@@ -1,0 +1,9 @@
+{
+  "name": "eventId",
+  "in": "path",
+  "description": "ID of the event/KüA plan (allowing us to host multiple KüA plans on one instance in parallel.",
+  "required": true,
+  "schema": {
+    "type": "integer"
+  }
+}

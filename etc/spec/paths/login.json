@@ -1,0 +1,99 @@
+{
+  "post": {
+    "operationId": "login",
+    "summary": "Get a session token and authenticate to a specific user role at a specific event.",
+    "parameters": [
+      {
+        "name": "X-SESSION-TOKEN",
+        "in": "header",
+        "description": "(optional) existing session token, to extend the roles/authorization information of the existing session.",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "object",
+                "properties": {
+                  "eventId": {
+                    "type": "integer"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["participant", "orga"]
+                  },
+                  "passphrase": {
+                    "type": "string"
+                  }
+                },
+                "required": ["eventId", "role"]
+              },
+              "userInfo": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "200": {
+        "description": "Authorization was successful.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "sessionToken": {
+                  "type": "string"
+                },
+                "authorization": {
+                  "type": "array",
+                  "minItems": 0,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventId": {
+                        "type": "integer"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "enum": ["participant", "orga"]
+                        }
+                      }
+                    },
+                    "required": ["eventId", "roles"]
+                  }
+                }
+              },
+              "required": ["sessionToken", "authorization"]
+            }
+          }
+        }
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

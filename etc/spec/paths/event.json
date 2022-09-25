@@ -1,0 +1,30 @@
+{
+  "get": {
+    "operationId": "getEventInfo",
+    "summary": "Get information about a single event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"}
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the event data.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Event.json"}
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

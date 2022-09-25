@@ -1,0 +1,8 @@
+{
+    "description": "Error Response, returned when the data, sent to the server, is no valid JSON document.",
+    "content": {
+        "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+        }
+    }
+}

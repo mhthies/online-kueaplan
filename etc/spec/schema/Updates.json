@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/Room.json",
+    "title": "Recent KüA Plan Updates",
+    "description": "Data structure, containing all recent updates in the KüA Plan of one event to be sent by the GET /updates API endpoint",
+    "type": "object",
+
+    "properties": {
+        "changedEntries": {
+            "description": "List of new and changed entries. Existing entries with same id should be replaced by the new version in this list.",
+            "type": "array",
+            "items": {"$ref": "./Entry.json"}
+        },
+        "deletedEntries": {
+            "description": "List of deleted Entries.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        },
+        "rooms": {
+            "description": "New list of rooms. If this property exists, all rooms shall be replaced by this list.",
+            "type": "array",
+            "items": {"$ref": "./Room.json"}
+        }
+    },
+    "required": ["changedEntries", "deletedEntries"]
+}

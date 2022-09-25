@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/Room.json",
+    "title": "Room/Location description",
+    "description": "Description of a place where KüAs can take place at a specific event, i.e. a column in the matrix-style KüA plan",
+    "type": "object",
+
+    "properties": {
+        "id": {
+            "description": "The unique identifier of the room",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "The name of the room",
+            "type": "string"
+        },
+        "description": {
+            "description": "More information about the room, e.g. directions to get there.",
+            "type": "string"
+        }
+    },
+    "required": ["id", "title", "description"]
+}

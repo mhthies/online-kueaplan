@@ -1,0 +1,8 @@
+{
+    "description": "Error Response, returned when no Session Token has been provided or the current Session is not authorized to execute this action in this event.",
+    "content": {
+        "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+        }
+    }
+}

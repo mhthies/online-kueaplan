@@ -1,0 +1,34 @@
+{
+  "get": {
+    "operationId": "listEntries",
+    "summary": "Get all KüA plan entries for this event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"}
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the list of entries.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {"$ref": "../schema/Entry.json"}
+            }
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}
+  

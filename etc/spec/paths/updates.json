@@ -1,0 +1,30 @@
+{
+  "get": {
+    "operationId": "getUpdates",
+    "summary": "Get KüA plan updates since last request. The main endpoint for refreshing the KüA plan view.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"},
+      {
+        "name": "since",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Loading updates was successful; the content represents a full set of updates or recent updates when the 'since' parameters was given.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Updates.json"}
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }  
+}

@@ -1,0 +1,8 @@
+{
+    "description": "Error Response, returned when the JSON data, sent to the server, does not comply to the expected schema.",
+    "content": {
+        "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/Error.json",
+    "title": "Error Response",
+    "description": "Generic error response schema, sent by the KüA Plan API server when an API operation fails",
+    "type": "object",
+
+    "properties": {
+        "httpCode": {
+            "description": "The http response code",
+            "type": "integer"
+        },
+        "message": {
+            "description": "A human readable error description",
+            "type": "string"
+        }
+    },
+    "required": ["httpCode", "message"]
+}

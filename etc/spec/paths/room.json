@@ -1,0 +1,88 @@
+{
+  "put": {
+    "operationId": "createOrUpdateRoom",
+    "summary": "Create or update a room.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"},
+      {
+        "name": "roomId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/Room.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "201": {
+        "description": "Creating the new room was successful."
+      },
+      "204": {
+        "description": "Updating the room was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The event with given eventId does not exist; so creating/updating a room there is not possible.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
+  "delete": {
+    "operationId": "deleteRoom",
+    "summary": "Remove a room from the KüA plan. It will be marked as deleted in the database.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"},
+      {
+        "name": "roomId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "responses": {
+      "204": {
+        "description": "Removing the entry (and creating the residue, if requested) was successful."
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The room to be deleted does not exist or is not part of the event with given eventId.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "409": {
+        "description": "Deleting the room was not possible, due to conflicting entries.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }  
+}

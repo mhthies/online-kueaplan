@@ -1,0 +1,8 @@
+{
+    "description": "Error Response, returned when the request is sent with an other Content-Type than application/json.",
+    "content": {
+        "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+        }
+    }
+}

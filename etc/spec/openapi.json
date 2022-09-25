@@ -1,0 +1,31 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Online KüA-Plan API",
+    "description": "The API of the online KüA-Plan, used for the communication between JS-based client-side frontend and server-side backend.",
+    "contact": {
+      "name": "Michael Thies",
+      "email": "mail@mhthies.de"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "0.1"
+  },
+  "paths": {
+    "/login": {"$ref": "./paths/login.json"},
+    "/logout": {"$ref": "./paths/logout.json"},
+    "/events/{eventId}": {"$ref": "./paths/event.json"},
+    "/events/{eventId}/rooms": {"$ref": "./paths/rooms.json"},
+    "/event/{eventId}/rooms/{roomId}": {"$ref": "./paths/room.json"},
+    "/events/{eventId}/entries": {"$ref": "./paths/entries.json"},
+    "/events/{eventId}/entries/{entryId}": {"$ref": "./paths/entry.json"},
+    "/events/{eventId}/updates": {"$ref": "./paths/updates.json"}
+  },
+  "components": {
+    "parameters": {
+      "eventId": {"$ref": "components/eventId.json"}
+    }
+  }
+}

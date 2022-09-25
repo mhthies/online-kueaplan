@@ -1,0 +1,48 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/Entry.json",
+    "title": "KüA Plan Entry",
+    "description": "A single entry of the KüA plan",
+    "type": "object",
+
+    "properties": {
+        "id": {
+            "description": "The unique identifier of the entry",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "The subject of the planned KüA (or blocker)",
+            "type": "string"
+        },
+        "description": {
+            "description": "A longer description of the planned KüA.",
+            "type": "string"
+        },
+        "room": {
+            "description": "List of unique identifiers of the rooms this entry is valid for.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "number"
+            }
+        },
+        "responsiblePerson": {
+            "description": "Name of the persons responsible for this KüA or blocker",
+            "type": "string"
+        },
+        "isBlocker": {
+            "description": "if present and true, this is not a real KüA announcement, but instead an informative entry to mark this time slot (in this room or any room) as blocked for some reason.",
+            "type": "boolean"
+        },
+        "residueOf": {
+            "description": "If present, this is not a KüA announcement, but instead informs about another plan entry (by its unique identifier), which has been here before.",
+            "type": "integer"
+        },
+        "category": {
+            "description": "Unique identifier of a category",
+            "type": "integer"
+        }
+    },
+    "required": ["id", "title", "room"]
+}

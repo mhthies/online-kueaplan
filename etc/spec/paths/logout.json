@@ -1,0 +1,16 @@
+{
+  "post": {
+    "operationId": "logout",
+    "summary": "Revoke session authorization",
+    "parameters": [
+      {"$ref": "../components/sessionToken.json"}
+    ],
+    "responses": {
+      "204": {
+        "description": "Logout was successful."
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

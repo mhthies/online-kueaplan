@@ -1,33 +1,33 @@
 CREATE TABLE events (
     id SERIAL PRIMARY KEY,
     title VARCHAR NOT NULL,
-    beginDate DATE NOT NULL,
-    endDate DATE NOT NULL
+    begin_date DATE NOT NULL,
+    end_date DATE NOT NULL
 );
 
 CREATE TABLE entries (
     id UUID PRIMARY KEY,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
-    responsiblePerson VARCHAR NOT NULL,
-    isBlocker BOOLEAN NOT NULL DEFAULT FALSE,
-    residueOf UUID REFERENCES entries (id),
-    eventId SERIAL REFERENCES events(id)
+    responsible_person VARCHAR NOT NULL,
+    is_blocker BOOLEAN NOT NULL DEFAULT FALSE,
+    residue_of UUID REFERENCES entries (id),
+    event_id SERIAL REFERENCES events(id)
 );
-CREATE INDEX ON entries (eventId);
+CREATE INDEX ON entries (event_id);
 
 CREATE TABLE rooms (
     id UUID PRIMARY KEY,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
-    eventId SERIAL REFERENCES events(id)
+    event_id SERIAL REFERENCES events(id)
 );
-CREATE INDEX ON entries (eventId);
+CREATE INDEX ON entries (event_id);
 
 CREATE TABLE entry_rooms (
-    entryId UUID REFERENCES entries(id),
-    roomId UUID REFERENCES rooms(id),
+    entry_id UUID REFERENCES entries(id),
+    room_id UUID REFERENCES rooms(id),
     
-    PRIMARY KEY (entryId, roomId)
+    PRIMARY KEY (entry_id, room_id)
 );
-CREATE INDEX ON entry_rooms (entryId);
+CREATE INDEX ON entry_rooms (entry_id);

@@ -5,17 +5,17 @@ diesel::table! {
         id -> Uuid,
         title -> Varchar,
         description -> Varchar,
-        responsibleperson -> Varchar,
-        isblocker -> Bool,
-        residueof -> Nullable<Uuid>,
-        eventid -> Int4,
+        responsible_person -> Varchar,
+        is_blocker -> Bool,
+        residue_of -> Nullable<Uuid>,
+        event_id -> Int4,
     }
 }
 
 diesel::table! {
-    entry_rooms (entryid, roomid) {
-        entryid -> Uuid,
-        roomid -> Uuid,
+    entry_rooms (entry_id, room_id) {
+        entry_id -> Uuid,
+        room_id -> Uuid,
     }
 }
 
@@ -23,8 +23,8 @@ diesel::table! {
     events (id) {
         id -> Int4,
         title -> Varchar,
-        begindate -> Date,
-        enddate -> Date,
+        begin_date -> Date,
+        end_date -> Date,
     }
 }
 
@@ -33,14 +33,14 @@ diesel::table! {
         id -> Uuid,
         title -> Varchar,
         description -> Varchar,
-        eventid -> Int4,
+        event_id -> Int4,
     }
 }
 
-diesel::joinable!(entries -> events (eventid));
-diesel::joinable!(entry_rooms -> entries (entryid));
-diesel::joinable!(entry_rooms -> rooms (roomid));
-diesel::joinable!(rooms -> events (eventid));
+diesel::joinable!(entries -> events (event_id));
+diesel::joinable!(entry_rooms -> entries (entry_id));
+diesel::joinable!(entry_rooms -> rooms (room_id));
+diesel::joinable!(rooms -> events (event_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     entries,

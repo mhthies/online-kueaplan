@@ -16,6 +16,8 @@ CREATE TABLE entries (
 );
 CREATE INDEX ON entries (event_id);
 
+-- TODO: Last updated, deleted
+
 CREATE TABLE rooms (
     id UUID PRIMARY KEY,
     title VARCHAR NOT NULL,

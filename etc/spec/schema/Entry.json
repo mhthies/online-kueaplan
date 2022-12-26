@@ -24,7 +24,8 @@
             "type": "array",
             "minItems": 1,
             "items": {
-                "type": "number"
+                "type": "string",
+                "format": "uuid"
             }
         },
         "responsiblePerson": {
@@ -37,7 +38,8 @@
         },
         "residueOf": {
             "description": "If present, this is not a KüA announcement, but instead informs about another plan entry (by its unique identifier), which has been here before.",
-            "type": "integer"
+            "type": "string",
+            "format": "uuid"
         },
         "category": {
             "description": "Unique identifier of a category",

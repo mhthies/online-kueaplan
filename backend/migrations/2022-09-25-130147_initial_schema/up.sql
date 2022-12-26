@@ -25,7 +25,7 @@ CREATE TABLE rooms (
 CREATE INDEX ON entries (event_id);
 
 CREATE TABLE entry_rooms (
-    entry_id UUID REFERENCES entries(id),
+    entry_id UUID REFERENCES entries(id) ON DELETE CASCADE,
     room_id UUID REFERENCES rooms(id),
     
     PRIMARY KEY (entry_id, room_id)

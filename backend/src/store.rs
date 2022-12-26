@@ -30,90 +30,78 @@ impl DataStore {
     pub fn get_entries(&mut self, the_event_id: i32) -> Result<Vec<models::FullEntry>, StoreError> {
         use crate::schema::entries::dsl::*;
 
-        // TODO use transaction
-        let the_entries = entries
-            .filter(event_id.eq(the_event_id))
-            .load::<models::Entry>(&mut self.connection)?;
+        self.connection.transaction(|connection| {
+            let the_entries = entries
+                .filter(event_id.eq(the_event_id))
+                .load::<models::Entry>(connection)?;
 
-        let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
-            .load::<models::EntryRoomMapping>(&mut self.connection)?
-            .grouped_by(&the_entries);
+            let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
+                .load::<models::EntryRoomMapping>(connection)?
+                .grouped_by(&the_entries);
 
-        return Ok(the_entries
-            .into_iter()
-            .zip(the_entry_rooms.into_iter())
-            .map(|(entry, entry_rooms)| models::FullEntry {
-                entry,
-                room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
-            })
-            .collect());
+            return Ok(the_entries
+                .into_iter()
+                .zip(the_entry_rooms.into_iter())
+                .map(|(entry, entry_rooms)| models::FullEntry {
+                    entry,
+                    room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
+                })
+                .collect());
+        })
     }
 
     pub fn get_entry(&mut self, entry_id: uuid::Uuid) -> Result<models::FullEntry, StoreError> {
         use crate::schema::entries::dsl::*;
         use crate::schema::entry_rooms;
 
-        // TODO use transaction
-        let entry = entries
-            .filter(id.eq(entry_id))
-            .first::<models::Entry>(&mut self.connection)?;
-        let room_ids = entry_rooms::table
-            .filter(entry_rooms::dsl::entry_id.eq(entry.id))
-            .select(entry_rooms::dsl::room_id)
-            .load::<uuid::Uuid>(&mut self.connection)?;
+        self.connection.transaction(|connection| {
+            let entry = entries
+                .filter(id.eq(entry_id))
+                .first::<models::Entry>(connection)?;
+            let room_ids = entry_rooms::table
+                .filter(entry_rooms::dsl::entry_id.eq(entry.id))
+                .select(entry_rooms::dsl::room_id)
+                .load::<uuid::Uuid>(connection)?;
 
-        Ok(models::FullEntry { entry, room_ids })
+            Ok(models::FullEntry { entry, room_ids })
+        })
     }
 
     pub fn create_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
         use crate::schema::entries::dsl::*;
 
-        // TODO use transaction
-        diesel::insert_into(entries)
-            .values(&entry.entry)
-            .execute(&mut self.connection)?;
+        self.connection.transaction(|connection| {
+            diesel::insert_into(entries)
+                .values(&entry.entry)
+                .execute(connection)?;
 
-        self.insert_entry_rooms(entry.entry.id, &entry.room_ids)?;
+            insert_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
 
-        Ok(())
+            Ok(())
+        })
     }
 
     pub fn update_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
         use crate::schema::entries::dsl::*;
         use crate::schema::entry_rooms;
 
-        // TODO use transaction
-        let count = diesel::update(entries)
-            .filter(id.eq(entry.entry.id))
-            .set(&entry.entry)
-            .execute(&mut self.connection)?;
-        if count == 0 {
-            return Err(StoreError::NotExisting);
-        }
+        self.connection.transaction(|connection| {
+            let count = diesel::update(entries)
+                .filter(id.eq(entry.entry.id))
+                .set(&entry.entry)
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            }
 
-        diesel::delete(entry_rooms::table.filter(entry_rooms::dsl::entry_id.eq(entry.entry.id)))
-            .execute(&mut self.connection)?;
-        self.insert_entry_rooms(entry.entry.id, &entry.room_ids)?;
-
-        Ok(())
-    }
-
-    fn insert_entry_rooms(
-        &mut self,
-        the_entry_id: uuid::Uuid,
-        room_ids: &Vec<uuid::Uuid>,
-    ) -> Result<(), diesel::result::Error> {
-        use crate::schema::entry_rooms::dsl::*;
-
-        diesel::insert_into(entry_rooms)
-            .values(
-                room_ids
-                    .iter()
-                    .map(|the_room_id| (entry_id.eq(the_entry_id), room_id.eq(the_room_id)))
-                    .collect::<Vec<_>>(),
+            diesel::delete(
+                entry_rooms::table.filter(entry_rooms::dsl::entry_id.eq(entry.entry.id)),
             )
-            .execute(&mut self.connection)
-            .map(|_| ())
+            .execute(connection)?;
+            insert_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
+
+            Ok(())
+        })
     }
 
     pub fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
@@ -162,6 +150,24 @@ impl std::fmt::Display for StoreError {
             Self::NotExisting => write!(f, "Database record does not exist."),
         }
     }
+}
+
+fn insert_entry_rooms(
+    the_entry_id: uuid::Uuid,
+    room_ids: &Vec<uuid::Uuid>,
+    connection: &mut PgConnection,
+) -> Result<(), diesel::result::Error> {
+    use crate::schema::entry_rooms::dsl::*;
+
+    diesel::insert_into(entry_rooms)
+        .values(
+            room_ids
+                .iter()
+                .map(|the_room_id| (entry_id.eq(the_entry_id), room_id.eq(the_room_id)))
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)
+        .map(|_| ())
 }
 
 fn establish_connection() -> Result<PgConnection, StoreError> {

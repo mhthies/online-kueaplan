@@ -11,3 +11,12 @@ uuid = { version = "^1.1.2", features = ["serde"] }
 chrono = { version = "^0.4.22"}
 dotenvy = "0.15.5"
 serde = { version = "1.0", features = ["derive"] }
+rocket = { version = "0.5.0-rc.2", features = ["json"] }
+
+[[bin]]
+name = "kueaplan-web"
+path = "src/web.rs"
+
+[[bin]]
+name = "kueaplan-cli"
+path = "src/cli.rs"

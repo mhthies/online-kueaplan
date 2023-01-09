@@ -2,6 +2,7 @@
 use diesel::prelude::*;
 use uuid::Uuid;
 use chrono::naive::NaiveDate;
+use serde::{Serialize, Deserialize};
 
 
 #[derive(Queryable)]
@@ -14,13 +15,19 @@ pub struct Event {
 
 #[derive(Queryable, Insertable, AsChangeset, Identifiable)]
 #[diesel(table_name=crate::schema::entries)]
+#[derive(Serialize, Deserialize)]
 pub struct Entry {
     pub id: Uuid,
     pub title: String,
+    #[serde(default)]
     pub description: String,
+    #[serde(default)]
     pub responsible_person: String,
+    #[serde(default)]
     pub is_blocker: bool,
+    #[serde(default)]
     pub residue_of: Option<Uuid>,
+    #[serde(skip)]
     pub event_id: i32,
 }
 
@@ -31,8 +38,11 @@ pub struct Room {
     pub description: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct FullEntry {
+    #[serde(flatten)]
     pub entry: Entry,
+    #[serde(rename="room")]
     pub room_ids: Vec<Uuid>,
 }
 

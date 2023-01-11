@@ -1,0 +1,9 @@
+# compiled files and executables when using the Cargo Workspace in the root directory
+debug/
+target/
+
+# Cargo.lock in the Cargo workspace
+Cargo.lock
+
+# Cargo.lock in the Cargo workspace
+**/*.rs.bk

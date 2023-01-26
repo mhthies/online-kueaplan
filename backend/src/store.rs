@@ -7,15 +7,15 @@ use dotenvy::dotenv;
 
 use crate::models;
 
-pub struct DataStore {
-    connection: PgConnection,
+pub struct DataStore<'a> {
+    connection: &'a mut PgConnection,
 }
 
-impl DataStore {
-    pub fn new() -> Result<Self, StoreError> {
-        return Ok(Self {
-            connection: establish_connection()?,
-        });
+impl<'a> DataStore<'a> {
+    pub fn with_connection(connection: &'a mut PgConnection) -> Self {
+        return Self {
+            connection,
+        };
     }
 
     pub fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
@@ -23,7 +23,7 @@ impl DataStore {
 
         events
             .filter(id.eq(event_id))
-            .first::<models::Event>(&mut self.connection)
+            .first::<models::Event>(self.connection)
             .map_err(|e| e.into())
     }
 
@@ -109,7 +109,7 @@ impl DataStore {
 
         let count = diesel::delete(entries)
             .filter(id.eq(entry_id))
-            .execute(&mut self.connection)?;
+            .execute(self.connection)?;
         // entry_room assignments are automatically deleted via CASCADE
 
         if count == 0 {

@@ -11,7 +11,9 @@ uuid = { version = "^1.1.2", features = ["serde"] }
 chrono = { version = "^0.4.22"}
 dotenvy = "0.15.5"
 serde = { version = "1.0", features = ["derive"] }
-rocket = { version = "0.5.0-rc.2", features = ["json"] }
+serde_json = { version = "1.0.91" }
+rocket = { git = "https://github.com/SergioBenitez/Rocket.git", rev="682c2d9acf", features = ["json", "uuid"] }
+rocket_sync_db_pools = { git = "https://github.com/SergioBenitez/Rocket.git", rev="682c2d9acf", features = ["diesel_postgres_pool"] }
 
 [[bin]]
 name = "kueaplan-web"

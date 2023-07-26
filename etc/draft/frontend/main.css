@@ -1,0 +1,233 @@
+html { 
+	scroll-snap-type: x proximity;
+} 
+
+body {
+	font-family: "Roboto";
+	margin: 0;
+}
+
+.main-grid {
+	display: grid;
+	--time-column-width: 78px;
+	--column-width: 300px;
+/*
+	grid-template-columns: var(--time-column-width) repeat(var(--total-rooms),var(--column-width)) auto;
+*/
+	position: relative;
+	min-width: min-content;
+}
+
+.grid-head {
+	position: sticky;
+	top: 0px;
+	display: block;
+	font-size: 18px;
+	line-height: 35px;
+	background-color: #fff;
+	border-bottom: 1px solid rgba(0,0,0,.12);
+	text-align: center;
+	font-weight: bold;
+	padding: 8px;
+	z-index: 25;
+	scroll-snap-align: start;
+	scroll-margin-left: var(--time-column-width);
+}
+.timecolumn {
+	position: sticky;
+	left: 0px;
+	z-index: 20;
+}
+.timeslice {
+	position: sticky;
+	left: 0px;
+	z-index: 21;
+}
+.timeslice>.time-label {
+	position: relative;
+	top: -18px;
+	padding: 8px;
+	line-height: 20px;
+	border: solid 1px rgba(0,0,0,.1);
+	box-shadow: 0 0 5px rgba(0,0,0,.15);
+	background: rgba(255,255,255,.7);
+	backdrop-filter: blur(2px);
+}
+.timeslice.midnight>.time-label {
+	color: #fff;
+	border: solid 1px rgba(0,0,0,.8);
+	background: rgba(0,0,0,.7);
+}
+.timeellipsis {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 46px;
+	color: #555;
+	z-index: 2;
+	writing-mode: sideways-lr;
+}
+.timeellipsis:after {
+	content: "• • •";
+}
+.timeline {
+	height: 1px;
+	background-color: rgba(0,0,0,.12);
+	position: absolute;
+	width: 100%;
+}
+.timeline.midnight {
+	height: 2px;
+	background-color: rgba(0,0,0,.24);
+}
+.timeline.now {
+	height: 2px;
+	background-color: #f55;
+	position: absolute;
+	width: 100%;
+	z-index: 15;
+	box-shadow: 0 0 5px rgba(0,0,0,.3);
+}
+
+.grid-entry {
+	display: flex;
+	flex-direction: column;
+	min-height: 96px;
+	margin: 4px;
+	overflow: hidden;
+	color: rgba(0,0,0,.87);
+	position: relative;
+	border: solid 2px var(--category-color);
+	border-radius: 4px;
+}
+.grid-entry.event-residue {
+	color: #888;
+	border: dashed 2px #888;
+	background: rgba(255,255,255,.5);
+	backdrop-filter: blur(1px);
+	font-size: 0.9em;
+}
+.grid-entry>.event-head {
+	background: var(--category-color);
+	padding: 3px 8px;
+	color: white;
+	font-weight: bold;
+}
+.grid-entry.event-residue>.event-title {
+	padding: 3px 8px;
+	font-weight: bold;
+}
+.grid-entry>.event-body {
+	padding: 3px 8px;
+	color: #888;
+	font-size: 0.9em;
+	background: rgba(255,255,255,.7);
+	backdrop-filter: blur(1px);
+	flex: 1;
+}
+.grid-entry.event-residue>.residue-info {
+	padding: 3px 8px;
+	flex: 1;
+}
+.grid-entry>.category-icon {
+	color: var(--category-color);
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
+	padding: 8px;
+	text-align: right;
+	line-height: 1;
+}
+
+.grid-blocker {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	min-height: 96px;
+	font-size: 18px;
+	margin: 4px;
+	overflow: hidden;
+	background: repeating-linear-gradient(
+	  45deg,
+	  rgba(255,200,200,.5),
+	  rgba(255,200,200,.5) 15px,
+	  rgba(255,145,145,1) 15px,
+	  rgba(255,145,145,1) 30px
+	);
+	backdrop-filter: blur(1px);
+	border: solid 10px rgba(255,145,145,1);
+	border-radius: 4px;
+	z-index: 0;
+}
+.grid-blocker>.blocker-title {
+	font-weight: bold;
+	color: #fff;
+	width: 100%;
+	padding: 8px;
+	background: rgba(255,145,145,1);
+	text-align: center;
+}
+
+.grid-special-range {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	min-height: 96px;
+	font-size: 18px;
+	overflow: hidden;
+	z-index: 0;
+	background:
+		radial-gradient(#ddd 15%, transparent 16%) 0 0,
+		radial-gradient(#ddd 15%, transparent 16%) 8px 8px,
+		radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
+		radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+	background-size:16px 16px;
+}
+.grid-special-range>.special-range-title {
+	font-weight: bold;
+	position: sticky;
+	color: #aaa;
+	width: 100%;
+	text-align: center;
+	text-shadow: 0 0 15px #fff;
+}
+
+#footer {
+	position: sticky;
+	bottom: 0;
+	display: block;
+	background-color: #fff;
+	border-top: 1px solid rgba(0,0,0,.12);
+	box-shadow: 0 0 10px rgba(0,0,0,.12);
+	padding: 8px;
+	z-index: 30;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.dateswitcher {
+	font-size: 18px;
+	line-height: 35px;
+	text-align: center;
+	font-weight: bold;
+	display: flex;
+}
+.dateswitcher>.prev,.dateswitcher>.next,.dateswitcher>.date {
+	border: solid 1px darkblue;
+	padding: 0px 16px;
+}
+.dateswitcher>.prev {
+	cursor: pointer;
+	margin-right: -1px;
+	color: darkblue;
+	border-radius: 50% 0 0 50%;
+}
+.dateswitcher>.next {
+	cursor: pointer;
+	margin-left: -1px;
+	color: darkblue;
+	border-radius: 0 50% 50% 0;
+}

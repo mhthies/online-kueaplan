@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CdE KüA-Plan</title>
+  <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+	<!--  <script src="main.js"></script> -->
+	<div class="main-grid" style="--total-rooms: 5;
+			grid-template-rows: 
+				[header] 52px
+				[slice-06-08-06-00] minmax(20px, auto) 
+				[slice-06-08-06-30] minmax(20px, auto) 
+				[slice-06-08-07-00] minmax(20px, auto) 
+				[slice-06-08-07-30] minmax(20px, auto) 
+				[slice-06-08-08-00] minmax(20px, auto) 
+				[slice-06-08-08-30] minmax(20px, auto)
+				[slice-06-08-09-00] minmax(20px, auto) 
+				[slice-06-08-09-30] minmax(20px, auto) 
+				[slice-06-08-10-00] minmax(20px, auto) 
+				[slice-06-08-10-30] minmax(20px, auto) 
+				[slice-06-08-11-00] minmax(20px, auto) 
+				[slice-06-08-11-30] minmax(20px, auto) 
+				[slice-06-08-12-00] minmax(60px, auto) 
+				[slice-06-08-12-30] minmax(60px, auto) 
+				[slice-06-08-13-00] minmax(60px, auto) 
+				[slice-06-08-13-30] minmax(60px, auto) 
+				[slice-06-08-14-00] minmax(60px, auto) 
+				[slice-06-08-14-30] minmax(60px, auto) 
+				[slice-06-08-15-00] minmax(20px, auto) 
+				[slice-06-08-15-30] minmax(20px, auto) 
+				[slice-06-08-16-00] minmax(20px, auto) 
+				[slice-06-08-16-30] minmax(20px, auto) 
+				[slice-06-08-17-00] minmax(20px, auto) 
+				[slice-06-08-17-30] minmax(20px, auto) 
+				[slice-06-08-18-00] minmax(60px, auto) 
+				[slice-06-08-18-30] minmax(60px, auto) 
+				[slice-06-08-19-00] minmax(60px, auto) 
+				[slice-06-08-19-30] minmax(60px, auto)
+				[slice-06-08-20-00] minmax(60px, auto) 
+				[slice-06-08-20-30] minmax(60px, auto)
+				[slice-06-08-21-00] minmax(60px, auto) 
+				[slice-06-08-21-30] minmax(60px, auto)
+				[slice-06-08-22-00] minmax(60px, auto) 
+				[slice-06-08-22-30] minmax(60px, auto)
+				[slice-06-08-23-00] minmax(60px, auto) 
+				[slice-06-08-23-30] minmax(60px, auto)
+				[slice-06-09-00-00] minmax(60px, auto) 
+				[slice-06-09-00-30] minmax(60px, auto)
+				[slice-06-09-01-00] minmax(60px, auto) 
+				[slice-06-09-01-30] minmax(60px, auto)
+				[slice-06-09-02-00] minmax(60px, auto) 
+				[slice-06-09-02-30] minmax(60px, auto)
+				[slice-06-09-03-00] minmax(20px, auto) 
+				[slice-06-09-03-30] minmax(20px, auto)
+				[slice-06-09-04-00] minmax(20px, auto) 
+				[slice-06-09-04-30] minmax(20px, auto)
+				[slice-06-09-05-00] minmax(20px, auto) 
+				[slice-06-09-05-30] minmax(20px, auto)
+				[slice-06-09-06-00] minmax(20px, auto);
+			grid-template-columns:
+				[time] var(--time-column-width)
+				[room-0-1] var(--column-width)
+				[room-0-end room-1-1] calc(var(--column-width)/2)
+				[room-1-2] calc(var(--column-width)/2)
+				[room-1-end room-2-1] var(--column-width)
+				[room-2-end room-3-1] var(--column-width)
+				[room-3-end]">
+		<div class="grid-head" style="grid-area: 1 / time;"></div>
+		<div class="grid-head" style="grid-area: 1 / room-0-1;">Pelikanhalle</div>
+		<div class="grid-head" style="grid-area: 1 / room-1-1 / 1 / room-1-end;">Speisesaal Buchwaldhof</div>
+		<div class="grid-head" style="grid-area: 1 / room-2-1;">ObÄ CdErnhof</div>
+		<div class="grid-head" style="grid-area: 1 / room-3-1;">Seminarraum Pelikanhalle</div>
+		
+		<div class="timecolumn" style="grid-area: slice-06-08-14-30 / 1 / slice-06-08-18-30 / auto;"></div>
+
+		<div class="timeslice" style="grid-area: slice-06-08-06-00 / 1 / auto;"><div class="time-label">06:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-06-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-07-00 / 1 / auto;"><div class="time-label">07:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-07-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-08-00 / 1 / auto;"><div class="time-label">08:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-08-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-09-00 / 1 / auto;"><div class="time-label">09:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-09-00 / 1 / auto;"></div>
+		<div class="timeellipsis" style="grid-area: slice-06-08-09-00 / 1 / slice-06-08-12-00 / 1;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-12-00 / 1 / auto;"><div class="time-label">12:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-12-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-13-00 / 1 / auto;"><div class="time-label">13:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-13-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-14-00 / 1 / auto;"><div class="time-label">14:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-14-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-15-00 / 1 / auto;"><div class="time-label">15:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-15-00 / 1 / auto;"></div>
+		<div class="timeellipsis" style="grid-area: slice-06-08-15-00 / 1 / slice-06-08-18-00 / 1;"></div>
+		<!-- keine Timelabels für die abgekürzte Kurszeit-->
+		<div class="timeslice" style="grid-area: slice-06-08-18-00 / 1 / auto;"><div class="time-label">18:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-18-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-19-00 / 1 / auto;"><div class="time-label">19:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-19-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-20-00 / 1 / auto;"><div class="time-label">20:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-20-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-21-00 / 1 / auto;"><div class="time-label">21:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-21-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-22-00 / 1 / auto;"><div class="time-label">22:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-22-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-08-23-00 / 1 / auto;"><div class="time-label">23:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-08-23-00 / 1 / auto;"></div>
+		<div class="timeslice midnight" style="grid-area: slice-06-09-00-00 / 1 / auto;"><div class="time-label">00:00</div></div>
+		<div class="timeline midnight" style="grid-area: slice-06-09-00-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-01-00 / 1 / auto;"><div class="time-label">01:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-01-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-02-00 / 1 / auto;"><div class="time-label">02:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-02-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-03-00 / 1 / auto;"><div class="time-label">03:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-03-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-04-00 / 1 / auto;"><div class="time-label">04:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-04-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-05-00 / 1 / auto;"><div class="time-label">05:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-05-00 / 1 / auto;"></div>
+		<div class="timeslice" style="grid-area: slice-06-09-06-00 / 1 / auto;"><div class="time-label">06:00</div></div>
+		<div class="timeline" style="grid-area: slice-06-09-06-00 / 1 / auto;"></div>
+		
+		<div class="timeline now" style="grid-area: slice-06-08-15-00 / 1 / auto; margin-top: 15px;"></div>
+		
+		<div class="grid-special-range" style="grid-area: slice-06-08-08-00 / 1 / slice-06-08-09-00 / 7;">
+			<div class="special-range-title">Frühstück</div>
+		</div>
+		<div class="grid-special-range" style="grid-area: slice-06-08-09-00 / 1 / slice-06-08-12-00 / 7;">
+			<div class="special-range-title">Kurs</div>
+		</div>
+		<div class="grid-special-range" style="grid-area: slice-06-08-12-00 / 1 / slice-06-08-13-00 / 7;">
+			<div class="special-range-title">Mittagessen</div>
+		</div>
+		<div class="grid-special-range" style="grid-area: slice-06-08-15-00 / 1 / slice-06-08-18-00 / 7;">
+			<div class="special-range-title">Kurs</div>
+		</div>
+		<div class="grid-special-range" style="grid-area: slice-06-08-18-00 / 1 / slice-06-08-19-00 / 7;">
+			<div class="special-range-title">Abendessen</div>
+		</div>
+		
+		<div class="grid-entry" style="--category-color: #df9100; grid-area: slice-06-08-06-30 / room-2-1 / slice-06-08-07-30;">
+			<div class="event-head">Frühsport</div>
+			<div class="event-body">
+				?<br>
+				06:30 Uhr • ObÄ CdErnhof
+			</div>
+			<div class="category-icon">⚽&#xFE0E;</div>
+		</div>
+
+		<div class="grid-entry" style="--category-color: #EB5B04; grid-area: slice-06-08-18-30 / 2 / slice-06-08-19-30;">
+			<div class="event-head">Singen für Anfänger</div>
+			<div class="event-body">
+				Charlotte Mertz<br>
+				18:30 Uhr • Pelikanhalle
+			</div>
+			<div class="category-icon">♬</div>
+		</div>
+		<div class="grid-entry" style="--category-color: #EB5B04; grid-area: slice-06-08-19-00 / 3 / slice-06-08-20-00;">
+			<div class="event-head">Singen für Fortgeschrittene</div>
+			<div class="event-body">
+				Claudia Sandig<br>
+				19:00 Uhr • Speisesaal Buchwaldhof
+			</div>
+			<div class="category-icon">♬</div>
+		</div>
+		<div class="grid-entry event-residue" style="--category-color: #EB5B04; grid-area: slice-06-08-18-30 / 4 / slice-06-08-19-30;">
+			<div class="event-title">Singen für Anfänger</div>
+			<div class="residue-info">⮳ Pelikanhalle</div>
+		</div>
+		<div class="grid-blocker" style="--category-color: #EB5B04; grid-area: slice-06-08-20-00 / 3 / slice-06-08-21-30 / 7;">
+			<div class="blocker-title">Aktiventreffen</div>
+		</div>
+		<div class="grid-entry" style="--category-color: #0B04EB; grid-area: slice-06-08-20-00 / 2 / slice-06-08-21-30;">
+			<div class="event-head">Aktiventreffen</div>
+			<div class="event-body">
+				CdE-Vorstand<br>
+				20:00 Uhr • Pelikanhalle
+			</div>
+			<div class="category-icon">📢&#xFE0E;</div>
+		</div>
+		<div class="grid-entry" style="--category-color: #5EAC00; grid-area: slice-06-08-19-30 / room-2-1 / slice-06-08-20-00;">
+			<div class="event-head">Spirit Island</div>
+			<div class="event-body">
+				Anton Dorn<br>
+				19:30 Uhr • Seminarraum Pelikanhalle
+			</div>
+			<div class="category-icon">⚄</div>
+		</div>
+	</div>
+	<footer id="footer">
+		<div class="dateswitcher">
+			<div class="prev">⧼</div>
+			<div class="date">Donnerstag, 08.06.</div>
+			<div class="next">⧽</div>
+		</div>
+	</footer>
+</body>
+</html>

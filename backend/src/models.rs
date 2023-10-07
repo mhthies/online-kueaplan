@@ -1,9 +1,7 @@
-
-use diesel::prelude::*;
-use uuid::Uuid;
 use chrono::naive::NaiveDate;
-use serde::{Serialize, Deserialize};
-
+use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Queryable)]
 pub struct Event {
@@ -42,7 +40,7 @@ pub struct Room {
 pub struct FullEntry {
     #[serde(flatten)]
     pub entry: Entry,
-    #[serde(rename="room")]
+    #[serde(rename = "room")]
     pub room_ids: Vec<Uuid>,
 }
 

@@ -13,9 +13,7 @@ pub struct DataStore<'a> {
 
 impl<'a> DataStore<'a> {
     pub fn with_connection(connection: &'a mut PgConnection) -> Self {
-        return Self {
-            connection,
-        };
+        return Self { connection };
     }
 
     pub fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {

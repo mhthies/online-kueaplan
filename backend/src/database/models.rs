@@ -12,7 +12,7 @@ pub struct Event {
 }
 
 #[derive(Queryable, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=crate::schema::entries)]
+#[diesel(table_name=super::schema::entries)]
 #[derive(Serialize, Deserialize)]
 pub struct Entry {
     pub id: Uuid,
@@ -47,7 +47,7 @@ pub struct FullEntry {
 // Introduce type for Entry-Room-association, to simplify grouped retrieval of room_ids of an Entry
 // using Diesel's .grouped_by() method.
 #[derive(Queryable, Associations, Identifiable)]
-#[diesel(table_name=crate::schema::entry_rooms)]
+#[diesel(table_name=super::schema::entry_rooms)]
 #[diesel(primary_key(entry_id, room_id))]
 #[diesel(belongs_to(Entry))]
 pub struct EntryRoomMapping {

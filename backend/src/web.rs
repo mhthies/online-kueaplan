@@ -9,8 +9,8 @@ use rocket_sync_db_pools::{database, diesel};
 use serde_json::json;
 use uuid::Uuid;
 
-use kueaplan_backend::models::*;
-use kueaplan_backend::store::{DataStore, StoreError};
+use kueaplan_backend::database::models::*;
+use kueaplan_backend::database::{get_pg_store, StoreError, KueaPlanStore};
 
 #[database("database")]
 struct Database(PgConnection);
@@ -66,7 +66,7 @@ async fn get_entry(
     entry_id: Uuid,
 ) -> Result<Json<FullEntry>, APIError> {
     let entry = db
-        .run(move |connection| DataStore::with_connection(connection).get_entry(entry_id))
+        .run(move |connection| get_pg_store(connection).get_entry(entry_id))
         .await?;
     Ok(Json(entry))
 }
@@ -78,7 +78,7 @@ async fn create_or_update_entry(
     entry_id: Uuid,
     data: Json<FullEntry>,
 ) -> Result<(), APIError> {
-    db.run(move |connection| DataStore::with_connection(connection).create_entry(data.0))
+    db.run(move |connection| get_pg_store(connection).create_entry(data.0))
         .await?;
     Ok(())
 }

@@ -1,23 +1,23 @@
 use std::env;
-use std::fmt::Debug;
-
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenvy::dotenv;
 
-use crate::models;
+use super::{models, schema, KueaPlanStore, StoreError};
 
-pub struct DataStore<'a> {
+pub struct PgDataStore<'a> {
     connection: &'a mut PgConnection,
 }
 
-impl<'a> DataStore<'a> {
+impl<'a> PgDataStore<'a> {
     pub fn with_connection(connection: &'a mut PgConnection) -> Self {
         return Self { connection };
     }
+}
 
-    pub fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
-        use crate::schema::events::dsl::*;
+impl<'a> KueaPlanStore for PgDataStore<'a> {
+    fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
+        use schema::events::dsl::*;
 
         events
             .filter(id.eq(event_id))
@@ -25,8 +25,8 @@ impl<'a> DataStore<'a> {
             .map_err(|e| e.into())
     }
 
-    pub fn get_entries(&mut self, the_event_id: i32) -> Result<Vec<models::FullEntry>, StoreError> {
-        use crate::schema::entries::dsl::*;
+    fn get_entries(&mut self, the_event_id: i32) -> Result<Vec<models::FullEntry>, StoreError> {
+        use schema::entries::dsl::*;
 
         self.connection.transaction(|connection| {
             let the_entries = entries
@@ -48,9 +48,9 @@ impl<'a> DataStore<'a> {
         })
     }
 
-    pub fn get_entry(&mut self, entry_id: uuid::Uuid) -> Result<models::FullEntry, StoreError> {
-        use crate::schema::entries::dsl::*;
-        use crate::schema::entry_rooms;
+    fn get_entry(&mut self, entry_id: uuid::Uuid) -> Result<models::FullEntry, StoreError> {
+        use schema::entries::dsl::*;
+        use schema::entry_rooms;
 
         self.connection.transaction(|connection| {
             let entry = entries
@@ -65,8 +65,8 @@ impl<'a> DataStore<'a> {
         })
     }
 
-    pub fn create_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
-        use crate::schema::entries::dsl::*;
+    fn create_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
+        use schema::entries::dsl::*;
 
         self.connection.transaction(|connection| {
             diesel::insert_into(entries)
@@ -79,9 +79,9 @@ impl<'a> DataStore<'a> {
         })
     }
 
-    pub fn update_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
-        use crate::schema::entries::dsl::*;
-        use crate::schema::entry_rooms;
+    fn update_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
+        use schema::entries::dsl::*;
+        use schema::entry_rooms;
 
         self.connection.transaction(|connection| {
             let count = diesel::update(entries)
@@ -102,8 +102,8 @@ impl<'a> DataStore<'a> {
         })
     }
 
-    pub fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
-        use crate::schema::entries::dsl::*;
+    fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
+        use schema::entries::dsl::*;
 
         // FIXME we don't want to actually delete but set a 'deleted' flag and update the last-modified timestamp
 
@@ -120,44 +120,12 @@ impl<'a> DataStore<'a> {
     }
 }
 
-#[derive(Debug)]
-pub enum StoreError {
-    ConnectionError(diesel::result::ConnectionError),
-    QueryError(diesel::result::Error),
-    NotExisting,
-}
-
-impl From<diesel::result::Error> for StoreError {
-    fn from(error: diesel::result::Error) -> Self {
-        match error {
-            diesel::result::Error::NotFound => Self::NotExisting,
-            _ => Self::QueryError(error),
-        }
-    }
-}
-
-impl From<diesel::result::ConnectionError> for StoreError {
-    fn from(error: diesel::result::ConnectionError) -> Self {
-        Self::ConnectionError(error)
-    }
-}
-
-impl std::fmt::Display for StoreError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
-            Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
-            Self::NotExisting => write!(f, "Database record does not exist."),
-        }
-    }
-}
-
 fn insert_entry_rooms(
     the_entry_id: uuid::Uuid,
     room_ids: &Vec<uuid::Uuid>,
     connection: &mut PgConnection,
 ) -> Result<(), diesel::result::Error> {
-    use crate::schema::entry_rooms::dsl::*;
+    use schema::entry_rooms::dsl::*;
 
     diesel::insert_into(entry_rooms)
         .values(

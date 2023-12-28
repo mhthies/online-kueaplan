@@ -1,5 +1,8 @@
-
+use std::env;
 use std::fmt::Debug;
+
+use diesel::PgConnection;
+use dotenvy::dotenv;
 
 pub mod models;
 mod schema;
@@ -14,10 +17,33 @@ pub trait KueaPlanStore {
     fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError>;
 }
 
-pub fn get_pg_store<'a>(connection: &'a mut diesel::pg::PgConnection) -> impl KueaPlanStore + 'a {
-    store::PgDataStore::with_connection(connection)
+#[derive(Clone)]
+pub struct DbPool {
+    pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>,
 }
 
+impl DbPool {
+    pub fn new() -> Self {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
+        Self {
+            pool: diesel::r2d2::Pool::builder()
+                .test_on_check_out(true)
+                .build(connection_manager)
+                .expect("Could not build connection pool"),
+        }
+    }
+
+    pub fn get_store<'a>(&self) -> impl KueaPlanStore + 'a {
+        // TODO better error handling
+        store::PgDataStore::with_pooled_connection(
+            self.pool
+                .get()
+                .expect("couldn't get db connection from pool"),
+        )
+    }
+}
 
 #[derive(Debug)]
 pub enum StoreError {

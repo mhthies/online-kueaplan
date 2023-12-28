@@ -6,14 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-diesel = { version = "^2.0.0", features = ["postgres", "uuid", "chrono"] }
+diesel = { version = "^2.0.0", features = ["postgres", "uuid", "chrono", "r2d2"] }
 uuid = { version = "^1.1.2", features = ["serde"] }
 chrono = { version = "^0.4.22"}
 dotenvy = "0.15.5"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.91" }
-rocket = { git = "https://github.com/SergioBenitez/Rocket.git", rev="682c2d9acf", features = ["json", "uuid"] }
-rocket_sync_db_pools = { git = "https://github.com/SergioBenitez/Rocket.git", rev="682c2d9acf", features = ["diesel_postgres_pool"] }
+serde = { version = "^1.0", features = ["derive"] }
+serde_json = { version = "^1.0.91" }
+actix-web = "4"
 
 [[bin]]
 name = "kueaplan-web"

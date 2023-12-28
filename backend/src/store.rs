@@ -105,6 +105,8 @@ impl<'a> DataStore<'a> {
     pub fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
         use crate::schema::entries::dsl::*;
 
+        // FIXME we don't want to actually delete but set a 'deleted' flag and update the last-modified timestamp
+
         let count = diesel::delete(entries)
             .filter(id.eq(entry_id))
             .execute(self.connection)?;

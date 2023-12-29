@@ -14,12 +14,13 @@ async fn main() -> std::io::Result<()> {
 
     let state = AppState::new().unwrap();
     HttpServer::new(move || {
+        let api_scope = web::scope("/api/v1").configure(configure_app);
         App::new()
-            .configure(configure_app)
+            .service(api_scope)
             .app_data(web::Data::new(state.clone()))
             .wrap(middleware::Compress::default())
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 9000))?
     .run()
     .await
 }

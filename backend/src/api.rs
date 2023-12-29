@@ -1,11 +1,10 @@
-
 use std::{fmt::Display, vec::Vec};
 
 use actix_web::{
     error::ResponseError,
     get,
     http::{header::ContentType, StatusCode},
-    middleware, put, web, HttpResponse, HttpServer,
+    put, web, HttpResponse,
 };
 use serde_json::json;
 use uuid::Uuid;
@@ -13,12 +12,10 @@ use uuid::Uuid;
 use crate::database::models::*;
 use crate::database::{KueaPlanStore, StoreError};
 
-
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(list_entries)
         .service(get_entry)
         .service(create_or_update_entry);
-    
 }
 
 #[derive(Debug)]
@@ -68,6 +65,10 @@ impl ResponseError for APIError {
 impl From<StoreError> for APIError {
     fn from(e: StoreError) -> Self {
         match e {
+            StoreError::ConnectionPoolError(r2d2_error) => Self::BackendError(format!(
+                "Could not get database connection from pool: {}",
+                r2d2_error
+            )),
             StoreError::ConnectionError(diesel_error) => {
                 Self::BackendError(diesel_error.to_string())
             }
@@ -91,10 +92,10 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new() -> Self {
-        Self {
-            db_pool: crate::database::DbPool::new(),
-        }
+    pub fn new() -> Result<Self, String> {
+        Ok(Self {
+            db_pool: crate::database::DbPool::new()?,
+        })
     }
 }
 
@@ -112,7 +113,7 @@ async fn get_entry(
     state: web::Data<AppState>,
 ) -> Result<web::Json<FullEntry>, APIError> {
     let (_event_id, entry_id) = path.into_inner();
-    let entry = web::block(move || state.db_pool.get_store().get_entry(entry_id)).await??;
+    let entry = web::block(move || state.db_pool.get_store()?.get_entry(entry_id)).await??;
     Ok(web::Json(entry))
 }
 
@@ -123,9 +124,7 @@ async fn create_or_update_entry(
     state: web::Data<AppState>,
 ) -> Result<&'static str, APIError> {
     let (_event_id, _entry_id) = path.into_inner(); // TODO check?
-    web::block(move || state.db_pool.get_store().create_entry(data.0)).await??;
+    web::block(move || state.db_pool.get_store()?.create_entry(data.0)).await??;
 
     Ok("")
 }
-
-

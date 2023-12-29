@@ -1,27 +1,27 @@
-use std::env;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use dotenvy::dotenv;
 
 use super::{models, schema, KueaPlanStore, StoreError};
 
-pub struct PgDataStore<'a> {
-    connection: &'a mut PgConnection,
+pub struct PgDataStore {
+    connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
 }
 
-impl<'a> PgDataStore<'a> {
-    pub fn with_connection(connection: &'a mut PgConnection) -> Self {
+impl PgDataStore {
+    pub fn with_pooled_connection(
+        connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
+    ) -> Self {
         return Self { connection };
     }
 }
 
-impl<'a> KueaPlanStore for PgDataStore<'a> {
+impl KueaPlanStore for PgDataStore {
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
         use schema::events::dsl::*;
 
         events
             .filter(id.eq(event_id))
-            .first::<models::Event>(self.connection)
+            .first::<models::Event>(&mut self.connection)
             .map_err(|e| e.into())
     }
 
@@ -109,7 +109,7 @@ impl<'a> KueaPlanStore for PgDataStore<'a> {
 
         let count = diesel::delete(entries)
             .filter(id.eq(entry_id))
-            .execute(self.connection)?;
+            .execute(&mut self.connection)?;
         // entry_room assignments are automatically deleted via CASCADE
 
         if count == 0 {
@@ -136,11 +136,4 @@ fn insert_entry_rooms(
         )
         .execute(connection)
         .map(|_| ())
-}
-
-fn establish_connection() -> Result<PgConnection, StoreError> {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).map_err(|e| e.into())
 }

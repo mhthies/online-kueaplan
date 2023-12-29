@@ -2,7 +2,6 @@ use std::env;
 use std::fmt::Debug;
 
 use diesel::PgConnection;
-use dotenvy::dotenv;
 
 pub mod models;
 mod schema;
@@ -23,30 +22,25 @@ pub struct DbPool {
 }
 
 impl DbPool {
-    pub fn new() -> Self {
-        dotenv().ok();
+    pub fn new() -> Result<Self, String> {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
-        Self {
+        Ok(Self {
             pool: diesel::r2d2::Pool::builder()
                 .test_on_check_out(true)
                 .build(connection_manager)
-                .expect("Could not build connection pool"),
-        }
+                .map_err(|e| format!("Could not create database connection pool: {}", e))?,
+        })
     }
 
-    pub fn get_store<'a>(&self) -> impl KueaPlanStore + 'a {
-        // TODO better error handling
-        store::PgDataStore::with_pooled_connection(
-            self.pool
-                .get()
-                .expect("couldn't get db connection from pool"),
-        )
+    pub fn get_store<'a>(&self) -> Result<impl KueaPlanStore + 'a, StoreError> {
+        Ok(store::PgDataStore::with_pooled_connection(self.pool.get()?))
     }
 }
 
 #[derive(Debug)]
 pub enum StoreError {
+    ConnectionPoolError(String),
     ConnectionError(diesel::result::ConnectionError),
     QueryError(diesel::result::Error),
     NotExisting,
@@ -61,6 +55,12 @@ impl From<diesel::result::Error> for StoreError {
     }
 }
 
+impl From<r2d2::Error> for StoreError {
+    fn from(error: r2d2::Error) -> Self {
+        return Self::ConnectionPoolError(error.to_string());
+    }
+}
+
 impl From<diesel::result::ConnectionError> for StoreError {
     fn from(error: diesel::result::ConnectionError) -> Self {
         Self::ConnectionError(error)
@@ -70,6 +70,9 @@ impl From<diesel::result::ConnectionError> for StoreError {
 impl std::fmt::Display for StoreError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::ConnectionPoolError(e) => {
+                write!(f, "Could not get database connection from pool: {}", e)
+            }
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::NotExisting => write!(f, "Database record does not exist."),

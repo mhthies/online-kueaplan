@@ -103,8 +103,11 @@ impl AppState {
 async fn list_entries(
     path: web::Path<i32>,
     state: web::Data<AppState>,
-) -> web::Json<Vec<FullEntry>> {
-    web::Json(vec![]) // TODO
+) -> Result<web::Json<Vec<FullEntry>>, APIError> {
+    let event_id = path.into_inner();
+    let entries = web::block(move || state.db_pool.get_store()?.get_entries(event_id)).await??;
+
+    Ok(web::Json(entries))
 }
 
 #[get("/event/{event_id}/entries/{entry_id}")]

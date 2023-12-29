@@ -3,7 +3,7 @@ debug/
 target/
 
 # Cargo.lock in the Cargo workspace
-Cargo.lock
+/Cargo.lock
 
 # Cargo.lock in the Cargo workspace
 **/*.rs.bk

@@ -1,12 +1,12 @@
 {
   "put": {
-    "operationId": "createOrUpdateRoom",
-    "summary": "Create or update a room.",
+    "operationId": "createOrUpdateCategory",
+    "summary": "Create or update a category.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
       {"$ref": "../components/sessionToken.json"},
       {
-        "name": "roomId",
+        "name": "categoryId",
         "in": "path",
         "required": true,
         "schema": {
@@ -18,22 +18,22 @@
     "requestBody": {
       "content": {
         "application/json": {
-          "schema": {"$ref": "../schema/Room.json"}
+          "schema": {"$ref": "../schema/Category.json"}
         }
       },
       "required": true
     },
     "responses": {
       "201": {
-        "description": "Creating the new room was successful."
+        "description": "Creating the new category was successful."
       },
       "204": {
-        "description": "Updating the room was successful."
+        "description": "Updating the category was successful."
       },
       "400": {"$ref": "../components/badJSONError.json"},
       "403": {"$ref": "../components/authorizationError.json"},
       "404": {
-        "description": "The event with given eventId does not exist; so creating/updating a room there is not possible.",
+        "description": "The event with given eventId does not exist; so creating/updating a category there is not possible.",
         "content": {
           "application/json": {
             "schema": {"$ref": "../schema/Error.json"}
@@ -46,13 +46,13 @@
     }
   },
   "delete": {
-    "operationId": "deleteRoom",
-    "summary": "Remove a room from the KüA plan. It will be deleted from the database.",
+    "operationId": "deleteCategory",
+    "summary": "Remove a category from the KüA plan. It will be removed from the database.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
       {"$ref": "../components/sessionToken.json"},
       {
-        "name": "roomId",
+        "name": "categoryId",
         "in": "path",
         "required": true,
         "schema": {
@@ -63,11 +63,11 @@
     ],
     "responses": {
       "204": {
-        "description": "Removing the room was successful."
+        "description": "Removing the category was successful."
       },
       "403": {"$ref": "../components/authorizationError.json"},
       "404": {
-        "description": "The room to be deleted does not exist or is not part of the event with given eventId.",
+        "description": "The category to be deleted does not exist or is not part of the event with given eventId.",
         "content": {
           "application/json": {
             "schema": {"$ref": "../schema/Error.json"}
@@ -75,7 +75,7 @@
         }
       },
       "409": {
-        "description": "Deleting the room was not possible, due to conflicting entries.",
+        "description": "Deleting the category was not possible, due to conflicting entries.",
         "content": {
           "application/json": {
             "schema": {"$ref": "../schema/Error.json"}

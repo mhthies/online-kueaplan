@@ -52,8 +52,9 @@
             "format": "uuid"
         },
         "category": {
-            "description": "Unique identifier of a category",
-            "type": "integer"
+            "description": "Unique identifier of a Category of this event (optional)",
+            "type": "string",
+            "format": "uuid"
         }
     },
     "required": ["id", "title", "room", "begin", "end"]

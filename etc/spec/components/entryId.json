@@ -1,0 +1,10 @@
+{
+  "name": "entryId",
+  "in": "path",
+  "description": "ID of an Entry in the KüA plan.",
+  "required": true,
+  "schema": {
+    "type": "string",
+    "format": "uuid"
+  }
+}

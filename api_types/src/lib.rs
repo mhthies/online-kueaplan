@@ -29,7 +29,7 @@ pub struct Entry {
     #[serde(default,skip_serializing_if="Option::is_none",rename="residueOf")]
     pub residue_of: Option<Uuid>,
     #[serde(default,skip_serializing_if="Option::is_none")]
-    pub category: Option<i32>,
+    pub category: Option<Uuid>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -37,6 +37,14 @@ pub struct Room {
     pub id: Uuid,
     pub title: String,
     pub description: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Category {
+    pub id: Uuid,
+    pub title: String,
+    pub icon: String,
+    pub color: String,
 }
 
 #[derive(Serialize, Deserialize)]

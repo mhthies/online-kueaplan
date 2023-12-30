@@ -23,6 +23,11 @@
             "description": "New list of rooms. If this property exists, all rooms shall be replaced by this list.",
             "type": "array",
             "items": {"$ref": "./Room.json"}
+        },
+        "categories": {
+            "description": "New list of categories. If this property exists, all categories shall be replaced by this list.",
+            "type": "array",
+            "items": {"$ref": "./Category.json"}
         }
     },
     "required": ["changedEntries", "deletedEntries"]

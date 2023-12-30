@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/Category.json",
+    "title": "Category description",
+    "description": "A category/kind/genre of KüAs, with name, icon, and a display color, e.g. music, sports, games, talk",
+    "type": "object",
+
+    "properties": {
+        "id": {
+            "description": "The unique identifier of the category",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "The (long) name of the category",
+            "type": "string"
+        },
+        "icon": {
+            "description": "An icon (emoji) or abbreviation of the category",
+            "type": "string"
+        },
+        "color": {
+            "description": "Hexadecimal color code to use as display color for KüAs of this category",
+            "type": "string",
+            "format": "hexcolor",
+            "pattern": "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
+        }
+    },
+    "required": ["id", "title", "icon", "color"]
+}

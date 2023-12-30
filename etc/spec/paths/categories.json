@@ -1,0 +1,33 @@
+{
+  "get": {
+    "operationId": "listCategories",
+    "summary": "Get the list of all categories for this event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/sessionToken.json"}
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the list of categories.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {"$ref": "../schema/Category.json"}
+            }
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

@@ -19,6 +19,16 @@
             "description": "A longer description of the planned KüA.",
             "type": "string"
         },
+        "begin": {
+            "description": "The begin of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "description": "The end of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
         "room": {
             "description": "List of unique identifiers of the rooms this entry is valid for.",
             "type": "array",
@@ -46,5 +56,5 @@
             "type": "integer"
         }
     },
-    "required": ["id", "title", "room"]
+    "required": ["id", "title", "room", "begin", "end"]
 }

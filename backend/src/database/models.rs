@@ -1,4 +1,4 @@
-use chrono::naive::NaiveDate;
+use chrono::{naive::NaiveDate, DateTime};
 use diesel::prelude::*;
 use uuid::Uuid;
 
@@ -50,12 +50,12 @@ impl FullEntry {
         Self {
             entry: Entry {
                 id: entry.id,
-                description: entry.description,
-                event_id: event_id,
                 title: entry.title,
+                description: entry.description,
                 responsible_person: entry.responsible_person,
                 is_blocker: entry.is_blocker,
                 residue_of: entry.residue_of,
+                event_id,
             },
             room_ids: entry.room,
         }
@@ -64,12 +64,14 @@ impl FullEntry {
     pub fn into_api(self) -> kueaplan_api_types::Entry {
         kueaplan_api_types::Entry {
             id: self.entry.id,
-            description: self.entry.description,
             title: self.entry.title,
+            description: self.entry.description,
+            room: self.room_ids,
+            begin: DateTime::from_timestamp(0, 0).unwrap(),  // TODO
+            end: DateTime::from_timestamp(0, 0).unwrap(),  // TODO
             responsible_person: self.entry.responsible_person,
             is_blocker: self.entry.is_blocker,
             residue_of: self.entry.residue_of,
-            room: self.room_ids,
             category: None,  // TODO
         }
     }

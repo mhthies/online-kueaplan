@@ -1,6 +1,6 @@
 
 use uuid::Uuid;
-use chrono::naive::NaiveDate;
+use chrono::{naive::NaiveDate, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -20,6 +20,8 @@ pub struct Entry {
     #[serde(default)]
     pub description: String,
     pub room: Vec<Uuid>,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
     #[serde(default,rename="responsiblePerson")]
     pub responsible_person: String,
     #[serde(default,skip_serializing_if="not",rename="isBlocker")]

@@ -49,7 +49,7 @@ impl ResponseError for APIError {
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::json())
             .json(json!({
-                "status": self.status_code().as_u16(),
+                "httpCode": self.status_code().as_u16(),
                 "message": message
             }))
     }
@@ -103,9 +103,13 @@ impl AppState {
 async fn list_entries(
     path: web::Path<i32>,
     state: web::Data<AppState>,
-) -> Result<web::Json<Vec<FullEntry>>, APIError> {
+) -> Result<web::Json<Vec<kueaplan_api_types::Entry>>, APIError> {
     let event_id = path.into_inner();
-    let entries = web::block(move || state.db_pool.get_store()?.get_entries(event_id)).await??;
+    let entries = web::block(move || state.db_pool.get_store()?.get_entries(event_id))
+        .await??
+        .into_iter()
+        .map(|e| e.into_api())
+        .collect();
 
     Ok(web::Json(entries))
 }
@@ -114,20 +118,28 @@ async fn list_entries(
 async fn get_entry(
     path: web::Path<(i32, Uuid)>,
     state: web::Data<AppState>,
-) -> Result<web::Json<FullEntry>, APIError> {
+) -> Result<web::Json<kueaplan_api_types::Entry>, APIError> {
     let (_event_id, entry_id) = path.into_inner();
-    let entry = web::block(move || state.db_pool.get_store()?.get_entry(entry_id)).await??;
+    let entry = web::block(move || state.db_pool.get_store()?.get_entry(entry_id))
+        .await??
+        .into_api();
     Ok(web::Json(entry))
 }
 
 #[put("/event/{event_id}/entries/{entry_id}")]
 async fn create_or_update_entry(
     path: web::Path<(i32, Uuid)>,
-    data: web::Json<FullEntry>,
+    data: web::Json<kueaplan_api_types::Entry>,
     state: web::Data<AppState>,
 ) -> Result<&'static str, APIError> {
-    let (_event_id, _entry_id) = path.into_inner(); // TODO check?
-    web::block(move || state.db_pool.get_store()?.create_entry(data.0)).await??;
+    let (event_id, _entry_id) = path.into_inner(); // TODO check?
+    web::block(move || {
+        state
+            .db_pool
+            .get_store()?
+            .create_entry(FullEntry::from_api(data.into_inner(), event_id))
+    })
+    .await??;
 
     Ok("")
 }

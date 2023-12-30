@@ -7,15 +7,16 @@ edition = "2021"
 
 [dependencies]
 diesel = { version = "^2.0.0", features = ["postgres", "uuid", "chrono", "r2d2"] }
-uuid = { version = "^1.1.2", features = ["serde"] }
+uuid = { version = "^1.1.2" }
 chrono = { version = "^0.4.22"}
 dotenvy = "0.15.5"
-serde = { version = "^1.0", features = ["derive"] }
+serde = { version = "^1.0" }
 serde_json = { version = "^1.0.91" }
 actix-web = "4"
 log = "^0.4"
 env_logger = "^0.10"
 r2d2 = "^0.8"
+kueaplan_api_types = {path = "../api_types"}
 
 [[bin]]
 name = "kueaplan-web"

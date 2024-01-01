@@ -31,6 +31,7 @@ impl KueaPlanStore for PgDataStore {
         self.connection.transaction(|connection| {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
+                .filter(deleted.eq(false))
                 .load::<models::Entry>(connection)?;
 
             let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
@@ -56,6 +57,11 @@ impl KueaPlanStore for PgDataStore {
             let entry = entries
                 .filter(id.eq(entry_id))
                 .first::<models::Entry>(connection)?;
+
+            if entry.deleted {
+                return Err(StoreError::NotExisting);
+            }
+
             let room_ids = entry_rooms::table
                 .filter(entry_rooms::dsl::entry_id.eq(entry.id))
                 .select(entry_rooms::dsl::room_id)
@@ -106,17 +112,16 @@ impl KueaPlanStore for PgDataStore {
         use schema::entries::dsl::*;
 
         // FIXME we don't want to actually delete but set a 'deleted' flag and update the last-modified timestamp
-
-        let count = diesel::delete(entries)
-            .filter(id.eq(entry_id))
-            .execute(&mut self.connection)?;
-        // entry_room assignments are automatically deleted via CASCADE
-
+        
+        let count = diesel::update(entries)
+                .filter(id.eq(entry_id))
+                .set(deleted.eq(false))
+                .execute(&mut self.connection)?;
         if count == 0 {
-            Err(StoreError::NotExisting)
-        } else {
-            Ok(())
+            return Err(StoreError::NotExisting);
         }
+
+        Ok(())
     }
 }
 

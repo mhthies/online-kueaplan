@@ -11,8 +11,8 @@ pub trait KueaPlanStore {
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError>;
     fn get_entries(&mut self, the_event_id: i32) -> Result<Vec<models::FullEntry>, StoreError>;
     fn get_entry(&mut self, entry_id: uuid::Uuid) -> Result<models::FullEntry, StoreError>;
-    fn create_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError>;
-    fn update_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError>;
+    fn create_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
+    fn update_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
     fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError>;
 }
 

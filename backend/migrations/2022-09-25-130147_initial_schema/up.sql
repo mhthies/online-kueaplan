@@ -16,15 +16,13 @@ CREATE TABLE entries (
 );
 CREATE INDEX ON entries (event_id);
 
--- TODO: Last updated, deleted
-
 CREATE TABLE rooms (
     id UUID PRIMARY KEY,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     event_id SERIAL REFERENCES events(id)
 );
-CREATE INDEX ON entries (event_id);
+CREATE INDEX ON rooms (event_id);
 
 CREATE TABLE entry_rooms (
     entry_id UUID REFERENCES entries(id) ON DELETE CASCADE,

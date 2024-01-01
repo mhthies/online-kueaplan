@@ -108,7 +108,7 @@ async fn list_entries(
     let entries = web::block(move || state.db_pool.get_store()?.get_entries(event_id))
         .await??
         .into_iter()
-        .map(|e| e.into_api())
+        .map(|e| e.into())
         .collect();
 
     Ok(web::Json(entries))
@@ -122,7 +122,7 @@ async fn get_entry(
     let (_event_id, entry_id) = path.into_inner();
     let entry = web::block(move || state.db_pool.get_store()?.get_entry(entry_id))
         .await??
-        .into_api();
+        .into();
     Ok(web::Json(entry))
 }
 
@@ -137,7 +137,7 @@ async fn create_or_update_entry(
         state
             .db_pool
             .get_store()?
-            .create_entry(FullEntry::from_api(data.into_inner(), event_id))
+            .create_entry(FullNewEntry::from_api(data.into_inner(), event_id))
     })
     .await??;
 

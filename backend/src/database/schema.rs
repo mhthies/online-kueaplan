@@ -1,6 +1,19 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    categories (id) {
+        id -> Uuid,
+        title -> Varchar,
+        icon -> Varchar,
+        #[max_length = 6]
+        color -> Bpchar,
+        event_id -> Int4,
+        deleted -> Bool,
+        last_updated -> Timestamptz,
+    }
+}
+
+diesel::table! {
     entries (id) {
         id -> Uuid,
         title -> Varchar,
@@ -9,6 +22,11 @@ diesel::table! {
         is_blocker -> Bool,
         residue_of -> Nullable<Uuid>,
         event_id -> Int4,
+        begin -> Timestamptz,
+        end -> Timestamptz,
+        category -> Nullable<Uuid>,
+        deleted -> Bool,
+        last_updated -> Timestamptz,
     }
 }
 
@@ -34,15 +52,20 @@ diesel::table! {
         title -> Varchar,
         description -> Varchar,
         event_id -> Int4,
+        deleted -> Bool,
+        last_updated -> Timestamptz,
     }
 }
 
+diesel::joinable!(categories -> events (event_id));
+diesel::joinable!(entries -> categories (category));
 diesel::joinable!(entries -> events (event_id));
 diesel::joinable!(entry_rooms -> entries (entry_id));
 diesel::joinable!(entry_rooms -> rooms (room_id));
 diesel::joinable!(rooms -> events (event_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    categories,
     entries,
     entry_rooms,
     events,

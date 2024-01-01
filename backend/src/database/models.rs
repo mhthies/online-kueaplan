@@ -1,4 +1,4 @@
-use chrono::{naive::NaiveDate, DateTime};
+use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
 
@@ -10,7 +10,7 @@ pub struct Event {
     pub end_date: NaiveDate,
 }
 
-#[derive(Queryable, Insertable, AsChangeset, Identifiable)]
+#[derive(Queryable, Identifiable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct Entry {
     pub id: Uuid,
@@ -20,18 +20,57 @@ pub struct Entry {
     pub is_blocker: bool,
     pub residue_of: Option<Uuid>,
     pub event_id: i32,
-}
-
-#[derive(Queryable)]
-pub struct Room {
-    pub id: Uuid,
-    pub title: String,
-    pub description: String,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    pub category: Option<Uuid>,
+    pub deleted: bool,
+    pub last_updated: DateTime<Utc>,
 }
 
 pub struct FullEntry {
     pub entry: Entry,
     pub room_ids: Vec<Uuid>,
+}
+
+#[derive(Insertable, AsChangeset, Identifiable)]
+#[diesel(table_name=super::schema::entries)]
+pub struct NewEntry {
+    pub id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub responsible_person: String,
+    pub is_blocker: bool,
+    pub residue_of: Option<Uuid>,
+    pub event_id: i32,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    pub category: Option<Uuid>,
+}
+
+pub struct FullNewEntry {
+    pub entry: NewEntry,
+    pub room_ids: Vec<Uuid>,
+}
+
+#[derive(Queryable, Identifiable)]
+#[diesel(table_name=super::schema::rooms)]
+pub struct Room {
+    pub id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub event_id: i32,
+    pub deleted: bool,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::rooms)]
+pub struct NewRoom {
+    pub id: Uuid,
+    pub title: String,
+    pub description: String,
+    pub event_id: i32,
+    pub deleted: bool,
+    pub last_updated: DateTime<Utc>,
 }
 
 // Introduce type for Entry-Room-association, to simplify grouped retrieval of room_ids of an Entry
@@ -45,10 +84,10 @@ pub struct EntryRoomMapping {
     pub room_id: Uuid,
 }
 
-impl FullEntry {
+impl FullNewEntry {
     pub fn from_api(entry: kueaplan_api_types::Entry, event_id: i32) -> Self {
         Self {
-            entry: Entry {
+            entry: NewEntry {
                 id: entry.id,
                 title: entry.title,
                 description: entry.description,
@@ -56,23 +95,28 @@ impl FullEntry {
                 is_blocker: entry.is_blocker,
                 residue_of: entry.residue_of,
                 event_id,
+                begin: entry.begin,
+                end: entry.end,
+                category: entry.category,
             },
             room_ids: entry.room,
         }
     }
+}
 
-    pub fn into_api(self) -> kueaplan_api_types::Entry {
+impl From<FullEntry> for kueaplan_api_types::Entry {
+    fn from(value: FullEntry) -> Self {
         kueaplan_api_types::Entry {
-            id: self.entry.id,
-            title: self.entry.title,
-            description: self.entry.description,
-            room: self.room_ids,
-            begin: DateTime::from_timestamp(0, 0).unwrap(),  // TODO
-            end: DateTime::from_timestamp(0, 0).unwrap(),  // TODO
-            responsible_person: self.entry.responsible_person,
-            is_blocker: self.entry.is_blocker,
-            residue_of: self.entry.residue_of,
-            category: None,  // TODO
+            id: value.entry.id,
+            title: value.entry.title,
+            description: value.entry.description,
+            room: value.room_ids,
+            begin: value.entry.begin,
+            end: value.entry.end,
+            responsible_person: value.entry.responsible_person,
+            is_blocker: value.entry.is_blocker,
+            residue_of: value.entry.residue_of,
+            category: value.entry.category,
         }
     }
 }

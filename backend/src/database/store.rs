@@ -65,7 +65,7 @@ impl KueaPlanStore for PgDataStore {
         })
     }
 
-    fn create_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
+    fn create_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
 
         self.connection.transaction(|connection| {
@@ -79,7 +79,7 @@ impl KueaPlanStore for PgDataStore {
         })
     }
 
-    fn update_entry(&mut self, entry: models::FullEntry) -> Result<(), StoreError> {
+    fn update_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
         use schema::entry_rooms;
 

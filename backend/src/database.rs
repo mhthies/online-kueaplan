@@ -35,7 +35,7 @@ pub trait KueaPlanStore {
 
 pub enum AccessRole {
     User,
-    Admin
+    Admin,
 }
 
 pub struct AuthToken {
@@ -46,7 +46,11 @@ pub trait AuthStore {
     type SessionToken;
 
     fn create_session() -> Result<Self::SessionToken, StoreError>;
-    fn authenticate(event_id: i32, passphrase: &str, session: &Self::SessionToken) -> Result<(), StoreError>;
+    fn authenticate(
+        event_id: i32,
+        passphrase: &str,
+        session: &Self::SessionToken,
+    ) -> Result<(), StoreError>;
     fn get_auth_token(session: &Self::SessionToken) -> Result<AuthToken, StoreError>;
     fn logout(session: &Self::SessionToken) -> Result<(), StoreError>;
 }

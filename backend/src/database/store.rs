@@ -24,7 +24,7 @@ impl KueaPlanStore for PgDataStore {
             .first::<models::Event>(&mut self.connection)
             .map_err(|e| e.into())
     }
-    
+
     fn create_event(&mut self, event: models::NewEvent) -> Result<i32, StoreError> {
         use schema::events::dsl::*;
 
@@ -119,18 +119,18 @@ impl KueaPlanStore for PgDataStore {
 
     fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
-        
+
         let count = diesel::update(entries)
-                .filter(id.eq(entry_id))
-                .set(deleted.eq(true))
-                .execute(&mut self.connection)?;
+            .filter(id.eq(entry_id))
+            .set(deleted.eq(true))
+            .execute(&mut self.connection)?;
         if count == 0 {
             return Err(StoreError::NotExisting);
         }
 
         Ok(())
     }
-    
+
     fn get_rooms(&mut self, the_event_id: i32) -> Result<Vec<models::Room>, StoreError> {
         use schema::rooms::dsl::*;
 
@@ -140,17 +140,17 @@ impl KueaPlanStore for PgDataStore {
             .filter(deleted.eq(false))
             .load::<models::Room>(&mut self.connection)?)
     }
-    
+
     fn create_room(&mut self, room: models::NewRoom) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
-    
+
         diesel::insert_into(rooms)
             .values(&room)
             .execute(&mut self.connection)?;
 
         Ok(())
     }
-    
+
     fn update_room(&mut self, room: models::NewRoom) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
 
@@ -164,21 +164,21 @@ impl KueaPlanStore for PgDataStore {
         }
         Ok(())
     }
-    
+
     fn delete_room(&mut self, room_id: uuid::Uuid) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
 
         let count = diesel::update(rooms)
-                .filter(id.eq(room_id))
-                .set(deleted.eq(true))
-                .execute(&mut self.connection)?;
+            .filter(id.eq(room_id))
+            .set(deleted.eq(true))
+            .execute(&mut self.connection)?;
         if count == 0 {
             return Err(StoreError::NotExisting);
         }
 
         Ok(())
     }
-    
+
     fn get_categories(&mut self, the_event_id: i32) -> Result<Vec<models::Category>, StoreError> {
         use schema::categories::dsl::*;
 
@@ -188,17 +188,17 @@ impl KueaPlanStore for PgDataStore {
             .filter(deleted.eq(false))
             .load::<models::Category>(&mut self.connection)?)
     }
-    
+
     fn create_category(&mut self, category: models::NewCategory) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
-    
+
         diesel::insert_into(categories)
             .values(&category)
             .execute(&mut self.connection)?;
 
         Ok(())
     }
-    
+
     fn update_category(&mut self, category: models::NewCategory) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
@@ -212,14 +212,14 @@ impl KueaPlanStore for PgDataStore {
         }
         Ok(())
     }
-    
+
     fn delete_category(&mut self, category_id: uuid::Uuid) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
         let count = diesel::update(categories)
-                .filter(id.eq(category_id))
-                .set(deleted.eq(true))
-                .execute(&mut self.connection)?;
+            .filter(id.eq(category_id))
+            .set(deleted.eq(true))
+            .execute(&mut self.connection)?;
         if count == 0 {
             return Err(StoreError::NotExisting);
         }

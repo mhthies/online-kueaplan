@@ -33,6 +33,24 @@ pub trait KueaPlanStore {
     fn delete_category(&mut self, category_id: CategoryId) -> Result<(), StoreError>;
 }
 
+pub enum AccessRole {
+    User,
+    Admin
+}
+
+pub struct AuthToken {
+    events: Vec<(i32, AccessRole)>,
+}
+
+pub trait AuthStore {
+    type SessionToken;
+
+    fn create_session() -> Result<Self::SessionToken, StoreError>;
+    fn authenticate(event_id: i32, passphrase: &str, session: &Self::SessionToken) -> Result<(), StoreError>;
+    fn get_auth_token(session: &Self::SessionToken) -> Result<AuthToken, StoreError>;
+    fn logout(session: &Self::SessionToken) -> Result<(), StoreError>;
+}
+
 #[derive(Clone)]
 pub struct DbPool {
     pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>,

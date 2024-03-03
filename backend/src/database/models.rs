@@ -84,6 +84,29 @@ pub struct EntryRoomMapping {
     pub room_id: Uuid,
 }
 
+#[derive(Queryable, Identifiable)]
+#[diesel(table_name=super::schema::categories)]
+pub struct Category {
+    pub id: Uuid,
+    pub title: String,
+    pub icon: String,
+    pub color: String,
+    pub event_id: i32,
+    pub deleted: bool,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::categories)]
+pub struct NewCategory {
+    pub id: Uuid,
+    pub title: String,
+    pub icon: String,
+    pub color: String,
+    pub event_id: i32,
+    pub deleted: bool,
+    pub last_updated: DateTime<Utc>,
+}
+
 impl FullNewEntry {
     pub fn from_api(entry: kueaplan_api_types::Entry, event_id: i32) -> Self {
         Self {

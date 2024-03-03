@@ -9,11 +9,23 @@ mod store;
 
 pub trait KueaPlanStore {
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError>;
+    fn create_event(&mut self, event: models::Event) -> Result<i32, StoreError>;
+
     fn get_entries(&mut self, the_event_id: i32) -> Result<Vec<models::FullEntry>, StoreError>;
     fn get_entry(&mut self, entry_id: uuid::Uuid) -> Result<models::FullEntry, StoreError>;
     fn create_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
     fn update_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
     fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError>;
+
+    fn get_rooms(&mut self, event_id: i32) -> Result<Vec<models::Room>, StoreError>;
+    fn create_room(&mut self, room: models::NewRoom) -> Result<(), StoreError>;
+    fn update_room(&mut self, room: models::NewRoom) -> Result<(), StoreError>;
+    fn delete_room(&mut self, room_id: uuid::Uuid) -> Result<(), StoreError>;
+
+    fn get_categories(&mut self, event_id: i32) -> Result<Vec<models::Category>, StoreError>;
+    fn create_category(&mut self, category: models::NewCategory) -> Result<(), StoreError>;
+    fn update_category(&mut self, category: models::NewCategory) -> Result<(), StoreError>;
+    fn delete_category(&mut self, category_id: uuid::Uuid) -> Result<(), StoreError>;
 }
 
 #[derive(Clone)]

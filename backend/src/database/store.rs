@@ -119,12 +119,10 @@ impl KueaPlanStore for PgDataStore {
 
     fn delete_entry(&mut self, entry_id: uuid::Uuid) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
-
-        // FIXME we don't want to actually delete but set a 'deleted' flag and update the last-modified timestamp
         
         let count = diesel::update(entries)
                 .filter(id.eq(entry_id))
-                .set(deleted.eq(false))
+                .set(deleted.eq(true))
                 .execute(&mut self.connection)?;
         if count == 0 {
             return Err(StoreError::NotExisting);

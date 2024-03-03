@@ -14,7 +14,7 @@ type CategoryId = uuid::Uuid;
 
 pub trait KueaPlanStore {
     fn get_event(&mut self, event_id: EventId) -> Result<models::Event, StoreError>;
-    fn create_event(&mut self, event: models::Event) -> Result<EventId, StoreError>;
+    fn create_event(&mut self, event: models::NewEvent) -> Result<EventId, StoreError>;
 
     fn get_entries(&mut self, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
     fn get_entry(&mut self, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;

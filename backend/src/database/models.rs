@@ -10,6 +10,14 @@ pub struct Event {
     pub end_date: NaiveDate,
 }
 
+#[derive(Insertable)]
+#[diesel(table_name=super::schema::events)]
+pub struct NewEvent {
+    pub title: String,
+    pub begin_date: NaiveDate,
+    pub end_date: NaiveDate,
+}
+
 #[derive(Queryable, Identifiable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct Entry {
@@ -52,14 +60,13 @@ pub struct FullNewEntry {
     pub room_ids: Vec<Uuid>,
 }
 
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::rooms)]
 pub struct Room {
     pub id: Uuid,
     pub title: String,
     pub description: String,
     pub event_id: i32,
-    pub deleted: bool,
 }
 
 #[derive(Insertable, AsChangeset)]
@@ -69,8 +76,6 @@ pub struct NewRoom {
     pub title: String,
     pub description: String,
     pub event_id: i32,
-    pub deleted: bool,
-    pub last_updated: DateTime<Utc>,
 }
 
 // Introduce type for Entry-Room-association, to simplify grouped retrieval of room_ids of an Entry
@@ -84,7 +89,7 @@ pub struct EntryRoomMapping {
     pub room_id: Uuid,
 }
 
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::categories)]
 pub struct Category {
     pub id: Uuid,
@@ -92,7 +97,6 @@ pub struct Category {
     pub icon: String,
     pub color: String,
     pub event_id: i32,
-    pub deleted: bool,
 }
 
 #[derive(Insertable, AsChangeset)]
@@ -103,8 +107,6 @@ pub struct NewCategory {
     pub icon: String,
     pub color: String,
     pub event_id: i32,
-    pub deleted: bool,
-    pub last_updated: DateTime<Utc>,
 }
 
 impl FullNewEntry {

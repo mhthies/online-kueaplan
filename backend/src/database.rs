@@ -1,5 +1,6 @@
 use std::env;
 use std::fmt::Debug;
+use std::str::FromStr;
 
 use diesel::PgConnection;
 
@@ -13,46 +14,56 @@ type RoomId = uuid::Uuid;
 type CategoryId = uuid::Uuid;
 
 pub trait KueaPlanStore {
-    fn get_event(&mut self, event_id: EventId) -> Result<models::Event, StoreError>;
-    fn create_event(&mut self, event: models::NewEvent) -> Result<EventId, StoreError>;
+    fn get_event(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<models::Event, StoreError>;
+    fn create_event(&mut self, auth_token: &AuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
 
-    fn get_entries(&mut self, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
-    fn get_entry(&mut self, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;
-    fn create_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
-    fn update_entry(&mut self, entry: models::FullNewEntry) -> Result<(), StoreError>;
-    fn delete_entry(&mut self, entry_id: EntryId) -> Result<(), StoreError>;
+    fn get_entries(&mut self, auth_token: &AuthToken, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
+    fn get_entry(&mut self, auth_token: &AuthToken, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;
+    fn create_entry(&mut self, auth_token: &AuthToken, entry: models::FullNewEntry) -> Result<(), StoreError>;
+    fn update_entry(&mut self, auth_token: &AuthToken, entry: models::FullNewEntry) -> Result<(), StoreError>;
+    fn delete_entry(&mut self, auth_token: &AuthToken, event_id: EventId, entry_id: EntryId) -> Result<(), StoreError>;
 
-    fn get_rooms(&mut self, event_id: EventId) -> Result<Vec<models::Room>, StoreError>;
-    fn create_room(&mut self, room: models::NewRoom) -> Result<(), StoreError>;
-    fn update_room(&mut self, room: models::NewRoom) -> Result<(), StoreError>;
-    fn delete_room(&mut self, room_id: RoomId) -> Result<(), StoreError>;
+    fn get_rooms(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<Vec<models::Room>, StoreError>;
+    fn create_room(&mut self, auth_token: &AuthToken, room: models::NewRoom) -> Result<(), StoreError>;
+    fn update_room(&mut self, auth_token: &AuthToken, room: models::NewRoom) -> Result<(), StoreError>;
+    fn delete_room(&mut self, auth_token: &AuthToken, event_id: EventId, room_id: RoomId) -> Result<(), StoreError>;
 
-    fn get_categories(&mut self, event_id: EventId) -> Result<Vec<models::Category>, StoreError>;
-    fn create_category(&mut self, category: models::NewCategory) -> Result<(), StoreError>;
-    fn update_category(&mut self, category: models::NewCategory) -> Result<(), StoreError>;
-    fn delete_category(&mut self, category_id: CategoryId) -> Result<(), StoreError>;
+    fn get_categories(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<Vec<models::Category>, StoreError>;
+    fn create_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
+    fn update_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
+    fn delete_category(&mut self, auth_token: &AuthToken, event_id: EventId, category_id: CategoryId) -> Result<(), StoreError>;
+}
+
+pub trait AuthStore {
+    fn create_session(&mut self) -> Result<String, StoreError>;
+    fn authenticate(
+        &mut self,
+        event_id: i32,
+        passphrase: &str,
+        session: &str,
+    ) -> Result<(), StoreError>;
+    fn get_auth_token(&mut self, session: &str) -> Result<AuthToken, StoreError>;
+    fn logout(&mut self, session: &str) -> Result<(), StoreError>;
 }
 
 pub enum AccessRole {
     User,
-    Admin,
+    Orga,
 }
 
 pub struct AuthToken {
     events: Vec<(i32, AccessRole)>,
+    admin: bool,
 }
 
-pub trait AuthStore {
-    type SessionToken;
+impl AuthToken {
+    fn check_event_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> bool {
+        todo!()
+    }
 
-    fn create_session() -> Result<Self::SessionToken, StoreError>;
-    fn authenticate(
-        event_id: i32,
-        passphrase: &str,
-        session: &Self::SessionToken,
-    ) -> Result<(), StoreError>;
-    fn get_auth_token(session: &Self::SessionToken) -> Result<AuthToken, StoreError>;
-    fn logout(session: &Self::SessionToken) -> Result<(), StoreError>;
+    fn check_admin_privilege(&self, ) -> bool {
+        todo!()
+    }
 }
 
 #[derive(Clone)]
@@ -72,7 +83,7 @@ impl DbPool {
         })
     }
 
-    pub fn get_store<'a>(&self) -> Result<impl KueaPlanStore + 'a, StoreError> {
+    pub fn get_store<'a>(&self) -> Result<impl KueaPlanStore + AuthStore + 'a, StoreError> {
         Ok(store::PgDataStore::with_pooled_connection(self.pool.get()?))
     }
 }
@@ -83,6 +94,8 @@ pub enum StoreError {
     ConnectionError(diesel::result::ConnectionError),
     QueryError(diesel::result::Error),
     NotExisting,
+    PermissionDenied,
+    InvalidSession,
 }
 
 impl From<diesel::result::Error> for StoreError {
@@ -114,7 +127,9 @@ impl std::fmt::Display for StoreError {
             }
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
-            Self::NotExisting => write!(f, "Database record does not exist."),
+            Self::NotExisting => f.write_str("Database record does not exist."),
+            Self::PermissionDenied => f.write_str("Client is not authorized to perform this action"),
+            Self::InvalidSession => f.write_str("Session token provided by client or session data is invalid"),
         }
     }
 }

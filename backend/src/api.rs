@@ -10,7 +10,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::database::models::*;
-use crate::database::{KueaPlanStore, StoreError};
+use crate::database::{AuthStore, KueaPlanStore, StoreError};
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(list_entries)
@@ -21,6 +21,9 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 #[derive(Debug)]
 enum APIError {
     NotExisting,
+    PermissionDenied,
+    NoSessionToken,
+    InvalidSessionToken,
     BackendError(String),
     InternalError(String),
 }
@@ -29,14 +32,23 @@ impl Display for APIError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotExisting => f.write_str("Element does not exist")?,
+            Self::PermissionDenied => {
+                f.write_str("Client is not authorized to perform this action")?
+            },
+            Self::NoSessionToken => {
+                f.write_str("This action requires authentication, but client did not send authentication session token.")?
+            },
+            Self::InvalidSessionToken => {
+                f.write_str("This action requires authentication, but client authentication session given by the client is not valid.")?
+            },
             Self::BackendError(s) => {
                 f.write_str("Database error: ")?;
                 f.write_str(s)?;
-            }
+            },
             Self::InternalError(s) => {
                 f.write_str("Internal error: ")?;
                 f.write_str(s)?;
-            }
+            },
         };
         Ok(())
     }
@@ -56,6 +68,9 @@ impl ResponseError for APIError {
     fn status_code(&self) -> StatusCode {
         match self {
             Self::NotExisting => StatusCode::NOT_FOUND,
+            Self::PermissionDenied => StatusCode::FORBIDDEN,
+            Self::NoSessionToken => StatusCode::FORBIDDEN,
+            Self::InvalidSessionToken => StatusCode::FORBIDDEN,
             Self::BackendError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -74,6 +89,8 @@ impl From<StoreError> for APIError {
             }
             StoreError::QueryError(diesel_error) => Self::BackendError(diesel_error.to_string()),
             StoreError::NotExisting => Self::NotExisting,
+            StoreError::PermissionDenied => Self::PermissionDenied,
+            StoreError::InvalidSession => Self::InvalidSessionToken,
         }
     }
 }
@@ -99,17 +116,56 @@ impl AppState {
     }
 }
 
+struct SessionTokenHeader(String);
+
+impl actix_web::http::header::TryIntoHeaderValue for SessionTokenHeader {
+    type Error = actix_web::http::header::InvalidHeaderValue;
+
+    fn try_into_value(self) -> Result<actix_web::http::header::HeaderValue, Self::Error> {
+        Ok(self.0.parse()?)
+    }
+}
+
+impl actix_web::http::header::Header for SessionTokenHeader {
+    fn name() -> actix_web::http::header::HeaderName {
+        "X-SESSION-TOKEN"
+            .try_into()
+            .expect("Session Token Header name should be a valid header name")
+    }
+
+    fn parse<M: actix_web::HttpMessage>(msg: &M) -> Result<Self, actix_web::error::ParseError> {
+        Ok(Self(
+            msg.headers()
+                .get(Self::name())
+                .ok_or(actix_web::error::ParseError::Header)?
+                .to_str()
+                .unwrap_or("")
+                .to_owned(),
+        ))
+    }
+}
+
 #[get("/event/{event_id}/entries")]
 async fn list_entries(
     path: web::Path<i32>,
     state: web::Data<AppState>,
+    session_token: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<web::Json<Vec<kueaplan_api_types::Entry>>, APIError> {
     let event_id = path.into_inner();
-    let entries = web::block(move || state.db_pool.get_store()?.get_entries(event_id))
-        .await??
-        .into_iter()
-        .map(|e| e.into())
-        .collect();
+    let entries = web::block(move || -> Result<_, APIError> {
+        let mut store = state.db_pool.get_store()?;
+        let auth = store.get_auth_token(
+            &session_token
+                .ok_or(APIError::NoSessionToken)?
+                .into_inner()
+                .0,
+        )?;
+        Ok(store.get_entries(&auth, event_id)?)
+    })
+    .await??
+    .into_iter()
+    .map(|e| e.into())
+    .collect();
 
     Ok(web::Json(entries))
 }
@@ -118,9 +174,19 @@ async fn list_entries(
 async fn get_entry(
     path: web::Path<(i32, Uuid)>,
     state: web::Data<AppState>,
+    session_token: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<web::Json<kueaplan_api_types::Entry>, APIError> {
     let (_event_id, entry_id) = path.into_inner();
-    let entry = web::block(move || state.db_pool.get_store()?.get_entry(entry_id))
+    let entry = web::block(move || -> Result<_, APIError> {
+        let mut store = state.db_pool.get_store()?;
+        let auth = store.get_auth_token(
+            &session_token
+                .ok_or(APIError::NoSessionToken)?
+                .into_inner()
+                .0,
+        )?;
+        Ok(store.get_entry(&auth, entry_id)?)
+    })
         .await??
         .into();
     Ok(web::Json(entry))
@@ -131,13 +197,18 @@ async fn create_or_update_entry(
     path: web::Path<(i32, Uuid)>,
     data: web::Json<kueaplan_api_types::Entry>,
     state: web::Data<AppState>,
+    session_token: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<&'static str, APIError> {
     let (event_id, _entry_id) = path.into_inner(); // TODO check?
-    web::block(move || {
-        state
-            .db_pool
-            .get_store()?
-            .create_entry(FullNewEntry::from_api(data.into_inner(), event_id))
+    web::block(move || -> Result<_, APIError> {
+        let mut store = state.db_pool.get_store()?;
+        let auth = store.get_auth_token(
+            &session_token
+                .ok_or(APIError::NoSessionToken)?
+                .into_inner()
+                .0,
+        )?;
+        Ok(store.create_entry(&auth, FullNewEntry::from_api(data.into_inner(), event_id))?)
     })
     .await??;
 

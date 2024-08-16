@@ -1,0 +1,23 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/AuthorizationInfo.json",
+    "title": "Authorization Information",
+    "description": "List of authorized roles for the KüA-Plan of a given event.",
+    "type": "object",
+    "properties": {
+        "authorization": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "enum": ["participant", "orga"]
+                    }
+                },
+                "required": ["role"]
+            }
+        }
+    },
+    "required": ["authorization"]
+}

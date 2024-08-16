@@ -14,8 +14,7 @@
     "version": "0.1"
   },
   "paths": {
-    "/login": {"$ref": "./paths/login.json"},
-    "/logout": {"$ref": "./paths/logout.json"},
+    "/events/{eventId}/auth": {"$ref": "./paths/auth.json"},
     "/events/{eventId}": {"$ref": "./paths/event.json"},
     "/events/{eventId}/rooms": {"$ref": "./paths/rooms.json"},
     "/event/{eventId}/rooms/{roomId}": {"$ref": "./paths/room.json"},

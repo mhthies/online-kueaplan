@@ -1,4 +1,4 @@
-use std::{fmt::Display, vec::Vec};
+use std::{env, fmt::Display, vec::Vec};
 
 use actix_web::{
     error::ResponseError,
@@ -8,7 +8,7 @@ use actix_web::{
 };
 use serde_json::json;
 use uuid::Uuid;
-
+use crate::auth_session::SessionToken;
 use crate::data_store::models::*;
 use crate::data_store::{AuthStore, KueaPlanStore, StoreError};
 
@@ -103,20 +103,34 @@ impl From<actix_web::error::BlockingError> for APIError {
     }
 }
 
+impl From<crate::auth_session::SessionError> for APIError {
+    fn from(_e: crate::auth_session::SessionError) -> Self {
+        APIError::InvalidSessionToken
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     db_pool: crate::data_store::DbPool,
+    secret: String,
 }
 
 impl AppState {
     pub fn new() -> Result<Self, String> {
         Ok(Self {
-            db_pool: crate::data_store::DbPool::new()?,
+            db_pool: crate::data_store::DbPool::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)?,
+            secret: env::var("SECRET").map_err(|_| "SECRET must be set")?.into(),
         })
     }
 }
 
 struct SessionTokenHeader(String);
+
+impl SessionTokenHeader {
+    fn session_token(&self, secret: &str) -> Result<crate::auth_session::SessionToken, crate::auth_session::SessionError> {
+        SessionToken::from_string(&self.0, secret)
+    }
+}
 
 impl actix_web::http::header::TryIntoHeaderValue for SessionTokenHeader {
     type Error = actix_web::http::header::InvalidHeaderValue;
@@ -149,17 +163,16 @@ impl actix_web::http::header::Header for SessionTokenHeader {
 async fn list_entries(
     path: web::Path<i32>,
     state: web::Data<AppState>,
-    session_token: Option<web::Header<SessionTokenHeader>>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<web::Json<Vec<kueaplan_api_types::Entry>>, APIError> {
     let event_id = path.into_inner();
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
     let entries = web::block(move || -> Result<_, APIError> {
         let mut store = state.db_pool.get_store()?;
-        let auth = store.get_auth_token(
-            &session_token
-                .ok_or(APIError::NoSessionToken)?
-                .into_inner()
-                .0,
-        )?;
+        let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.get_entries(&auth, event_id)?)
     })
     .await??
@@ -174,17 +187,16 @@ async fn list_entries(
 async fn get_entry(
     path: web::Path<(i32, Uuid)>,
     state: web::Data<AppState>,
-    session_token: Option<web::Header<SessionTokenHeader>>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<web::Json<kueaplan_api_types::Entry>, APIError> {
-    let (_event_id, entry_id) = path.into_inner();
+    let (event_id, entry_id) = path.into_inner();
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
     let entry = web::block(move || -> Result<_, APIError> {
         let mut store = state.db_pool.get_store()?;
-        let auth = store.get_auth_token(
-            &session_token
-                .ok_or(APIError::NoSessionToken)?
-                .into_inner()
-                .0,
-        )?;
+        let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.get_entry(&auth, entry_id)?)
     })
         .await??
@@ -197,17 +209,16 @@ async fn create_or_update_entry(
     path: web::Path<(i32, Uuid)>,
     data: web::Json<kueaplan_api_types::Entry>,
     state: web::Data<AppState>,
-    session_token: Option<web::Header<SessionTokenHeader>>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<&'static str, APIError> {
     let (event_id, _entry_id) = path.into_inner(); // TODO check?
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
     web::block(move || -> Result<_, APIError> {
         let mut store = state.db_pool.get_store()?;
-        let auth = store.get_auth_token(
-            &session_token
-                .ok_or(APIError::NoSessionToken)?
-                .into_inner()
-                .0,
-        )?;
+        let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.create_entry(&auth, FullNewEntry::from_api(data.into_inner(), event_id))?)
     })
     .await??;

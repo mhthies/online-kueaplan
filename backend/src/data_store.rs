@@ -1,8 +1,7 @@
-use std::env;
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use diesel::PgConnection;
+use crate::auth_session::SessionToken;
 
 pub mod models;
 mod schema;
@@ -12,10 +11,11 @@ type EventId = i32;
 type EntryId = uuid::Uuid;
 type RoomId = uuid::Uuid;
 type CategoryId = uuid::Uuid;
+pub type PassphraseId = i32;
 
 pub trait KueaPlanStore {
     fn get_event(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<models::Event, StoreError>;
-    fn create_event(&mut self, auth_token: &AuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
+    fn create_event(&mut self, auth_token: &AdminAuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
 
     fn get_entries(&mut self, auth_token: &AuthToken, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
     fn get_entry(&mut self, auth_token: &AuthToken, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;
@@ -35,36 +35,39 @@ pub trait KueaPlanStore {
 }
 
 pub trait AuthStore {
-    fn create_session(&mut self) -> Result<String, StoreError>;
-    fn authenticate(
+    /**
+     * Try to authorize for a new privilege level for the given event, using the given passphrase.
+     *
+     * On success, the given session token is updated with the new passphrase id.
+     */
+    fn authorize(
         &mut self,
         event_id: i32,
         passphrase: &str,
-        session: &str,
+        session_token: &mut SessionToken,
     ) -> Result<(), StoreError>;
-    fn get_auth_token(&mut self, session: &str) -> Result<AuthToken, StoreError>;
+    fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError>;
     fn logout(&mut self, session: &str) -> Result<(), StoreError>;
 }
 
+#[derive(Eq, PartialEq)]
 pub enum AccessRole {
     User,
     Orga,
 }
 
 pub struct AuthToken {
-    events: Vec<(i32, AccessRole)>,
-    admin: bool,
+    event_id: i32,
+    roles: Vec<AccessRole>,
 }
 
 impl AuthToken {
-    fn check_event_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> bool {
-        todo!()
-    }
-
-    fn check_admin_privilege(&self, ) -> bool {
-        todo!()
+    fn check_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> bool {
+        event_id == self.event_id && self.roles.contains(&privilege_level)
     }
 }
+
+pub struct AdminAuthToken;
 
 #[derive(Clone)]
 pub struct DbPool {
@@ -72,8 +75,7 @@ pub struct DbPool {
 }
 
 impl DbPool {
-    pub fn new() -> Result<Self, String> {
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    pub fn new(database_url: &str) -> Result<Self, String> {
         let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
         Ok(Self {
             pool: diesel::r2d2::Pool::builder()

@@ -1,11 +1,7 @@
-use std::str::FromStr;
-
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-
-use crate::data_store::AccessRole;
-
-use super::{models, schema, AuthStore, AuthToken, EventId, KueaPlanStore, StoreError};
+use crate::auth_session::{SessionToken};
+use super::{models, schema, AccessRole, AdminAuthToken, AuthStore, AuthToken, EventId, KueaPlanStore, StoreError};
 
 pub struct PgDataStore {
     connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
@@ -22,14 +18,10 @@ impl PgDataStore {
 impl KueaPlanStore for PgDataStore {
     fn get_event(
         &mut self,
-        auth_token: &AuthToken,
+        _auth_token: &AuthToken,
         event_id: i32,
     ) -> Result<models::Event, StoreError> {
         use schema::events::dsl::*;
-
-        if !auth_token.check_admin_privilege() {
-            return Err(StoreError::PermissionDenied);
-        }
 
         events
             .filter(id.eq(event_id))
@@ -39,14 +31,10 @@ impl KueaPlanStore for PgDataStore {
 
     fn create_event(
         &mut self,
-        auth_token: &AuthToken,
+        _auth_token: &AdminAuthToken,
         event: models::NewEvent,
     ) -> Result<i32, StoreError> {
         use schema::events::dsl::*;
-
-        if !auth_token.check_admin_privilege() {
-            return Err(StoreError::PermissionDenied);
-        }
 
         Ok(diesel::insert_into(events)
             .values(&event)
@@ -61,7 +49,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<Vec<models::FullEntry>, StoreError> {
         use schema::entries::dsl::*;
 
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::User) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -98,7 +86,7 @@ impl KueaPlanStore for PgDataStore {
             let entry = entries
                 .filter(id.eq(entry_id))
                 .first::<models::Entry>(connection)?;
-            if !auth_token.check_event_privilege(entry.event_id, AccessRole::User) {
+            if !auth_token.check_privilege(entry.event_id, AccessRole::User) {
                 return Err(StoreError::PermissionDenied);
             }
 
@@ -122,7 +110,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
 
-        if !auth_token.check_event_privilege(entry.entry.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -147,7 +135,7 @@ impl KueaPlanStore for PgDataStore {
 
         // The event_id of the existing entry is ensured to be the same (see below), so the
         // privilege level check holds for the existing and the new entry.
-        if !auth_token.check_event_privilege(entry.entry.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -184,7 +172,7 @@ impl KueaPlanStore for PgDataStore {
         use schema::entries::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -207,7 +195,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<Vec<models::Room>, StoreError> {
         use schema::rooms::dsl::*;
 
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::User) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -225,7 +213,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
 
-        if !auth_token.check_event_privilege(room.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(room.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -245,7 +233,7 @@ impl KueaPlanStore for PgDataStore {
 
         // The event_id of the existing room is ensured to be the same (see below), so the
         // privilege level check holds for both, the existing and the new room.
-        if !auth_token.check_event_privilege(room.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(room.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -273,7 +261,7 @@ impl KueaPlanStore for PgDataStore {
         use schema::rooms::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -296,7 +284,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<Vec<models::Category>, StoreError> {
         use schema::categories::dsl::*;
 
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::User) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -314,7 +302,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
-        if !auth_token.check_event_privilege(category.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(category.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -332,7 +320,7 @@ impl KueaPlanStore for PgDataStore {
     ) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
-        if !auth_token.check_event_privilege(category.event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(category.event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -360,7 +348,7 @@ impl KueaPlanStore for PgDataStore {
         use schema::categories::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_event_privilege(the_event_id, AccessRole::Orga) {
+        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
             return Err(StoreError::PermissionDenied);
         }
 
@@ -378,20 +366,11 @@ impl KueaPlanStore for PgDataStore {
 }
 
 impl AuthStore for PgDataStore {
-    fn create_session(&mut self) -> Result<String, StoreError> {
+    fn authorize(&mut self, event_id: i32, passphrase: &str, session_token: &mut SessionToken) -> Result<(), StoreError> {
         todo!()
     }
 
-    fn authenticate(
-        &mut self,
-        event_id: i32,
-        passphrase: &str,
-        session: &str,
-    ) -> Result<(), StoreError> {
-        todo!()
-    }
-
-    fn get_auth_token(&mut self, session: &str) -> Result<AuthToken, StoreError> {
+    fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError> {
         todo!()
     }
 
@@ -399,26 +378,6 @@ impl AuthStore for PgDataStore {
         todo!()
     }
 }
-
-type SessionId = [u8; 128];
-struct PgSessionToken {
-    session_id: SessionId
-}
-
-impl FromStr for PgSessionToken {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!("Convert from base64")
-    }
-}
-
-impl ToString for PgSessionToken {
-    fn to_string(&self) -> String {
-        todo!("Convert to base64")
-    }
-}
-
 
 fn insert_entry_rooms(
     the_entry_id: uuid::Uuid,

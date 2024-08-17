@@ -9,8 +9,8 @@ use actix_web::{
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::database::models::*;
-use crate::database::{AuthStore, KueaPlanStore, StoreError};
+use crate::data_store::models::*;
+use crate::data_store::{AuthStore, KueaPlanStore, StoreError};
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(list_entries)
@@ -105,13 +105,13 @@ impl From<actix_web::error::BlockingError> for APIError {
 
 #[derive(Clone)]
 pub struct AppState {
-    db_pool: crate::database::DbPool,
+    db_pool: crate::data_store::DbPool,
 }
 
 impl AppState {
     pub fn new() -> Result<Self, String> {
         Ok(Self {
-            db_pool: crate::database::DbPool::new()?,
+            db_pool: crate::data_store::DbPool::new()?,
         })
     }
 }

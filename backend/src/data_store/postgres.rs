@@ -3,7 +3,7 @@ use std::str::FromStr;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
-use crate::database::AccessRole;
+use crate::data_store::AccessRole;
 
 use super::{models, schema, AuthStore, AuthToken, EventId, KueaPlanStore, StoreError};
 

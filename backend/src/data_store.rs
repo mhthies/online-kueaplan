@@ -6,7 +6,7 @@ use diesel::PgConnection;
 
 pub mod models;
 mod schema;
-mod store;
+mod postgres;
 
 type EventId = i32;
 type EntryId = uuid::Uuid;
@@ -84,7 +84,7 @@ impl DbPool {
     }
 
     pub fn get_store<'a>(&self) -> Result<impl KueaPlanStore + AuthStore + 'a, StoreError> {
-        Ok(store::PgDataStore::with_pooled_connection(self.pool.get()?))
+        Ok(postgres::PgDataStore::with_pooled_connection(self.pool.get()?))
     }
 }
 

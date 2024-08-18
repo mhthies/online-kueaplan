@@ -38,6 +38,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    event_passphrases (id) {
+        id -> Int4,
+        event_id -> Int4,
+        privilege -> Int4,
+        passphrase -> Varchar,
+    }
+}
+
+diesel::table! {
     events (id) {
         id -> Int4,
         title -> Varchar,
@@ -62,12 +71,14 @@ diesel::joinable!(entries -> categories (category));
 diesel::joinable!(entries -> events (event_id));
 diesel::joinable!(entry_rooms -> entries (entry_id));
 diesel::joinable!(entry_rooms -> rooms (room_id));
+diesel::joinable!(event_passphrases -> events (event_id));
 diesel::joinable!(rooms -> events (event_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     categories,
     entries,
     entry_rooms,
+    event_passphrases,
     events,
     rooms,
 );

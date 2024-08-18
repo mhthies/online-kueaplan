@@ -47,14 +47,37 @@ pub trait AuthStore {
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError>;
     fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError>;
-    fn logout(&mut self, session: &str) -> Result<(), StoreError>;
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
+#[repr(i32)]
 pub enum AccessRole {
-    User,
-    Orga,
+    User = 1,
+    Orga = 2,
 }
+
+impl AccessRole {
+    fn implied_roles(&self) -> &'static[AccessRole] {
+        match self {
+            AccessRole::User => &[],
+            AccessRole::Orga => &[AccessRole::User],
+        }
+    }
+}
+
+impl TryFrom<i32> for AccessRole {
+    type Error = EnumMemberNotExistingError;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(AccessRole::Orga),
+            2 => Ok(AccessRole::User),
+            _ => Err(EnumMemberNotExistingError{}),
+        }
+    }
+}
+
+pub struct EnumMemberNotExistingError;
 
 pub struct AuthToken {
     event_id: i32,
@@ -98,6 +121,7 @@ pub enum StoreError {
     NotExisting,
     PermissionDenied,
     InvalidSession,
+    InvalidData,
 }
 
 impl From<diesel::result::Error> for StoreError {
@@ -106,6 +130,12 @@ impl From<diesel::result::Error> for StoreError {
             diesel::result::Error::NotFound => Self::NotExisting,
             _ => Self::QueryError(error),
         }
+    }
+}
+
+impl From<EnumMemberNotExistingError> for StoreError {
+    fn from(_value: EnumMemberNotExistingError) -> Self {
+        StoreError::InvalidData
     }
 }
 
@@ -132,6 +162,7 @@ impl std::fmt::Display for StoreError {
             Self::NotExisting => f.write_str("Database record does not exist."),
             Self::PermissionDenied => f.write_str("Client is not authorized to perform this action"),
             Self::InvalidSession => f.write_str("Session token provided by client or session data is invalid"),
+            Self::InvalidData => f.write_str("Data loaded or stored from/in database is not valid."),
         }
     }
 }

@@ -16,6 +16,8 @@ actix-web = "4"
 log = "^0.4"
 env_logger = "^0.10"
 r2d2 = "^0.8"
+ring = "^0.17.8"
+base64 = "^0.22.1"
 kueaplan_api_types = {path = "../api_types"}
 
 [[bin]]

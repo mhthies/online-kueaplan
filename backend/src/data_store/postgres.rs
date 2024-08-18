@@ -1,7 +1,10 @@
+use super::{
+    models, schema, AccessRole, AdminAuthToken, AuthStore, AuthToken, EnumMemberNotExistingError,
+    EventId, KueaPlanStore, StoreError,
+};
+use crate::auth_session::SessionToken;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use crate::auth_session::{SessionToken};
-use super::{models, schema, AccessRole, AdminAuthToken, AuthStore, AuthToken, EventId, KueaPlanStore, StoreError};
 
 pub struct PgDataStore {
     connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
@@ -366,16 +369,51 @@ impl KueaPlanStore for PgDataStore {
 }
 
 impl AuthStore for PgDataStore {
-    fn authorize(&mut self, event_id: i32, passphrase: &str, session_token: &mut SessionToken) -> Result<(), StoreError> {
-        todo!()
+    fn authorize(
+        &mut self,
+        the_event_id: i32,
+        the_passphrase: &str,
+        session_token: &mut SessionToken,
+    ) -> Result<(), StoreError> {
+        use schema::event_passphrases::dsl::*;
+        let passphrase_ids = event_passphrases
+            .select(id)
+            .filter(event_id.eq(the_event_id))
+            .filter(passphrase.eq(the_passphrase))
+            .load::<i32>(&mut self.connection)?;
+        if passphrase_ids.len() > 0 {
+            session_token.add_authorization(passphrase_ids[0]);
+            Ok(())
+        } else {
+            Err(StoreError::NotExisting)
+        }
     }
 
-    fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError> {
-        todo!()
-    }
+    fn check_authorization(
+        &mut self,
+        session_token: &SessionToken,
+        the_event_id: EventId,
+    ) -> Result<AuthToken, StoreError> {
+        use schema::event_passphrases::dsl::*;
 
-    fn logout(&mut self, session: &str) -> Result<(), StoreError> {
-        todo!()
+        let role_ids = event_passphrases
+            .select(privilege)
+            .filter(event_id.eq(the_event_id))
+            .filter(id.eq_any(session_token.get_passphrase_ids()))
+            .load::<i32>(&mut self.connection)?;
+        
+        let mut roles = role_ids.iter()
+            .map(|r| (*r).try_into())
+            .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()?;
+        let implied_roles = roles.iter().flat_map(|e| e.implied_roles()).map(|e| *e).collect::<Vec<_>>();
+        roles.extend(implied_roles);
+        roles.sort_unstable();
+        roles.dedup();
+        
+        Ok(AuthToken {
+            event_id: the_event_id,
+            roles,
+        })
     }
 }
 

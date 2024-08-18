@@ -91,6 +91,7 @@ impl From<StoreError> for APIError {
             StoreError::NotExisting => Self::NotExisting,
             StoreError::PermissionDenied => Self::PermissionDenied,
             StoreError::InvalidSession => Self::InvalidSessionToken,
+            StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
         }
     }
 }
@@ -126,9 +127,11 @@ impl AppState {
 
 struct SessionTokenHeader(String);
 
+const SESSION_TOKEN_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
+
 impl SessionTokenHeader {
     fn session_token(&self, secret: &str) -> Result<crate::auth_session::SessionToken, crate::auth_session::SessionError> {
-        SessionToken::from_string(&self.0, secret)
+        SessionToken::from_string(&self.0, secret, SESSION_TOKEN_MAX_AGE)
     }
 }
 

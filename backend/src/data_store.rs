@@ -1,19 +1,25 @@
+use std::env;
 use std::fmt::Debug;
 
-use diesel::PgConnection;
 use crate::auth_session::SessionToken;
 
 pub mod models;
 mod schema;
 mod postgres;
 
-type EventId = i32;
-type EntryId = uuid::Uuid;
-type RoomId = uuid::Uuid;
-type CategoryId = uuid::Uuid;
+
+pub fn get_store_from_env() -> Result<impl KuaPlanStore, String> {
+    Ok(postgres::PgDataStore::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)?)
+}
+
+
+pub type EventId = i32;
+pub type EntryId = uuid::Uuid;
+pub type RoomId = uuid::Uuid;
+pub type CategoryId = uuid::Uuid;
 pub type PassphraseId = i32;
 
-pub trait KueaPlanStore {
+pub trait KueaPlanStoreFacade {
     fn get_event(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<models::Event, StoreError>;
     fn create_event(&mut self, auth_token: &AdminAuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
 
@@ -32,9 +38,7 @@ pub trait KueaPlanStore {
     fn create_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
     fn update_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
     fn delete_category(&mut self, auth_token: &AuthToken, event_id: EventId, category_id: CategoryId) -> Result<(), StoreError>;
-}
 
-pub trait AuthStore {
     /**
      * Try to authorize for a new privilege level for the given event, using the given passphrase.
      *
@@ -92,25 +96,8 @@ impl AuthToken {
 
 pub struct AdminAuthToken;
 
-#[derive(Clone)]
-pub struct DbPool {
-    pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>,
-}
-
-impl DbPool {
-    pub fn new(database_url: &str) -> Result<Self, String> {
-        let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
-        Ok(Self {
-            pool: diesel::r2d2::Pool::builder()
-                .test_on_check_out(true)
-                .build(connection_manager)
-                .map_err(|e| format!("Could not create database connection pool: {}", e))?,
-        })
-    }
-
-    pub fn get_store<'a>(&self) -> Result<impl KueaPlanStore + AuthStore + 'a, StoreError> {
-        Ok(postgres::PgDataStore::with_pooled_connection(self.pool.get()?))
-    }
+pub trait KuaPlanStore: Send + Sync {
+    fn get_facade<'a>(&self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError>;
 }
 
 #[derive(Debug)]

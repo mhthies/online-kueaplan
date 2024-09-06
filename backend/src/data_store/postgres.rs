@@ -1,16 +1,36 @@
-use super::{
-    models, schema, AccessRole, AdminAuthToken, AuthStore, AuthToken, EnumMemberNotExistingError,
-    EventId, KueaPlanStore, StoreError,
-};
+use super::{models, schema, AccessRole, AdminAuthToken, AuthToken, EnumMemberNotExistingError, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError};
 use crate::auth_session::SessionToken;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
+#[derive(Clone)]
 pub struct PgDataStore {
-    connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
+    pool: diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>,
 }
 
 impl PgDataStore {
+    pub fn new(database_url: &str) -> Result<Self, String> {
+        let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
+        Ok(Self {
+            pool: diesel::r2d2::Pool::builder()
+                .test_on_check_out(true)
+                .build(connection_manager)
+                .map_err(|e| format!("Could not create database connection pool: {}", e))?,
+        })
+    }
+}
+
+impl KuaPlanStore for PgDataStore {
+    fn get_facade<'a>(&self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError> {
+        Ok(Box::new(PgDataStoreFacade::with_pooled_connection(self.pool.get()?)))
+    }
+}
+
+pub struct PgDataStoreFacade {
+    connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
+}
+
+impl PgDataStoreFacade {
     pub fn with_pooled_connection(
         connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
     ) -> Self {
@@ -18,7 +38,7 @@ impl PgDataStore {
     }
 }
 
-impl KueaPlanStore for PgDataStore {
+impl KueaPlanStoreFacade for PgDataStoreFacade {
     fn get_event(
         &mut self,
         _auth_token: &AuthToken,
@@ -366,9 +386,7 @@ impl KueaPlanStore for PgDataStore {
 
         Ok(())
     }
-}
 
-impl AuthStore for PgDataStore {
     fn authorize(
         &mut self,
         the_event_id: i32,
@@ -401,15 +419,20 @@ impl AuthStore for PgDataStore {
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))
             .load::<i32>(&mut self.connection)?;
-        
-        let mut roles = role_ids.iter()
+
+        let mut roles = role_ids
+            .iter()
             .map(|r| (*r).try_into())
             .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()?;
-        let implied_roles = roles.iter().flat_map(|e| e.implied_roles()).map(|e| *e).collect::<Vec<_>>();
+        let implied_roles = roles
+            .iter()
+            .flat_map(|e| e.implied_roles())
+            .map(|e| *e)
+            .collect::<Vec<_>>();
         roles.extend(implied_roles);
         roles.sort_unstable();
         roles.dedup();
-        
+
         Ok(AuthToken {
             event_id: the_event_id,
             roles,

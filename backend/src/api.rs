@@ -1,4 +1,5 @@
 use std::{env, fmt::Display, vec::Vec};
+use std::sync::Arc;
 
 use actix_web::{
     error::ResponseError,
@@ -10,7 +11,7 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::auth_session::SessionToken;
 use crate::data_store::models::*;
-use crate::data_store::{AuthStore, KueaPlanStore, StoreError};
+use crate::data_store::{get_store_from_env, StoreError};
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(list_entries)
@@ -112,14 +113,14 @@ impl From<crate::auth_session::SessionError> for APIError {
 
 #[derive(Clone)]
 pub struct AppState {
-    db_pool: crate::data_store::DbPool,
+    store: Arc<dyn crate::data_store::KuaPlanStore>,
     secret: String,
 }
 
 impl AppState {
     pub fn new() -> Result<Self, String> {
         Ok(Self {
-            db_pool: crate::data_store::DbPool::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)?,
+            store: Arc::new(get_store_from_env()?),
             secret: env::var("SECRET").map_err(|_| "SECRET must be set")?.into(),
         })
     }
@@ -174,7 +175,7 @@ async fn list_entries(
         .into_inner()
         .session_token(&state.secret)?;
     let entries = web::block(move || -> Result<_, APIError> {
-        let mut store = state.db_pool.get_store()?;
+        let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.get_entries(&auth, event_id)?)
     })
@@ -198,7 +199,7 @@ async fn get_entry(
         .into_inner()
         .session_token(&state.secret)?;
     let entry = web::block(move || -> Result<_, APIError> {
-        let mut store = state.db_pool.get_store()?;
+        let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.get_entry(&auth, entry_id)?)
     })
@@ -220,7 +221,7 @@ async fn create_or_update_entry(
         .into_inner()
         .session_token(&state.secret)?;
     web::block(move || -> Result<_, APIError> {
-        let mut store = state.db_pool.get_store()?;
+        let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.create_entry(&auth, FullNewEntry::from_api(data.into_inner(), event_id))?)
     })

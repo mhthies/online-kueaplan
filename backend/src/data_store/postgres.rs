@@ -21,7 +21,7 @@ impl PgDataStore {
 }
 
 impl KuaPlanStore for PgDataStore {
-    fn get_facade<'a>(&self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError> {
+    fn get_facade<'a>(&'a self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError> {
         Ok(Box::new(PgDataStoreFacade::with_pooled_connection(self.pool.get()?)))
     }
 }

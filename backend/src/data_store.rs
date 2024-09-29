@@ -1,3 +1,19 @@
+//! The backend part of the backend: the database interface
+//! 
+//! The primary entry point to this module is the function [get_store_from_env], which returns an
+//! object implementing the [KueaPlanStore] trait. This object can be shared between threads in a
+//! global application state and be used to create [KueaPlanStoreFacade] instances for interaction
+//! with the database. These provide a CRUD-like interface, using the data models from the [models]
+//! module.
+//! 
+//! The primary implementation of [KueaPlanStore] ([postgres::PgDataStore]) wraps a PostgreSQL
+//! connection pool and its corresponding [KueaPlanStoreFacade] objects
+//! ([postgres::PgDataStoreFacade]) hold a reference to one pooled connection each, using the Diesel
+//! query DSL for implementing the database interaction.
+//! 
+//! There is also a mock implementation for unittests. Other [KueaPlanStore] implementations may be
+//! added later and selected via the "DATABASE_URL" environment variable. 
+
 use std::env;
 use std::fmt::Debug;
 
@@ -7,7 +23,13 @@ pub mod models;
 mod schema;
 mod postgres;
 
+#[cfg(test)]
+pub mod store_mock;
 
+/// Get a [KuaPlanStore] instances, according the "DATABASE_URL" environment variable.
+/// 
+/// The DATABASE_URL must be a PosgreSQL connection url, following the schema
+/// "postgres://{user}:{password}@{host}/{database}".
 pub fn get_store_from_env() -> Result<impl KuaPlanStore, String> {
     Ok(postgres::PgDataStore::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)?)
 }
@@ -53,6 +75,7 @@ pub trait KueaPlanStoreFacade {
     fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError>;
 }
 
+/// Possible roles, a single user can have with respect to a certain event
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 #[repr(i32)]
 pub enum AccessRole {
@@ -61,6 +84,7 @@ pub enum AccessRole {
 }
 
 impl AccessRole {
+    /// Get a list of roles, which are implicitly granted to a user who was authorized to this role.
     fn implied_roles(&self) -> &'static[AccessRole] {
         match self {
             AccessRole::User => &[],
@@ -97,7 +121,7 @@ impl AuthToken {
 pub struct AdminAuthToken;
 
 pub trait KuaPlanStore: Send + Sync {
-    fn get_facade<'a>(&self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError>;
+    fn get_facade<'a>(&'a self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError>;
 }
 
 #[derive(Debug)]

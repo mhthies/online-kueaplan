@@ -1,6 +1,9 @@
 use std::{env, fmt::Display, vec::Vec};
 use std::sync::Arc;
 
+#[cfg(test)]
+mod tests;
+
 use actix_web::{
     error::ResponseError,
     get,
@@ -14,9 +17,14 @@ use crate::data_store::models::*;
 use crate::data_store::{get_store_from_env, StoreError};
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
-    cfg.service(list_entries)
+    cfg.service(get_api_service());
+}
+
+fn get_api_service() -> actix_web::Scope {
+    web::scope("/api/v1")
+        .service(list_entries)
         .service(get_entry)
-        .service(create_or_update_entry);
+        .service(create_or_update_entry)
 }
 
 #[derive(Debug)]

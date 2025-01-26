@@ -1,14 +1,17 @@
+mod sample_data;
+
 use super::*;
 use actix_web::{http, test, web, App};
 use actix_web::body::MessageBody;
+use crate::data_store;
 
 #[actix_web::test]
 async fn test_list_entries() {
-    let data_store_mock = Arc::new(crate::data_store::store_mock::StoreMock::default());
+    let data_store_mock = crate::data_store::store_mock::StoreMock::default();
+    sample_data::fill_sample_data(&data_store_mock);
     const APP_SECRET: &str = "123456";
-    // TODO insert test entries
     let state = AppState {
-        store: data_store_mock.clone(),
+        store: Arc::new(data_store_mock),
         secret: APP_SECRET.to_string(),
     };
     let app = test::init_service(
@@ -17,11 +20,13 @@ async fn test_list_entries() {
             .app_data(web::Data::new(state.clone())),
     )
     .await;
+    let mut token = SessionToken::new();
+    token.add_authorization(2);
     let req = test::TestRequest::get()
         .uri("/api/v1/event/1/entries")
         .append_header((
             "X-SESSION-TOKEN".to_string(),
-            crate::auth_session::SessionToken::new().as_string(APP_SECRET),
+            token.as_string(APP_SECRET),
         ))
         .to_request();
     let res = test::call_service(&app, req).await;

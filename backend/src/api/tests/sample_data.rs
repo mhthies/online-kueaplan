@@ -1,0 +1,40 @@
+use chrono::TimeZone;
+use uuid::uuid;
+use crate::auth_session::SessionToken;
+use crate::data_store::{AdminAuthToken, KuaPlanStore};
+use crate::data_store::models::{FullNewEntry, NewEntry, NewEvent};
+
+pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
+    let mut facade = store.get_facade().unwrap();
+    let admin_token = AdminAuthToken{};
+    facade.create_event(&admin_token, NewEvent{
+        title: "SommerAkademie 2024".to_string(),
+        begin_date: chrono::NaiveDate::from_ymd_opt(2024, 7,27).unwrap(),
+        end_date: chrono::NaiveDate::from_ymd_opt(2024,8, 10).unwrap(),
+    }).unwrap();
+    let mut session_token = SessionToken::new();
+    session_token.add_authorization(2);
+    let auth_token = facade.check_authorization(&session_token, 42).unwrap();
+    facade.create_entry(&auth_token, FullNewEntry{
+        entry: NewEntry {
+            id: uuid!("fca6379a-b8ad-4a53-9479-73099c34f16a"),
+            title: "Kennenlernspiele".to_string(),
+            description: "Es sollen heute wieder Kennenlernspiele stattfinden.
+Sie starten sobald die KL- und Minderjährigentreffen vorbei sind in der Pelikanhalle.
+Es wird auch wieder für Leute, die es ruhiger mögen einen zweiten ruhigeren Ort geben.
+
+Die Spiele sind dafür da, neue Leute kennenzulernen, Menschen mit ähnlichen Interessen und Anschluss auf der Akademie zu finden.
+Deswegen richten sie sich explizit sowohl an Menschen, die jetzt neu dazugekommen sind, als auch die, die schon lange im Verein sind.
+
+Treffpunkt: Pelikanhalle".to_string(),
+            responsible_person: "Sam, Amity".to_string(),
+            is_blocker: false,
+            residue_of: None,
+            event_id: 42,
+            begin: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 21, 45, 0).unwrap(),
+            end: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 23, 0, 0).unwrap(),
+            category: None,
+        },
+        room_ids: vec![]
+    }).unwrap();
+}

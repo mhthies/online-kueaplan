@@ -28,12 +28,17 @@ Deswegen richten sie sich explizit sowohl an Menschen, die jetzt neu dazugekomme
 
 Treffpunkt: Pelikanhalle".to_string(),
             responsible_person: "Sam, Amity".to_string(),
-            is_blocker: false,
+            is_room_reservation: false,
             residue_of: None,
             event_id: 42,
             begin: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 21, 45, 0).unwrap(),
             end: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 23, 0, 0).unwrap(),
             category: None,
+            comment: "".to_string(),
+            room_comment: "".to_string(),
+            time_comment: "".to_string(),
+            is_exclusive: false,
+            is_cancelled: false,
         },
         room_ids: vec![]
     }).unwrap();

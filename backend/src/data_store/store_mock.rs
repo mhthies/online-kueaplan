@@ -123,7 +123,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
                 title: entry.entry.title,
                 description: entry.entry.description,
                 responsible_person: entry.entry.responsible_person,
-                is_blocker: entry.entry.is_blocker,
+                is_room_reservation: entry.entry.is_room_reservation,
                 residue_of: entry.entry.residue_of,
                 event_id: entry.entry.event_id,
                 begin: entry.entry.begin,
@@ -131,6 +131,11 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
                 category: entry.entry.category,
                 deleted: false,
                 last_updated: chrono::Utc::now(),
+                comment: entry.entry.comment,
+                room_comment: entry.entry.room_comment,
+                time_comment: entry.entry.time_comment,
+                is_exclusive: entry.entry.is_exclusive,
+                is_cancelled: entry.entry.is_cancelled,
             },
             room_ids: entry.room_ids,
         });
@@ -155,13 +160,18 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         existing_entry.entry.title = entry.entry.title;
         existing_entry.entry.description = entry.entry.description;
         existing_entry.entry.responsible_person = entry.entry.responsible_person;
-        existing_entry.entry.is_blocker = entry.entry.is_blocker;
+        existing_entry.entry.is_room_reservation = entry.entry.is_room_reservation;
         existing_entry.entry.residue_of = entry.entry.residue_of;
         existing_entry.entry.event_id = entry.entry.event_id;
         existing_entry.entry.begin = entry.entry.begin;
         existing_entry.entry.end = entry.entry.end;
         existing_entry.entry.category = entry.entry.category;
         existing_entry.entry.last_updated = chrono::Utc::now();
+        existing_entry.entry.comment = entry.entry.comment;
+        existing_entry.entry.room_comment = entry.entry.room_comment;
+        existing_entry.entry.time_comment = entry.entry.time_comment;
+        existing_entry.entry.is_exclusive = entry.entry.is_exclusive;
+        existing_entry.entry.is_cancelled = entry.entry.is_cancelled;
         existing_entry.room_ids = entry.room_ids;
         Ok(())
     }
@@ -264,6 +274,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             icon: category.icon,
             color: category.color,
             event_id: category.event_id,
+            is_official: category.is_official,
         });
         Ok(())
     }
@@ -286,7 +297,8 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         existing_category.title = category.title; 
         existing_category.icon = category.icon; 
         existing_category.color = category.color; 
-        existing_category.event_id = category.event_id; 
+        existing_category.event_id = category.event_id;
+        existing_category.is_official = category.is_official;
         Ok(())
     }
 

@@ -10,6 +10,7 @@ diesel::table! {
         event_id -> Int4,
         deleted -> Bool,
         last_updated -> Timestamptz,
+        is_official -> Bool,
     }
 }
 
@@ -19,7 +20,7 @@ diesel::table! {
         title -> Varchar,
         description -> Varchar,
         responsible_person -> Varchar,
-        is_blocker -> Bool,
+        is_room_reservation -> Bool,
         residue_of -> Nullable<Uuid>,
         event_id -> Int4,
         begin -> Timestamptz,
@@ -27,6 +28,11 @@ diesel::table! {
         category -> Nullable<Uuid>,
         deleted -> Bool,
         last_updated -> Timestamptz,
+        comment -> Varchar,
+        time_comment -> Varchar,
+        room_comment -> Varchar,
+        is_exclusive -> Bool,
+        is_cancelled -> Bool,
     }
 }
 

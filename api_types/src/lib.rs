@@ -17,15 +17,25 @@ fn not(v: &bool) -> bool {!v}
 pub struct Entry {
     pub id: Uuid,
     pub title: String,
-    #[serde(default)]
+    #[serde(default,skip_serializing_if="str::is_empty")]
+    pub comment: String,
+    #[serde(default,skip_serializing_if="str::is_empty")]
     pub description: String,
     pub room: Vec<Uuid>,
+    #[serde(default,skip_serializing_if="str::is_empty",rename = "roomComment")]
+    pub room_comment: String,
     pub begin: DateTime<Utc>,
     pub end: DateTime<Utc>,
+    #[serde(default,skip_serializing_if="str::is_empty",rename = "timeComment")]
+    pub time_comment: String,
     #[serde(default,rename="responsiblePerson")]
     pub responsible_person: String,
-    #[serde(default,skip_serializing_if="not",rename="isBlocker")]
-    pub is_blocker: bool,
+    #[serde(default,skip_serializing_if="not",rename="isExclusive")]
+    pub is_room_reservation: bool,
+    #[serde(default,skip_serializing_if="not",rename="isCancelled")]
+    pub is_exclusive: bool,
+    #[serde(default,skip_serializing_if="not",rename="isRoomReservation")]
+    pub is_cancelled: bool,
     #[serde(default,skip_serializing_if="Option::is_none",rename="residueOf")]
     pub residue_of: Option<Uuid>,
     #[serde(default,skip_serializing_if="Option::is_none")]
@@ -45,6 +55,8 @@ pub struct Category {
     pub title: String,
     pub icon: String,
     pub color: String,
+    #[serde(default,skip_serializing_if="not",rename="isOfficial")]
+    pub is_official: bool,
 }
 
 #[derive(Serialize, Deserialize)]

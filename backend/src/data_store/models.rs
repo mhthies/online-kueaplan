@@ -27,7 +27,7 @@ pub struct Entry {
     pub title: String,
     pub description: String,
     pub responsible_person: String,
-    pub is_blocker: bool,
+    pub is_room_reservation: bool,
     pub residue_of: Option<Uuid>,
     pub event_id: i32,
     pub begin: DateTime<Utc>,
@@ -35,6 +35,11 @@ pub struct Entry {
     pub category: Option<Uuid>,
     pub deleted: bool,
     pub last_updated: DateTime<Utc>,
+    pub comment: String,
+    pub room_comment: String,
+    pub time_comment: String,
+    pub is_exclusive: bool,
+    pub is_cancelled: bool,
 }
 
 #[derive(Clone)]
@@ -50,12 +55,17 @@ pub struct NewEntry {
     pub title: String,
     pub description: String,
     pub responsible_person: String,
-    pub is_blocker: bool,
+    pub is_room_reservation: bool,
     pub residue_of: Option<Uuid>,
     pub event_id: i32,
     pub begin: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub category: Option<Uuid>,
+    pub comment: String,
+    pub room_comment: String,
+    pub time_comment: String,
+    pub is_exclusive: bool,
+    pub is_cancelled: bool,
 }
 
 pub struct FullNewEntry {
@@ -102,6 +112,7 @@ pub struct Category {
     pub icon: String,
     pub color: String,
     pub event_id: i32,
+    pub is_official: bool,
 }
 
 #[derive(Insertable, AsChangeset)]
@@ -112,6 +123,7 @@ pub struct NewCategory {
     pub icon: String,
     pub color: String,
     pub event_id: i32,
+    pub is_official: bool,
 }
 
 impl FullNewEntry {
@@ -122,12 +134,17 @@ impl FullNewEntry {
                 title: entry.title,
                 description: entry.description,
                 responsible_person: entry.responsible_person,
-                is_blocker: entry.is_blocker,
+                is_room_reservation: entry.is_room_reservation,
                 residue_of: entry.residue_of,
                 event_id,
                 begin: entry.begin,
                 end: entry.end,
                 category: entry.category,
+                comment: entry.comment,
+                room_comment: entry.room_comment,
+                time_comment: entry.time_comment,
+                is_exclusive: entry.is_exclusive,
+                is_cancelled: entry.is_cancelled,
             },
             room_ids: entry.room,
         }
@@ -144,9 +161,14 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
             begin: value.entry.begin,
             end: value.entry.end,
             responsible_person: value.entry.responsible_person,
-            is_blocker: value.entry.is_blocker,
+            is_room_reservation: value.entry.is_room_reservation,
             residue_of: value.entry.residue_of,
             category: value.entry.category,
+            comment: value.entry.comment,
+            room_comment: value.entry.room_comment,
+            time_comment: value.entry.time_comment,
+            is_exclusive: value.entry.is_exclusive,
+            is_cancelled: value.entry.is_cancelled,
         }
     }
 }

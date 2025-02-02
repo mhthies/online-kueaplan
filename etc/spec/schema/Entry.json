@@ -12,11 +12,15 @@
             "format": "uuid"
         },
         "title": {
-            "description": "The subject of the planned KüA (or blocker)",
+            "description": "The subject of the planned KüA (or reservation)",
+            "type": "string"
+        },
+        "comment": {
+            "description": "A short explanatory comment to be shown together with the subject.",
             "type": "string"
         },
         "description": {
-            "description": "A longer description of the planned KüA.",
+            "description": "A longer description of the planned KüA, formatted as Markdown.",
             "type": "string"
         },
         "begin": {
@@ -29,6 +33,10 @@
             "type": "string",
             "format": "date-time"
         },
+        "timeComment": {
+            "description": "A short comment about the KüA's time (e.g. start after another KüA, \"open end\", etc.).",
+            "type": "string"
+        },
         "room": {
             "description": "List of unique identifiers of the rooms this entry is valid for.",
             "type": "array",
@@ -38,12 +46,24 @@
                 "format": "uuid"
             }
         },
+        "roomComment": {
+            "description": "A short comment about the KüA's room (e.g. the meeting point or which part of the room).",
+            "type": "string"
+        },
         "responsiblePerson": {
             "description": "Name of the persons responsible for this KüA or blocker",
             "type": "string"
         },
-        "isBlocker": {
-            "description": "if present and true, this is not a real KüA announcement, but instead an informative entry to mark this time slot (in this room or any room) as blocked for some reason.",
+        "isRoomReservation": {
+            "description": "if present and true, this is not a real KüA announcement, but instead an informative entry to mark this time slot in this room as reserved for some reason (e.g. some non-public meeting).",
+            "type": "boolean"
+        },
+        "isExclusive": {
+            "description": "if present and true, this KüA (possibly together with other entries) exclusively blocks its interval for other KüAs (e.g. a mandatory plenum or reserved time slot for talks).",
+            "type": "boolean"
+        },
+        "isCancelled": {
+            "description": "if present and true, this is not a KüA announcement, but instead informs that his plan entry is no longer valid.",
             "type": "boolean"
         },
         "residueOf": {

@@ -4,8 +4,7 @@ use dotenvy::dotenv;
 use kueaplan_backend::api::{configure_app, AppState};
 use log::warn;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+fn main() -> std::io::Result<()> {
     let dotenv_result = dotenv();
     env_logger::init();
     if dotenv_result.is_err() {
@@ -13,13 +12,14 @@ async fn main() -> std::io::Result<()> {
     }
 
     let state = AppState::new().unwrap();
-    HttpServer::new(move || {
-        App::new()
-            .configure(configure_app)
-            .app_data(web::Data::new(state.clone()))
-            .wrap(middleware::Compress::default())
-    })
-    .bind(("127.0.0.1", 9000))?
-    .run()
-    .await
+    actix_web::rt::System::new().block_on(
+        HttpServer::new(move || {
+            App::new()
+                .configure(configure_app)
+                .app_data(web::Data::new(state.clone()))
+                .wrap(middleware::Compress::default())
+        })
+        .bind(("127.0.0.1", 9000))?
+        .run(),
+    )
 }

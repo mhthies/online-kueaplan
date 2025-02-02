@@ -3,7 +3,6 @@ mod sample_data;
 use super::*;
 use actix_web::{http, test, web, App};
 use actix_web::body::MessageBody;
-use crate::data_store;
 
 #[actix_web::test]
 async fn test_list_entries() {

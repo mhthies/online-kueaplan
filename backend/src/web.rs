@@ -14,9 +14,8 @@ async fn main() -> std::io::Result<()> {
 
     let state = AppState::new().unwrap();
     HttpServer::new(move || {
-        let api_scope = web::scope("/api/v1").configure(configure_app);
         App::new()
-            .service(api_scope)
+            .configure(configure_app)
             .app_data(web::Data::new(state.clone()))
             .wrap(middleware::Compress::default())
     })

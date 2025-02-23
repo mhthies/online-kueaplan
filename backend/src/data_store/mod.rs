@@ -113,8 +113,12 @@ pub struct AuthToken {
 }
 
 impl AuthToken {
-    fn check_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> bool {
-        event_id == self.event_id && self.roles.contains(&privilege_level)
+    fn check_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> Result<(), StoreError> {
+        if event_id == self.event_id && self.roles.contains(&privilege_level) {
+            Ok(())
+        } else {
+            Err(StoreError::PermissionDenied)
+        }
     }
 }
 

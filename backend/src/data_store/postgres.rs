@@ -71,10 +71,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
     ) -> Result<Vec<models::FullEntry>, StoreError> {
         use schema::entries::dsl::*;
-
-        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::User)?;
 
         self.connection.transaction(|connection| {
             let the_entries = entries
@@ -109,9 +106,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let entry = entries
                 .filter(id.eq(entry_id))
                 .first::<models::Entry>(connection)?;
-            if !auth_token.check_privilege(entry.event_id, AccessRole::User) {
-                return Err(StoreError::PermissionDenied);
-            }
+            auth_token.check_privilege(entry.event_id, AccessRole::User)?;
 
             if entry.deleted {
                 return Err(StoreError::NotExisting);
@@ -132,10 +127,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         entry: models::FullNewEntry,
     ) -> Result<(), StoreError> {
         use schema::entries::dsl::*;
-
-        if !auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
 
         self.connection.transaction(|connection| {
             diesel::insert_into(entries)
@@ -158,9 +150,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         // The event_id of the existing entry is ensured to be the same (see below), so the
         // privilege level check holds for the existing and the new entry.
-        if !auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
 
         self.connection.transaction(|connection| {
             let count = diesel::update(entries)
@@ -195,9 +185,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::entries::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
 
         let count = diesel::update(entries)
             .filter(id.eq(entry_id))
@@ -217,10 +205,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
     ) -> Result<Vec<models::Room>, StoreError> {
         use schema::rooms::dsl::*;
-
-        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::User)?;
 
         Ok(rooms
             .select(models::Room::as_select())
@@ -236,9 +221,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
 
-        if !auth_token.check_privilege(room.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(room.event_id, AccessRole::Orga)?;
 
         diesel::insert_into(rooms)
             .values(&room)
@@ -256,9 +239,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         // The event_id of the existing room is ensured to be the same (see below), so the
         // privilege level check holds for both, the existing and the new room.
-        if !auth_token.check_privilege(room.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(room.event_id, AccessRole::Orga)?;
 
         let count = diesel::update(rooms)
             .filter(id.eq(room.id))
@@ -284,9 +265,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::rooms::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
 
         let count = diesel::update(rooms)
             .filter(id.eq(room_id))
@@ -306,10 +285,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
     ) -> Result<Vec<models::Category>, StoreError> {
         use schema::categories::dsl::*;
-
-        if !auth_token.check_privilege(the_event_id, AccessRole::User) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::User)?;
 
         Ok(categories
             .select(models::Category::as_select())
@@ -325,9 +301,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
-        if !auth_token.check_privilege(category.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(category.event_id, AccessRole::Orga)?;
 
         diesel::insert_into(categories)
             .values(&category)
@@ -343,9 +317,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
-        if !auth_token.check_privilege(category.event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(category.event_id, AccessRole::Orga)?;
 
         let count = diesel::update(categories)
             .filter(id.eq(category.id))
@@ -371,9 +343,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::categories::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        if !auth_token.check_privilege(the_event_id, AccessRole::Orga) {
-            return Err(StoreError::PermissionDenied);
-        }
+        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
 
         let count = diesel::update(categories)
             .filter(id.eq(category_id))

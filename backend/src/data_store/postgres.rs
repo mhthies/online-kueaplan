@@ -54,10 +54,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
     fn create_event(
         &mut self,
-        _auth_token: &AdminAuthToken,
+        auth_token: &AdminAuthToken,
         event: models::NewEvent,
     ) -> Result<i32, StoreError> {
         use schema::events::dsl::*;
+        auth_token.check_privilege(AccessRole::Admin)?;
 
         Ok(diesel::insert_into(events)
             .values(&event)

@@ -18,6 +18,7 @@ use std::env;
 use std::fmt::Debug;
 
 use crate::auth_session::SessionToken;
+use crate::CliAuthToken;
 
 pub mod models;
 mod schema;
@@ -81,6 +82,7 @@ pub trait KueaPlanStoreFacade {
 pub enum AccessRole {
     User = 1,
     Orga = 2,
+    Admin = 3,
 }
 
 impl AccessRole {
@@ -89,6 +91,7 @@ impl AccessRole {
         match self {
             AccessRole::User => &[],
             AccessRole::Orga => &[AccessRole::User],
+            AccessRole::Admin => &[AccessRole::Orga, AccessRole::User],
         }
     }
 }
@@ -100,6 +103,7 @@ impl TryFrom<i32> for AccessRole {
         match value {
             1 => Ok(AccessRole::User),
             2 => Ok(AccessRole::Orga),
+            3 => Ok(AccessRole::Admin),
             _ => Err(EnumMemberNotExistingError{}),
         }
     }
@@ -120,9 +124,38 @@ impl AuthToken {
             Err(StoreError::PermissionDenied)
         }
     }
+
+    pub fn get_cli_authorization(_token: &CliAuthToken, event_id: EventId) -> Self {
+        let mut roles = vec![AccessRole::Admin];
+        roles.extend(AccessRole::Admin.implied_roles());
+        AuthToken {
+            event_id,
+            roles,
+        }
+    }
 }
 
-pub struct AdminAuthToken;
+pub struct AdminAuthToken {
+    roles: Vec<AccessRole>,
+}
+
+impl AdminAuthToken {
+    fn check_privilege(&self, privilege_level: AccessRole) -> Result<(), StoreError> {
+        if self.roles.contains(&privilege_level) {
+            Ok(())
+        } else {
+            Err(StoreError::PermissionDenied)
+        }
+    }
+
+    pub fn get_global_cli_authorization(_token: &CliAuthToken) -> Self {
+        let mut roles = vec![AccessRole::Admin];
+        roles.extend(AccessRole::Admin.implied_roles());
+        AdminAuthToken {
+            roles,
+        }
+    }
+}
 
 pub trait KuaPlanStore: Send + Sync {
     fn get_facade<'a>(&'a self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError>;

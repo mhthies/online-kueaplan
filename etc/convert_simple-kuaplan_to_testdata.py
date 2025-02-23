@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional, Any, Iterable, TypeAlias, Mapping
 
 import yaml
+import pytz
 
 JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
@@ -179,23 +180,28 @@ def generate_json_categories() -> list[dict[str, JSON]]:
 
 def generate_json_entries(entries: Iterable[KueaPlanEntry], room_id_mapping: Mapping[str, uuid]) -> list[
     dict[str, JSON]]:
-    return [{
-        "id": str(uuid.uuid4()),
-        "title": entry.title,
-        "comment": entry.comment or "",
-        "description": entry.description,
-        "begin": entry.begin.isoformat(),
-        "end": (entry.end or entry.begin + datetime.timedelta(hours=1)).isoformat(),
-        "timeComment": entry.time_comment or "",
-        "room": [str(room_id_mapping.get(room)) for room in get_rooms(entry) if room in room_id_mapping],
-        "roomComment": entry.place_comment or "",
-        "responsiblePerson": ",".join(entry.people),
-        "isRoomReservation": entry.kuea_type == KueaType.BLOCKER,
-        "isExclusive": entry.kuea_type == KueaType.PLENUM,
-        "isCancelled": entry.kuea_type == KueaType.CANCELLED,
-        "category": CATEGORIES.get(entry.kuea_type, CATEGORIES[KueaType.NORMAL])["id"],
-    }
-        for entry in entries]
+    result = []
+    for entry in entries:
+        EST = pytz.timezone('Europe/Berlin')
+        begin = EST.localize(entry.begin)
+        end = EST.localize(entry.end or entry.begin + datetime.timedelta(hours=1))
+        result.append({
+            "id": str(uuid.uuid4()),
+            "title": entry.title,
+            "comment": entry.comment or "",
+            "description": entry.description,
+            "begin": begin.isoformat(),
+            "end": end.isoformat(),
+            "timeComment": entry.time_comment or "",
+            "room": [str(room_id_mapping.get(room)) for room in get_rooms(entry) if room in room_id_mapping],
+            "roomComment": entry.place_comment or "",
+            "responsiblePerson": ",".join(entry.people),
+            "isRoomReservation": entry.kuea_type == KueaType.BLOCKER,
+            "isExclusive": entry.kuea_type == KueaType.PLENUM,
+            "isCancelled": entry.kuea_type == KueaType.CANCELLED,
+            "category": CATEGORIES.get(entry.kuea_type, CATEGORIES[KueaType.NORMAL])["id"],
+        })
+    return result
 
 
 if __name__ == '__main__':

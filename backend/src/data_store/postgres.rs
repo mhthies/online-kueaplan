@@ -1,4 +1,4 @@
-use super::{models, schema, AccessRole, AdminAuthToken, AuthToken, EnumMemberNotExistingError, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError};
+use super::{models, schema, AccessRole, GlobalAuthToken, AuthToken, EnumMemberNotExistingError, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError};
 use crate::auth_session::SessionToken;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -54,7 +54,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
     fn create_event(
         &mut self,
-        auth_token: &AdminAuthToken,
+        auth_token: &GlobalAuthToken,
         event: models::NewEvent,
     ) -> Result<i32, StoreError> {
         use schema::events::dsl::*;

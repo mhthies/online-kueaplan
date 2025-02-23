@@ -3,7 +3,7 @@ use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, NewCategory, NewEvent, NewRoom, Room,
 };
 use crate::data_store::{
-    models, AccessRole, AdminAuthToken, AuthToken, EventId, KuaPlanStore, KueaPlanStoreFacade,
+    models, AccessRole, GlobalAuthToken, AuthToken, EventId, KuaPlanStore, KueaPlanStoreFacade,
     StoreError,
 };
 use std::sync::Mutex;
@@ -62,7 +62,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
 
     fn create_event(
         &mut self,
-        _auth_token: &AdminAuthToken,
+        _auth_token: &GlobalAuthToken,
         event: NewEvent,
     ) -> Result<crate::data_store::EventId, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");

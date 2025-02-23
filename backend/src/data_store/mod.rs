@@ -44,7 +44,7 @@ pub type PassphraseId = i32;
 
 pub trait KueaPlanStoreFacade {
     fn get_event(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<models::Event, StoreError>;
-    fn create_event(&mut self, auth_token: &AdminAuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
+    fn create_event(&mut self, auth_token: &GlobalAuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
 
     fn get_entries(&mut self, auth_token: &AuthToken, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
     fn get_entry(&mut self, auth_token: &AuthToken, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;
@@ -135,11 +135,11 @@ impl AuthToken {
     }
 }
 
-pub struct AdminAuthToken {
+pub struct GlobalAuthToken {
     roles: Vec<AccessRole>,
 }
 
-impl AdminAuthToken {
+impl GlobalAuthToken {
     fn check_privilege(&self, privilege_level: AccessRole) -> Result<(), StoreError> {
         if self.roles.contains(&privilege_level) {
             Ok(())
@@ -151,7 +151,7 @@ impl AdminAuthToken {
     pub fn get_global_cli_authorization(_token: &CliAuthToken) -> Self {
         let mut roles = vec![AccessRole::Admin];
         roles.extend(AccessRole::Admin.implied_roles());
-        AdminAuthToken {
+        GlobalAuthToken {
             roles,
         }
     }

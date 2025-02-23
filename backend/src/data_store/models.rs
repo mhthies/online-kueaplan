@@ -126,6 +126,27 @@ pub struct NewCategory {
     pub is_official: bool,
 }
 
+impl From<kueaplan_api_types::Event> for NewEvent {
+    fn from(value: kueaplan_api_types::Event) -> Self {
+        Self {
+            title: value.title,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+        }
+    }
+}
+
+impl From<Event> for kueaplan_api_types::Event {
+    fn from(value: Event) -> Self {
+        Self {
+            id: value.id,
+            title: value.title,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+        }
+    }
+}
+
 impl FullNewEntry {
     pub fn from_api(entry: kueaplan_api_types::Entry, event_id: i32) -> Self {
         Self {
@@ -169,6 +190,52 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
             time_comment: value.entry.time_comment,
             is_exclusive: value.entry.is_exclusive,
             is_cancelled: value.entry.is_cancelled,
+        }
+    }
+}
+
+impl NewRoom {
+    pub fn from_api(room: kueaplan_api_types::Room, event_id: i32) -> Self {
+        Self {
+            id: room.id,
+            title: room.title,
+            description: room.description,
+            event_id,
+        }
+    }
+}
+
+impl From<Room> for kueaplan_api_types::Room {
+    fn from(value: Room) -> Self {
+        kueaplan_api_types::Room {
+            id: value.id,
+            title: value.title,
+            description: value.description,
+        }
+    }
+}
+
+impl NewCategory {
+    pub fn from_api(category: kueaplan_api_types::Category, event_id: i32) -> Self {
+        Self {
+            id: category.id,
+            title: category.title,
+            icon: category.icon,
+            color: category.color,
+            event_id,
+            is_official: category.is_official,
+        }
+    }
+}
+
+impl From<Category> for kueaplan_api_types::Category {
+    fn from(value: Category) -> Self {
+        kueaplan_api_types::Category {
+            id: value.id,
+            title: value.title,
+            icon: value.icon,
+            color: value.color,
+            is_official: value.is_official,
         }
     }
 }

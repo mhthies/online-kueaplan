@@ -5,4 +5,12 @@ mod auth_session;
 pub mod file_io;
 pub mod web;
 
-struct CliAuthToken;
+pub struct CliAuthToken{
+    _private: (),
+}
+
+impl CliAuthToken{
+    pub fn new() -> Self{
+        Self { _private: () }
+    }
+}

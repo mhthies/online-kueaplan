@@ -1,18 +1,23 @@
+use crate::auth_session::SessionToken;
+use crate::data_store::models::{FullNewEntry, NewEntry, NewEvent};
+use crate::data_store::{GlobalAuthToken, KuaPlanStore};
 use chrono::TimeZone;
 use uuid::uuid;
-use crate::auth_session::SessionToken;
-use crate::data_store::{GlobalAuthToken, KuaPlanStore};
-use crate::data_store::models::{FullNewEntry, NewEntry, NewEvent};
 
 pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
     let mut facade = store.get_facade().unwrap();
     let cli_auth_token = crate::CliAuthToken::new();
     let admin_token = GlobalAuthToken::get_global_cli_authorization(&cli_auth_token);
-    facade.create_event(&admin_token, NewEvent{
-        title: "SommerAkademie 2024".to_string(),
-        begin_date: chrono::NaiveDate::from_ymd_opt(2024, 7,27).unwrap(),
-        end_date: chrono::NaiveDate::from_ymd_opt(2024,8, 10).unwrap(),
-    }).unwrap();
+    facade
+        .create_event(
+            &admin_token,
+            NewEvent {
+                title: "SommerAkademie 2024".to_string(),
+                begin_date: chrono::NaiveDate::from_ymd_opt(2024, 7, 27).unwrap(),
+                end_date: chrono::NaiveDate::from_ymd_opt(2024, 8, 10).unwrap(),
+            },
+        )
+        .unwrap();
     let mut session_token = SessionToken::new();
     session_token.add_authorization(2);
     let auth_token = facade.check_authorization(&session_token, 42).unwrap();

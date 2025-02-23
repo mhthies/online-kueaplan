@@ -2,8 +2,7 @@ use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
 
-#[derive(Clone)]
-#[derive(Queryable)]
+#[derive(Clone, Queryable)]
 pub struct Event {
     pub id: i32,
     pub title: String,
@@ -19,8 +18,7 @@ pub struct NewEvent {
     pub end_date: NaiveDate,
 }
 
-#[derive(Clone)]
-#[derive(Queryable, Identifiable)]
+#[derive(Clone, Queryable, Identifiable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct Entry {
     pub id: Uuid,
@@ -73,8 +71,7 @@ pub struct FullNewEntry {
     pub room_ids: Vec<Uuid>,
 }
 
-#[derive(Clone)]
-#[derive(Queryable, Identifiable, Selectable)]
+#[derive(Clone, Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::rooms)]
 pub struct Room {
     pub id: Uuid,
@@ -103,8 +100,7 @@ pub struct EntryRoomMapping {
     pub room_id: Uuid,
 }
 
-#[derive(Clone)]
-#[derive(Queryable, Identifiable, Selectable)]
+#[derive(Clone, Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::categories)]
 pub struct Category {
     pub id: Uuid,

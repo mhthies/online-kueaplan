@@ -1,8 +1,8 @@
 mod sample_data;
 
 use super::*;
-use actix_web::{http, test, web, App};
 use actix_web::body::MessageBody;
+use actix_web::{http, test, web, App};
 
 #[actix_web::test]
 async fn test_list_entries() {
@@ -23,10 +23,7 @@ async fn test_list_entries() {
     token.add_authorization(2);
     let req = test::TestRequest::get()
         .uri("/api/v1/event/1/entries")
-        .append_header((
-            "X-SESSION-TOKEN".to_string(),
-            token.as_string(APP_SECRET),
-        ))
+        .append_header(("X-SESSION-TOKEN".to_string(), token.as_string(APP_SECRET)))
         .to_request();
     let res = test::call_service(&app, req).await;
     let res_status = res.status();

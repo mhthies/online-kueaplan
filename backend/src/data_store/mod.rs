@@ -1,18 +1,18 @@
 //! The backend part of the backend: the database interface
-//! 
+//!
 //! The primary entry point to this module is the function [get_store_from_env], which returns an
 //! object implementing the [KueaPlanStore] trait. This object can be shared between threads in a
 //! global application state and be used to create [KueaPlanStoreFacade] instances for interaction
 //! with the database. These provide a CRUD-like interface, using the data models from the [models]
 //! module.
-//! 
+//!
 //! The primary implementation of [KueaPlanStore] ([postgres::PgDataStore]) wraps a PostgreSQL
 //! connection pool and its corresponding [KueaPlanStoreFacade] objects
 //! ([postgres::PgDataStoreFacade]) hold a reference to one pooled connection each, using the Diesel
 //! query DSL for implementing the database interaction.
-//! 
+//!
 //! There is also a mock implementation for unittests. Other [KueaPlanStore] implementations may be
-//! added later and selected via the "DATABASE_URL" environment variable. 
+//! added later and selected via the "DATABASE_URL" environment variable.
 
 use std::env;
 use std::fmt::Debug;
@@ -21,20 +21,21 @@ use crate::auth_session::SessionToken;
 use crate::CliAuthToken;
 
 pub mod models;
-mod schema;
 mod postgres;
+mod schema;
 
 #[cfg(test)]
 pub mod store_mock;
 
 /// Get a [KuaPlanStore] instances, according the "DATABASE_URL" environment variable.
-/// 
+///
 /// The DATABASE_URL must be a PosgreSQL connection url, following the schema
 /// "postgres://{user}:{password}@{host}/{database}".
 pub fn get_store_from_env() -> Result<impl KuaPlanStore, String> {
-    Ok(postgres::PgDataStore::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)?)
+    Ok(postgres::PgDataStore::new(
+        &env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?,
+    )?)
 }
-
 
 pub type EventId = i32;
 pub type EntryId = uuid::Uuid;
@@ -43,24 +44,87 @@ pub type CategoryId = uuid::Uuid;
 pub type PassphraseId = i32;
 
 pub trait KueaPlanStoreFacade {
-    fn get_event(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<models::Event, StoreError>;
-    fn create_event(&mut self, auth_token: &GlobalAuthToken, event: models::NewEvent) -> Result<EventId, StoreError>;
+    fn get_event(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<models::Event, StoreError>;
+    fn create_event(
+        &mut self,
+        auth_token: &GlobalAuthToken,
+        event: models::NewEvent,
+    ) -> Result<EventId, StoreError>;
 
-    fn get_entries(&mut self, auth_token: &AuthToken, the_event_id: EventId) -> Result<Vec<models::FullEntry>, StoreError>;
-    fn get_entry(&mut self, auth_token: &AuthToken, entry_id: EntryId) -> Result<models::FullEntry, StoreError>;
-    fn create_entry(&mut self, auth_token: &AuthToken, entry: models::FullNewEntry) -> Result<(), StoreError>;
-    fn update_entry(&mut self, auth_token: &AuthToken, entry: models::FullNewEntry) -> Result<(), StoreError>;
-    fn delete_entry(&mut self, auth_token: &AuthToken, event_id: EventId, entry_id: EntryId) -> Result<(), StoreError>;
+    fn get_entries(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<models::FullEntry>, StoreError>;
+    fn get_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+    ) -> Result<models::FullEntry, StoreError>;
+    fn create_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry: models::FullNewEntry,
+    ) -> Result<(), StoreError>;
+    fn update_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry: models::FullNewEntry,
+    ) -> Result<(), StoreError>;
+    fn delete_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        entry_id: EntryId,
+    ) -> Result<(), StoreError>;
 
-    fn get_rooms(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<Vec<models::Room>, StoreError>;
-    fn create_room(&mut self, auth_token: &AuthToken, room: models::NewRoom) -> Result<(), StoreError>;
-    fn update_room(&mut self, auth_token: &AuthToken, room: models::NewRoom) -> Result<(), StoreError>;
-    fn delete_room(&mut self, auth_token: &AuthToken, event_id: EventId, room_id: RoomId) -> Result<(), StoreError>;
+    fn get_rooms(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<models::Room>, StoreError>;
+    fn create_room(
+        &mut self,
+        auth_token: &AuthToken,
+        room: models::NewRoom,
+    ) -> Result<(), StoreError>;
+    fn update_room(
+        &mut self,
+        auth_token: &AuthToken,
+        room: models::NewRoom,
+    ) -> Result<(), StoreError>;
+    fn delete_room(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        room_id: RoomId,
+    ) -> Result<(), StoreError>;
 
-    fn get_categories(&mut self, auth_token: &AuthToken, event_id: EventId) -> Result<Vec<models::Category>, StoreError>;
-    fn create_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
-    fn update_category(&mut self, auth_token: &AuthToken, category: models::NewCategory) -> Result<(), StoreError>;
-    fn delete_category(&mut self, auth_token: &AuthToken, event_id: EventId, category_id: CategoryId) -> Result<(), StoreError>;
+    fn get_categories(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<models::Category>, StoreError>;
+    fn create_category(
+        &mut self,
+        auth_token: &AuthToken,
+        category: models::NewCategory,
+    ) -> Result<(), StoreError>;
+    fn update_category(
+        &mut self,
+        auth_token: &AuthToken,
+        category: models::NewCategory,
+    ) -> Result<(), StoreError>;
+    fn delete_category(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        category_id: CategoryId,
+    ) -> Result<(), StoreError>;
 
     /**
      * Try to authorize for a new privilege level for the given event, using the given passphrase.
@@ -73,7 +137,11 @@ pub trait KueaPlanStoreFacade {
         passphrase: &str,
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError>;
-    fn check_authorization(&mut self, session_token: &SessionToken, event_id: EventId) -> Result<AuthToken, StoreError>;
+    fn check_authorization(
+        &mut self,
+        session_token: &SessionToken,
+        event_id: EventId,
+    ) -> Result<AuthToken, StoreError>;
 }
 
 /// Possible roles, a single user can have with respect to a certain event
@@ -87,7 +155,7 @@ pub enum AccessRole {
 
 impl AccessRole {
     /// Get a list of roles, which are implicitly granted to a user who was authorized to this role.
-    fn implied_roles(&self) -> &'static[AccessRole] {
+    fn implied_roles(&self) -> &'static [AccessRole] {
         match self {
             AccessRole::User => &[],
             AccessRole::Orga => &[AccessRole::User],
@@ -104,7 +172,7 @@ impl TryFrom<i32> for AccessRole {
             1 => Ok(AccessRole::User),
             2 => Ok(AccessRole::Orga),
             3 => Ok(AccessRole::Admin),
-            _ => Err(EnumMemberNotExistingError{}),
+            _ => Err(EnumMemberNotExistingError {}),
         }
     }
 }
@@ -117,7 +185,11 @@ pub struct AuthToken {
 }
 
 impl AuthToken {
-    fn check_privilege(&self, event_id: EventId, privilege_level: AccessRole) -> Result<(), StoreError> {
+    fn check_privilege(
+        &self,
+        event_id: EventId,
+        privilege_level: AccessRole,
+    ) -> Result<(), StoreError> {
         if event_id == self.event_id && self.roles.contains(&privilege_level) {
             Ok(())
         } else {
@@ -128,10 +200,7 @@ impl AuthToken {
     pub fn get_cli_authorization(_token: &CliAuthToken, event_id: EventId) -> Self {
         let mut roles = vec![AccessRole::Admin];
         roles.extend(AccessRole::Admin.implied_roles());
-        AuthToken {
-            event_id,
-            roles,
-        }
+        AuthToken { event_id, roles }
     }
 }
 
@@ -151,9 +220,7 @@ impl GlobalAuthToken {
     pub fn get_global_cli_authorization(_token: &CliAuthToken) -> Self {
         let mut roles = vec![AccessRole::Admin];
         roles.extend(AccessRole::Admin.implied_roles());
-        GlobalAuthToken {
-            roles,
-        }
+        GlobalAuthToken { roles }
     }
 }
 
@@ -208,9 +275,15 @@ impl std::fmt::Display for StoreError {
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::NotExisting => f.write_str("Database record does not exist."),
-            Self::PermissionDenied => f.write_str("Client is not authorized to perform this action"),
-            Self::InvalidSession => f.write_str("Session token provided by client or session data is invalid"),
-            Self::InvalidData => f.write_str("Data loaded or stored from/in database is not valid."),
+            Self::PermissionDenied => {
+                f.write_str("Client is not authorized to perform this action")
+            }
+            Self::InvalidSession => {
+                f.write_str("Session token provided by client or session data is invalid")
+            }
+            Self::InvalidData => {
+                f.write_str("Data loaded or stored from/in database is not valid.")
+            }
         }
     }
 }

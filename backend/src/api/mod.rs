@@ -1,9 +1,12 @@
-use std::{env, fmt::Display, vec::Vec};
 use std::sync::Arc;
+use std::{env, fmt::Display, vec::Vec};
 
 #[cfg(test)]
 mod tests;
 
+use crate::auth_session::SessionToken;
+use crate::data_store::models::*;
+use crate::data_store::{get_store_from_env, StoreError};
 use actix_web::{
     error::ResponseError,
     get,
@@ -12,9 +15,6 @@ use actix_web::{
 };
 use serde_json::json;
 use uuid::Uuid;
-use crate::auth_session::SessionToken;
-use crate::data_store::models::*;
-use crate::data_store::{get_store_from_env, StoreError};
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(get_api_service());
@@ -139,7 +139,10 @@ struct SessionTokenHeader(String);
 const SESSION_TOKEN_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
 
 impl SessionTokenHeader {
-    fn session_token(&self, secret: &str) -> Result<crate::auth_session::SessionToken, crate::auth_session::SessionError> {
+    fn session_token(
+        &self,
+        secret: &str,
+    ) -> Result<crate::auth_session::SessionToken, crate::auth_session::SessionError> {
         SessionToken::from_string(&self.0, secret, SESSION_TOKEN_MAX_AGE)
     }
 }
@@ -211,8 +214,8 @@ async fn get_entry(
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok(store.get_entry(&auth, entry_id)?)
     })
-        .await??
-        .into();
+    .await??
+    .into();
     Ok(web::Json(entry))
 }
 

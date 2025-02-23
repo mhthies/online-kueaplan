@@ -1,6 +1,6 @@
+use crate::api::{configure_app, AppState};
 use actix_web::{middleware, web, App, HttpServer};
 use std::fmt::Display;
-use crate::api::{configure_app, AppState};
 
 #[derive(Debug)]
 pub enum ApplicationStartupError {

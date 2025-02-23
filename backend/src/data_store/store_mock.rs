@@ -3,7 +3,7 @@ use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, NewCategory, NewEvent, NewRoom, Room,
 };
 use crate::data_store::{
-    models, AccessRole, GlobalAuthToken, AuthToken, EventId, KuaPlanStore, KueaPlanStoreFacade,
+    models, AccessRole, AuthToken, EventId, GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade,
     StoreError,
 };
 use std::sync::Mutex;
@@ -294,9 +294,9 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             .filter(|c| c.id == category.id)
             .next()
             .ok_or(StoreError::NotExisting)?;
-        existing_category.title = category.title; 
-        existing_category.icon = category.icon; 
-        existing_category.color = category.color; 
+        existing_category.title = category.title;
+        existing_category.icon = category.icon;
+        existing_category.color = category.color;
         existing_category.event_id = category.event_id;
         existing_category.is_official = category.is_official;
         Ok(())

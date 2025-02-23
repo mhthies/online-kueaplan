@@ -25,6 +25,7 @@ def main() -> int:
         "entries": generate_json_entries(entries, room_map),
         "rooms": room_result,
         "categories": generate_json_categories(),
+        "event": generate_json_event(config)
     }
     with OUTPUT_PATH.open("w") as f:
         json.dump(result, f, indent=2)
@@ -203,6 +204,14 @@ def generate_json_entries(entries: Iterable[KueaPlanEntry], room_id_mapping: Map
         })
     return result
 
+
+def generate_json_event(config: Any) -> JSON:
+    return {
+        "id": -1,
+        "title": config["event"]["title"],
+        "begin_date": config["event"]["begin"].isoformat(),
+        "end_date": config["event"]["end"].isoformat(),
+    }
 
 if __name__ == '__main__':
     sys.exit(main())

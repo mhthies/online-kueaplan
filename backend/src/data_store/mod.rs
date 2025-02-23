@@ -98,8 +98,8 @@ impl TryFrom<i32> for AccessRole {
 
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            1 => Ok(AccessRole::Orga),
-            2 => Ok(AccessRole::User),
+            1 => Ok(AccessRole::User),
+            2 => Ok(AccessRole::Orga),
             _ => Err(EnumMemberNotExistingError{}),
         }
     }

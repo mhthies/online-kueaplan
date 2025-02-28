@@ -46,7 +46,7 @@ pub struct FullEntry {
     pub room_ids: Vec<Uuid>,
 }
 
-#[derive(Insertable, AsChangeset, Identifiable)]
+#[derive(Clone, Insertable, AsChangeset, Identifiable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct NewEntry {
     pub id: Uuid,
@@ -66,6 +66,7 @@ pub struct NewEntry {
     pub is_cancelled: bool,
 }
 
+#[derive(Clone)]
 pub struct FullNewEntry {
     pub entry: NewEntry,
     pub room_ids: Vec<Uuid>,

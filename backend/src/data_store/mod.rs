@@ -234,6 +234,7 @@ pub enum StoreError {
     ConnectionError(diesel::result::ConnectionError),
     QueryError(diesel::result::Error),
     NotExisting,
+    AlreadyExisting,
     PermissionDenied,
     InvalidSession,
     InvalidData,
@@ -243,6 +244,10 @@ impl From<diesel::result::Error> for StoreError {
     fn from(error: diesel::result::Error) -> Self {
         match error {
             diesel::result::Error::NotFound => Self::NotExisting,
+            diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::UniqueViolation,
+                _,
+            ) => Self::AlreadyExisting,
             _ => Self::QueryError(error),
         }
     }
@@ -275,6 +280,7 @@ impl std::fmt::Display for StoreError {
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::NotExisting => f.write_str("Database record does not exist."),
+            Self::AlreadyExisting => f.write_str("Database record exists already."),
             Self::PermissionDenied => {
                 f.write_str("Client is not authorized to perform this action")
             }

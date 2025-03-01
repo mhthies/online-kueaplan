@@ -1,5 +1,6 @@
 use crate::api::{APIError, AppState, SessionTokenHeader};
 use crate::auth_session::SessionToken;
+use crate::data_store::StoreError;
 use actix_web::{get, post, web, Responder};
 use kueaplan_api_types::AuthorizationInfo;
 use serde::{Deserialize, Serialize};
@@ -57,7 +58,12 @@ async fn authorize(
         web::block(move || -> Result<_, APIError> {
             let mut session_token = session_token;
             let mut store = store.get_facade()?;
-            store.authorize(event_id, &body.passphrase, &mut session_token)?;
+            store
+                .authorize(event_id, &body.passphrase, &mut session_token)
+                .map_err(|e| match e {
+                    StoreError::NotExisting => APIError::AuthenticationFailed,
+                    e => e.into(),
+                })?;
             let auth = store.check_authorization(&session_token, event_id)?;
             Ok((auth.list_api_privileges(), session_token))
         })

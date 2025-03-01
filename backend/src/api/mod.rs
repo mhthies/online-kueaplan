@@ -35,6 +35,7 @@ enum APIError {
     PermissionDenied,
     NoSessionToken,
     InvalidSessionToken,
+    AuthenticationFailed,
     BackendError(String),
     InternalError(String),
 }
@@ -55,6 +56,9 @@ impl Display for APIError {
             Self::InvalidSessionToken => {
                 f.write_str("This action requires authentication, but client authentication session given by the client is not valid.")?
             },
+            Self::AuthenticationFailed => {
+                f.write_str("Authentication with the given passphrase failed.")?
+            }
             Self::BackendError(s) => {
                 f.write_str("Database error: ")?;
                 f.write_str(s)?;
@@ -86,6 +90,7 @@ impl ResponseError for APIError {
             Self::PermissionDenied => StatusCode::FORBIDDEN,
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
+            Self::AuthenticationFailed => StatusCode::FORBIDDEN,
             Self::BackendError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }

@@ -1,5 +1,6 @@
 html { 
 	scroll-snap-type: x proximity;
+	scroll-snap-stop: always;
 } 
 
 body {
@@ -195,9 +196,10 @@ body {
 }
 
 #footer {
-	position: sticky;
+	position: fixed;
 	bottom: 0;
-	display: block;
+	left: 0;
+	right: 0;
 	background-color: #fff;
 	border-top: 1px solid rgba(0,0,0,.12);
 	box-shadow: 0 0 10px rgba(0,0,0,.12);

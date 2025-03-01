@@ -8,12 +8,12 @@ mod tests;
 
 use crate::auth_session::SessionToken;
 use crate::data_store::{get_store_from_env, StoreError};
+use actix_web::error::JsonPayloadError;
 use actix_web::{
     error::ResponseError,
     http::{header::ContentType, StatusCode},
     web, HttpResponse,
 };
-use actix_web::error::JsonPayloadError;
 use serde_json::json;
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
@@ -30,6 +30,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)
+        .service(endpoints_entry::delete_entry)
 }
 
 #[derive(Debug)]
@@ -41,6 +42,7 @@ enum APIError {
     InvalidSessionToken,
     AuthenticationFailed,
     InvalidJson(actix_web::error::JsonPayloadError),
+    EntityIdMissmatch,
     BackendError(String),
     InternalError(String),
 }
@@ -76,6 +78,9 @@ impl Display for APIError {
                 f.write_str("Invalid JSON request data: ")?;
                 write!(f, "{}", e)?;
             },
+            Self::EntityIdMissmatch => {
+                f.write_str("Entity id in given data does not match URL")?;
+            }
         };
         Ok(())
     }
@@ -104,9 +109,12 @@ impl ResponseError for APIError {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidJson(e) => match e {
                 JsonPayloadError::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                JsonPayloadError::Deserialize(json_error ) if json_error.is_data() => StatusCode::UNPROCESSABLE_ENTITY,
+                JsonPayloadError::Deserialize(json_error) if json_error.is_data() => {
+                    StatusCode::UNPROCESSABLE_ENTITY
+                }
                 _ => StatusCode::BAD_REQUEST,
             },
+            &APIError::EntityIdMissmatch => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 }

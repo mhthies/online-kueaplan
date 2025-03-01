@@ -43,6 +43,13 @@ impl PgDataStoreFacade {
     }
 }
 
+/// Create an Sql expression to check if a row has been created or updated by a Postgres "upsert"
+/// statement 
+fn sql_upsert_is_updated() -> diesel::expression::SqlLiteral<diesel::sql_types::Bool> {
+    // See https://stackoverflow.com/q/34762732 and https://stackoverflow.com/q/49597793
+    diesel::dsl::sql("xmax::text <> '0'")
+}
+
 impl KueaPlanStoreFacade for PgDataStoreFacade {
     fn get_event(
         &mut self,
@@ -127,30 +134,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
-    fn create_entry(
+    fn create_or_update_entry(
         &mut self,
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
-    ) -> Result<(), StoreError> {
-        use schema::entries::dsl::*;
-        auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
-
-        self.connection.transaction(|connection| {
-            diesel::insert_into(entries)
-                .values(&entry.entry)
-                .execute(connection)?;
-
-            insert_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
-
-            Ok(())
-        })
-    }
-
-    fn update_entry(
-        &mut self,
-        auth_token: &AuthToken,
-        entry: models::FullNewEntry,
-    ) -> Result<(), StoreError> {
+    ) -> Result<bool, StoreError> {
         use schema::entries::dsl::*;
         use schema::entry_rooms;
 
@@ -159,18 +147,30 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
 
         self.connection.transaction(|connection| {
-            let count = diesel::update(entries)
-                .filter(id.eq(entry.entry.id))
-                // By limiting the search of existing entries to the same event, we prevent changes
-                // of the event id (i.e. "moving" entries between events), which would be a security
-                // loop hole
-                .filter(event_id.eq(entry.entry.event_id))
-                .filter(deleted.eq(false))
-                .set(&entry.entry)
-                .execute(connection)?;
-            if count == 0 {
-                return Err(StoreError::NotExisting);
+            let upsert_result = {
+                // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
+                // `.on_onflict().do_update()`, does not implement the QueryDsl trait for
+                // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
+                // to not make the .filter() method in the following query ambiguous.
+                use diesel::query_dsl::methods::FilterDsl;
+                
+                diesel::insert_into(entries)
+                    .values(&entry.entry)
+                    .on_conflict(id)
+                    .do_update()
+                    // By limiting the search of existing entries to the same event, we prevent changes
+                    // of the event id (i.e. "moving" entries between events), which would be a security
+                    // loop hole
+                    .set(&entry.entry)
+                    .filter(event_id.eq(entry.entry.event_id))
+                    .filter(deleted.eq(false))
+                    .returning(sql_upsert_is_updated())
+                    .load::<bool>(connection)?
+            };
+            if upsert_result.len() == 0 {
+                return Err(StoreError::ConflictEntityExists);
             }
+            let is_updated = upsert_result[0];
 
             diesel::delete(
                 entry_rooms::table.filter(entry_rooms::dsl::entry_id.eq(entry.entry.id)),
@@ -178,7 +178,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .execute(connection)?;
             insert_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
 
-            Ok(())
+            Ok(!is_updated)
         })
     }
 

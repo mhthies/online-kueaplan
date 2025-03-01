@@ -108,45 +108,11 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             .ok_or(StoreError::NotExisting)
     }
 
-    fn create_entry(
+    fn create_or_update_entry(
         &mut self,
         _auth_token: &AuthToken,
         entry: FullNewEntry,
-    ) -> Result<(), StoreError> {
-        let mut data = self.store.data.lock().expect("Error while locking mutex.");
-        if let Some(e) = data.next_error.take() {
-            return Err(e);
-        }
-        data.entries.push(models::FullEntry {
-            entry: models::Entry {
-                id: entry.entry.id,
-                title: entry.entry.title,
-                description: entry.entry.description,
-                responsible_person: entry.entry.responsible_person,
-                is_room_reservation: entry.entry.is_room_reservation,
-                residue_of: entry.entry.residue_of,
-                event_id: entry.entry.event_id,
-                begin: entry.entry.begin,
-                end: entry.entry.end,
-                category: entry.entry.category,
-                deleted: false,
-                last_updated: chrono::Utc::now(),
-                comment: entry.entry.comment,
-                room_comment: entry.entry.room_comment,
-                time_comment: entry.entry.time_comment,
-                is_exclusive: entry.entry.is_exclusive,
-                is_cancelled: entry.entry.is_cancelled,
-            },
-            room_ids: entry.room_ids,
-        });
-        Ok(())
-    }
-
-    fn update_entry(
-        &mut self,
-        _auth_token: &AuthToken,
-        entry: FullNewEntry,
-    ) -> Result<(), StoreError> {
+    ) -> Result<bool, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");
         if let Some(e) = data.next_error.take() {
             return Err(e);
@@ -155,25 +121,53 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             .entries
             .iter_mut()
             .filter(|e| e.entry.id == entry.entry.id)
-            .next()
-            .ok_or(StoreError::NotExisting)?;
-        existing_entry.entry.title = entry.entry.title;
-        existing_entry.entry.description = entry.entry.description;
-        existing_entry.entry.responsible_person = entry.entry.responsible_person;
-        existing_entry.entry.is_room_reservation = entry.entry.is_room_reservation;
-        existing_entry.entry.residue_of = entry.entry.residue_of;
-        existing_entry.entry.event_id = entry.entry.event_id;
-        existing_entry.entry.begin = entry.entry.begin;
-        existing_entry.entry.end = entry.entry.end;
-        existing_entry.entry.category = entry.entry.category;
-        existing_entry.entry.last_updated = chrono::Utc::now();
-        existing_entry.entry.comment = entry.entry.comment;
-        existing_entry.entry.room_comment = entry.entry.room_comment;
-        existing_entry.entry.time_comment = entry.entry.time_comment;
-        existing_entry.entry.is_exclusive = entry.entry.is_exclusive;
-        existing_entry.entry.is_cancelled = entry.entry.is_cancelled;
-        existing_entry.room_ids = entry.room_ids;
-        Ok(())
+            .next();
+        if let Some(e) = existing_entry {
+            if (e.entry.event_id != entry.entry.event_id || e.entry.deleted) {
+                return Err(StoreError::ConflictEntityExists);
+            }
+            e.entry.title = entry.entry.title;
+            e.entry.description = entry.entry.description;
+            e.entry.responsible_person = entry.entry.responsible_person;
+            e.entry.is_room_reservation = entry.entry.is_room_reservation;
+            e.entry.residue_of = entry.entry.residue_of;
+            e.entry.event_id = entry.entry.event_id;
+            e.entry.begin = entry.entry.begin;
+            e.entry.end = entry.entry.end;
+            e.entry.category = entry.entry.category;
+            e.entry.last_updated = chrono::Utc::now();
+            e.entry.comment = entry.entry.comment;
+            e.entry.room_comment = entry.entry.room_comment;
+            e.entry.time_comment = entry.entry.time_comment;
+            e.entry.is_exclusive = entry.entry.is_exclusive;
+            e.entry.is_cancelled = entry.entry.is_cancelled;
+            e.room_ids = entry.room_ids;
+            Ok(false)
+        } else {
+            data.entries.push(models::FullEntry {
+                entry: models::Entry {
+                    id: entry.entry.id,
+                    title: entry.entry.title,
+                    description: entry.entry.description,
+                    responsible_person: entry.entry.responsible_person,
+                    is_room_reservation: entry.entry.is_room_reservation,
+                    residue_of: entry.entry.residue_of,
+                    event_id: entry.entry.event_id,
+                    begin: entry.entry.begin,
+                    end: entry.entry.end,
+                    category: entry.entry.category,
+                    deleted: false,
+                    last_updated: chrono::Utc::now(),
+                    comment: entry.entry.comment,
+                    room_comment: entry.entry.room_comment,
+                    time_comment: entry.entry.time_comment,
+                    is_exclusive: entry.entry.is_exclusive,
+                    is_cancelled: entry.entry.is_cancelled,
+                },
+                room_ids: entry.room_ids,
+            });
+            Ok(true)
+        }
     }
 
     fn delete_entry(

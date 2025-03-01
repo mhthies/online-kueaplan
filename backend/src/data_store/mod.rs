@@ -65,16 +65,19 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         entry_id: EntryId,
     ) -> Result<models::FullEntry, StoreError>;
-    fn create_entry(
+    /// Create a new entry or update the existing entry with the same id.
+    /// 
+    /// # return value
+    /// - `Ok(true)` if the entry has been created, successfully
+    /// - `Ok(false)` if an existing entry has been updated, successfully
+    /// - `Err(StoreError::ConflictEntityExists)` if the entry exists but could not be updated
+    ///   (assigned to another event or deleted already)
+    /// - `Err(_)` if something different went wrong, as usual
+    fn create_or_update_entry(
         &mut self,
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
-    ) -> Result<(), StoreError>;
-    fn update_entry(
-        &mut self,
-        auth_token: &AuthToken,
-        entry: models::FullNewEntry,
-    ) -> Result<(), StoreError>;
+    ) -> Result<bool, StoreError>;
     fn delete_entry(
         &mut self,
         auth_token: &AuthToken,
@@ -234,7 +237,7 @@ pub enum StoreError {
     ConnectionError(diesel::result::ConnectionError),
     QueryError(diesel::result::Error),
     NotExisting,
-    AlreadyExisting,
+    ConflictEntityExists,
     PermissionDenied,
     InvalidSession,
     InvalidData,
@@ -247,7 +250,7 @@ impl From<diesel::result::Error> for StoreError {
             diesel::result::Error::DatabaseError(
                 diesel::result::DatabaseErrorKind::UniqueViolation,
                 _,
-            ) => Self::AlreadyExisting,
+            ) => Self::ConflictEntityExists,
             _ => Self::QueryError(error),
         }
     }
@@ -280,7 +283,7 @@ impl std::fmt::Display for StoreError {
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::NotExisting => f.write_str("Database record does not exist."),
-            Self::AlreadyExisting => f.write_str("Database record exists already."),
+            Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::PermissionDenied => {
                 f.write_str("Client is not authorized to perform this action")
             }

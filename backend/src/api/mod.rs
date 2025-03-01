@@ -103,7 +103,7 @@ impl From<StoreError> for APIError {
             }
             StoreError::QueryError(diesel_error) => Self::BackendError(diesel_error.to_string()),
             StoreError::NotExisting => Self::NotExisting,
-            StoreError::AlreadyExisting => Self::AlreadyExisting,
+            StoreError::ConflictEntityExists => Self::AlreadyExisting,
             StoreError::PermissionDenied => Self::PermissionDenied,
             StoreError::InvalidSession => Self::InvalidSessionToken,
             StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
@@ -240,19 +240,10 @@ async fn create_or_update_entry(
     web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
-        let entry = FullNewEntry::from_api(data.into_inner(), event_id);
-        let insert_result = store.create_entry(&auth, entry.clone());
-        match insert_result {
-            Ok(_) => Ok(()),
-            Err(StoreError::AlreadyExisting) => {
-                // Without a transaction, this may fail due to concurrency, but in this case,
-                // there's already something strange going on, so it's okay to fail.
-                Ok(store.update_entry(&auth, entry)?)
-            },
-            Err(e) => Err(e.into()),
-        }
+        store.create_or_update_entry(&auth, FullNewEntry::from_api(data.into_inner(), event_id))?;
+        Ok(())
     })
     .await??;
-
-    Ok("")
+    
+    Ok("")  // TODO return HTTP 201 or 204 respectively
 }

@@ -37,7 +37,7 @@ pub fn load_event_from_file(
         data_store.create_category(&auth_token, NewCategory::from_api(category, event_id))?;
     }
     for entry in data.entries {
-        data_store.create_entry(&auth_token, FullNewEntry::from_api(entry, event_id))?;
+        data_store.create_or_update_entry(&auth_token, FullNewEntry::from_api(entry, event_id))?;
     }
 
     Ok(())

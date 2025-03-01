@@ -21,7 +21,7 @@ pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
     let mut session_token = SessionToken::new();
     session_token.add_authorization(2);
     let auth_token = facade.check_authorization(&session_token, 42).unwrap();
-    facade.create_entry(&auth_token, FullNewEntry{
+    facade.create_or_update_entry(&auth_token, FullNewEntry{
         entry: NewEntry {
             id: uuid!("fca6379a-b8ad-4a53-9479-73099c34f16a"),
             title: "Kennenlernspiele".to_string(),

@@ -3,7 +3,7 @@ use crate::data_store::models::FullNewEntry;
 use actix_web::{get, put, web, HttpResponse, Responder};
 use uuid::Uuid;
 
-#[get("/event/{event_id}/entries")]
+#[get("/events/{event_id}/entries")]
 async fn list_entries(
     path: web::Path<i32>,
     state: web::Data<AppState>,
@@ -27,7 +27,7 @@ async fn list_entries(
     Ok(web::Json(entries))
 }
 
-#[get("/event/{event_id}/entries/{entry_id}")]
+#[get("/events/{event_id}/entries/{entry_id}")]
 async fn get_entry(
     path: web::Path<(i32, Uuid)>,
     state: web::Data<AppState>,
@@ -48,7 +48,7 @@ async fn get_entry(
     Ok(web::Json(entry))
 }
 
-#[put("/event/{event_id}/entries/{entry_id}")]
+#[put("/events/{event_id}/entries/{entry_id}")]
 async fn create_or_update_entry(
     path: web::Path<(i32, Uuid)>,
     data: web::Json<kueaplan_api_types::Entry>,

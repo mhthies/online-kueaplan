@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::{env, fmt::Display, vec::Vec};
+use std::{env, fmt::Display};
 
 mod endpoints_entry;
 #[cfg(test)]
@@ -13,6 +13,7 @@ use actix_web::{
     web, HttpResponse,
 };
 use serde_json::json;
+
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(get_api_service());
 }

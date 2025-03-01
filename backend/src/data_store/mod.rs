@@ -90,16 +90,19 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
     ) -> Result<Vec<models::Room>, StoreError>;
-    fn create_room(
+    /// Create a new room or update the existing entry with the same id.
+    ///
+    /// # return value
+    /// - `Ok(true)` if the room has been created, successfully
+    /// - `Ok(false)` if an existing room has been updated, successfully
+    /// - `Err(StoreError::ConflictEntityExists)` if the room exists but could not be updated
+    ///   (assigned to another event or deleted already)
+    /// - `Err(_)` if something different went wrong, as usual
+    fn create_or_update_room(
         &mut self,
         auth_token: &AuthToken,
         room: models::NewRoom,
-    ) -> Result<(), StoreError>;
-    fn update_room(
-        &mut self,
-        auth_token: &AuthToken,
-        room: models::NewRoom,
-    ) -> Result<(), StoreError>;
+    ) -> Result<bool, StoreError>;
     fn delete_room(
         &mut self,
         auth_token: &AuthToken,
@@ -112,16 +115,19 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
     ) -> Result<Vec<models::Category>, StoreError>;
-    fn create_category(
+    /// Create a new category or update the existing entry with the same id.
+    ///
+    /// # return value
+    /// - `Ok(true)` if the category has been created, successfully
+    /// - `Ok(false)` if an existing category has been updated, successfully
+    /// - `Err(StoreError::ConflictEntityExists)` if the category exists but could not be updated
+    ///   (assigned to another event or deleted already)
+    /// - `Err(_)` if something different went wrong, as usual
+    fn create_or_update_category(
         &mut self,
         auth_token: &AuthToken,
         category: models::NewCategory,
-    ) -> Result<(), StoreError>;
-    fn update_category(
-        &mut self,
-        auth_token: &AuthToken,
-        category: models::NewCategory,
-    ) -> Result<(), StoreError>;
+    ) -> Result<bool, StoreError>;
     fn delete_category(
         &mut self,
         auth_token: &AuthToken,

@@ -158,9 +158,9 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     .values(&entry.entry)
                     .on_conflict(id)
                     .do_update()
-                    // By limiting the search of existing entries to the same event, we prevent changes
-                    // of the event id (i.e. "moving" entries between events), which would be a security
-                    // loop hole
+                    // By limiting the search of existing entries to the same event, we prevent
+                    // changes of the event id (i.e. "moving" entries between events), which would
+                    // be a security loophole
                     .set(&entry.entry)
                     .filter(event_id.eq(entry.entry.event_id))
                     .filter(deleted.eq(false))
@@ -220,46 +220,42 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .load::<models::Room>(&mut self.connection)?)
     }
 
-    fn create_room(
+    fn create_or_update_room(
         &mut self,
         auth_token: &AuthToken,
         room: models::NewRoom,
-    ) -> Result<(), StoreError> {
-        use schema::rooms::dsl::*;
-
-        auth_token.check_privilege(room.event_id, AccessRole::Orga)?;
-
-        diesel::insert_into(rooms)
-            .values(&room)
-            .execute(&mut self.connection)?;
-
-        Ok(())
-    }
-
-    fn update_room(
-        &mut self,
-        auth_token: &AuthToken,
-        room: models::NewRoom,
-    ) -> Result<(), StoreError> {
+    ) -> Result<bool, StoreError> {
         use schema::rooms::dsl::*;
 
         // The event_id of the existing room is ensured to be the same (see below), so the
         // privilege level check holds for both, the existing and the new room.
         auth_token.check_privilege(room.event_id, AccessRole::Orga)?;
 
-        let count = diesel::update(rooms)
-            .filter(id.eq(room.id))
+        let upsert_result = {
+            // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
+            // `.on_onflict().do_update()`, does not implement the QueryDsl trait for
+            // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
+            // to not make the .filter() method in the following query ambiguous.
+            use diesel::query_dsl::methods::FilterDsl;
+            
+            diesel::insert_into(rooms)
+                .values(&room)
+            .on_conflict(id)
+            .do_update()
             // By limiting the search of existing rooms to the same event, we prevent changes
             // of the event id (i.e. "moving" entries between events), which would be a security
-            // loop hole
+            // loophole
+            .set(&room)
             .filter(event_id.eq(room.event_id))
             .filter(deleted.eq(false))
-            .set(&room)
-            .execute(&mut self.connection)?;
-        if count == 0 {
+            .returning(sql_upsert_is_updated())
+            .load::<bool>(&mut self.connection)?
+        };
+        if upsert_result.len() == 0 {
             return Err(StoreError::NotExisting);
         }
-        Ok(())
+        let is_updated = upsert_result[0];
+        Ok(!is_updated)
     }
 
     fn delete_room(
@@ -300,44 +296,40 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .load::<models::Category>(&mut self.connection)?)
     }
 
-    fn create_category(
+    fn create_or_update_category(
         &mut self,
         auth_token: &AuthToken,
         category: models::NewCategory,
-    ) -> Result<(), StoreError> {
+    ) -> Result<bool, StoreError> {
         use schema::categories::dsl::*;
 
         auth_token.check_privilege(category.event_id, AccessRole::Orga)?;
 
-        diesel::insert_into(categories)
-            .values(&category)
-            .execute(&mut self.connection)?;
-
-        Ok(())
-    }
-
-    fn update_category(
-        &mut self,
-        auth_token: &AuthToken,
-        category: models::NewCategory,
-    ) -> Result<(), StoreError> {
-        use schema::categories::dsl::*;
-
-        auth_token.check_privilege(category.event_id, AccessRole::Orga)?;
-
-        let count = diesel::update(categories)
-            .filter(id.eq(category.id))
-            // By limiting the search of existing categories to the same event, we prevent changes
-            // of the event id (i.e. "moving" categories between events), which would be a security
-            // loop hole
-            .filter(event_id.eq(category.event_id))
-            .filter(deleted.eq(false))
-            .set(&category)
-            .execute(&mut self.connection)?;
-        if count == 0 {
+        let upsert_result = {
+            // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
+            // `.on_onflict().do_update()`, does not implement the QueryDsl trait for
+            // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
+            // to not make the .filter() method in the following query ambiguous.
+            use diesel::query_dsl::methods::FilterDsl;
+            
+            diesel::insert_into(categories)
+                .values(&category)
+                .on_conflict(id)
+                .do_update()
+                // By limiting the search of existing categories to the same event, we prevent
+                // changes of the event id (i.e. "moving" categories between events), which would be
+                // a security loophole
+                .set(&category)
+                .filter(event_id.eq(category.event_id))
+                .filter(deleted.eq(false))
+                .returning(sql_upsert_is_updated())
+                .load::<bool>(&mut self.connection)?
+        };
+        if upsert_result.len() == 0 {
             return Err(StoreError::NotExisting);
         }
-        Ok(())
+        let is_updated = upsert_result[0];
+        Ok(!is_updated)
     }
 
     fn delete_category(

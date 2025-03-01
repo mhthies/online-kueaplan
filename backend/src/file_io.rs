@@ -22,7 +22,7 @@ pub fn load_event_from_file(
     // TODO logging instead of propagating error
     let data_store_pool = get_store_from_env()?;
     let mut data_store = data_store_pool.get_facade()?;
-    
+
     let f = File::open(path)?;
     let data: SavedEvent = serde_json::from_reader(BufReader::new(f))?;
 
@@ -31,10 +31,11 @@ pub fn load_event_from_file(
 
     let auth_token = AuthToken::get_cli_authorization(&token, event_id);
     for room in data.rooms {
-        data_store.create_room(&auth_token, NewRoom::from_api(room, event_id))?;
+        data_store.create_or_update_room(&auth_token, NewRoom::from_api(room, event_id))?;
     }
     for category in data.categories {
-        data_store.create_category(&auth_token, NewCategory::from_api(category, event_id))?;
+        data_store
+            .create_or_update_category(&auth_token, NewCategory::from_api(category, event_id))?;
     }
     for entry in data.entries {
         data_store.create_or_update_entry(&auth_token, FullNewEntry::from_api(entry, event_id))?;

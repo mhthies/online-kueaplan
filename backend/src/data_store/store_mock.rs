@@ -196,35 +196,32 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         Ok(data.rooms.clone())
     }
 
-    fn create_room(&mut self, _auth_token: &AuthToken, room: NewRoom) -> Result<(), StoreError> {
+    fn create_or_update_room(
+        &mut self,
+        _auth_token: &AuthToken,
+        room: NewRoom,
+    ) -> Result<bool, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");
         if let Some(e) = data.next_error.take() {
             return Err(e);
         }
-        data.rooms.push(Room {
-            id: room.id,
-            title: room.title,
-            description: room.description,
-            event_id: room.event_id,
-        });
-        Ok(())
-    }
-
-    fn update_room(&mut self, _auth_token: &AuthToken, room: NewRoom) -> Result<(), StoreError> {
-        let mut data = self.store.data.lock().expect("Error while locking mutex.");
-        if let Some(e) = data.next_error.take() {
-            return Err(e);
+        let existing_room = data.rooms.iter_mut().filter(|r| r.id == room.id).next();
+        if let Some(r) = existing_room {
+            if r.event_id != room.event_id {
+                return Err(StoreError::ConflictEntityExists);
+            }
+            r.title = room.title;
+            r.description = room.description;
+            Ok(false)
+        } else {
+            data.rooms.push(Room {
+                id: room.id,
+                title: room.title,
+                description: room.description,
+                event_id: room.event_id,
+            });
+            Ok(true)
         }
-        let existing_room = data
-            .rooms
-            .iter_mut()
-            .filter(|r| r.id == room.id)
-            .next()
-            .ok_or(StoreError::NotExisting)?;
-        existing_room.title = room.title;
-        existing_room.description = room.description;
-        existing_room.event_id = room.event_id;
-        Ok(())
     }
 
     fn delete_room(
@@ -253,31 +250,11 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         Ok(data.categories.clone())
     }
 
-    fn create_category(
+    fn create_or_update_category(
         &mut self,
         _auth_token: &AuthToken,
         category: NewCategory,
-    ) -> Result<(), StoreError> {
-        let mut data = self.store.data.lock().expect("Error while locking mutex.");
-        if let Some(e) = data.next_error.take() {
-            return Err(e);
-        }
-        data.categories.push(Category {
-            id: category.id,
-            title: category.title,
-            icon: category.icon,
-            color: category.color,
-            event_id: category.event_id,
-            is_official: category.is_official,
-        });
-        Ok(())
-    }
-
-    fn update_category(
-        &mut self,
-        _auth_token: &AuthToken,
-        category: NewCategory,
-    ) -> Result<(), StoreError> {
+    ) -> Result<bool, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");
         if let Some(e) = data.next_error.take() {
             return Err(e);
@@ -286,14 +263,28 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             .categories
             .iter_mut()
             .filter(|c| c.id == category.id)
-            .next()
-            .ok_or(StoreError::NotExisting)?;
-        existing_category.title = category.title;
-        existing_category.icon = category.icon;
-        existing_category.color = category.color;
-        existing_category.event_id = category.event_id;
-        existing_category.is_official = category.is_official;
-        Ok(())
+            .next();
+        if let Some(c) = existing_category {
+            if c.event_id != category.event_id {
+                return Err(StoreError::ConflictEntityExists);
+            }
+            c.title = category.title;
+            c.icon = category.icon;
+            c.color = category.color;
+            c.event_id = category.event_id;
+            c.is_official = category.is_official;
+            Ok(false)
+        } else {
+            data.categories.push(Category {
+                id: category.id,
+                title: category.title,
+                icon: category.icon,
+                color: category.color,
+                event_id: category.event_id,
+                is_official: category.is_official,
+            });
+            Ok(true)
+        }
     }
 
     fn delete_category(

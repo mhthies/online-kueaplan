@@ -1,0 +1,70 @@
+use crate::api::{APIError, AppState, SessionTokenHeader};
+use crate::auth_session::SessionToken;
+use actix_web::{get, post, web, Responder};
+use kueaplan_api_types::AuthorizationInfo;
+use serde::{Deserialize, Serialize};
+
+#[get("/events/{eventId}/auth")]
+async fn check_authorization(
+    path: web::Path<i32>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let event_id = path.into_inner();
+    let session_token = session_token_header
+        .map(|token_header| token_header.into_inner().session_token(&state.secret))
+        .transpose()?;
+    let authorization: Vec<kueaplan_api_types::Authorization> = if let Some(token) = session_token {
+        web::block(move || -> Result<_, APIError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.check_authorization(&token, event_id)?;
+            Ok(auth.list_api_privileges())
+        })
+        .await??
+    } else {
+        vec![]
+    };
+    let authorization_info: AuthorizationInfo = AuthorizationInfo { authorization };
+    Ok(web::Json(authorization_info))
+}
+
+#[derive(Deserialize)]
+struct AuthorizeRequest {
+    passphrase: String,
+}
+#[derive(Serialize)]
+struct AuthorizeResponse {
+    #[serde(flatten)]
+    authorization_info: AuthorizationInfo,
+    #[serde(rename = "sessionToken")]
+    session_token: String,
+}
+
+#[post("/events/{eventId}/auth")]
+async fn authorize(
+    path: web::Path<i32>,
+    body: web::Json<AuthorizeRequest>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let event_id = path.into_inner();
+    let session_token = session_token_header
+        .map(|token_header| token_header.into_inner().session_token(&state.secret))
+        .transpose()?
+        .unwrap_or_else(SessionToken::new);
+    let store = state.store.clone();
+    let (authorization, session_token) = {
+        web::block(move || -> Result<_, APIError> {
+            let mut session_token = session_token;
+            let mut store = store.get_facade()?;
+            store.authorize(event_id, &body.passphrase, &mut session_token)?;
+            let auth = store.check_authorization(&session_token, event_id)?;
+            Ok((auth.list_api_privileges(), session_token))
+        })
+        .await??
+    };
+    Ok(web::Json(AuthorizeResponse {
+        authorization_info: AuthorizationInfo { authorization },
+        session_token: session_token.as_string(&state.secret),
+    }))
+}

@@ -68,3 +68,22 @@ pub struct Updates {
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub rooms: Option<Vec<Room>>,
 }
+
+
+#[derive(Serialize, Deserialize)]
+pub enum AuthorizationRole {
+    #[serde(rename="participant")]
+    Participant,
+    #[serde(rename="orga")]
+    Orga,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Authorization {
+    pub role: AuthorizationRole,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AuthorizationInfo {
+    pub authorization: Vec<Authorization>
+}

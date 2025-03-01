@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{env, fmt::Display};
 
+mod endpoints_auth;
 mod endpoints_entry;
 #[cfg(test)]
 mod tests;
@@ -20,6 +21,8 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 
 fn get_api_service() -> actix_web::Scope {
     web::scope("/api/v1")
+        .service(endpoints_auth::check_authorization)
+        .service(endpoints_auth::authorize)
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)

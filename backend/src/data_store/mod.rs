@@ -14,11 +14,10 @@
 //! There is also a mock implementation for unittests. Other [KueaPlanStore] implementations may be
 //! added later and selected via the "DATABASE_URL" environment variable.
 
-use std::env;
-use std::fmt::Debug;
-
 use crate::auth_session::SessionToken;
 use crate::CliAuthToken;
+use std::env;
+use std::fmt::Debug;
 
 pub mod models;
 mod postgres;
@@ -66,7 +65,7 @@ pub trait KueaPlanStoreFacade {
         entry_id: EntryId,
     ) -> Result<models::FullEntry, StoreError>;
     /// Create a new entry or update the existing entry with the same id.
-    /// 
+    ///
     /// # return value
     /// - `Ok(true)` if the entry has been created, successfully
     /// - `Ok(false)` if an existing entry has been updated, successfully
@@ -186,6 +185,16 @@ impl TryFrom<i32> for AccessRole {
     }
 }
 
+impl Into<kueaplan_api_types::AuthorizationRole> for AccessRole {
+    fn into(self) -> kueaplan_api_types::AuthorizationRole {
+        match self {
+            AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
+            AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
+            AccessRole::Admin => unimplemented!(),
+        }
+    }
+}
+
 pub struct EnumMemberNotExistingError;
 
 pub struct AuthToken {
@@ -204,6 +213,15 @@ impl AuthToken {
         } else {
             Err(StoreError::PermissionDenied)
         }
+    }
+
+    pub fn list_api_privileges(&self) -> Vec<kueaplan_api_types::Authorization> {
+        self.roles
+            .iter()
+            .map(|role| kueaplan_api_types::Authorization {
+                role: (*role).into(),
+            })
+            .collect()
     }
 
     pub fn get_cli_authorization(_token: &CliAuthToken, event_id: EventId) -> Self {

@@ -13,6 +13,7 @@ use actix_web::{
     http::{header::ContentType, StatusCode},
     web, HttpResponse,
 };
+use actix_web::error::JsonPayloadError;
 use serde_json::json;
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
@@ -20,7 +21,10 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 }
 
 fn get_api_service() -> actix_web::Scope {
+    let json_config =
+        web::JsonConfig::default().error_handler(|err, _req| APIError::InvalidJson(err).into());
     web::scope("/api/v1")
+        .app_data(json_config)
         .service(endpoints_auth::check_authorization)
         .service(endpoints_auth::authorize)
         .service(endpoints_entry::list_entries)
@@ -36,6 +40,7 @@ enum APIError {
     NoSessionToken,
     InvalidSessionToken,
     AuthenticationFailed,
+    InvalidJson(actix_web::error::JsonPayloadError),
     BackendError(String),
     InternalError(String),
 }
@@ -67,6 +72,10 @@ impl Display for APIError {
                 f.write_str("Internal error: ")?;
                 f.write_str(s)?;
             },
+            Self::InvalidJson(e) => {
+                f.write_str("Invalid JSON request data: ")?;
+                write!(f, "{}", e)?;
+            },
         };
         Ok(())
     }
@@ -93,6 +102,11 @@ impl ResponseError for APIError {
             Self::AuthenticationFailed => StatusCode::FORBIDDEN,
             Self::BackendError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::InvalidJson(e) => match e {
+                JsonPayloadError::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
+                JsonPayloadError::Deserialize(json_error ) if json_error.is_data() => StatusCode::UNPROCESSABLE_ENTITY,
+                _ => StatusCode::BAD_REQUEST,
+            },
         }
     }
 }

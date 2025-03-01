@@ -40,6 +40,14 @@
           }
         }
       },
+      "409": {
+        "description": "The room could not created with this id, because it already exists in another event or has been deleted.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
       "415": {"$ref": "../components/wrongMediaTypeError.json"},
       "422": {"$ref": "../components/badContentError.json"},
       "500": {"$ref": "../components/serverError.json"}

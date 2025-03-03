@@ -1,6 +1,7 @@
-use crate::api::{configure_app, AppState};
 use actix_web::{middleware, web, App, HttpServer};
 use std::fmt::Display;
+
+mod api;
 
 #[derive(Debug)]
 pub enum ApplicationStartupError {
@@ -26,12 +27,12 @@ impl Display for ApplicationStartupError {
 }
 
 pub fn serve() -> Result<(), ApplicationStartupError> {
-    let state = AppState::new().map_err(ApplicationStartupError::SetupError)?;
+    let state = api::AppState::new().map_err(ApplicationStartupError::SetupError)?;
     actix_web::rt::System::new()
         .block_on(
             HttpServer::new(move || {
                 App::new()
-                    .configure(configure_app)
+                    .configure(api::configure_app)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(middleware::Compress::default())
             })

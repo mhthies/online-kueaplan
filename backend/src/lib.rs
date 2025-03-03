@@ -1,4 +1,3 @@
-mod api;
 mod data_store;
 
 mod auth_session;

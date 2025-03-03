@@ -1,5 +1,6 @@
-use super::{APIError, AppState, SessionTokenHeader};
 use crate::data_store::models::FullNewEntry;
+use crate::web::api::{APIError, SessionTokenHeader};
+use crate::web::AppState;
 use actix_web::{delete, get, put, web, HttpResponse, Responder};
 use uuid::Uuid;
 

@@ -1,5 +1,5 @@
+use std::fmt::Display;
 use std::sync::Arc;
-use std::{env, fmt::Display};
 
 mod endpoints_auth;
 mod endpoints_category;
@@ -10,7 +10,7 @@ mod endpoints_room;
 mod tests;
 
 use crate::auth_session::SessionToken;
-use crate::data_store::{get_store_from_env, StoreError};
+use crate::data_store::StoreError;
 use actix_web::error::JsonPayloadError;
 use actix_web::{
     error::ResponseError,
@@ -158,21 +158,6 @@ impl From<actix_web::error::BlockingError> for APIError {
 impl From<crate::auth_session::SessionError> for APIError {
     fn from(_e: crate::auth_session::SessionError) -> Self {
         APIError::InvalidSessionToken
-    }
-}
-
-#[derive(Clone)]
-pub struct AppState {
-    store: Arc<dyn crate::data_store::KuaPlanStore>,
-    secret: String,
-}
-
-impl AppState {
-    pub fn new() -> Result<Self, String> {
-        Ok(Self {
-            store: Arc::new(get_store_from_env()?),
-            secret: env::var("SECRET").map_err(|_| "SECRET must be set")?,
-        })
     }
 }
 

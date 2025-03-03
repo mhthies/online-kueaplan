@@ -1,4 +1,5 @@
-use super::{APIError, AppState, SessionTokenHeader};
+use crate::web::api::{APIError, SessionTokenHeader};
+use crate::web::AppState;
 use actix_web::{get, web, Responder};
 
 #[get("/events/{event_id}")]

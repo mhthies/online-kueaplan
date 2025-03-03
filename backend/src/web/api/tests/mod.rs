@@ -1,6 +1,7 @@
 mod sample_data;
 
 use super::*;
+use crate::web::AppState;
 use actix_web::body::MessageBody;
 use actix_web::{http, test, web, App};
 

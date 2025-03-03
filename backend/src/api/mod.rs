@@ -2,7 +2,10 @@ use std::sync::Arc;
 use std::{env, fmt::Display};
 
 mod endpoints_auth;
+mod endpoints_category;
 mod endpoints_entry;
+mod endpoints_event;
+mod endpoints_room;
 #[cfg(test)]
 mod tests;
 
@@ -31,6 +34,12 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)
         .service(endpoints_entry::delete_entry)
+        .service(endpoints_room::list_rooms)
+        .service(endpoints_room::create_or_update_room)
+        .service(endpoints_room::delete_room)
+        .service(endpoints_category::list_categories)
+        .service(endpoints_category::create_or_update_category)
+        .service(endpoints_category::delete_category)
 }
 
 #[derive(Debug)]

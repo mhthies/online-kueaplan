@@ -263,7 +263,6 @@ pub enum StoreError {
     NotExisting,
     ConflictEntityExists,
     PermissionDenied,
-    InvalidSession,
     InvalidData,
 }
 
@@ -310,9 +309,6 @@ impl std::fmt::Display for StoreError {
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::PermissionDenied => {
                 f.write_str("Client is not authorized to perform this action")
-            }
-            Self::InvalidSession => {
-                f.write_str("Session token provided by client or session data is invalid")
             }
             Self::InvalidData => {
                 f.write_str("Data loaded or stored from/in database is not valid.")

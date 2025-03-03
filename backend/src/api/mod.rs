@@ -142,7 +142,6 @@ impl From<StoreError> for APIError {
             StoreError::NotExisting => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
             StoreError::PermissionDenied => Self::PermissionDenied,
-            StoreError::InvalidSession => Self::InvalidSessionToken,
             StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
         }
     }

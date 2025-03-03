@@ -2,6 +2,7 @@ use actix_web::{middleware, web, App, HttpServer};
 use std::fmt::Display;
 
 mod api;
+mod ui;
 
 #[derive(Debug)]
 pub enum ApplicationStartupError {
@@ -33,6 +34,7 @@ pub fn serve() -> Result<(), ApplicationStartupError> {
             HttpServer::new(move || {
                 App::new()
                     .configure(api::configure_app)
+                    .configure(ui::configure_app)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(middleware::Compress::default())
             })

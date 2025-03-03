@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="mb-4">KüA-Plan</h1>
+    <div class="alert alert-danger" role="alert">
+        <i class="bi-exclamation-circle-fill"></i> {{ error.to_string() }}
+    </div>
+</div>
+{% endblock %}

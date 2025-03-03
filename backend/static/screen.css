@@ -1,0 +1,50 @@
+
+@media (max-width: 576px) {
+    .kuealist, .kuealist>tbody {
+        display: block;
+    }
+    .kuealist thead {
+        display: none;
+    }
+    .kuealist tr {
+        display: block;
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 3px;
+        margin-bottom: .5rem;
+    }
+    .kuealist td {
+        background-color: none;
+        display: block;
+        border-style: none;
+    }
+    .kuealist td.kuea-title {
+        border-bottom-style: solid;
+    }
+    .kuealist td.kuea-place {
+        font-size: .875em;
+    }
+    .kuealist td.kuea-place .comment {
+        font-size: inherit;
+    }
+    .kuealist td.kuea-people {
+        padding-top: 0;
+        font-size: .875em;
+    }
+    .kuealist td.kuea-people:before {
+        content: "von ";
+    }
+    .kuealist td.kuea-time {
+        float: right;
+        text-align: right;
+        font-size: .875em;
+    }
+    .kuealist td.kuea-time .comment {
+        font-size: inherit;
+    }
+
+}
+
+#main * {
+    scroll-margin-top: 60px;
+}

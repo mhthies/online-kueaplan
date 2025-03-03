@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block body %}
+    {% for (block_name, entries) in entry_blocks %}
+        {% if entry_blocks.len() > 1 %}<h3>{{ block_name }}</h3>{% endif %}
+        <table class="table table-striped kuealist">
+            <thead>
+            <tr>
+                <th>Was?</th>
+                <th>Wann?</th>
+                <th>Wo?</th>
+                <th>Von wem?</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
+                    <span class="content">{{ entry.entry.title }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+{% endblock %}

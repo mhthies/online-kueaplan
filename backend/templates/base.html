@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KüA-Plan – {{base.page_title}}</title>
+    <link rel="stylesheet" href="{{ base.url_for_static("bootstrap/css/bootstrap.min.css")? }}">
+    <link rel="stylesheet" href="{{ base.url_for_static("bootstrap-icons/bootstrap-icons.min.css")? }}">
+    {% block stylesheets %}
+    {% endblock %}
+    <link rel="stylesheet" href="{{ base.url_for_static("main.css")? }}">
+    <link rel="stylesheet" href="{{ base.url_for_static("print.css")? }}" media="print">
+    <link rel="stylesheet" href="{{ base.url_for_static("screen.css")? }}" media="screen">
+</head>
+<body>
+{% block body %}
+{% endblock %}
+<script src="{{ base.url_for_static("bootstrap/js/bootstrap.bundle.min.js")? }}"></script>
+{% block scripts %}
+{% endblock %}
+<script src="{{ base.url_for_static("main.js")? }}"></script>
+</body>
+</html>

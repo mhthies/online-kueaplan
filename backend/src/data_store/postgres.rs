@@ -39,12 +39,12 @@ impl PgDataStoreFacade {
     pub fn with_pooled_connection(
         connection: diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<PgConnection>>,
     ) -> Self {
-        return Self { connection };
+        Self { connection }
     }
 }
 
 /// Create an Sql expression to check if a row has been created or updated by a Postgres "upsert"
-/// statement 
+/// statement
 fn sql_upsert_is_updated() -> diesel::expression::SqlLiteral<diesel::sql_types::Bool> {
     // See https://stackoverflow.com/q/34762732 and https://stackoverflow.com/q/49597793
     diesel::dsl::sql("xmax::text <> '0'")
@@ -96,14 +96,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .load::<models::EntryRoomMapping>(connection)?
                 .grouped_by(&the_entries);
 
-            return Ok(the_entries
+            Ok(the_entries
                 .into_iter()
-                .zip(the_entry_rooms.into_iter())
+                .zip(the_entry_rooms)
                 .map(|(entry, entry_rooms)| models::FullEntry {
                     entry,
                     room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
                 })
-                .collect());
+                .collect())
         })
     }
 
@@ -153,7 +153,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
                 // to not make the .filter() method in the following query ambiguous.
                 use diesel::query_dsl::methods::FilterDsl;
-                
+
                 diesel::insert_into(entries)
                     .values(&entry.entry)
                     .on_conflict(id)
@@ -167,7 +167,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     .returning(sql_upsert_is_updated())
                     .load::<bool>(connection)?
             };
-            if upsert_result.len() == 0 {
+            if upsert_result.is_empty() {
                 return Err(StoreError::ConflictEntityExists);
             }
             let is_updated = upsert_result[0];
@@ -237,21 +237,21 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
             // to not make the .filter() method in the following query ambiguous.
             use diesel::query_dsl::methods::FilterDsl;
-            
+
             diesel::insert_into(rooms)
                 .values(&room)
-            .on_conflict(id)
-            .do_update()
-            // By limiting the search of existing rooms to the same event, we prevent changes
-            // of the event id (i.e. "moving" entries between events), which would be a security
-            // loophole
-            .set(&room)
-            .filter(event_id.eq(room.event_id))
-            .filter(deleted.eq(false))
-            .returning(sql_upsert_is_updated())
-            .load::<bool>(&mut self.connection)?
+                .on_conflict(id)
+                .do_update()
+                // By limiting the search of existing rooms to the same event, we prevent changes
+                // of the event id (i.e. "moving" entries between events), which would be a security
+                // loophole
+                .set(&room)
+                .filter(event_id.eq(room.event_id))
+                .filter(deleted.eq(false))
+                .returning(sql_upsert_is_updated())
+                .load::<bool>(&mut self.connection)?
         };
-        if upsert_result.len() == 0 {
+        if upsert_result.is_empty() {
             return Err(StoreError::NotExisting);
         }
         let is_updated = upsert_result[0];
@@ -311,7 +311,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
             // to not make the .filter() method in the following query ambiguous.
             use diesel::query_dsl::methods::FilterDsl;
-            
+
             diesel::insert_into(categories)
                 .values(&category)
                 .on_conflict(id)
@@ -325,7 +325,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .returning(sql_upsert_is_updated())
                 .load::<bool>(&mut self.connection)?
         };
-        if upsert_result.len() == 0 {
+        if upsert_result.is_empty() {
             return Err(StoreError::NotExisting);
         }
         let is_updated = upsert_result[0];
@@ -367,7 +367,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .filter(event_id.eq(the_event_id))
             .filter(passphrase.eq(the_passphrase))
             .load::<i32>(&mut self.connection)?;
-        if passphrase_ids.len() > 0 {
+        if passphrase_ids.is_empty() {
             session_token.add_authorization(passphrase_ids[0]);
             Ok(())
         } else {
@@ -395,7 +395,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         let implied_roles = roles
             .iter()
             .flat_map(|e| e.implied_roles())
-            .map(|e| *e)
+            .copied()
             .collect::<Vec<_>>();
         roles.extend(implied_roles);
         roles.sort_unstable();
@@ -410,7 +410,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
 fn insert_entry_rooms(
     the_entry_id: uuid::Uuid,
-    room_ids: &Vec<uuid::Uuid>,
+    room_ids: &[uuid::Uuid],
     connection: &mut PgConnection,
 ) -> Result<(), diesel::result::Error> {
     use schema::entry_rooms::dsl::*;

@@ -120,8 +120,7 @@ fn derive_key_from_secret(secret: &str) -> Key {
         secret.as_bytes(),
         &mut key_data,
     );
-    let key = ring::hmac::Key::new(HMAC_ALGORITHM, &key_data);
-    key
+    ring::hmac::Key::new(HMAC_ALGORITHM, &key_data)
 }
 
 #[cfg(test)]

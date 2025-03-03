@@ -171,13 +171,13 @@ impl AppState {
     pub fn new() -> Result<Self, String> {
         Ok(Self {
             store: Arc::new(get_store_from_env()?),
-            secret: env::var("SECRET").map_err(|_| "SECRET must be set")?.into(),
+            secret: env::var("SECRET").map_err(|_| "SECRET must be set")?,
         })
     }
 }
 
 struct SessionTokenHeader(String);
-
+#[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
 const SESSION_TOKEN_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
 
 impl SessionTokenHeader {
@@ -193,7 +193,7 @@ impl actix_web::http::header::TryIntoHeaderValue for SessionTokenHeader {
     type Error = actix_web::http::header::InvalidHeaderValue;
 
     fn try_into_value(self) -> Result<actix_web::http::header::HeaderValue, Self::Error> {
-        Ok(self.0.parse()?)
+        self.0.parse()
     }
 }
 

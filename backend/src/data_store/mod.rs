@@ -31,9 +31,7 @@ pub mod store_mock;
 /// The DATABASE_URL must be a PosgreSQL connection url, following the schema
 /// "postgres://{user}:{password}@{host}/{database}".
 pub fn get_store_from_env() -> Result<impl KuaPlanStore, String> {
-    Ok(postgres::PgDataStore::new(
-        &env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?,
-    )?)
+    postgres::PgDataStore::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)
 }
 
 pub type EventId = i32;
@@ -185,9 +183,9 @@ impl TryFrom<i32> for AccessRole {
     }
 }
 
-impl Into<kueaplan_api_types::AuthorizationRole> for AccessRole {
-    fn into(self) -> kueaplan_api_types::AuthorizationRole {
-        match self {
+impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
+    fn from(value: AccessRole) -> Self {
+        match value {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
             AccessRole::Admin => unimplemented!(),
@@ -287,7 +285,7 @@ impl From<EnumMemberNotExistingError> for StoreError {
 
 impl From<r2d2::Error> for StoreError {
     fn from(error: r2d2::Error) -> Self {
-        return Self::ConnectionPoolError(error.to_string());
+        Self::ConnectionPoolError(error.to_string())
     }
 }
 

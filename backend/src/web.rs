@@ -26,7 +26,7 @@ impl Display for ApplicationStartupError {
 }
 
 pub fn serve() -> Result<(), ApplicationStartupError> {
-    let state = AppState::new().map_err(|e| ApplicationStartupError::SetupError(e))?;
+    let state = AppState::new().map_err(ApplicationStartupError::SetupError)?;
     actix_web::rt::System::new()
         .block_on(
             HttpServer::new(move || {
@@ -36,8 +36,8 @@ pub fn serve() -> Result<(), ApplicationStartupError> {
                     .wrap(middleware::Compress::default())
             })
             .bind(("127.0.0.1", 9000))
-            .map_err(|e| ApplicationStartupError::BindError(e))?
+            .map_err(ApplicationStartupError::BindError)?
             .run(),
         )
-        .map_err(|e| ApplicationStartupError::ServerError(e))
+        .map_err(ApplicationStartupError::ServerError)
 }

@@ -1,17 +1,47 @@
 use super::{AppError, BaseTemplateContext};
-use crate::data_store::models::FullEntry;
+use crate::auth_session::SessionToken;
+use crate::data_store::models::{FullEntry, Room};
+use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, HttpRequest, Responder};
+use actix_web::{get, web, HttpRequest, Responder};
 use rinja::Template;
+use std::collections::BTreeMap;
 
-#[get("/list")]
-async fn main_list(req: HttpRequest) -> Result<impl Responder, AppError> {
+#[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
+const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
+
+#[get("/{event_id}/list")]
+async fn main_list(
+    path: web::Path<i32>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let event_id = path.into_inner();
+    let session_token = SessionToken::from_string(
+        req.cookie("kuea-plan-session")
+            .ok_or(AppError::NoSession)?
+            .value(),
+        &state.secret,
+        SESSION_COOKIE_MAX_AGE,
+    )?;
+    let (entries, rooms) = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.check_authorization(&session_token, event_id)?;
+        Ok((
+            store.get_entries(&auth, event_id)?,
+            store.get_rooms(&auth, event_id)?,
+        ))
+    })
+    .await??;
+
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "TODO",
         },
-        entry_blocks: vec![],
+        entry_blocks: sort_entries_into_blocks(&entries),
+        all_entries: entries.iter().collect(),
+        rooms: rooms.iter().map(|r| (r.id, r)).collect(),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -20,5 +50,12 @@ async fn main_list(req: HttpRequest) -> Result<impl Responder, AppError> {
 #[template(path = "main_list.html")]
 struct MainListTemplate<'a> {
     base: BaseTemplateContext<'a>,
-    entry_blocks: Vec<(String, Vec<FullEntry>)>,
+    entry_blocks: Vec<(String, Vec<&'a FullEntry>)>,
+    all_entries: Vec<&'a FullEntry>,
+    rooms: BTreeMap<uuid::Uuid, &'a Room>,
+}
+
+fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullEntry>)> {
+    // TODO
+    vec![("All".to_string(), entries.iter().collect())]
 }

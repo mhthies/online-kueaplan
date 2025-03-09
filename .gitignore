@@ -7,3 +7,6 @@ target/
 
 # Cargo.lock in the Cargo workspace
 **/*.rs.bk
+
+/.idea/
+/.vscode/

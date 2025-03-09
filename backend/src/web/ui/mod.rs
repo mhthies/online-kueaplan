@@ -66,7 +66,6 @@ enum AppError {
     InvalidSessionToken,
     ExpiredSessionToken,
     PermissionDenied,
-    AuthenticationFailed,
     TemplateError(rinja::Error),
     UrlError(UrlGenerationError),
     BackendError(String),
@@ -134,7 +133,6 @@ impl Display for AppError {
             AppError::ExpiredSessionToken => write!(f, "Session is expired"),
             AppError::EntityNotFound => write!(f, "Entity not found"),
             AppError::PermissionDenied => write!(f, "Permission denied"),
-            AppError::AuthenticationFailed => write!(f, "Login failed"),
             AppError::BackendError(e) => write!(f, "Internal database error: {}", e),
             AppError::InternalError(e) => write!(f, "Internal error: {}", e),
         }
@@ -145,9 +143,10 @@ impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self {
             AppError::PageNotFound | AppError::EntityNotFound => StatusCode::NOT_FOUND,
-            AppError::NoSession | AppError::InvalidSessionToken | AppError::ExpiredSessionToken => {
-                StatusCode::FORBIDDEN
-            }
+            AppError::NoSession
+            | AppError::InvalidSessionToken
+            | AppError::ExpiredSessionToken
+            | AppError::PermissionDenied => StatusCode::FORBIDDEN,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

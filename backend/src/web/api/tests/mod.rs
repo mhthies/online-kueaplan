@@ -4,6 +4,7 @@ use super::*;
 use crate::web::AppState;
 use actix_web::body::MessageBody;
 use actix_web::{http, test, web, App};
+use std::sync::Arc;
 
 #[actix_web::test]
 async fn test_list_entries() {

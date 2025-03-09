@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use std::sync::Arc;
 
 mod endpoints_auth;
 mod endpoints_category;

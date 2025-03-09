@@ -34,8 +34,8 @@ pub struct Entry {
     pub deleted: bool,
     pub last_updated: DateTime<Utc>,
     pub comment: String,
-    pub room_comment: String,
     pub time_comment: String,
+    pub room_comment: String,
     pub is_exclusive: bool,
     pub is_cancelled: bool,
 }
@@ -60,8 +60,8 @@ pub struct NewEntry {
     pub end: DateTime<Utc>,
     pub category: Option<Uuid>,
     pub comment: String,
-    pub room_comment: String,
     pub time_comment: String,
+    pub room_comment: String,
     pub is_exclusive: bool,
     pub is_cancelled: bool,
 }

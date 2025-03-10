@@ -222,6 +222,10 @@ impl AuthToken {
             .collect()
     }
 
+    pub fn has_privilege(&self, privilege_level: AccessRole) -> bool {
+        self.roles.contains(&privilege_level)
+    }
+
     pub fn get_cli_authorization(_token: &CliAuthToken, event_id: EventId) -> Self {
         let mut roles = vec![AccessRole::Admin];
         roles.extend(AccessRole::Admin.implied_roles());

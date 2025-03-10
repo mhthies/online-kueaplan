@@ -1,8 +1,10 @@
 use crate::auth_session::{SessionError, SessionToken};
+use crate::data_store::AccessRole;
 use crate::web::ui::{AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::cookie::Cookie;
-use actix_web::http::header::LOCATION;
+use actix_web::http::header;
+use actix_web::http::header::{ContentType, TryIntoHeaderValue};
 use actix_web::web::Html;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use rinja::Template;
@@ -46,26 +48,63 @@ async fn login(
         .unwrap_or(SessionToken::new());
 
     let store = state.store.clone();
-    let session_token = web::block(move || -> Result<_, AppError> {
+    let result = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         store.authorize(event_id, &data.passphrase, &mut session_token)?;
         let auth = store.check_authorization(&session_token, event_id)?;
-        // TODO check that token has relevant privilege level now
-        Ok(session_token)
+        Ok((session_token, auth.has_privilege(AccessRole::User)))
     })
-    .await??; // TODO handle authorization errors by showing form again
+    .await?; // TODO handle authorization errors by showing form again
 
-    Ok(HttpResponse::SeeOther()
-        .append_header((
-            LOCATION,
-            req.url_for("main_list", &[event_id.to_string()])?
-                .to_string(),
-        ))
-        .cookie(Cookie::new(
-            "kuea-plan-session",
-            session_token.as_string(&state.secret),
-        ))
-        .finish())
+    let (session_token, error) = match result {
+        Ok((session_token, true)) => (Some(session_token), None),
+        Ok((session_token, false)) => (
+            Some(session_token),
+            Some("Diese Passphrase schaltet nicht den gewünschten Zugriff frei."),
+        ),
+        Err(AppError::EntityNotFound) => (None, Some("Ungültige Passphrase.")),
+        Err(e) => return Err(e),
+    };
+
+    if let Some(error) = error {
+        let tmpl = LoginFormTemplate {
+            base: BaseTemplateContext {
+                request: &req,
+                page_title: "Login",
+            },
+            login_url: req.url_for("login", &[event_id.to_string()])?,
+            error: Some(error),
+        };
+
+        let mut response = HttpResponse::UnprocessableEntity();
+        if let Some(session_token) = session_token {
+            response.cookie(Cookie::new(
+                "kuea-plan-session",
+                session_token.as_string(&state.secret),
+            ));
+        }
+        Ok(response
+            .append_header((
+                header::CONTENT_TYPE,
+                ContentType::html().try_into_value().unwrap(),
+            ))
+            .body(tmpl.render()?))
+    } else {
+        let mut response = HttpResponse::SeeOther();
+        if let Some(session_token) = session_token {
+            response.cookie(Cookie::new(
+                "kuea-plan-session",
+                session_token.as_string(&state.secret),
+            ));
+        }
+        Ok(response
+            .append_header((
+                header::LOCATION,
+                req.url_for("main_list", &[event_id.to_string()])?
+                    .to_string(),
+            ))
+            .finish())
+    }
 }
 
 #[derive(Template)]

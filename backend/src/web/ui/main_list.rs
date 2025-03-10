@@ -56,3 +56,12 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
     // TODO
     vec![("All".to_string(), entries.iter().collect())]
 }
+
+mod filters {
+    pub fn markdown(input: &str) -> rinja::Result<rinja::filters::Safe<String>> {
+        Ok(rinja::filters::Safe(comrak::markdown_to_html(
+            input,
+            &comrak::ComrakOptions::default(),
+        )))
+    }
+}

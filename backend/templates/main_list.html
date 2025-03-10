@@ -54,7 +54,7 @@
     <h2>Beschreibungen</h2>
     {% for entry in all_entries if !entry.entry.description.is_empty() %}
         <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>
-        {{ entry.entry.description }}
+        {{ entry.entry.description|markdown }}
     {% endfor %}
 </div>
 {% endblock %}

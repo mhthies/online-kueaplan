@@ -90,6 +90,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
                 .filter(deleted.eq(false))
+                .order_by(begin.asc())
+                .order_by(end.asc())
                 .load::<models::Entry>(connection)?;
 
             let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)

@@ -88,7 +88,9 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         if let Some(e) = data.next_error.take() {
             return Err(e);
         }
-        Ok(data.entries.clone())
+        let mut result = data.entries.clone();
+        result.sort_by_key(|e| (e.entry.begin, e.entry.end));
+        Ok(result)
     }
 
     fn get_entry(

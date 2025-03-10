@@ -7,6 +7,20 @@ use actix_web::{get, web, HttpRequest, Responder};
 use rinja::Template;
 use std::collections::BTreeMap;
 
+const EARLIEST_REASONABLE_KUEA: chrono::NaiveTime =
+    chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap();
+const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
+    (
+        "Morgens",
+        Some(chrono::NaiveTime::from_hms_opt(12, 0, 0).unwrap()),
+    ),
+    (
+        "Mittags",
+        Some(chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap()),
+    ),
+    ("Abends", None),
+];
+
 #[get("/{event_id}/list")]
 async fn main_list(
     path: web::Path<i32>,
@@ -52,9 +66,33 @@ struct MainListTemplate<'a> {
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
 }
 
+// entries must be sorted by begin timestamp
 fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullEntry>)> {
-    // TODO
-    vec![("All".to_string(), entries.iter().collect())]
+    let mut result = Vec::new();
+    let mut block_entries = Vec::new();
+    let mut time_block_iter = TIME_BLOCKS.iter();
+    let (mut time_block_name, mut time_block_time) = time_block_iter
+        .next()
+        .expect("At least one time block should be defined.");
+    for entry in entries {
+        while time_block_time
+            .is_some_and(|block_begin_time| entry.entry.begin.time() >= block_begin_time)
+        {
+            // TODO convert to local timezone
+            if !block_entries.is_empty() {
+                result.push((time_block_name.to_string(), block_entries));
+            }
+            (time_block_name, time_block_time) = *time_block_iter
+                .next()
+                .expect("last time block's time must be 'None' to stop iteration");
+            block_entries = Vec::new();
+        }
+        block_entries.push(entry);
+    }
+    if !block_entries.is_empty() {
+        result.push((time_block_name.to_string(), block_entries));
+    }
+    result
 }
 
 mod filters {

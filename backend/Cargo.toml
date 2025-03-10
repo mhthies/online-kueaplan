@@ -23,3 +23,4 @@ kueaplan_api_types = {path = "../api_types"}
 clap = { version = "4.5.30", features = ["derive"] }
 mime_guess = "^2.0.5"
 rinja = "^0.3.5"
+url = "^2.5.4"

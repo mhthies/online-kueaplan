@@ -8,7 +8,11 @@ use rinja::Template;
 use rust_embed::Embed;
 use std::fmt::{Display, Formatter};
 
-mod endpoints;
+mod auth;
+mod main_list;
+
+#[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
+const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(get_ui_service());
@@ -17,7 +21,9 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
-        .service(endpoints::main_list)
+        .service(main_list::main_list)
+        .service(auth::login_form)
+        .service(auth::login)
         .default_service(web::to(not_found_handler))
 }
 

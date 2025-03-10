@@ -7,9 +7,6 @@ use actix_web::{get, web, HttpRequest, Responder};
 use rinja::Template;
 use std::collections::BTreeMap;
 
-#[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
-const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
-
 #[get("/{event_id}/list")]
 async fn main_list(
     path: web::Path<i32>,
@@ -22,7 +19,7 @@ async fn main_list(
             .ok_or(AppError::NoSession)?
             .value(),
         &state.secret,
-        SESSION_COOKIE_MAX_AGE,
+        super::SESSION_COOKIE_MAX_AGE,
     )?;
     let (entries, rooms) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;

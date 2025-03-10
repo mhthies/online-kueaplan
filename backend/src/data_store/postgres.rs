@@ -367,7 +367,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .filter(event_id.eq(the_event_id))
             .filter(passphrase.eq(the_passphrase))
             .load::<i32>(&mut self.connection)?;
-        if passphrase_ids.is_empty() {
+        if !passphrase_ids.is_empty() {
             session_token.add_authorization(passphrase_ids[0]);
             Ok(())
         } else {

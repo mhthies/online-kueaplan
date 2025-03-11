@@ -1,12 +1,15 @@
 use crate::data_store::models::FullNewEntry;
+use crate::data_store::EntryFilter;
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
 use actix_web::{delete, get, put, web, HttpResponse, Responder};
+use serde::Deserialize;
 use uuid::Uuid;
 
 #[get("/events/{event_id}/entries")]
 async fn list_entries(
     path: web::Path<i32>,
+    query: web::Query<FilterQuery>,
     state: web::Data<AppState>,
     session_token_header: Option<web::Header<SessionTokenHeader>>,
 ) -> Result<impl Responder, APIError> {
@@ -18,7 +21,7 @@ async fn list_entries(
     let entries: Vec<kueaplan_api_types::Entry> = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
-        Ok(store.get_entries(&auth, event_id)?)
+        Ok(store.get_entries_filtered(&auth, event_id, query.into_inner().into())?)
     })
     .await??
     .into_iter()
@@ -26,6 +29,25 @@ async fn list_entries(
     .collect();
 
     Ok(web::Json(entries))
+}
+
+#[derive(Deserialize)]
+struct FilterQuery {
+    after: Option<chrono::DateTime<chrono::Utc>>,
+    before: Option<chrono::DateTime<chrono::Utc>>,
+    // TODO
+}
+
+impl From<FilterQuery> for EntryFilter {
+    fn from(value: FilterQuery) -> Self {
+        EntryFilter {
+            after: value.after,
+            before: value.before,
+            categories: None, // TODO
+            rooms: None,      // TODO
+            no_room: false,   // TODO
+        }
+    }
 }
 
 #[get("/events/{event_id}/entries/{entry_id}")]

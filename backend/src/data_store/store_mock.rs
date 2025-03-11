@@ -3,8 +3,8 @@ use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, NewCategory, NewEvent, NewRoom, Room,
 };
 use crate::data_store::{
-    models, AccessRole, AuthToken, EventId, GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade,
-    StoreError,
+    models, AccessRole, AuthToken, EntryFilter, EventId, GlobalAuthToken, KuaPlanStore,
+    KueaPlanStoreFacade, StoreError,
 };
 use std::sync::Mutex;
 
@@ -79,16 +79,22 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         Ok(event_id)
     }
 
-    fn get_entries(
+    fn get_entries_filtered(
         &mut self,
         _auth_token: &AuthToken,
         _the_event_id: crate::data_store::EventId,
+        filter: EntryFilter,
     ) -> Result<Vec<FullEntry>, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");
         if let Some(e) = data.next_error.take() {
             return Err(e);
         }
-        let mut result = data.entries.clone();
+        let mut result: Vec<FullEntry> = data
+            .entries
+            .iter()
+            .filter(|e| filter.matches(e))
+            .cloned()
+            .collect();
         result.sort_by_key(|e| (e.entry.begin, e.entry.end));
         Ok(result)
     }

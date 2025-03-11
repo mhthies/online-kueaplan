@@ -59,7 +59,20 @@ pub trait KueaPlanStoreFacade {
         &mut self,
         auth_token: &AuthToken,
         the_event_id: EventId,
+    ) -> Result<Vec<models::FullEntry>, StoreError> {
+        self.get_entries_filtered(auth_token, the_event_id, EntryFilter::default())
+    }
+
+    /// Get a filtered list of entries of the event
+    ///
+    /// Entries are returned in chronological order, i.e. sorted by (begin, end)
+    fn get_entries_filtered(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+        filter: EntryFilter,
     ) -> Result<Vec<models::FullEntry>, StoreError>;
+
     fn get_entry(
         &mut self,
         auth_token: &AuthToken,
@@ -151,6 +164,112 @@ pub trait KueaPlanStoreFacade {
         session_token: &SessionToken,
         event_id: EventId,
     ) -> Result<AuthToken, StoreError>;
+}
+
+/// Filter options for retrieving entries from the store via KueaPlanStoreFacade::get_entries_filtered()
+///
+/// Can be constructed through the EntryFilterBuilder
+#[derive(Default)]
+pub struct EntryFilter {
+    /// Filter for entries that end after the given point in time (this includes entries that span
+    /// over this point in time)
+    pub after: Option<chrono::DateTime<chrono::Utc>>,
+    /// Filter for entries that begin before the given point in time (this includes entries that
+    /// span over this point in time)
+    pub before: Option<chrono::DateTime<chrono::Utc>>,
+    /// Filter for entries that belong to any of the given categories
+    pub categories: Option<Vec<uuid::Uuid>>,
+    /// Filter for entries that use any of the given rooms
+    pub rooms: Option<Vec<uuid::Uuid>>,
+    /// If true, filter for entries without any room
+    pub no_room: bool,
+}
+
+impl EntryFilter {
+    /// Checks if a given entry matches the filter
+    ///
+    /// Usually, filtering should be done by the database. This function can be used for separate
+    /// checks of individual entries in software.
+    pub fn matches(&self, entry: &models::FullEntry) -> bool {
+        if let Some(after) = self.after {
+            if after >= entry.entry.end {
+                return false;
+            }
+        }
+        if let Some(before) = self.before {
+            if before <= entry.entry.begin {
+                return false;
+            }
+        }
+        if let Some(categories) = &self.categories {
+            if !categories.contains(&entry.entry.category) {
+                return false;
+            }
+        }
+        if let Some(rooms) = &self.rooms {
+            if !rooms.iter().any(|r| entry.room_ids.contains(r)) {
+                return false;
+            }
+        }
+        if self.no_room && !entry.room_ids.is_empty() {
+            return false;
+        }
+        true
+    }
+}
+
+/// Builder for constructing EntryFilter objects
+pub struct EntryFilterBuilder {
+    result: EntryFilter,
+}
+
+impl EntryFilterBuilder {
+    pub fn new() -> Self {
+        Self {
+            result: EntryFilter {
+                after: None,
+                before: None,
+                categories: None,
+                rooms: None,
+                no_room: false,
+            },
+        }
+    }
+
+    /// Add filter, to only include entries that end after the given point in time (this includes
+    /// entries that span over this point in time)
+    pub fn after(&mut self, after: chrono::DateTime<chrono::Utc>) -> &mut Self {
+        self.result.after = Some(after);
+        self
+    }
+    /// Add filter, to only include entries that begin before the given point in time (this includes
+    /// entries that span over this point in time)
+    pub fn before(&mut self, before: chrono::DateTime<chrono::Utc>) -> &mut Self {
+        self.result.before = Some(before);
+        self
+    }
+    /// Add filter to only include entries that belong to one of the given categories
+    pub fn category_is_one_of(&mut self, categories: Vec<uuid::Uuid>) -> &mut Self {
+        self.result.categories = Some(categories);
+        self
+    }
+
+    /// Add filter to only include entries that take place (at least) in one of the given rooms
+    pub fn in_one_of_these_rooms(&mut self, rooms: Vec<uuid::Uuid>) -> &mut Self {
+        self.result.rooms = Some(rooms);
+        self
+    }
+
+    /// Add filter to only include entries that don't have a room assigned
+    pub fn without_room(&mut self) -> &mut Self {
+        self.result.no_room = true;
+        self
+    }
+
+    /// Create the EntryFilter object
+    pub fn build(self) -> EntryFilter {
+        self.result
+    }
 }
 
 /// Possible roles, a single user can have with respect to a certain event

@@ -1,8 +1,9 @@
 use super::{
-    models, schema, AccessRole, AuthToken, EnumMemberNotExistingError, EventId, GlobalAuthToken,
-    KuaPlanStore, KueaPlanStoreFacade, StoreError,
+    models, schema, AccessRole, AuthToken, EntryFilter, EnumMemberNotExistingError, EventId,
+    GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade, StoreError,
 };
 use crate::auth_session::SessionToken;
+use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
@@ -78,10 +79,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .map(|e| e[0].id)?)
     }
 
-    fn get_entries(
+    fn get_entries_filtered(
         &mut self,
         auth_token: &AuthToken,
         the_event_id: i32,
+        filter: EntryFilter,
     ) -> Result<Vec<models::FullEntry>, StoreError> {
         use schema::entries::dsl::*;
         auth_token.check_privilege(the_event_id, AccessRole::User)?;
@@ -90,6 +92,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
                 .filter(deleted.eq(false))
+                .filter(filter_to_sql(filter))
                 .order_by(begin.asc())
                 .order_by(end.asc())
                 .load::<models::Entry>(connection)?;
@@ -426,4 +429,46 @@ fn insert_entry_rooms(
         )
         .execute(connection)
         .map(|_| ())
+}
+
+fn filter_to_sql<'a>(
+    filter: EntryFilter,
+) -> Box<
+    dyn BoxableExpression<schema::entries::table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool>
+        + 'a,
+> {
+    use diesel::dsl::{exists, not};
+    use schema::entries::dsl::*;
+
+    let mut expression: Box<
+        dyn BoxableExpression<
+                schema::entries::table,
+                diesel::pg::Pg,
+                SqlType = diesel::sql_types::Bool,
+            > + 'a,
+    > = Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
+    if let Some(after) = filter.after {
+        expression = Box::new(expression.as_expression().and(end.ge(after)));
+    }
+    if let Some(before) = filter.before {
+        expression = Box::new(expression.as_expression().and(begin.le(before)));
+    }
+    if let Some(categories) = filter.categories {
+        expression = Box::new(expression.as_expression().and(category.eq_any(categories)));
+    }
+    if let Some(rooms) = filter.rooms {
+        expression = Box::new(
+            expression.as_expression().and(exists(
+                schema::entry_rooms::dsl::entry_rooms
+                    .filter(schema::entry_rooms::entry_id.eq(id))
+                    .filter(schema::entry_rooms::room_id.eq_any(rooms)),
+            )),
+        );
+    }
+    if filter.no_room {
+        expression = Box::new(expression.as_expression().and(not(exists(
+            schema::entry_rooms::dsl::entry_rooms.filter(schema::entry_rooms::entry_id.eq(id)),
+        ))));
+    }
+    expression
 }

@@ -72,10 +72,10 @@
             "format": "uuid"
         },
         "category": {
-            "description": "Unique identifier of a Category of this event (optional)",
+            "description": "Unique identifier of a Category of this event",
             "type": "string",
             "format": "uuid"
         }
     },
-    "required": ["id", "title", "room", "begin", "end"]
+    "required": ["id", "title", "room", "begin", "end", "category"]
 }

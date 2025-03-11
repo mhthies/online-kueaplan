@@ -1,5 +1,5 @@
 use crate::auth_session::SessionToken;
-use crate::data_store::models::{FullNewEntry, NewEntry, NewEvent};
+use crate::data_store::models::{FullNewEntry, NewCategory, NewEntry, NewEvent};
 use crate::data_store::{GlobalAuthToken, KuaPlanStore};
 use chrono::TimeZone;
 use uuid::uuid;
@@ -21,6 +21,19 @@ pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
     let mut session_token = SessionToken::new();
     session_token.add_authorization(2);
     let auth_token = facade.check_authorization(&session_token, 42).unwrap();
+    facade
+        .create_or_update_category(
+            &auth_token,
+            NewCategory {
+                id: uuid!("019586d4-08fa-7341-9bee-d223c46e77cc"),
+                title: "Default Category".to_string(),
+                icon: "".to_string(),
+                color: "000000".to_string(),
+                event_id: 42,
+                is_official: false,
+            },
+        )
+        .unwrap();
     facade.create_or_update_entry(&auth_token, FullNewEntry{
         entry: NewEntry {
             id: uuid!("fca6379a-b8ad-4a53-9479-73099c34f16a"),
@@ -39,7 +52,7 @@ Treffpunkt: Pelikanhalle".to_string(),
             event_id: 42,
             begin: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 21, 45, 0).unwrap(),
             end: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 23, 0, 0).unwrap(),
-            category: None,
+            category: uuid!("019586d4-08fa-7341-9bee-d223c46e77cc"),
             comment: "".to_string(),
             room_comment: "".to_string(),
             time_comment: "".to_string(),

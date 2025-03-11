@@ -1,0 +1,2 @@
+ALTER TABLE entries
+    ALTER COLUMN category DROP NOT NULL;

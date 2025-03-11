@@ -25,7 +25,7 @@ diesel::table! {
         event_id -> Int4,
         begin -> Timestamptz,
         end -> Timestamptz,
-        category -> Nullable<Uuid>,
+        category -> Uuid,
         deleted -> Bool,
         last_updated -> Timestamptz,
         comment -> Varchar,

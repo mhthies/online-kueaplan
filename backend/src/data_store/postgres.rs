@@ -85,13 +85,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
         filter: EntryFilter,
     ) -> Result<Vec<models::FullEntry>, StoreError> {
+        use diesel::dsl::not;
         use schema::entries::dsl::*;
         auth_token.check_privilege(the_event_id, AccessRole::User)?;
 
         self.connection.transaction(|connection| {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
-                .filter(deleted.eq(false))
+                .filter(not(deleted))
                 .filter(filter_to_sql(filter))
                 .order_by((begin.asc(), end.asc()))
                 .load::<models::Entry>(connection)?;
@@ -143,6 +144,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
     ) -> Result<bool, StoreError> {
+        use diesel::dsl::not;
         use schema::entries::dsl::*;
         use schema::entry_rooms;
 
@@ -167,7 +169,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     // be a security loophole
                     .set(&entry.entry)
                     .filter(event_id.eq(entry.entry.event_id))
-                    .filter(deleted.eq(false))
+                    .filter(not(deleted))
                     .returning(sql_upsert_is_updated())
                     .load::<bool>(connection)?
             };
@@ -214,13 +216,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         the_event_id: i32,
     ) -> Result<Vec<models::Room>, StoreError> {
+        use diesel::dsl::not;
         use schema::rooms::dsl::*;
         auth_token.check_privilege(the_event_id, AccessRole::User)?;
 
         Ok(rooms
             .select(models::Room::as_select())
             .filter(event_id.eq(the_event_id))
-            .filter(deleted.eq(false))
+            .filter(not(deleted))
             .load::<models::Room>(&mut self.connection)?)
     }
 

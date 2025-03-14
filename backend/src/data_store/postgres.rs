@@ -445,10 +445,10 @@ fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a> {
     let mut expression: BoxedBoolExpression<'a> =
         Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
     if let Some(after) = filter.after {
-        expression = Box::new(expression.as_expression().and(end.ge(after)));
+        expression = Box::new(expression.as_expression().and(end.gt(after)));
     }
     if let Some(before) = filter.before {
-        expression = Box::new(expression.as_expression().and(begin.le(before)));
+        expression = Box::new(expression.as_expression().and(begin.lt(before)));
     }
     if let Some(categories) = filter.categories {
         expression = Box::new(expression.as_expression().and(category.eq_any(categories)));

@@ -2,13 +2,14 @@ use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::AccessRole;
 use crate::web::ui::{util, AppError, BaseTemplateContext};
 use crate::web::AppState;
-use actix_web::cookie::Cookie;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
 use actix_web::web::Html;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use rinja::Template;
 use serde::Deserialize;
+
+const SESSION_COOKIE_NAME: &str = "kuea-plan-session";
 
 #[get("/{event_id}/login")]
 async fn login_form(
@@ -41,7 +42,7 @@ async fn login(
     let event_id = path.into_inner();
 
     let mut session_token = req
-        .cookie("kuea-plan-session")
+        .cookie(SESSION_COOKIE_NAME)
         .map(|cookie| {
             SessionToken::from_string(cookie.value(), &state.secret, super::SESSION_COOKIE_MAX_AGE)
         })
@@ -88,10 +89,7 @@ async fn login(
 
         let mut response = HttpResponse::UnprocessableEntity();
         if let Some(session_token) = session_token {
-            response.cookie(Cookie::new(
-                "kuea-plan-session",
-                session_token.as_string(&state.secret),
-            ));
+            response.cookie(create_session_cookie(session_token, &state.secret));
         }
         Ok(response
             .append_header((
@@ -102,10 +100,7 @@ async fn login(
     } else {
         let mut response = HttpResponse::SeeOther();
         if let Some(session_token) = session_token {
-            response.cookie(Cookie::new(
-                "kuea-plan-session",
-                session_token.as_string(&state.secret),
-            ));
+            response.cookie(create_session_cookie(session_token, &state.secret));
         }
         Ok(response
             .append_header((
@@ -121,6 +116,16 @@ async fn login(
             ))
             .finish())
     }
+}
+
+fn create_session_cookie(session_token: SessionToken, secret: &str) -> actix_web::cookie::Cookie {
+    let mut cookie =
+        actix_web::cookie::Cookie::new(SESSION_COOKIE_NAME, session_token.as_string(secret));
+    cookie.set_path("/");
+    cookie.set_expires(
+        actix_web::cookie::time::OffsetDateTime::now_utc() + super::SESSION_COOKIE_MAX_AGE,
+    );
+    cookie
 }
 
 #[derive(Template)]

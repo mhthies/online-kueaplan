@@ -87,9 +87,9 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
         .next()
         .expect("At least one time block should be defined.");
     for entry in entries {
-        while time_block_time
-            .is_some_and(|block_begin_time| entry.entry.begin.time() >= block_begin_time)
-        {
+        while time_block_time.is_some_and(|block_begin_time| {
+            entry.entry.begin.with_timezone(&TIME_ZONE).time() >= block_begin_time
+        }) {
             // TODO convert to local timezone
             if !block_entries.is_empty() {
                 result.push((time_block_name.to_string(), block_entries));

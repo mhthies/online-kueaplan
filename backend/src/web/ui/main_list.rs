@@ -34,10 +34,11 @@ async fn main_list(
     })
     .await??;
 
+    let title = date.format("%d.%m.").to_string();
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
-            page_title: "TODO",
+            page_title: &title,
         },
         entry_blocks: sort_entries_into_blocks(&entries),
         all_entries: entries.iter().collect(),

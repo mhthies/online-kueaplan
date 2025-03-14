@@ -44,6 +44,7 @@ async fn main_list(
         all_entries: entries.iter().collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         timezone: TIME_ZONE,
+        date,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -56,6 +57,7 @@ struct MainListTemplate<'a> {
     all_entries: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     timezone: chrono_tz::Tz,
+    date: chrono::NaiveDate,
 }
 
 impl<'a> MainListTemplate<'a> {
@@ -108,10 +110,24 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
 }
 
 mod filters {
+    use chrono::{Datelike, Weekday};
+
     pub fn markdown(input: &str) -> rinja::Result<rinja::filters::Safe<String>> {
         Ok(rinja::filters::Safe(comrak::markdown_to_html(
             input,
             &comrak::ComrakOptions::default(),
         )))
+    }
+
+    pub fn weekday(date: &chrono::NaiveDate) -> rinja::Result<&'static str> {
+        Ok(match date.weekday() {
+            Weekday::Mon => "Montag",
+            Weekday::Tue => "Dienstag",
+            Weekday::Wed => "Mittwoch",
+            Weekday::Thu => "Donnerstag",
+            Weekday::Fri => "Freitag",
+            Weekday::Sat => "Samstag",
+            Weekday::Sun => "Sonntag",
+        })
     }
 }

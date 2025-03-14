@@ -3,7 +3,7 @@
 {% block body %}
 <div class="container mt-3" id="main">
     <h1>
-        KüA-Plan – {{ base.page_title }}
+        KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
     </h1>
     {% for (block_name, entries) in entry_blocks %}
         {% if entry_blocks.len() > 1 %}<h3>{{ block_name }}</h3>{% endif %}

@@ -1,7 +1,7 @@
 use super::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
 use super::{AppError, BaseTemplateContext};
 use crate::auth_session::SessionToken;
-use crate::data_store::models::{FullEntry, Room};
+use crate::data_store::models::{Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
 use crate::web::AppState;
 use actix_web::web::Html;
@@ -24,10 +24,11 @@ async fn main_list(
         &state.secret,
         super::SESSION_COOKIE_MAX_AGE,
     )?;
-    let (entries, rooms) = web::block(move || -> Result<_, AppError> {
+    let (event, entries, rooms) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok((
+            store.get_event(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,
             store.get_rooms(&auth, event_id)?,
         ))
@@ -38,6 +39,7 @@ async fn main_list(
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
+            event_id,
             page_title: &title,
         },
         entry_blocks: sort_entries_into_blocks(&entries),
@@ -45,6 +47,8 @@ async fn main_list(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         timezone: TIME_ZONE,
         date,
+        event: &event,
+        event_days: event_days(&event),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -58,6 +62,8 @@ struct MainListTemplate<'a> {
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
+    event: &'a Event,
+    event_days: Vec<chrono::NaiveDate>,
 }
 
 impl<'a> MainListTemplate<'a> {
@@ -66,6 +72,8 @@ impl<'a> MainListTemplate<'a> {
     }
 }
 
+/// Generate an EntryFilter for retrieving only the entries on the given day (using the
+/// EFFECTIVE_BEGIN_OF_DAY)
 fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
     let end = begin + chrono::Duration::days(1);
@@ -109,6 +117,15 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
     result
 }
 
+/// Calculate the list of calendar days that the event covers
+fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
+    let len = (event.end_date - event.begin_date).num_days();
+    (0..=len)
+        .map(|i| event.begin_date + chrono::Duration::days(i))
+        .collect()
+}
+
+/// Filters for the rinja template
 mod filters {
     use chrono::{Datelike, Weekday};
 
@@ -128,6 +145,18 @@ mod filters {
             Weekday::Fri => "Freitag",
             Weekday::Sat => "Samstag",
             Weekday::Sun => "Sonntag",
+        })
+    }
+
+    pub fn weekday_short(date: &chrono::NaiveDate) -> rinja::Result<&'static str> {
+        Ok(match date.weekday() {
+            Weekday::Mon => "Mo",
+            Weekday::Tue => "Di",
+            Weekday::Wed => "Mi",
+            Weekday::Thu => "Do",
+            Weekday::Fri => "Fr",
+            Weekday::Sat => "Sa",
+            Weekday::Sun => "So",
         })
     }
 }

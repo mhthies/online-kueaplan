@@ -1,6 +1,23 @@
 {% extends "base.html" %}
 
 {% block body %}
+<nav class="navbar navbar-expand sticky-top bg-body-tertiary">
+    <div class="container">
+        <a class="navbar-brand" href="#">{{ event.title }}</a>
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ date|weekday_short }} {{ date.format("%d.%m.") }}
+                </a>
+                <ul class="dropdown-menu">
+                    {% for day in event_days %}
+                        <li><a class="dropdown-item {% if *day == date %}active{% endif %}" href="{{ base.url_for_main_list(day)? }}">{{ day|weekday_short }} {{ day.format("%d.%m.") }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
 <div class="container mt-3" id="main">
     <h1>
         KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}

@@ -1,5 +1,5 @@
 use crate::auth_session::SessionError;
-use crate::data_store::StoreError;
+use crate::data_store::{EventId, StoreError};
 use actix_web::error::UrlGenerationError;
 use actix_web::http::StatusCode;
 use actix_web::web::Html;
@@ -53,6 +53,7 @@ async fn static_resources(path: web::Path<String>) -> impl Responder {
 #[derive(Debug)]
 struct BaseTemplateContext<'a> {
     request: &'a HttpRequest,
+    event_id: EventId,
     page_title: &'a str,
 }
 
@@ -61,6 +62,13 @@ impl BaseTemplateContext<'_> {
         Ok(self
             .request
             .url_for("static_resources", &[file])?
+            .to_string())
+    }
+
+    fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
+        Ok(self
+            .request
+            .url_for("main_list", &[self.event_id.to_string(), date.to_string()])?
             .to_string())
     }
 }

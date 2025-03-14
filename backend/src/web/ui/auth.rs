@@ -22,6 +22,7 @@ async fn login_form(
     let tmpl = LoginFormTemplate {
         base: BaseTemplateContext {
             request: &req,
+            event_id,
             page_title: "Login",
         },
         login_url: req.url_for("login", &[event_id.to_string()])?,
@@ -78,6 +79,7 @@ async fn login(
         let tmpl = LoginFormTemplate {
             base: BaseTemplateContext {
                 request: &req,
+                event_id,
                 page_title: "Login",
             },
             login_url: req.url_for("login", &[event_id.to_string()])?,

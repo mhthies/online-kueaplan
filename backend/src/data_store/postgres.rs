@@ -433,22 +433,17 @@ fn insert_entry_rooms(
         .map(|_| ())
 }
 
-fn filter_to_sql<'a>(
-    filter: EntryFilter,
-) -> Box<
+type BoxedBoolExpression<'a> = Box<
     dyn BoxableExpression<schema::entries::table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool>
         + 'a,
-> {
+>;
+
+fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a> {
     use diesel::dsl::{exists, not};
     use schema::entries::dsl::*;
 
-    let mut expression: Box<
-        dyn BoxableExpression<
-                schema::entries::table,
-                diesel::pg::Pg,
-                SqlType = diesel::sql_types::Bool,
-            > + 'a,
-    > = Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
+    let mut expression: BoxedBoolExpression<'a> =
+        Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
     if let Some(after) = filter.after {
         expression = Box::new(expression.as_expression().and(end.ge(after)));
     }

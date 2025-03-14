@@ -1,6 +1,7 @@
 use crate::auth_session::SessionError;
 use crate::data_store::{EventId, StoreError};
 use actix_web::error::UrlGenerationError;
+use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::http::StatusCode;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder, ResponseError};
@@ -37,6 +38,7 @@ impl Resources {
         match Self::get(path) {
             Some(content) => HttpResponse::Ok()
                 .content_type(mime_guess::from_path(path).first_or_octet_stream().as_ref())
+                .append_header(CacheControl(vec![CacheDirective::MaxAge(86400 * 365)]))
                 .body(content.data.into_owned()),
             None => {
                 HttpResponse::NotFound().body(format!("Static resource file '{}' not found", path))
@@ -59,10 +61,14 @@ struct BaseTemplateContext<'a> {
 
 impl BaseTemplateContext<'_> {
     fn url_for_static(&self, file: &str) -> Result<String, UrlGenerationError> {
-        Ok(self
-            .request
-            .url_for("static_resources", &[file])?
-            .to_string())
+        let mut url = self.request.url_for("static_resources", &[file])?;
+        url.query_pairs_mut().append_pair(
+            "hash",
+            &Resources::get(file)
+                .map(|f| bytes_to_hex(&f.metadata.sha256_hash()))
+                .unwrap_or("unknown".to_string()),
+        );
+        Ok(url.to_string())
     }
 
     fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
@@ -200,4 +206,8 @@ impl ResponseError for AppError {
 
 async fn not_found_handler() -> Result<&'static str, AppError> {
     Err(AppError::PageNotFound)
+}
+
+fn bytes_to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }

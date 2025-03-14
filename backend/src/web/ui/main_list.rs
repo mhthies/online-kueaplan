@@ -1,35 +1,22 @@
+use super::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
 use super::{AppError, BaseTemplateContext};
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{FullEntry, Room};
+use crate::data_store::{EntryFilter, EntryFilterBuilder};
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
+use chrono::TimeZone;
 use rinja::Template;
 use std::collections::BTreeMap;
 
-// TODO move configuration to database / event
-const EARLIEST_REASONABLE_KUEA: chrono::NaiveTime =
-    chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap();
-const TIME_ZONE: chrono_tz::Tz = chrono_tz::Europe::Berlin;
-const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
-    (
-        "Morgens",
-        Some(chrono::NaiveTime::from_hms_opt(12, 0, 0).unwrap()),
-    ),
-    (
-        "Mittags",
-        Some(chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap()),
-    ),
-    ("Abends", None),
-];
-
-#[get("/{event_id}/list")]
+#[get("/{event_id}/list/{date}")]
 async fn main_list(
-    path: web::Path<i32>,
+    path: web::Path<(i32, chrono::NaiveDate)>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
-    let event_id = path.into_inner();
+    let (event_id, date) = path.into_inner();
     let session_token = SessionToken::from_string(
         req.cookie("kuea-plan-session")
             .ok_or(AppError::NoSession)?
@@ -41,7 +28,7 @@ async fn main_list(
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok((
-            store.get_entries(&auth, event_id)?,
+            store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,
             store.get_rooms(&auth, event_id)?,
         ))
     })
@@ -74,6 +61,20 @@ impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&self.timezone).naive_local()
     }
+}
+
+fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
+    let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
+    let end = begin + chrono::Duration::days(1);
+    let mut filter = EntryFilterBuilder::new();
+    // TODO handle local time gaps more gracefully – in case we have an event right at DST change
+    if let Some(begin) = TIME_ZONE.from_local_datetime(&begin).earliest() {
+        filter.after(begin.to_utc());
+    }
+    if let Some(end) = TIME_ZONE.from_local_datetime(&end).latest() {
+        filter.before(end.to_utc());
+    }
+    filter.build()
 }
 
 // entries must be sorted by begin timestamp

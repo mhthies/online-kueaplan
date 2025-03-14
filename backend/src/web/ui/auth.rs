@@ -1,6 +1,6 @@
 use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::AccessRole;
-use crate::web::ui::{AppError, BaseTemplateContext};
+use crate::web::ui::{util, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::cookie::Cookie;
 use actix_web::http::header;
@@ -48,13 +48,21 @@ async fn login(
         .unwrap_or(SessionToken::new());
 
     let store = state.store.clone();
+    let event = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let auth = store.check_authorization(&SessionToken::new(), event_id)?;
+        let event = store.get_event(&auth, event_id)?;
+        Ok(event)
+    })
+    .await??;
+    let store = state.store.clone();
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         store.authorize(event_id, &data.passphrase, &mut session_token)?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok((session_token, auth.has_privilege(AccessRole::User)))
     })
-    .await?; // TODO handle authorization errors by showing form again
+    .await?;
 
     let (session_token, error) = match result {
         Ok((session_token, true)) => (Some(session_token), None),
@@ -100,8 +108,14 @@ async fn login(
         Ok(response
             .append_header((
                 header::LOCATION,
-                req.url_for("main_list", &[event_id.to_string()])?
-                    .to_string(),
+                req.url_for(
+                    "main_list",
+                    &[
+                        event_id.to_string(),
+                        util::most_reasonable_date(event).to_string(),
+                    ],
+                )?
+                .to_string(),
             ))
             .finish())
     }

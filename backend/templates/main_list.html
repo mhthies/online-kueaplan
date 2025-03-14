@@ -29,7 +29,7 @@
                             {% endif %}
                         </td>
                         <td class="kuea-time">
-                            {{ entry.entry.begin.format("%H:%M") }}&nbsp;– {{ entry.entry.end.format("%H:%M") }}
+                            {{ to_our_timezone(entry.entry.begin).format("%H:%M") }}&nbsp;– {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
                             {% if !entry.entry.time_comment.is_empty() %}
                                 <div class="comment">{{ entry.entry.time_comment }}</div>
                             {% endif %}

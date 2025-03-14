@@ -7,8 +7,10 @@ use actix_web::{get, web, HttpRequest, Responder};
 use rinja::Template;
 use std::collections::BTreeMap;
 
+// TODO move configuration to database / event
 const EARLIEST_REASONABLE_KUEA: chrono::NaiveTime =
     chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap();
+const TIME_ZONE: chrono_tz::Tz = chrono_tz::Europe::Berlin;
 const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
     (
         "Morgens",
@@ -53,6 +55,7 @@ async fn main_list(
         entry_blocks: sort_entries_into_blocks(&entries),
         all_entries: entries.iter().collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
+        timezone: TIME_ZONE,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -64,6 +67,13 @@ struct MainListTemplate<'a> {
     entry_blocks: Vec<(String, Vec<&'a FullEntry>)>,
     all_entries: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
+    timezone: chrono_tz::Tz,
+}
+
+impl<'a> MainListTemplate<'a> {
+    fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
+        timestamp.with_timezone(&self.timezone).naive_local()
+    }
 }
 
 // entries must be sorted by begin timestamp

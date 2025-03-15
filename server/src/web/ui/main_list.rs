@@ -43,7 +43,10 @@ async fn main_list(
             page_title: &title,
         },
         entry_blocks: sort_entries_into_blocks(&entries),
-        all_entries: entries.iter().collect(),
+        entries_with_descriptions: entries
+            .iter()
+            .filter(|e| !e.entry.is_cancelled && !e.entry.description.is_empty())
+            .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         timezone: TIME_ZONE,
         date,
@@ -58,7 +61,7 @@ async fn main_list(
 struct MainListTemplate<'a> {
     base: BaseTemplateContext<'a>,
     entry_blocks: Vec<(String, Vec<&'a FullEntry>)>,
-    all_entries: Vec<&'a FullEntry>,
+    entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,

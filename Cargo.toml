@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "api_types",
-    "backend",
+    "server",
 ]
 
 resolver = "2"

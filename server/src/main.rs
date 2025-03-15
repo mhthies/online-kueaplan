@@ -23,12 +23,12 @@ fn main() {
     }
 
     match args.command {
-        Command::LoadData { path } => kueaplan_backend::file_io::load_event_from_file(
+        Command::LoadData { path } => kueaplan_server::file_io::load_event_from_file(
             &path,
-            kueaplan_backend::CliAuthToken::new(),
+            kueaplan_server::CliAuthToken::new(),
         )
         .unwrap(),
-        Command::Serve => kueaplan_backend::web::serve().unwrap(),
+        Command::Serve => kueaplan_server::web::serve().unwrap(),
     }
 }
 

@@ -48,7 +48,6 @@ Deswegen richten sie sich explizit sowohl an Menschen, die jetzt neu dazugekomme
 Treffpunkt: Pelikanhalle".to_string(),
             responsible_person: "Sam, Amity".to_string(),
             is_room_reservation: false,
-            residue_of: None,
             event_id: 42,
             begin: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 21, 45, 0).unwrap(),
             end: chrono::Utc.with_ymd_and_hms(2024, 7, 27, 23, 0, 0).unwrap(),
@@ -59,6 +58,7 @@ Treffpunkt: Pelikanhalle".to_string(),
             is_exclusive: false,
             is_cancelled: false,
         },
-        room_ids: vec![]
+        room_ids: vec![],
+        previous_dates: vec![],
     }).unwrap();
 }

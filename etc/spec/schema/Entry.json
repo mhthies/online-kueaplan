@@ -40,7 +40,6 @@
         "room": {
             "description": "List of unique identifiers of the rooms this entry is valid for.",
             "type": "array",
-            "minItems": 1,
             "items": {
                 "type": "string",
                 "format": "uuid"
@@ -66,16 +65,16 @@
             "description": "if present and true, this is not a KüA announcement, but instead informs that his plan entry is no longer valid.",
             "type": "boolean"
         },
-        "residueOf": {
-            "description": "If present, this is not a KüA announcement, but instead informs about another plan entry (by its unique identifier), which has been here before.",
-            "type": "string",
-            "format": "uuid"
-        },
         "category": {
             "description": "Unique identifier of a Category of this event",
             "type": "string",
             "format": "uuid"
+        },
+        "previousDates": {
+            "description": "List of former places/times for which the KüA was scheduled to take place.",
+            "type": "array",
+            "items": {"$ref": "./PreviousDate.json"}
         }
     },
-    "required": ["id", "title", "room", "begin", "end", "category"]
+    "required": ["id", "title", "room", "begin", "end", "category", "previousDates"]
 }

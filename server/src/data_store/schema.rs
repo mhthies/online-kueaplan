@@ -21,7 +21,6 @@ diesel::table! {
         description -> Varchar,
         responsible_person -> Varchar,
         is_room_reservation -> Bool,
-        residue_of -> Nullable<Uuid>,
         event_id -> Int4,
         begin -> Timestamptz,
         end -> Timestamptz,
@@ -62,6 +61,24 @@ diesel::table! {
 }
 
 diesel::table! {
+    previous_date_rooms (previous_date_id, room_id) {
+        previous_date_id -> Uuid,
+        room_id -> Uuid,
+    }
+}
+
+diesel::table! {
+    previous_dates (id) {
+        id -> Uuid,
+        entry_id -> Uuid,
+        comment -> Varchar,
+        begin -> Timestamptz,
+        end -> Timestamptz,
+        last_updated -> Timestamptz,
+    }
+}
+
+diesel::table! {
     rooms (id) {
         id -> Uuid,
         title -> Varchar,
@@ -78,6 +95,9 @@ diesel::joinable!(entries -> events (event_id));
 diesel::joinable!(entry_rooms -> entries (entry_id));
 diesel::joinable!(entry_rooms -> rooms (room_id));
 diesel::joinable!(event_passphrases -> events (event_id));
+diesel::joinable!(previous_date_rooms -> previous_dates (previous_date_id));
+diesel::joinable!(previous_date_rooms -> rooms (room_id));
+diesel::joinable!(previous_dates -> entries (entry_id));
 diesel::joinable!(rooms -> events (event_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
@@ -86,5 +106,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     entry_rooms,
     event_passphrases,
     events,
+    previous_date_rooms,
+    previous_dates,
     rooms,
 );

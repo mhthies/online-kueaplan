@@ -138,7 +138,6 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             e.entry.description = entry.entry.description;
             e.entry.responsible_person = entry.entry.responsible_person;
             e.entry.is_room_reservation = entry.entry.is_room_reservation;
-            e.entry.residue_of = entry.entry.residue_of;
             e.entry.event_id = entry.entry.event_id;
             e.entry.begin = entry.entry.begin;
             e.entry.end = entry.entry.end;
@@ -159,7 +158,6 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
                     description: entry.entry.description,
                     responsible_person: entry.entry.responsible_person,
                     is_room_reservation: entry.entry.is_room_reservation,
-                    residue_of: entry.entry.residue_of,
                     event_id: entry.entry.event_id,
                     begin: entry.entry.begin,
                     end: entry.entry.end,
@@ -173,6 +171,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
                     is_cancelled: entry.entry.is_cancelled,
                 },
                 room_ids: entry.room_ids,
+                previous_dates: entry.previous_dates,
             });
             Ok(true)
         }
@@ -188,8 +187,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         if let Some(e) = data.next_error.take() {
             return Err(e);
         }
-        data.entries
-            .retain(|e| e.entry.id != entry_id && e.entry.residue_of != Some(entry_id));
+        data.entries.retain(|e| e.entry.id != entry_id);
         Ok(())
     }
 

@@ -1,4 +1,6 @@
+use crate::data_store::EntryId;
 use chrono::{naive::NaiveDate, DateTime, Utc};
+use diesel::associations::BelongsTo;
 use diesel::prelude::*;
 use uuid::Uuid;
 
@@ -18,7 +20,7 @@ pub struct NewEvent {
     pub end_date: NaiveDate,
 }
 
-#[derive(Clone, Queryable, Identifiable)]
+#[derive(Clone, Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct Entry {
     pub id: Uuid,
@@ -26,7 +28,6 @@ pub struct Entry {
     pub description: String,
     pub responsible_person: String,
     pub is_room_reservation: bool,
-    pub residue_of: Option<Uuid>,
     pub event_id: i32,
     pub begin: DateTime<Utc>,
     pub end: DateTime<Utc>,
@@ -44,6 +45,7 @@ pub struct Entry {
 pub struct FullEntry {
     pub entry: Entry,
     pub room_ids: Vec<Uuid>,
+    pub previous_dates: Vec<FullPreviousDate>,
 }
 
 #[derive(Clone, Insertable, AsChangeset, Identifiable)]
@@ -54,7 +56,6 @@ pub struct NewEntry {
     pub description: String,
     pub responsible_person: String,
     pub is_room_reservation: bool,
-    pub residue_of: Option<Uuid>,
     pub event_id: i32,
     pub begin: DateTime<Utc>,
     pub end: DateTime<Utc>,
@@ -70,6 +71,7 @@ pub struct NewEntry {
 pub struct FullNewEntry {
     pub entry: NewEntry,
     pub room_ids: Vec<Uuid>,
+    pub previous_dates: Vec<FullPreviousDate>,
 }
 
 #[derive(Clone, Queryable, Identifiable, Selectable)]
@@ -99,6 +101,44 @@ pub struct NewRoom {
 pub struct EntryRoomMapping {
     pub entry_id: Uuid,
     pub room_id: Uuid,
+}
+#[derive(Queryable, Associations, Identifiable, Selectable)]
+#[diesel(table_name=super::schema::previous_date_rooms)]
+#[diesel(primary_key(previous_date_id, room_id))]
+#[diesel(belongs_to(PreviousDate))]
+pub struct PreviousDateRoomMapping {
+    pub previous_date_id: Uuid,
+    pub room_id: Uuid,
+}
+
+#[derive(Clone, Queryable, Selectable, Associations, Insertable, AsChangeset, Identifiable)]
+#[diesel(table_name=super::schema::previous_dates)]
+#[diesel(belongs_to(Entry))]
+pub struct PreviousDate {
+    pub id: Uuid,
+    pub entry_id: Uuid,
+    pub comment: String,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+}
+
+#[derive(Clone)]
+pub struct FullPreviousDate {
+    pub previous_date: PreviousDate,
+    pub room_ids: Vec<Uuid>,
+}
+
+impl BelongsTo<Entry> for FullPreviousDate {
+    type ForeignKey = Uuid;
+    type ForeignKeyColumn = super::schema::previous_dates::columns::entry_id;
+
+    fn foreign_key(&self) -> Option<&Self::ForeignKey> {
+        Some(&self.previous_date.entry_id)
+    }
+
+    fn foreign_key_column() -> Self::ForeignKeyColumn {
+        super::schema::previous_dates::columns::entry_id
+    }
 }
 
 #[derive(Clone, Queryable, Identifiable, Selectable)]
@@ -153,7 +193,6 @@ impl FullNewEntry {
                 description: entry.description,
                 responsible_person: entry.responsible_person,
                 is_room_reservation: entry.is_room_reservation,
-                residue_of: entry.residue_of,
                 event_id,
                 begin: entry.begin,
                 end: entry.end,
@@ -165,6 +204,11 @@ impl FullNewEntry {
                 is_cancelled: entry.is_cancelled,
             },
             room_ids: entry.room,
+            previous_dates: entry
+                .previous_dates
+                .into_iter()
+                .map(|pd| FullPreviousDate::from_api(pd, entry.id))
+                .collect(),
         }
     }
 }
@@ -180,13 +224,44 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
             end: value.entry.end,
             responsible_person: value.entry.responsible_person,
             is_room_reservation: value.entry.is_room_reservation,
-            residue_of: value.entry.residue_of,
             category: value.entry.category,
             comment: value.entry.comment,
             room_comment: value.entry.room_comment,
             time_comment: value.entry.time_comment,
             is_exclusive: value.entry.is_exclusive,
             is_cancelled: value.entry.is_cancelled,
+            previous_dates: value
+                .previous_dates
+                .into_iter()
+                .map(|pd| pd.into())
+                .collect(),
+        }
+    }
+}
+
+impl From<FullPreviousDate> for kueaplan_api_types::PreviousDate {
+    fn from(value: FullPreviousDate) -> Self {
+        Self {
+            id: value.previous_date.id,
+            begin: value.previous_date.begin,
+            end: value.previous_date.end,
+            comment: value.previous_date.comment,
+            room: value.room_ids,
+        }
+    }
+}
+
+impl FullPreviousDate {
+    fn from_api(value: kueaplan_api_types::PreviousDate, entry_id: EntryId) -> Self {
+        Self {
+            previous_date: PreviousDate {
+                id: value.id,
+                entry_id,
+                comment: value.comment,
+                begin: value.begin,
+                end: value.end,
+            },
+            room_ids: value.room,
         }
     }
 }

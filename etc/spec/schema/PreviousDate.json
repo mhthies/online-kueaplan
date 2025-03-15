@@ -1,0 +1,38 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/PreviousDate.json",
+    "title": "Previous Date of a KüA plan entry",
+    "description": "Represents a former location and/or time of the entry on the KüA plan for informative purposes.",
+    "type": "object",
+
+    "properties": {
+        "id": {
+            "description": "The unique identifier of the previous date",
+            "type": "string",
+            "format": "uuid"
+        },
+        "comment": {
+            "description": "A short comment about why the entry has been moved from this location/time.",
+            "type": "string"
+        },
+        "begin": {
+            "description": "The former begin of the KüA. May be identical to the current begin.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "description": "The former end of the KüA. May be identical to the current end.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "room": {
+            "description": "List of unique identifiers of the rooms, where the KüA was supposed to happen. May be identical to the current list of rooms.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        }
+    },
+    "required": ["id", "title", "room", "begin", "end"]
+}

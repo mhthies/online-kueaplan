@@ -37,9 +37,19 @@ pub struct Entry {
     pub is_exclusive: bool,
     #[serde(default, skip_serializing_if = "not", rename = "isRoomReservation")]
     pub is_cancelled: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "residueOf")]
-    pub residue_of: Option<Uuid>,
     pub category: Uuid,
+    #[serde(default, rename = "previousDates")]
+    pub previous_dates: Vec<PreviousDate>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PreviousDate {
+    pub id: Uuid,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    #[serde(default, skip_serializing_if = "str::is_empty")]
+    pub comment: String,
+    pub room: Vec<Uuid>,
 }
 
 #[derive(Serialize, Deserialize)]

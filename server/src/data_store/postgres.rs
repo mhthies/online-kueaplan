@@ -1,6 +1,6 @@
 use super::{
-    models, schema, AccessRole, AuthToken, EntryFilter, EnumMemberNotExistingError, EventId,
-    GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade, StoreError,
+    models, schema, AccessRole, AuthToken, EntryFilter, EntryId, EnumMemberNotExistingError,
+    EventId, GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade, StoreError,
 };
 use crate::auth_session::SessionToken;
 use diesel::expression::AsExpression;
@@ -104,13 +104,43 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .load::<models::EntryRoomMapping>(connection)?
                 .grouped_by(&the_entries);
 
+            let the_previous_dates = models::PreviousDate::belonging_to(&the_entries)
+                .select(models::PreviousDate::as_select())
+                .load::<models::PreviousDate>(connection)?;
+
+            let the_previous_date_rooms =
+                models::PreviousDateRoomMapping::belonging_to(&the_previous_dates)
+                    .inner_join(schema::rooms::table)
+                    .filter(not(schema::rooms::deleted))
+                    .select(models::PreviousDateRoomMapping::as_select())
+                    .load::<models::PreviousDateRoomMapping>(connection)?
+                    .grouped_by(&the_previous_dates);
+
+            let the_previous_dates = the_previous_dates
+                .into_iter()
+                .zip(the_previous_date_rooms)
+                .map(
+                    |(previous_date, previous_date_rooms)| models::FullPreviousDate {
+                        previous_date,
+                        room_ids: previous_date_rooms
+                            .into_iter()
+                            .map(|rm| rm.room_id)
+                            .collect(),
+                    },
+                )
+                .grouped_by(&the_entries);
+
             Ok(the_entries
                 .into_iter()
                 .zip(the_entry_rooms)
-                .map(|(entry, entry_rooms)| models::FullEntry {
-                    entry,
-                    room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
-                })
+                .zip(the_previous_dates)
+                .map(
+                    |((entry, entry_rooms), entry_previous_dates)| models::FullEntry {
+                        entry,
+                        room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
+                        previous_dates: entry_previous_dates,
+                    },
+                )
                 .collect())
         })
     }
@@ -123,6 +153,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use diesel::dsl::not;
         use schema::entries::dsl::*;
         use schema::entry_rooms;
+        use schema::previous_dates;
         use schema::rooms;
 
         self.connection.transaction(|connection| {
@@ -142,7 +173,36 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .select(entry_rooms::dsl::room_id)
                 .load::<uuid::Uuid>(connection)?;
 
-            Ok(models::FullEntry { entry, room_ids })
+            let previous_dates = previous_dates::table
+                .filter(previous_dates::entry_id.eq(entry.id))
+                .select(models::PreviousDate::as_select())
+                .load::<models::PreviousDate>(connection)?;
+
+            let the_previous_date_rooms =
+                models::PreviousDateRoomMapping::belonging_to(&previous_dates)
+                    .inner_join(schema::rooms::table)
+                    .filter(not(schema::rooms::deleted))
+                    .select(models::PreviousDateRoomMapping::as_select())
+                    .load::<models::PreviousDateRoomMapping>(connection)?
+                    .grouped_by(&previous_dates);
+
+            Ok(models::FullEntry {
+                entry,
+                room_ids,
+                previous_dates: previous_dates
+                    .into_iter()
+                    .zip(the_previous_date_rooms)
+                    .map(
+                        |(previous_date, previous_date_rooms)| models::FullPreviousDate {
+                            previous_date,
+                            room_ids: previous_date_rooms
+                                .into_iter()
+                                .map(|pdr| pdr.room_id)
+                                .collect(),
+                        },
+                    )
+                    .collect(),
+            })
         })
     }
 
@@ -153,13 +213,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<bool, StoreError> {
         use diesel::dsl::not;
         use schema::entries::dsl::*;
-        use schema::entry_rooms;
+        use schema::previous_dates;
 
         // The event_id of the existing entry is ensured to be the same (see below), so the
         // privilege level check holds for the existing and the new entry.
         auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
 
         self.connection.transaction(|connection| {
+            // entry
             let upsert_result = {
                 // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
                 // `.on_onflict().do_update()`, does not implement the QueryDsl trait for
@@ -185,11 +246,23 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
             let is_updated = upsert_result[0];
 
+            // rooms
+            update_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
+
+            // previous dates
             diesel::delete(
-                entry_rooms::table.filter(entry_rooms::dsl::entry_id.eq(entry.entry.id)),
+                previous_dates::table
+                    .filter(super::schema::previous_dates::entry_id.eq(entry.entry.id))
+                    .filter(
+                        previous_dates::id
+                            .ne_all(entry.previous_dates.iter().map(|pd| pd.previous_date.id)),
+                    ),
             )
             .execute(connection)?;
-            insert_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
+
+            for previous_date in entry.previous_dates {
+                update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?
+            }
 
             Ok(!is_updated)
         })
@@ -215,12 +288,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             if count == 0 {
                 return Err(StoreError::NotExisting);
             }
-
-            // Delete residues of entry
-            diesel::update(entries)
-                .filter(residue_of.eq(entry_id))
-                .set(deleted.eq(true))
-                .execute(connection)?;
 
             Ok(())
         })
@@ -430,18 +497,78 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     }
 }
 
-fn insert_entry_rooms(
+fn update_entry_rooms(
     the_entry_id: uuid::Uuid,
     room_ids: &[uuid::Uuid],
     connection: &mut PgConnection,
 ) -> Result<(), diesel::result::Error> {
     use schema::entry_rooms::dsl::*;
 
+    diesel::delete(
+        entry_rooms.filter(crate::data_store::schema::entry_rooms::dsl::entry_id.eq(the_entry_id)),
+    )
+    .execute(connection)?;
+
     diesel::insert_into(entry_rooms)
         .values(
             room_ids
                 .iter()
                 .map(|the_room_id| (entry_id.eq(the_entry_id), room_id.eq(the_room_id)))
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)
+        .map(|_| ())
+}
+
+fn update_or_insert_previous_date(
+    previous_date: &models::FullPreviousDate,
+    the_entry_id: EntryId,
+    connection: &mut PgConnection,
+) -> Result<(), StoreError> {
+    use diesel::query_dsl::methods::FilterDsl;
+    use schema::previous_dates::dsl::*;
+
+    let result = diesel::insert_into(previous_dates)
+        .values(&previous_date.previous_date)
+        .on_conflict(id)
+        .do_update()
+        .set(&previous_date.previous_date)
+        .filter(entry_id.eq(the_entry_id))
+        .execute(connection)?;
+
+    if result == 0 {
+        return Err(StoreError::ConflictEntityExists);
+    }
+
+    update_previous_date_rooms(
+        previous_date.previous_date.id,
+        &previous_date.room_ids,
+        connection,
+    )?;
+
+    Ok(())
+}
+
+fn update_previous_date_rooms(
+    the_previous_date_id: uuid::Uuid,
+    room_ids: &[uuid::Uuid],
+    connection: &mut PgConnection,
+) -> Result<(), diesel::result::Error> {
+    use schema::previous_date_rooms::dsl::*;
+
+    diesel::delete(previous_date_rooms.filter(previous_date_id.eq(the_previous_date_id)))
+        .execute(connection)?;
+
+    diesel::insert_into(previous_date_rooms)
+        .values(
+            room_ids
+                .iter()
+                .map(|the_room_id| {
+                    (
+                        previous_date_id.eq(the_previous_date_id),
+                        room_id.eq(the_room_id),
+                    )
+                })
                 .collect::<Vec<_>>(),
         )
         .execute(connection)

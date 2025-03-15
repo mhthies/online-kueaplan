@@ -95,6 +95,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(not(deleted))
                 .filter(filter_to_sql(filter))
                 .order_by((begin.asc(), end.asc()))
+                .select(models::Entry::as_select())
                 .load::<models::Entry>(connection)?;
 
             let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
@@ -159,6 +160,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         self.connection.transaction(|connection| {
             let entry = entries
                 .filter(id.eq(entry_id))
+                .select(models::Entry::as_select())
                 .first::<models::Entry>(connection)?;
             auth_token.check_privilege(entry.event_id, AccessRole::User)?;
 

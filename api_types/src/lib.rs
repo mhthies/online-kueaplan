@@ -32,11 +32,11 @@ pub struct Entry {
     #[serde(default, rename = "responsiblePerson")]
     pub responsible_person: String,
     #[serde(default, skip_serializing_if = "not", rename = "isExclusive")]
-    pub is_room_reservation: bool,
-    #[serde(default, skip_serializing_if = "not", rename = "isCancelled")]
     pub is_exclusive: bool,
-    #[serde(default, skip_serializing_if = "not", rename = "isRoomReservation")]
+    #[serde(default, skip_serializing_if = "not", rename = "isCancelled")]
     pub is_cancelled: bool,
+    #[serde(default, skip_serializing_if = "not", rename = "isRoomReservation")]
+    pub is_room_reservation: bool,
     pub category: Uuid,
     #[serde(default, rename = "previousDates")]
     pub previous_dates: Vec<PreviousDate>,

@@ -1,7 +1,7 @@
 [workspace]
-members = [ "api_types",
+members = [
+    "api_types",
     "backend",
-    "frontend"
 ]
 
 resolver = "2"

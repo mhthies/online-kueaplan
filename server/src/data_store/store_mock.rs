@@ -188,7 +188,8 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         if let Some(e) = data.next_error.take() {
             return Err(e);
         }
-        data.entries.retain(|e| e.entry.id != entry_id);
+        data.entries
+            .retain(|e| e.entry.id != entry_id && e.entry.residue_of != Some(entry_id));
         Ok(())
     }
 

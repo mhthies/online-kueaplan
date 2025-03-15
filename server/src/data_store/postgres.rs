@@ -206,16 +206,24 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         // The correctness of the given event_id is checked in the DELETE statement below
         auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
 
-        let count = diesel::update(entries)
-            .filter(id.eq(entry_id))
-            .filter(event_id.eq(the_event_id))
-            .set(deleted.eq(true))
-            .execute(&mut self.connection)?;
-        if count == 0 {
-            return Err(StoreError::NotExisting);
-        }
+        self.connection.transaction(|connection| {
+            let count = diesel::update(entries)
+                .filter(id.eq(entry_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            }
 
-        Ok(())
+            // Delete residues of entry
+            diesel::update(entries)
+                .filter(residue_of.eq(entry_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+
+            Ok(())
+        })
     }
 
     fn get_rooms(

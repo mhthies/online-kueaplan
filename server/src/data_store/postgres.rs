@@ -98,6 +98,9 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .load::<models::Entry>(connection)?;
 
             let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
+                .inner_join(schema::rooms::table)
+                .filter(not(schema::rooms::deleted))
+                .select(models::EntryRoomMapping::as_select())
                 .load::<models::EntryRoomMapping>(connection)?
                 .grouped_by(&the_entries);
 
@@ -117,8 +120,10 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         entry_id: uuid::Uuid,
     ) -> Result<models::FullEntry, StoreError> {
+        use diesel::dsl::not;
         use schema::entries::dsl::*;
         use schema::entry_rooms;
+        use schema::rooms;
 
         self.connection.transaction(|connection| {
             let entry = entries
@@ -131,7 +136,9 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
 
             let room_ids = entry_rooms::table
+                .inner_join(rooms::table)
                 .filter(entry_rooms::dsl::entry_id.eq(entry.id))
+                .filter(not(rooms::deleted))
                 .select(entry_rooms::dsl::room_id)
                 .load::<uuid::Uuid>(connection)?;
 

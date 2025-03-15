@@ -92,7 +92,7 @@ pub struct NewRoom {
 
 // Introduce type for Entry-Room-association, to simplify grouped retrieval of room_ids of an Entry
 // using Diesel's .grouped_by() method.
-#[derive(Queryable, Associations, Identifiable)]
+#[derive(Queryable, Associations, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::entry_rooms)]
 #[diesel(primary_key(entry_id, room_id))]
 #[diesel(belongs_to(Entry))]

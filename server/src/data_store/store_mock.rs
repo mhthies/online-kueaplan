@@ -243,6 +243,9 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             return Err(e);
         }
         data.rooms.retain(|r| r.id != room_id);
+        for entry in data.entries.iter_mut() {
+            entry.room_ids.retain(|id| *id != room_id);
+        }
         Ok(())
     }
 

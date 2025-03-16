@@ -1,0 +1,7 @@
+name;bg dark;text dark;border dark;bg light;text light;border light;base
+primary (blue);#031633;#6ea8fe;#084298;#cfe2ff;#052c65;#9ec5fe;#0d6efd
+sucess (green);#051b11;#75b798;#0f5132;#d1e7dd;#0a3622;#a3cfbb;#238754
+warning (yellow);#332701;#ffda6a;#997404;#fff3cd;#664d03;#ffe69c;#ffc107
+info (light blue);#032830;#6edff6;#087990;#cff4fc;#055160;#9eeaf9;#0dcaf0
+secondary (grey);#161719;#a7acb1;#41464b;#e2e3e5;#2b2f32;#c4c8cb;#6c757d
+light (light grey);#343a40;#f8f9fa;#495057;#fcfcfd;#495057;#e9ecef;#f8f9fa

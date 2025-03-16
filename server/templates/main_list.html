@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block custom_header %}
+<style>
+    {% for category in categories.values() %}
+    {{ category|styles_for_category }}
+    {% endfor %}
+</style>
+{% endblock %}
+
 {% block body %}
 <nav class="navbar navbar-expand sticky-top bg-body-tertiary">
     <div class="container">
@@ -35,8 +43,11 @@
             </thead>
             <tbody>
                 {% for entry in entries %}
-                    <tr>
+                    <tr class="{{ css_class_for_entry(entry) }}">
                         <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
+                            {% if entry.entry.is_cancelled %}
+                                <span class="visually-hidden">Abgesagt: </span>
+                            {% endif %}
                             <span class="content">{{ entry.entry.title }}</span>
                             {% if !entry.entry.description.is_empty() %}
                                 <a href="#entry-desc-{{ entry.entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
@@ -68,7 +79,7 @@
     {% endfor %}
 
     {% if !entries_with_descriptions.is_empty() %}
-        <h2>Beschreibungen</h2>
+        <h2 style="page-break-before: always;">Beschreibungen</h2>
         {% for entry in entries_with_descriptions %}
             <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>
             {{ entry.entry.description|markdown }}

@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{{ base.url_for_static("main.css")? }}">
     <link rel="stylesheet" href="{{ base.url_for_static("print.css")? }}" media="print">
     <link rel="stylesheet" href="{{ base.url_for_static("screen.css")? }}" media="screen">
+    {% block custom_header %}
+    {% endblock %}
 </head>
 <body>
 {% block body %}

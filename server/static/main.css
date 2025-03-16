@@ -19,3 +19,13 @@
 nav[data-toggle="toc"] {
     top: 60px;
 }
+
+.table.kuealist > :not(caption) > .kuea-with-category > * {
+    background: var(--category-bg);
+    color: var(--category-text);
+}
+
+[data-bs-theme="dark"] .table.kuealist > :not(caption) > .kuea-with-category > * {
+    background: var(--category-bg-dark);
+    color: var(--category-text-dark);
+}

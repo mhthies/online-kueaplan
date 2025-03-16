@@ -9,12 +9,16 @@
     .kuealist tr {
         display: block;
         border-style: solid;
+        border-color: var(--category-border);
         border-width: 1px;
         border-radius: 3px;
         margin-bottom: .5rem;
     }
+    [data-bs-theme="dark"] .kuealist tr {
+        border-color: var(--category-border-dark);
+    }
     .kuealist td {
-        background-color: none;
+        background-color: transparent;
         display: block;
         border-style: none;
     }

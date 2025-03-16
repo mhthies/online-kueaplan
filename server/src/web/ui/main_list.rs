@@ -1,12 +1,14 @@
-use super::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
+use super::util::{CategoryColors, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
 use super::{AppError, BaseTemplateContext};
 use crate::auth_session::SessionToken;
-use crate::data_store::models::{Event, FullEntry, Room};
+use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
+use crate::web::ui::main_list::filters::css_class_for_category;
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use chrono::TimeZone;
+use palette::{IntoColor, Lighten};
 use rinja::Template;
 use std::collections::BTreeMap;
 
@@ -24,13 +26,14 @@ async fn main_list(
         &state.secret,
         super::SESSION_COOKIE_MAX_AGE,
     )?;
-    let (event, entries, rooms) = web::block(move || -> Result<_, AppError> {
+    let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok((
             store.get_event(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,
             store.get_rooms(&auth, event_id)?,
+            store.get_categories(&auth, event_id)?,
         ))
     })
     .await??;
@@ -48,6 +51,7 @@ async fn main_list(
             .filter(|e| !e.entry.is_cancelled && !e.entry.description.is_empty())
             .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
+        categories: categories.iter().map(|r| (r.id, r)).collect(),
         timezone: TIME_ZONE,
         date,
         event: &event,
@@ -63,6 +67,7 @@ struct MainListTemplate<'a> {
     entry_blocks: Vec<(String, Vec<&'a FullEntry>)>,
     entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
+    categories: BTreeMap<uuid::Uuid, &'a Category>,
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
     event: &'a Event,
@@ -72,6 +77,23 @@ struct MainListTemplate<'a> {
 impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&self.timezone).naive_local()
+    }
+
+    fn css_class_for_entry(&self, entry: &'a FullEntry) -> String {
+        let mut result = css_class_for_category(
+            self.categories
+                .get(&entry.entry.category)
+                .expect("Category should be existing"),
+        )
+        .expect("CSS class calculation cannot fail");
+        result.push_str(" kuea-with-category");
+        if entry.entry.is_cancelled {
+            result.push_str(" kuea-cancelled");
+        }
+        if entry.entry.is_room_reservation {
+            result.push_str(" fst-italic");
+        }
+        result
     }
 }
 
@@ -130,6 +152,8 @@ fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
 
 /// Filters for the rinja template
 mod filters {
+    use crate::data_store::models::Category;
+    use crate::web::ui::util::CategoryColors;
     use chrono::{Datelike, Weekday};
 
     pub fn markdown(input: &str) -> rinja::Result<rinja::filters::Safe<String>> {
@@ -161,5 +185,19 @@ mod filters {
             Weekday::Sat => "Sa",
             Weekday::Sun => "So",
         })
+    }
+
+    pub fn styles_for_category(category: &Category) -> rinja::Result<String> {
+        let colors = CategoryColors::from_base_color_hex(&category.color)
+            .expect("Category color should be a valid HTML hex color string.");
+        Ok(format!(
+            ".{0}{{ {1} }}",
+            css_class_for_category(category)?,
+            colors.as_css(),
+        ))
+    }
+
+    pub fn css_class_for_category(category: &Category) -> rinja::Result<String> {
+        Ok(format!("category-{}", category.id.to_string()))
     }
 }

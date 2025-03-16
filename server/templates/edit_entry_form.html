@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block body %}
+<nav class="navbar navbar-expand sticky-top bg-body-tertiary">
+    <div class="container">
+        <a class="navbar-brand" href="#">{{ event.title }}</a>
+    </div>
+</nav>
+<div class="container mt-3" id="main">
+    <h1>
+        Eintrag bearbeiten
+    </h1>
+    <form method="post" action="{{post_url}}">
+    <div class="mb-3">
+        {{ form_data.title.create_form_field("title", "Titel", None, InputType::Text, InputSize::LARGE)? }}
+    </div>
+    <div class="mb-3">
+        {{ form_data.comment.create_form_field("comment", "Kommentar", Some("wird unter dem Titel angezeigt"), InputType::Text, InputSize::SMALL)? }}
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <label class="form-label">Tag</label>
+                    <select class="form-select">
+                        <option value="1">Mo 27.08.</option>
+                        <option value="2">Di 28.08.</option>
+                        <option value="3">Mi 29.08.</option>
+                    </select>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <label class="form-label">Begin</label>
+                    <input type="time" class="form-control">
+                </div>
+                <div class="col-6 col-sm-4">
+                    <label class="form-label">Ende</label>
+                    <input type="time" class="form-control">
+                </div>
+                <div class="mb-3">
+                    {{ form_data.time_comment.create_form_field("time_comment", "Kommentar zur Zeit", None, InputType::Text, InputSize::SMALL)? }}
+                </div>
+                <div class="mb-3">
+                    {{ form_data.is_cancelled.create_checkbox("is_cancelled", "fällt aus", None)? }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                {{ form_data.category.create_select("category", category_entries, "Kategorie", None, InputSize::NORMAL)? }}
+            </div>
+            <div class="mb-3">
+                {{ form_data.is_room_reservation.create_checkbox("is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))? }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Orte</label>
+                <select class="form-select">
+                    <option value="1">Pelikanhalle</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                {{ form_data.room_comment.create_form_field("room_comment", "Kommentar zum Ort", None, InputType::Text, InputSize::SMALL)? }}
+            </div>
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::NORMAL)? }}
+    </div>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+    </form>
+</div>
+{% endblock %}
+

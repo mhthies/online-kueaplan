@@ -10,6 +10,8 @@ use rust_embed::Embed;
 use std::fmt::{Display, Formatter};
 
 mod auth;
+mod edit_entry;
+mod forms;
 mod main_list;
 mod util;
 
@@ -26,6 +28,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(main_list::main_list)
         .service(auth::login_form)
         .service(auth::login)
+        .service(edit_entry::edit_entry_form)
+        .service(edit_entry::edit_entry)
         .default_service(web::to(not_found_handler))
 }
 

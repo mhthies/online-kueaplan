@@ -212,6 +212,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         &mut self,
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
+        extend_previous_dates: bool,
     ) -> Result<bool, StoreError> {
         use diesel::dsl::not;
         use schema::entries::dsl::*;
@@ -252,15 +253,17 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             update_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
 
             // previous dates
-            diesel::delete(
-                previous_dates::table
-                    .filter(super::schema::previous_dates::entry_id.eq(entry.entry.id))
-                    .filter(
-                        previous_dates::id
-                            .ne_all(entry.previous_dates.iter().map(|pd| pd.previous_date.id)),
-                    ),
-            )
-            .execute(connection)?;
+            if !extend_previous_dates {
+                diesel::delete(
+                    previous_dates::table
+                        .filter(super::schema::previous_dates::entry_id.eq(entry.entry.id))
+                        .filter(
+                            previous_dates::id
+                                .ne_all(entry.previous_dates.iter().map(|pd| pd.previous_date.id)),
+                        ),
+                )
+                .execute(connection)?;
+            }
 
             for previous_date in entry.previous_dates {
                 update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?

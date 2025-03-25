@@ -90,6 +90,7 @@ pub trait KueaPlanStoreFacade {
         &mut self,
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
+        extend_previous_dates: bool,
     ) -> Result<bool, StoreError>;
     fn delete_entry(
         &mut self,

@@ -60,5 +60,5 @@ Treffpunkt: Pelikanhalle".to_string(),
         },
         room_ids: vec![],
         previous_dates: vec![],
-    }).unwrap();
+    }, false).unwrap();
 }

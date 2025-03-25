@@ -1,8 +1,8 @@
 <label for="{{name}}Select" class="form-label">{{label}}</label>
-<select class="form-select {% match size %}{%when InputSize::LARGE%}form-control-lg{%when InputSize::NORMAL%}{%when InputSize::SMALL%}form-control-sm{%endmatch%}"
+<select class="form-select {%if !data.errors.is_empty() %}is-invalid{% endif %} {% match size %}{%when InputSize::LARGE%}form-control-lg{%when InputSize::NORMAL%}{%when InputSize::SMALL%}form-control-sm{%endmatch%}"
         id="{{name}}Select" name="{{name}}">
 {% for entry in entries %}
-    <option value="{{entry.value}}"{% if entry.value == data.value %}selected{% endif %}>{{entry.label}}</option>
+    <option value="{{entry.value}}"{% if entry.value == data.value %}selected{% endif %}>{{entry.text}}</option>
 {% endfor %}
 </select>
 {% include "_info_and_errors.html" %}

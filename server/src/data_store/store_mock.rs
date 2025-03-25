@@ -120,6 +120,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         &mut self,
         _auth_token: &AuthToken,
         entry: FullNewEntry,
+        extend_previous_dates: bool,
     ) -> Result<bool, StoreError> {
         let mut data = self.store.data.lock().expect("Error while locking mutex.");
         if let Some(e) = data.next_error.take() {
@@ -149,6 +150,11 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             e.entry.is_exclusive = entry.entry.is_exclusive;
             e.entry.is_cancelled = entry.entry.is_cancelled;
             e.room_ids = entry.room_ids;
+            if extend_previous_dates {
+                e.previous_dates.extend(entry.previous_dates.into_iter());
+            } else {
+                e.previous_dates = entry.previous_dates;
+            }
             Ok(false)
         } else {
             data.entries.push(models::FullEntry {

@@ -1,6 +1,5 @@
 use rinja::Template;
-use serde::de::Visitor;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 #[derive(Debug, Deserialize, Default)]
@@ -12,8 +11,20 @@ pub struct FormValue {
 }
 
 impl FormValue {
-    pub fn validated_as<'a, T: FromFormValue<'a>>(&'a mut self) -> Option<T> {
+    pub fn validate<'a, T: FromFormValue<'a>>(&'a mut self) -> Option<T> {
         match T::from_form_value(&mut self.value) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                self.errors.push(e);
+                None
+            }
+        }
+    }
+    pub fn validate_with<'a, 'd, T: FromFormValueWithData<'a, 'd>>(
+        &'a mut self,
+        data: T::AdditionalData,
+    ) -> Option<T> {
+        match T::from_form_value(&mut self.value, data) {
             Ok(v) => Some(v),
             Err(e) => {
                 self.errors.push(e);
@@ -24,10 +35,6 @@ impl FormValue {
 
     pub fn add_error(&mut self, error: String) {
         self.errors.push(error)
-    }
-
-    pub fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
     }
 
     pub fn create_form_field(
@@ -74,6 +81,11 @@ pub trait IntoFormValue {
 }
 pub trait FromFormValue<'a>: Sized {
     fn from_form_value(value: &'a str) -> Result<Self, String>;
+}
+pub trait FromFormValueWithData<'a, 'd>: Sized {
+    type AdditionalData: 'd;
+
+    fn from_form_value(value: &'a str, data: Self::AdditionalData) -> Result<Self, String>;
 }
 
 impl<T> IntoFormValue for T
@@ -136,9 +148,10 @@ struct FormFieldTemplate<'a> {
     data: &'a FormValue,
 }
 
+#[derive(Serialize)]
 pub struct SelectEntry<'a> {
     pub value: Cow<'a, str>,
-    pub label: Cow<'a, str>,
+    pub text: Cow<'a, str>,
 }
 
 #[derive(Template)]
@@ -166,16 +179,12 @@ pub struct BoolFormValue {
 }
 
 impl BoolFormValue {
-    pub fn validated_as(&mut self) -> Option<bool> {
-        Some(self.value.is_some())
+    pub fn get_value(&self) -> bool {
+        self.value.is_some()
     }
 
     pub fn add_error(&mut self, error: String) {
         self.errors.push(error)
-    }
-
-    pub fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
     }
 
     pub fn create_checkbox(

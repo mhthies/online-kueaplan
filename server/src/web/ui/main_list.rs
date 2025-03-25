@@ -1,5 +1,5 @@
 use super::util::{CategoryColors, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
-use super::{AppError, BaseTemplateContext};
+use super::{util, AppError, BaseTemplateContext};
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
@@ -55,7 +55,7 @@ async fn main_list(
         timezone: TIME_ZONE,
         date,
         event: &event,
-        event_days: event_days(&event),
+        event_days: util::event_days(&event),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -103,13 +103,20 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
     let end = begin + chrono::Duration::days(1);
     let mut filter = EntryFilterBuilder::new();
-    // TODO handle local time gaps more gracefully – in case we have an event right at DST change
-    if let Some(begin) = TIME_ZONE.from_local_datetime(&begin).earliest() {
-        filter.after(begin.to_utc());
-    }
-    if let Some(end) = TIME_ZONE.from_local_datetime(&end).latest() {
-        filter.before(end.to_utc());
-    }
+    filter.after(
+        TIME_ZONE
+            .from_local_datetime(&begin)
+            .earliest()
+            .map(|dt| dt.to_utc())
+            .unwrap_or(begin.and_utc()),
+    );
+    filter.before(
+        TIME_ZONE
+            .from_local_datetime(&end)
+            .latest()
+            .map(|dt| dt.to_utc())
+            .unwrap_or(end.and_utc()),
+    );
     filter.build()
 }
 
@@ -140,14 +147,6 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
         result.push((time_block_name.to_string(), block_entries));
     }
     result
-}
-
-/// Calculate the list of calendar days that the event covers
-fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
-    let len = (event.end_date - event.begin_date).num_days();
-    (0..=len)
-        .map(|i| event.begin_date + chrono::Duration::days(i))
-        .collect()
 }
 
 /// Filters for the rinja template

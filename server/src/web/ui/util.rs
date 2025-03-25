@@ -1,10 +1,13 @@
 use crate::data_store::models::Event;
+use chrono::{DateTime, NaiveDate, TimeZone, Timelike};
 use palette::{FromColor, IntoColor};
 
 // TODO move configuration to database / event
+// in local time
 pub const EFFECTIVE_BEGIN_OF_DAY: chrono::NaiveTime =
     chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap();
 pub const TIME_ZONE: chrono_tz::Tz = chrono_tz::Europe::Berlin;
+// in local time
 pub const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
     (
         "Morgens",
@@ -16,6 +19,32 @@ pub const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
     ),
     ("Abends", None),
 ];
+
+/// Calculate the effective date of a timestamp, considering the EFFECTIVE_BEGIN_OF_DAY (in local
+/// time) instead of 0:00 as date boundary
+pub fn get_effective_date(date_time: DateTime<chrono::Utc>) -> chrono::NaiveDate {
+    (date_time.with_timezone(&TIME_ZONE)
+        - chrono::Duration::seconds(EFFECTIVE_BEGIN_OF_DAY.num_seconds_from_midnight() as i64))
+    .date_naive()
+}
+
+pub fn timestamp_from_effective_date_and_time(
+    effective_date: NaiveDate,
+    local_time: chrono::NaiveTime,
+) -> DateTime<chrono::Utc> {
+    let date = effective_date
+        + if local_time < EFFECTIVE_BEGIN_OF_DAY {
+            chrono::Duration::days(-1)
+        } else {
+            chrono::Duration::days(0)
+        };
+    let local_datetime = chrono::NaiveDateTime::new(date, local_time);
+    TIME_ZONE
+        .from_local_datetime(&local_datetime)
+        .latest()
+        .map(|dt| dt.to_utc())
+        .unwrap_or(local_datetime.and_utc())
+}
 
 /// Calculate the most reasonable date to show the KüA-Plan for. Use the current (effective) date,
 /// but clamp it to the event's boundaries
@@ -106,4 +135,12 @@ fn change_color_luminance(color: &palette::Hsl, new_base_luminance: f32) -> pale
     color.lightness = target_luminance;
     color.saturation *= saturation_factor;
     color
+}
+
+/// Calculate the list of calendar days that the event covers
+pub fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
+    let len = (event.end_date - event.begin_date).num_days();
+    (0..=len)
+        .map(|i| event.begin_date + chrono::Duration::days(i))
+        .collect()
 }

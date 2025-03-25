@@ -14,6 +14,7 @@ mod edit_entry;
 mod forms;
 mod main_list;
 mod util;
+mod validation;
 
 #[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
 const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);

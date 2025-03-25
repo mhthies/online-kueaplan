@@ -90,7 +90,7 @@ async fn create_or_update_entry(
     let created = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
-        Ok(store.create_or_update_entry(&auth, FullNewEntry::from_api(entry, event_id))?)
+        Ok(store.create_or_update_entry(&auth, FullNewEntry::from_api(entry, event_id), false)?)
     })
     .await??;
 

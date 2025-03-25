@@ -1,4 +1,7 @@
-use crate::data_store::models::Event;
+use crate::data_store::models::{Event, NewEntry};
+use crate::data_store::{EntryId, EventId};
+use actix_web::error::UrlGenerationError;
+use actix_web::HttpRequest;
 use chrono::{DateTime, NaiveDate, TimeZone, Timelike};
 use palette::{FromColor, IntoColor};
 
@@ -22,7 +25,7 @@ pub const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
 
 /// Calculate the effective date of a timestamp, considering the EFFECTIVE_BEGIN_OF_DAY (in local
 /// time) instead of 0:00 as date boundary
-pub fn get_effective_date(date_time: DateTime<chrono::Utc>) -> chrono::NaiveDate {
+pub fn get_effective_date(date_time: &DateTime<chrono::Utc>) -> chrono::NaiveDate {
     (date_time.with_timezone(&TIME_ZONE)
         - chrono::Duration::seconds(EFFECTIVE_BEGIN_OF_DAY.num_seconds_from_midnight() as i64))
     .date_naive()
@@ -143,4 +146,21 @@ pub fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
     (0..=len)
         .map(|i| event.begin_date + chrono::Duration::days(i))
         .collect()
+}
+
+pub fn url_for_entry(
+    req: HttpRequest,
+    event_id: EventId,
+    entry_id: &EntryId,
+    entry_begin: &chrono::DateTime<chrono::Utc>,
+) -> Result<String, UrlGenerationError> {
+    let mut url = req.url_for(
+        "main_list",
+        &[
+            &event_id.to_string(),
+            &get_effective_date(entry_begin).to_string(),
+        ],
+    )?;
+    url.set_fragment(Some(&format!("entry-{}", entry_id)));
+    Ok(url.to_string())
 }

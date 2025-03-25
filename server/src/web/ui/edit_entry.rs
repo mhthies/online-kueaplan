@@ -3,12 +3,13 @@ use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEnt
 use crate::data_store::EntryId;
 use crate::web::ui::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
 use crate::web::ui::util::{
-    event_days, get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
+    event_days, get_effective_date, timestamp_from_effective_date_and_time, url_for_entry,
+    TIME_ZONE,
 };
 use crate::web::ui::{validation, AppError, BaseTemplateContext};
 use crate::web::AppState;
-use actix_web::web::{Form, Html};
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::web::{Form, Html, Redirect};
+use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
 use rinja::Template;
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -94,7 +95,10 @@ async fn edit_entry(
         &categories.iter().map(|c| c.id).collect(),
     );
 
-    if let Some(entry) = entry {
+    if let Some(mut entry) = entry {
+        entry.entry.id = entry_id;
+        entry.entry.event_id = event_id;
+        let entry_begin = entry.entry.begin;
         web::block(move || -> Result<_, AppError> {
             let mut store = state.store.get_facade()?;
             store.create_or_update_entry(&auth, entry, true)?;
@@ -103,8 +107,9 @@ async fn edit_entry(
         .await??;
 
         // TODO allow creating new previous_date
-        // TODO redirect
-        Ok(HttpResponse::Ok().body(""))
+        Ok(Either::Left(
+            Redirect::to(url_for_entry(req, event_id, &entry_id, &entry_begin)?).see_other(),
+        ))
     } else {
         let tmpl = EditEntryFormTemplate {
             base: BaseTemplateContext {
@@ -118,7 +123,9 @@ async fn edit_entry(
             rooms: &rooms,
             categories: &categories,
         };
-        Ok(HttpResponse::UnprocessableEntity().body(tmpl.render()?))
+        Ok(Either::Right(
+            HttpResponse::UnprocessableEntity().body(tmpl.render()?),
+        ))
     }
 }
 
@@ -238,7 +245,7 @@ impl From<FullEntry> for EntryFormData {
             time_comment: value.entry.time_comment.into(),
             description: value.entry.description.into(),
             responsible_person: value.entry.responsible_person.into(),
-            day: validation::IsoDate(get_effective_date(value.entry.begin)).into(),
+            day: validation::IsoDate(get_effective_date(&value.entry.begin)).into(),
             begin: validation::TimeOfDay(
                 value
                     .entry

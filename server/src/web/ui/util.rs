@@ -149,11 +149,11 @@ pub fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
 }
 
 pub fn url_for_entry(
-    req: HttpRequest,
+    req: &HttpRequest,
     event_id: EventId,
     entry_id: &EntryId,
     entry_begin: &chrono::DateTime<chrono::Utc>,
-) -> Result<String, UrlGenerationError> {
+) -> Result<url::Url, UrlGenerationError> {
     let mut url = req.url_for(
         "main_list",
         &[
@@ -162,5 +162,5 @@ pub fn url_for_entry(
         ],
     )?;
     url.set_fragment(Some(&format!("entry-{}", entry_id)));
-    Ok(url.to_string())
+    Ok(url)
 }

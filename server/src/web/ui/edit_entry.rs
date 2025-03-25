@@ -10,6 +10,7 @@ use crate::web::ui::{validation, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
+use chrono::DateTime;
 use rinja::Template;
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -43,6 +44,7 @@ async fn edit_entry_form(
     .await??;
 
     let entry_id = entry.entry.id;
+    let entry_begin = entry.entry.begin;
     let form_data: EntryFormData = entry.into();
 
     let tmpl = EditEntryFormTemplate {
@@ -56,6 +58,7 @@ async fn edit_entry_form(
         form_data: &form_data,
         rooms: &rooms,
         categories: &categories,
+        entry_begin: &entry_begin,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -77,17 +80,21 @@ async fn edit_entry(
         super::SESSION_COOKIE_MAX_AGE,
     )?;
     let store = state.store.clone();
-    let (event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
+    let (event, old_entry, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.check_authorization(&session_token, event_id)?;
         Ok((
             store.get_event(&auth, event_id)?,
+            store.get_entry(&auth, entry_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
     })
     .await??;
+    if event_id != old_entry.entry.event_id {
+        return Err(AppError::EntityNotFound);
+    }
 
     let mut data = data.into_inner();
     let entry = data.validate(
@@ -108,7 +115,8 @@ async fn edit_entry(
 
         // TODO allow creating new previous_date
         Ok(Either::Left(
-            Redirect::to(url_for_entry(req, event_id, &entry_id, &entry_begin)?).see_other(),
+            Redirect::to(url_for_entry(&req, event_id, &entry_id, &entry_begin)?.to_string())
+                .see_other(),
         ))
     } else {
         let tmpl = EditEntryFormTemplate {
@@ -122,6 +130,7 @@ async fn edit_entry(
             form_data: &data,
             rooms: &rooms,
             categories: &categories,
+            entry_begin: &old_entry.entry.begin,
         };
         Ok(Either::Right(
             HttpResponse::UnprocessableEntity().body(tmpl.render()?),
@@ -138,6 +147,7 @@ struct EditEntryFormTemplate<'a> {
     form_data: &'a EntryFormData,
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
+    entry_begin: &'a chrono::DateTime<chrono::Utc>,
 }
 
 impl<'a> EditEntryFormTemplate<'a> {
@@ -145,6 +155,14 @@ impl<'a> EditEntryFormTemplate<'a> {
         self.base.request.url_for(
             "edit_entry",
             &[self.event.id.to_string(), self.entry_id.to_string()],
+        )
+    }
+    fn abort_url(&self) -> Result<url::Url, actix_web::error::UrlGenerationError> {
+        url_for_entry(
+            self.base.request,
+            self.event.id,
+            self.entry_id,
+            self.entry_begin,
         )
     }
     fn room_entries(&self) -> Vec<SelectEntry<'a>> {

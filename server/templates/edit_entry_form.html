@@ -65,7 +65,8 @@
     <div class="mb-3">
         {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::NORMAL)? }}
     </div>
-    <button type="submit" class="btn btn-primary">Speichern</button>
+    <button type="submit" class="btn btn-primary">Speichern</button>&ensp;
+        <a href="{{ abort_url()? }}" class="btn btn-secondary">Abbrechen</a>
     </form>
 </div>
 {% endblock %}

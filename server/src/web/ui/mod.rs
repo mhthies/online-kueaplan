@@ -1,5 +1,7 @@
 use crate::auth_session::SessionError;
+use crate::data_store::models::Entry;
 use crate::data_store::{EventId, StoreError};
+use crate::web::ui::util::url_for_entry;
 use actix_web::error::UrlGenerationError;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::http::StatusCode;

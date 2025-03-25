@@ -29,3 +29,12 @@ nav[data-toggle="toc"] {
     background: var(--category-bg-dark);
     color: var(--category-text-dark);
 }
+
+.ts-control, .ts-control input, .ts-dropdown {
+    color: var(--bs-body-color);
+}
+.ts-wrapper.multi .ts-control > div {
+    background: var(--bs-secondary-bg);
+    border: 0 solid var(--bs-border-color);
+    color: var(--bs-body-color);
+}

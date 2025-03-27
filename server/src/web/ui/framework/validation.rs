@@ -1,4 +1,4 @@
-use crate::web::ui::forms::{FromFormValue, FromFormValueWithData, IntoFormValue};
+use super::forms::{FromFormValue, FromFormValueWithData, IntoFormValue};
 use chrono::Timelike;
 use lazy_static::lazy_static;
 use uuid::Uuid;

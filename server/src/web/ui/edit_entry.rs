@@ -1,12 +1,12 @@
-use crate::auth_session::SessionToken;
-use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
-use crate::data_store::EntryId;
-use crate::web::ui::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
-use crate::web::ui::util::{
+use super::framework::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
+use super::util::{
     event_days, get_effective_date, timestamp_from_effective_date_and_time, url_for_entry,
     TIME_ZONE,
 };
-use crate::web::ui::{validation, AppError, BaseTemplateContext};
+use crate::auth_session::SessionToken;
+use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
+use crate::data_store::EntryId;
+use crate::web::ui::{framework::validation, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};

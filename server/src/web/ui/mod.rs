@@ -1,12 +1,15 @@
 use crate::auth_session::SessionError;
 use crate::data_store::models::Entry;
 use crate::data_store::{EventId, StoreError};
+use crate::web::ui::framework::flash::flash_middleware;
 use crate::web::ui::util::url_for_entry;
 use actix_web::error::UrlGenerationError;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::http::StatusCode;
+use actix_web::middleware::from_fn;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder, ResponseError};
+use framework::flash::FlashesInterface;
 use rinja::Template;
 use rust_embed::Embed;
 use std::fmt::{Display, Formatter};
@@ -21,7 +24,7 @@ mod util;
 const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_ui_service());
+    cfg.service(get_ui_service().wrap(from_fn(flash_middleware)));
 }
 
 fn get_ui_service() -> actix_web::Scope {
@@ -82,6 +85,10 @@ impl BaseTemplateContext<'_> {
             .request
             .url_for("main_list", &[self.event_id.to_string(), date.to_string()])?
             .to_string())
+    }
+
+    fn get_flashes(&self) -> Vec<framework::flash::FlashMessage> {
+        self.request.get_and_clear_flashes()
     }
 }
 

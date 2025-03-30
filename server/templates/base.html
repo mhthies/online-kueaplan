@@ -17,7 +17,41 @@
 <body>
 {% block body %}
 {% endblock %}
+{% let flashes = base.get_flashes() %}
+{% if !flashes.is_empty() %}
+<div class="toast-container top-0 end-0 p-3 position-fixed">
+    {% for flash in flashes.iter() %}
+    <div class="toast {% match flash.flash_type %}
+                      {%- when crate::web::ui::framework::flash::FlashType::INFO%}text-bg-info
+                      {%- when crate::web::ui::framework::flash::FlashType::SUCCESS%}text-bg-success
+                      {%- when crate::web::ui::framework::flash::FlashType::WARNING%}text-bg-warning
+                      {%- when crate::web::ui::framework::flash::FlashType::ERROR%}text-bg-danger{% endmatch %}"
+         role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">
+            {% match flash.flash_type %}
+                {%- when crate::web::ui::framework::flash::FlashType::INFO%}<i class="bi bi-info-circle"></i> Information
+                {%- when crate::web::ui::framework::flash::FlashType::SUCCESS%}<i class="bi bi-check-lg"></i> Erfolg
+                {%- when crate::web::ui::framework::flash::FlashType::WARNING%}<i class="bi bi-exclamation-triangle-fill"></i> Warning
+                {%- when crate::web::ui::framework::flash::FlashType::ERROR%}<i class="bi bi-x-circle-fill"></i> Fehler{% endmatch %}
+            </strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            {{flash.message}}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 <script src="{{ base.url_for_static("bootstrap/js/bootstrap.bundle.min.js")? }}"></script>
+{% if !flashes.is_empty() %}
+<script>
+    const toastElList = document.querySelectorAll('.toast');
+    const toastList = Array.from(toastElList).map(toastEl => new bootstrap.Toast(toastEl, {}));
+    toastList.forEach(toast => toast.show());
+</script>
+{% endif %}
 {% block scripts %}
 {% endblock %}
 <script src="{{ base.url_for_static("main.js")? }}"></script>

@@ -6,6 +6,7 @@ use super::util::{
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
 use crate::data_store::EntryId;
+use crate::web::ui::framework::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::{framework::validation, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
@@ -114,11 +115,19 @@ async fn edit_entry(
         .await??;
 
         // TODO allow creating new previous_date
+        req.add_flash_message(FlashMessage {
+            flash_type: FlashType::SUCCESS,
+            message: "Änderung wurde gespeichert.".to_owned(),
+        });
         Ok(Either::Left(
             Redirect::to(url_for_entry(&req, event_id, &entry_id, &entry_begin)?.to_string())
                 .see_other(),
         ))
     } else {
+        req.add_flash_message(FlashMessage {
+            flash_type: FlashType::ERROR,
+            message: "Validierung fehlgeschlagen.".to_owned(),
+        });
         let tmpl = EditEntryFormTemplate {
             base: BaseTemplateContext {
                 request: &req,

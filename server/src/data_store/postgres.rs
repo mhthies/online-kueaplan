@@ -4,7 +4,7 @@ use super::{
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
-    AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken,
+    AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken, Privilege,
 };
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
@@ -74,7 +74,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         event: models::NewEvent,
     ) -> Result<i32, StoreError> {
         use schema::events::dsl::*;
-        auth_token.check_privilege(AccessRole::Admin)?;
+        auth_token.check_privilege(Privilege::CreateEvents)?;
 
         Ok(diesel::insert_into(events)
             .values(&event)
@@ -90,7 +90,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<Vec<models::FullEntry>, StoreError> {
         use diesel::dsl::not;
         use schema::entries::dsl::*;
-        auth_token.check_privilege(the_event_id, AccessRole::User)?;
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
 
         self.connection.transaction(|connection| {
             let the_entries = entries
@@ -165,7 +165,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(id.eq(entry_id))
                 .select(models::Entry::as_select())
                 .first::<models::Entry>(connection)?;
-            auth_token.check_privilege(entry.event_id, AccessRole::User)?;
+            auth_token.check_privilege(entry.event_id, Privilege::ShowKueaPlan)?;
 
             if entry.deleted {
                 return Err(StoreError::NotExisting);
@@ -223,7 +223,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         // The event_id of the existing entry is ensured to be the same (see below), so the
         // privilege level check holds for the existing and the new entry.
-        auth_token.check_privilege(entry.entry.event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(entry.entry.event_id, Privilege::ManageEntries)?;
 
         self.connection.transaction(|connection| {
             // entry
@@ -285,7 +285,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::entries::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
 
         self.connection.transaction(|connection| {
             let count = diesel::update(entries)
@@ -308,7 +308,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<Vec<models::Room>, StoreError> {
         use diesel::dsl::not;
         use schema::rooms::dsl::*;
-        auth_token.check_privilege(the_event_id, AccessRole::User)?;
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
 
         Ok(rooms
             .select(models::Room::as_select())
@@ -326,7 +326,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         // The event_id of the existing room is ensured to be the same (see below), so the
         // privilege level check holds for both, the existing and the new room.
-        auth_token.check_privilege(room.event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(room.event_id, Privilege::ManageRooms)?;
 
         let upsert_result = {
             // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
@@ -364,7 +364,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::rooms::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(the_event_id, Privilege::ManageRooms)?;
 
         let count = diesel::update(rooms)
             .filter(id.eq(room_id))
@@ -384,7 +384,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
     ) -> Result<Vec<models::Category>, StoreError> {
         use schema::categories::dsl::*;
-        auth_token.check_privilege(the_event_id, AccessRole::User)?;
+        auth_token.check_privilege(the_event_id, Privilege::ManageCategories)?;
 
         Ok(categories
             .select(models::Category::as_select())
@@ -400,7 +400,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<bool, StoreError> {
         use schema::categories::dsl::*;
 
-        auth_token.check_privilege(category.event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(category.event_id, Privilege::ManageCategories)?;
 
         let upsert_result = {
             // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
@@ -438,7 +438,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::categories::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        auth_token.check_privilege(the_event_id, AccessRole::Orga)?;
+        auth_token.check_privilege(the_event_id, Privilege::ManageCategories)?;
 
         let count = diesel::update(categories)
             .filter(id.eq(category_id))
@@ -489,12 +489,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .iter()
             .map(|r| (*r).try_into())
             .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()?;
-        let implied_roles = roles
-            .iter()
-            .flat_map(|e| e.implied_roles())
-            .copied()
-            .collect::<Vec<_>>();
-        roles.extend(implied_roles);
         roles.sort_unstable();
         roles.dedup();
 

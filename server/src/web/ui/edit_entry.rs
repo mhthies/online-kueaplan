@@ -51,7 +51,6 @@ async fn edit_entry_form(
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
             request: &req,
-            event_id,
             page_title: "Eintrag bearbeiten", // TODO
         },
         event: &event,
@@ -131,7 +130,6 @@ async fn edit_entry(
         let tmpl = EditEntryFormTemplate {
             base: BaseTemplateContext {
                 request: &req,
-                event_id,
                 page_title: "Eintrag bearbeiten", // TODO
             },
             event: &event,

@@ -19,7 +19,7 @@
                 </a>
                 <ul class="dropdown-menu">
                     {% for day in event_days %}
-                        <li><a class="dropdown-item {% if *day == date %}active{% endif %}" href="{{ base.url_for_main_list(day)? }}">{{ day|weekday_short }} {{ day.format("%d.%m.") }}</a></li>
+                        <li><a class="dropdown-item {% if *day == date %}active{% endif %}" href="{{ url_for_main_list(day)? }}">{{ day|weekday_short }} {{ day.format("%d.%m.") }}</a></li>
                     {% endfor %}
                 </ul>
             </li>

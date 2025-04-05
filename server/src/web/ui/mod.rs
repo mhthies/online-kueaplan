@@ -1,16 +1,13 @@
 use crate::auth_session::SessionError;
-use crate::data_store::models::Entry;
-use crate::data_store::{EventId, StoreError};
+use crate::data_store::StoreError;
+use crate::web::ui::framework::error_page::error_page_middleware;
 use crate::web::ui::framework::flash::flash_middleware;
-use crate::web::ui::util::url_for_entry;
 use actix_web::error::UrlGenerationError;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::http::StatusCode;
 use actix_web::middleware::from_fn;
-use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder, ResponseError};
 use framework::flash::FlashesInterface;
-use rinja::Template;
 use rust_embed::Embed;
 use std::fmt::{Display, Formatter};
 
@@ -24,7 +21,11 @@ mod util;
 const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_ui_service().wrap(from_fn(flash_middleware)));
+    cfg.service(
+        get_ui_service()
+            .wrap(from_fn(flash_middleware))
+            .wrap(from_fn(error_page_middleware)),
+    );
 }
 
 fn get_ui_service() -> actix_web::Scope {
@@ -64,7 +65,6 @@ async fn static_resources(path: web::Path<String>) -> impl Responder {
 #[derive(Debug)]
 struct BaseTemplateContext<'a> {
     request: &'a HttpRequest,
-    event_id: EventId,
     page_title: &'a str,
 }
 
@@ -78,13 +78,6 @@ impl BaseTemplateContext<'_> {
                 .unwrap_or("unknown".to_string()),
         );
         Ok(url.to_string())
-    }
-
-    fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
-        Ok(self
-            .request
-            .url_for("main_list", &[self.event_id.to_string(), date.to_string()])?
-            .to_string())
     }
 
     fn get_flashes(&self) -> Vec<framework::flash::FlashMessage> {
@@ -185,37 +178,6 @@ impl ResponseError for AppError {
         }
     }
 }
-
-//
-// impl Responder for AppError {
-//     type Body = String;
-//
-//     fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
-//         // The error handler uses a rinja template to display its content.
-//         // The member `lang` is used by "_layout.html" which "error.html" extends. Even though it
-//         // is always the fallback language English in here, "_layout.html" expects to be able to
-//         // access this field, so you have to provide it.
-//         #[derive(Debug, Template)]
-//         #[template(path = "error.html")]
-//         struct ErrorTemplate<'a> {
-//             base: BaseTemplateContext<'a>,
-//             error: &'a AppError,
-//         }
-//
-//         let tmpl = ErrorTemplate {
-//             base: BaseTemplateContext {
-//                 request: &req,
-//                 page_title: "Error",
-//             },
-//             error: &self,
-//         };
-//         if let Ok(body) = tmpl.render() {
-//             (Html::new(body), self.status_code()).respond_to(req)
-//         } else {
-//             ("Something went wrong".to_string(), self.status_code()).respond_to(req)
-//         }
-//     }
-// }
 
 async fn not_found_handler() -> Result<&'static str, AppError> {
     Err(AppError::PageNotFound)

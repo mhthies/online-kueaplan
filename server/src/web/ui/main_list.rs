@@ -5,6 +5,7 @@ use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
 use crate::web::ui::main_list::filters::css_class_for_category;
 use crate::web::AppState;
+use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use chrono::TimeZone;
@@ -42,7 +43,6 @@ async fn main_list(
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
-            event_id,
             page_title: &title,
         },
         entry_blocks: sort_entries_into_blocks(&entries),
@@ -77,6 +77,15 @@ struct MainListTemplate<'a> {
 impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&self.timezone).naive_local()
+    }
+
+    // TODO move to more generic place
+    fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
+        Ok(self
+            .base
+            .request
+            .url_for("main_list", &[self.event.id.to_string(), date.to_string()])?
+            .to_string())
     }
 
     fn css_class_for_entry(&self, entry: &'a FullEntry) -> String {

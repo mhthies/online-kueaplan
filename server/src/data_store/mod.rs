@@ -15,6 +15,7 @@
 //! added later and selected via the "DATABASE_URL" environment variable.
 
 use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::Privilege;
 use auth_token::{AuthToken, EnumMemberNotExistingError, GlobalAuthToken};
 use std::env;
 use std::fmt::Debug;
@@ -285,7 +286,7 @@ pub enum StoreError {
     QueryError(diesel::result::Error),
     NotExisting,
     ConflictEntityExists,
-    PermissionDenied,
+    PermissionDenied { required_privilege: Privilege },
     InvalidData,
 }
 
@@ -330,8 +331,11 @@ impl std::fmt::Display for StoreError {
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::NotExisting => f.write_str("Database record does not exist."),
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
-            Self::PermissionDenied => {
-                f.write_str("Client is not authorized to perform this action")
+            Self::PermissionDenied {
+                required_privilege: _,
+            } => {
+                // TODO add list of possible roles to error message
+                f.write_str("Client is not authorized to perform this action.")
             }
             Self::InvalidData => {
                 f.write_str("Data loaded or stored from/in database is not valid.")

@@ -35,7 +35,9 @@ impl AuthToken {
         {
             Ok(())
         } else {
-            Err(StoreError::PermissionDenied)
+            Err(StoreError::PermissionDenied {
+                required_privilege: privilege,
+            })
         }
     }
 
@@ -66,7 +68,9 @@ impl GlobalAuthToken {
         {
             Ok(())
         } else {
-            Err(StoreError::PermissionDenied)
+            Err(StoreError::PermissionDenied {
+                required_privilege: privilege,
+            })
         }
     }
 
@@ -108,6 +112,7 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
     }
 }
 
+#[derive(Debug)]
 pub enum Privilege {
     ShowKueaPlan,
     ManageEntries,

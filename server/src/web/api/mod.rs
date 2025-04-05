@@ -9,6 +9,7 @@ mod endpoints_room;
 mod tests;
 
 use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
 use actix_web::error::JsonPayloadError;
 use actix_web::{
@@ -45,7 +46,7 @@ fn get_api_service() -> actix_web::Scope {
 enum APIError {
     NotExisting,
     AlreadyExisting,
-    PermissionDenied,
+    PermissionDenied { required_privilege: Privilege },
     NoSessionToken,
     InvalidSessionToken,
     AuthenticationFailed,
@@ -62,7 +63,8 @@ impl Display for APIError {
             Self::AlreadyExisting => {
                 f.write_str("Element already exists")?;
             },
-            Self::PermissionDenied => {
+            Self::PermissionDenied{required_privilege: _} => {
+                // TODO add list of possible roles to error message
                 f.write_str("Client is not authorized to perform this action")?
             },
             Self::NoSessionToken => {
@@ -109,7 +111,9 @@ impl ResponseError for APIError {
         match self {
             Self::NotExisting => StatusCode::NOT_FOUND,
             Self::AlreadyExisting => StatusCode::CONFLICT,
-            Self::PermissionDenied => StatusCode::FORBIDDEN,
+            Self::PermissionDenied {
+                required_privilege: _,
+            } => StatusCode::FORBIDDEN,
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
             Self::AuthenticationFailed => StatusCode::FORBIDDEN,
@@ -140,7 +144,9 @@ impl From<StoreError> for APIError {
             StoreError::QueryError(diesel_error) => Self::BackendError(diesel_error.to_string()),
             StoreError::NotExisting => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
-            StoreError::PermissionDenied => Self::PermissionDenied,
+            StoreError::PermissionDenied { required_privilege } => {
+                Self::PermissionDenied { required_privilege }
+            }
             StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
         }
     }

@@ -1,4 +1,5 @@
 use crate::auth_session::SessionError;
+use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
 use crate::web::ui::framework::error_page::error_page_middleware;
 use crate::web::ui::framework::flash::flash_middleware;
@@ -92,7 +93,7 @@ enum AppError {
     NoSession,
     InvalidSessionToken,
     ExpiredSessionToken,
-    PermissionDenied,
+    PermissionDenied { required_privilege: Privilege },
     TemplateError(rinja::Error),
     UrlError(UrlGenerationError),
     BackendError(String),
@@ -114,7 +115,9 @@ impl From<StoreError> for AppError {
             StoreError::ConflictEntityExists => {
                 Self::InternalError("Conflicting entity exists".to_owned())
             }
-            StoreError::PermissionDenied => Self::PermissionDenied,
+            StoreError::PermissionDenied { required_privilege } => {
+                Self::PermissionDenied { required_privilege }
+            }
             StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
         }
     }
@@ -159,7 +162,10 @@ impl Display for AppError {
             AppError::InvalidSessionToken => write!(f, "Invalid session token"),
             AppError::ExpiredSessionToken => write!(f, "Session is expired"),
             AppError::EntityNotFound => write!(f, "Entity not found"),
-            AppError::PermissionDenied => write!(f, "Permission denied"),
+            // TODO add list of possible roles to error message
+            AppError::PermissionDenied {
+                required_privilege: _,
+            } => write!(f, "Permission denied"),
             AppError::BackendError(e) => write!(f, "Internal database error: {}", e),
             AppError::InternalError(e) => write!(f, "Internal error: {}", e),
         }
@@ -173,7 +179,9 @@ impl ResponseError for AppError {
             AppError::NoSession
             | AppError::InvalidSessionToken
             | AppError::ExpiredSessionToken
-            | AppError::PermissionDenied => StatusCode::FORBIDDEN,
+            | AppError::PermissionDenied {
+                required_privilege: _,
+            } => StatusCode::FORBIDDEN,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -357,7 +357,11 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
                 &AuthTokenKey {},
             ))
         } else {
-            Err(StoreError::PermissionDenied)
+            Ok(AuthToken::create_for_session(
+                event_id,
+                vec![],
+                &AuthTokenKey {},
+            ))
         }
     }
 }

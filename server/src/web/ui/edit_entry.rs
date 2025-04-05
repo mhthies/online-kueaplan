@@ -112,6 +112,7 @@ async fn edit_entry(
             Ok(())
         })
         .await??;
+        // TODO if storing entry failed, show flash notification and show form again
 
         // TODO allow creating new previous_date
         req.add_flash_message(FlashMessage {

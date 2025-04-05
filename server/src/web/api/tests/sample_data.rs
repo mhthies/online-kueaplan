@@ -1,12 +1,13 @@
 use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::GlobalAuthToken;
 use crate::data_store::models::{FullNewEntry, NewCategory, NewEntry, NewEvent};
-use crate::data_store::{GlobalAuthToken, KuaPlanStore};
+use crate::data_store::KuaPlanStore;
 use chrono::TimeZone;
 use uuid::uuid;
 
 pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
     let mut facade = store.get_facade().unwrap();
-    let cli_auth_token = crate::CliAuthToken::new();
+    let cli_auth_token = crate::CliAuthTokenKey::new();
     let admin_token = GlobalAuthToken::get_global_cli_authorization(&cli_auth_token);
     facade
         .create_event(

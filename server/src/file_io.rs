@@ -1,6 +1,7 @@
+use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
 use crate::data_store::models::{FullNewEntry, NewCategory, NewRoom};
-use crate::data_store::{get_store_from_env, AuthToken, GlobalAuthToken, KuaPlanStore};
-use crate::CliAuthToken;
+use crate::data_store::{get_store_from_env, KuaPlanStore};
+use crate::CliAuthTokenKey;
 use kueaplan_api_types::{Category, Entry, Event, Room};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -17,7 +18,7 @@ struct SavedEvent {
 
 pub fn load_event_from_file(
     path: &PathBuf,
-    token: CliAuthToken,
+    token: CliAuthTokenKey,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // TODO logging instead of propagating error
     let data_store_pool = get_store_from_env()?;
@@ -29,7 +30,7 @@ pub fn load_event_from_file(
     let admin_auth_token = GlobalAuthToken::get_global_cli_authorization(&token);
     let event_id = data_store.create_event(&admin_auth_token, data.event.into())?;
 
-    let auth_token = AuthToken::get_cli_authorization(&token, event_id);
+    let auth_token = AuthToken::create_for_cli(event_id, &token);
     for room in data.rooms {
         data_store.create_or_update_room(&auth_token, NewRoom::from_api(room, event_id))?;
     }

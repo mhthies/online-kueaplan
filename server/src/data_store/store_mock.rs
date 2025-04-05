@@ -1,10 +1,10 @@
 use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken};
 use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, NewCategory, NewEvent, NewRoom, Room,
 };
 use crate::data_store::{
-    models, AccessRole, AuthToken, EntryFilter, EventId, GlobalAuthToken, KuaPlanStore,
-    KueaPlanStoreFacade, StoreError,
+    models, AuthTokenKey, EntryFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
 };
 use std::sync::Mutex;
 
@@ -345,15 +345,17 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             return Err(e);
         }
         if session_token.get_passphrase_ids().contains(&1) {
-            Ok(AuthToken {
+            Ok(AuthToken::create_for_session(
                 event_id,
-                roles: vec![AccessRole::Orga, AccessRole::User],
-            })
+                vec![AccessRole::Orga, AccessRole::User],
+                &AuthTokenKey {},
+            ))
         } else if session_token.get_passphrase_ids().contains(&2) {
-            Ok(AuthToken {
+            Ok(AuthToken::create_for_session(
                 event_id,
-                roles: vec![AccessRole::User],
-            })
+                vec![AccessRole::User],
+                &AuthTokenKey {},
+            ))
         } else {
             Err(StoreError::PermissionDenied)
         }

@@ -1,8 +1,11 @@
 use super::{
-    models, schema, AccessRole, AuthToken, EntryFilter, EntryId, EnumMemberNotExistingError,
-    EventId, GlobalAuthToken, KuaPlanStore, KueaPlanStoreFacade, StoreError,
+    models, schema, AuthTokenKey, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade,
+    StoreError,
 };
 use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::{
+    AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken,
+};
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -495,10 +498,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         roles.sort_unstable();
         roles.dedup();
 
-        Ok(AuthToken {
-            event_id: the_event_id,
+        Ok(AuthToken::create_for_session(
+            the_event_id,
             roles,
-        })
+            &AuthTokenKey {},
+        ))
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::auth_session::{SessionError, SessionToken};
-use crate::data_store::AccessRole;
+use crate::data_store::auth_token::AccessRole;
 use crate::web::ui::{util, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::http::header;

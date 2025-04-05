@@ -25,7 +25,7 @@ fn main() {
     match args.command {
         Command::LoadData { path } => kueaplan_server::file_io::load_event_from_file(
             &path,
-            kueaplan_server::CliAuthToken::new(),
+            kueaplan_server::CliAuthTokenKey::new(),
         )
         .unwrap(),
         Command::Serve => kueaplan_server::web::serve().unwrap(),

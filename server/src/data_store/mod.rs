@@ -15,10 +15,11 @@
 //! added later and selected via the "DATABASE_URL" environment variable.
 
 use crate::auth_session::SessionToken;
-use crate::CliAuthToken;
+use auth_token::{AuthToken, EnumMemberNotExistingError, GlobalAuthToken};
 use std::env;
 use std::fmt::Debug;
 
+pub mod auth_token;
 pub mod models;
 mod postgres;
 mod schema;
@@ -273,109 +274,6 @@ impl EntryFilterBuilder {
     }
 }
 
-/// Possible roles, a single user can have with respect to a certain event
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
-#[repr(i32)]
-pub enum AccessRole {
-    User = 1,
-    Orga = 2,
-    Admin = 3,
-}
-
-impl AccessRole {
-    /// Get a list of roles, which are implicitly granted to a user who was authorized to this role.
-    fn implied_roles(&self) -> &'static [AccessRole] {
-        match self {
-            AccessRole::User => &[],
-            AccessRole::Orga => &[AccessRole::User],
-            AccessRole::Admin => &[AccessRole::Orga, AccessRole::User],
-        }
-    }
-}
-
-impl TryFrom<i32> for AccessRole {
-    type Error = EnumMemberNotExistingError;
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(AccessRole::User),
-            2 => Ok(AccessRole::Orga),
-            3 => Ok(AccessRole::Admin),
-            _ => Err(EnumMemberNotExistingError {}),
-        }
-    }
-}
-
-impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
-    fn from(value: AccessRole) -> Self {
-        match value {
-            AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
-            AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
-            AccessRole::Admin => unimplemented!(),
-        }
-    }
-}
-
-pub struct EnumMemberNotExistingError;
-
-pub struct AuthToken {
-    event_id: i32,
-    roles: Vec<AccessRole>,
-}
-
-impl AuthToken {
-    fn check_privilege(
-        &self,
-        event_id: EventId,
-        privilege_level: AccessRole,
-    ) -> Result<(), StoreError> {
-        if event_id == self.event_id && self.roles.contains(&privilege_level) {
-            Ok(())
-        } else {
-            Err(StoreError::PermissionDenied)
-        }
-    }
-
-    pub fn list_api_privileges(&self) -> Vec<kueaplan_api_types::Authorization> {
-        self.roles
-            .iter()
-            .map(|role| kueaplan_api_types::Authorization {
-                role: (*role).into(),
-            })
-            .collect()
-    }
-
-    pub fn has_privilege(&self, privilege_level: AccessRole) -> bool {
-        self.roles.contains(&privilege_level)
-    }
-
-    pub fn get_cli_authorization(_token: &CliAuthToken, event_id: EventId) -> Self {
-        let mut roles = vec![AccessRole::Admin];
-        roles.extend(AccessRole::Admin.implied_roles());
-        AuthToken { event_id, roles }
-    }
-}
-
-pub struct GlobalAuthToken {
-    roles: Vec<AccessRole>,
-}
-
-impl GlobalAuthToken {
-    fn check_privilege(&self, privilege_level: AccessRole) -> Result<(), StoreError> {
-        if self.roles.contains(&privilege_level) {
-            Ok(())
-        } else {
-            Err(StoreError::PermissionDenied)
-        }
-    }
-
-    pub fn get_global_cli_authorization(_token: &CliAuthToken) -> Self {
-        let mut roles = vec![AccessRole::Admin];
-        roles.extend(AccessRole::Admin.implied_roles());
-        GlobalAuthToken { roles }
-    }
-}
-
 pub trait KuaPlanStore: Send + Sync {
     fn get_facade<'a>(&'a self) -> Result<Box<dyn KueaPlanStoreFacade + 'a>, StoreError>;
 }
@@ -443,3 +341,5 @@ impl std::fmt::Display for StoreError {
 }
 
 impl std::error::Error for StoreError {}
+
+struct AuthTokenKey;

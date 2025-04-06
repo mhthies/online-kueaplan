@@ -1,6 +1,5 @@
 use super::{
-    models, schema, AuthTokenKey, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade,
-    StoreError,
+    models, schema, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
@@ -492,11 +491,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         roles.sort_unstable();
         roles.dedup();
 
-        Ok(AuthToken::create_for_session(
-            the_event_id,
-            roles,
-            &AuthTokenKey {},
-        ))
+        Ok(AuthToken::create_for_session(the_event_id, roles))
     }
 }
 

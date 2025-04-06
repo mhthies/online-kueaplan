@@ -9,11 +9,7 @@ pub struct AuthToken {
 }
 
 impl AuthToken {
-    pub fn create_for_session(
-        event_id: i32,
-        roles: Vec<AccessRole>,
-        key: &super::AuthTokenKey,
-    ) -> Self {
+    pub(super) fn create_for_session(event_id: i32, roles: Vec<AccessRole>) -> Self {
         AuthToken { event_id, roles }
     }
 

@@ -345,5 +345,3 @@ impl std::fmt::Display for StoreError {
 }
 
 impl std::error::Error for StoreError {}
-
-struct AuthTokenKey;

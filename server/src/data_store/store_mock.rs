@@ -4,7 +4,7 @@ use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, NewCategory, NewEvent, NewRoom, Room,
 };
 use crate::data_store::{
-    models, AuthTokenKey, EntryFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
+    models, EntryFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
 };
 use std::sync::Mutex;
 
@@ -348,20 +348,14 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
             Ok(AuthToken::create_for_session(
                 event_id,
                 vec![AccessRole::Orga, AccessRole::User],
-                &AuthTokenKey {},
             ))
         } else if session_token.get_passphrase_ids().contains(&2) {
             Ok(AuthToken::create_for_session(
                 event_id,
                 vec![AccessRole::User],
-                &AuthTokenKey {},
             ))
         } else {
-            Ok(AuthToken::create_for_session(
-                event_id,
-                vec![],
-                &AuthTokenKey {},
-            ))
+            Ok(AuthToken::create_for_session(event_id, vec![]))
         }
     }
 }

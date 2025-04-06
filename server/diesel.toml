@@ -5,4 +5,4 @@
 file = "src/data_store/schema.rs"
 
 [migrations_directory]
-dir = "migrations"
+dir = "migrations/postgresql"

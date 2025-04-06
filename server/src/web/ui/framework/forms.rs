@@ -1,4 +1,4 @@
-use rinja::Template;
+use askama::Template;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -44,7 +44,7 @@ impl FormValue {
         info: Option<&str>,
         input_type: InputType,
         size: InputSize,
-    ) -> Result<rinja::filters::Safe<String>, rinja::Error> {
+    ) -> Result<askama::filters::Safe<String>, askama::Error> {
         let template = FormFieldTemplate {
             name,
             label,
@@ -53,7 +53,7 @@ impl FormValue {
             size,
             data: self,
         };
-        Ok(rinja::filters::Safe(template.render()?))
+        Ok(askama::filters::Safe(template.render()?))
     }
 
     pub fn create_select(
@@ -63,7 +63,7 @@ impl FormValue {
         label: &str,
         info: Option<&str>,
         size: InputSize,
-    ) -> Result<rinja::filters::Safe<String>, rinja::Error> {
+    ) -> Result<askama::filters::Safe<String>, askama::Error> {
         let template = SelectTemplate {
             name,
             entries,
@@ -72,7 +72,7 @@ impl FormValue {
             size,
             data: self,
         };
-        Ok(rinja::filters::Safe(template.render()?))
+        Ok(askama::filters::Safe(template.render()?))
     }
 }
 
@@ -192,14 +192,14 @@ impl BoolFormValue {
         name: &str,
         label: &str,
         info: Option<&str>,
-    ) -> Result<rinja::filters::Safe<String>, rinja::Error> {
+    ) -> Result<askama::filters::Safe<String>, askama::Error> {
         let template = CheckboxTemplate {
             name,
             label,
             info,
             data: self,
         };
-        Ok(rinja::filters::Safe(template.render()?))
+        Ok(askama::filters::Safe(template.render()?))
     }
 }
 

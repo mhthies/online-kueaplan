@@ -24,7 +24,7 @@ base64 = "^0.22.1"
 kueaplan_api_types = {path = "../api_types"}
 clap = { version = "4.5.30", features = ["derive"] }
 mime_guess = "^2.0.5"
-rinja = { version = "^0.3.5", features = ["serde_json"] }
+askama = { version = "^0.13.0", features = ["serde_json"] }
 url = "^2.5.4"
 comrak = "^0.36"
 palette = "^0.7.6"

@@ -8,9 +8,9 @@ use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
+use askama::Template;
 use chrono::TimeZone;
 use palette::{IntoColor, Lighten};
-use rinja::Template;
 use std::collections::BTreeMap;
 
 #[get("/{event_id}/list/{date}")]
@@ -164,14 +164,14 @@ mod filters {
     use crate::web::ui::util::CategoryColors;
     use chrono::{Datelike, Weekday};
 
-    pub fn markdown(input: &str) -> rinja::Result<rinja::filters::Safe<String>> {
-        Ok(rinja::filters::Safe(comrak::markdown_to_html(
+    pub fn markdown(input: &str) -> askama::Result<askama::filters::Safe<String>> {
+        Ok(askama::filters::Safe(comrak::markdown_to_html(
             input,
             &comrak::ComrakOptions::default(),
         )))
     }
 
-    pub fn weekday(date: &chrono::NaiveDate) -> rinja::Result<&'static str> {
+    pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
         Ok(match date.weekday() {
             Weekday::Mon => "Montag",
             Weekday::Tue => "Dienstag",
@@ -183,7 +183,7 @@ mod filters {
         })
     }
 
-    pub fn weekday_short(date: &chrono::NaiveDate) -> rinja::Result<&'static str> {
+    pub fn weekday_short(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
         Ok(match date.weekday() {
             Weekday::Mon => "Mo",
             Weekday::Tue => "Di",
@@ -195,7 +195,7 @@ mod filters {
         })
     }
 
-    pub fn styles_for_category(category: &Category) -> rinja::Result<String> {
+    pub fn styles_for_category(category: &Category) -> askama::Result<String> {
         let colors = CategoryColors::from_base_color_hex(&category.color)
             .expect("Category color should be a valid HTML hex color string.");
         Ok(format!(
@@ -205,7 +205,7 @@ mod filters {
         ))
     }
 
-    pub fn css_class_for_category(category: &Category) -> rinja::Result<String> {
+    pub fn css_class_for_category(category: &Category) -> askama::Result<String> {
         Ok(format!("category-{}", category.id.to_string()))
     }
 }

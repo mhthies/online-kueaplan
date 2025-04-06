@@ -94,7 +94,7 @@ enum AppError {
     InvalidSessionToken,
     ExpiredSessionToken,
     PermissionDenied { required_privilege: Privilege },
-    TemplateError(rinja::Error),
+    TemplateError(askama::Error),
     UrlError(UrlGenerationError),
     BackendError(String),
     InternalError(String),
@@ -131,8 +131,8 @@ impl From<actix_web::error::BlockingError> for AppError {
     }
 }
 
-impl From<rinja::Error> for AppError {
-    fn from(value: rinja::Error) -> Self {
+impl From<askama::Error> for AppError {
+    fn from(value: askama::Error) -> Self {
         AppError::TemplateError(value)
     }
 }

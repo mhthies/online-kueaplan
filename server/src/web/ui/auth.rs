@@ -6,7 +6,7 @@ use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
 use actix_web::web::Html;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
-use rinja::Template;
+use askama::Template;
 use serde::Deserialize;
 
 const SESSION_COOKIE_NAME: &str = "kuea-plan-session";

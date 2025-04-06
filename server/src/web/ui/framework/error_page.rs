@@ -2,7 +2,7 @@ use crate::web::ui::{AppError, BaseTemplateContext};
 use actix_web::body::EitherBody;
 use actix_web::web::Html;
 use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
-use rinja::Template;
+use askama::Template;
 
 pub async fn error_page_middleware<B: actix_web::body::MessageBody>(
     req: actix_web::dev::ServiceRequest,

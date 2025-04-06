@@ -1,3 +1,4 @@
+pub mod database_migration;
 pub mod file_io;
 
 pub struct CliAuthTokenKey {

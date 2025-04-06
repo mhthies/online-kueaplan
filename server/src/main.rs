@@ -26,7 +26,13 @@ fn main() {
         Command::LoadData { path } => {
             kueaplan_server::cli::file_io::load_event_from_file(&path).unwrap()
         }
-        Command::Serve => kueaplan_server::web::serve().unwrap(),
+        Command::Serve => {
+            kueaplan_server::cli::database_migration::check_migration_state().unwrap();
+            kueaplan_server::web::serve().unwrap()
+        }
+        Command::MigrateDatabase => {
+            kueaplan_server::cli::database_migration::run_migrations().unwrap();
+        }
     }
 }
 
@@ -48,6 +54,8 @@ enum Command {
         /// The path of the JSON file to read from
         path: PathBuf,
     },
+    /// Execute all pending database migrations to run this version of the kueaplan
+    MigrateDatabase,
     /// Serve the KüA-Plan web application
     Serve,
 }

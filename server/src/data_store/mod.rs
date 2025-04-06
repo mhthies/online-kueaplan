@@ -33,7 +33,12 @@ pub mod store_mock;
 /// The DATABASE_URL must be a PosgreSQL connection url, following the schema
 /// "postgres://{user}:{password}@{host}/{database}".
 pub fn get_store_from_env() -> Result<impl KuaPlanStore, String> {
-    postgres::PgDataStore::new(&env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set")?)
+    postgres::PgDataStore::new(&get_database_url_from_env()?)
+}
+
+/// Get the database URL from the environment variable.
+pub fn get_database_url_from_env() -> Result<String, String> {
+    env::var("DATABASE_URL").map_err(|_| "DATABASE_URL must be set and valid UTF-8".to_string())
 }
 
 pub type EventId = i32;

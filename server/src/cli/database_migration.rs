@@ -1,3 +1,8 @@
+//! This module uses the embedded Diesel migration data to provide functions for checking the
+//! database migration status and migrating the database schema to the current state.
+//!
+//! The functions provided functions are meant to be used directly from the command line interface
+//! implementation.
 use crate::data_store::get_database_url_from_env;
 use diesel::migration::Migration;
 use diesel::Connection;
@@ -6,6 +11,10 @@ use std::fmt::{Debug, Display, Formatter};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgresql");
 
+/// Migrate the database schema to the latest known migration for the current application version.
+///
+/// The database connection URL is taken from the environment variable, using
+/// [get_database_url_from_env]. Information about the migration process is printed to stdout.
 pub fn run_migrations() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let mut connection = diesel::pg::PgConnection::establish(&get_database_url_from_env()?)?;
     let mut connection =
@@ -31,6 +40,11 @@ impl Display for MigrationsStateOutdatedError {
 
 impl std::error::Error for MigrationsStateOutdatedError {}
 
+/// Check if the database schema has been migrated to the latest known migration for the current
+/// application version. If not, return an error, describing the missing migrations.
+///
+/// The database connection URL is taken from the environment variable, using
+/// [get_database_url_from_env].
 pub fn check_migration_state() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let mut connection = diesel::pg::PgConnection::establish(&get_database_url_from_env()?)?;
     let mut connection =

@@ -61,6 +61,7 @@ async fn login(
         let mut store = store.get_facade()?;
         store.authorize(event_id, &data.passphrase, &mut session_token)?;
         let auth = store.check_authorization(&session_token, event_id)?;
+        // TODO check if dynamic configurable privilege has been unlocked
         Ok((session_token, auth.has_privilege(AccessRole::User)))
     })
     .await?;

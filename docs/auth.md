@@ -3,9 +3,11 @@
 
 This application does **not** have a concept of user accounts or identities for authorization, so there is no authentization or authentication.
 (There may be some kind of user name of device identifiers to track changes and even authorize changes to KüA entries, but this will not be bound to user identities either.)
-Instead, each event has multiple pre-shared passphrases, which grant a certain level of privileges for a certain datetime interval.
+Instead, each event has multiple pre-shared passphrases, which grant a certain set of privileges for a certain datetime interval.
+The possible privileges are mapped to access roles.
 
-For example, we may have the passphrase "Buxtehude", granting editing privileges for event 1 for all time and the passphrase "Foo", granting viewing privileges for event 2.  
+For example, we may have the passphrase "Buxtehude", granting orga access (role) for event 1 for all time and the passphrase "Foo", granting user access (role) for event 2.
+The orga access role qualifies for retrieving and editing entries, categories and rooms; the user access role only qualifies for retrieving the data. 
 
 Passphrases are stored in the database as plain text and have a global unique id, used for session token storage (see below).
 
@@ -27,5 +29,5 @@ The session token consists of a list of unique ids of passphrases, plus a messag
 - Upon every request, the server
   - checks the HMAC
   - retrieves the list of passphrase unique ids
-  - checks the authorization level for the requested event for the requested event, granted by the given list of passphrases
-  - checks that the authorization level is sufficient for the requested request
+  - checks the access role for the requested event for the requested event, granted by the given list of passphrases
+  - checks that the access role qualifies for the privilege that is required for the request

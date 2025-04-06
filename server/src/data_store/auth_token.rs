@@ -1,5 +1,5 @@
+use crate::cli::CliAuthTokenKey;
 use crate::data_store::{EventId, StoreError};
-use crate::CliAuthTokenKey;
 
 pub struct EnumMemberNotExistingError;
 
@@ -39,7 +39,7 @@ impl AuthToken {
     ///
     /// This function must only be used by command line interface functions, not in the context of
     /// the web server!
-    pub fn create_for_cli(event_id: i32, key: &crate::CliAuthTokenKey) -> Self {
+    pub fn create_for_cli(event_id: i32, _key: &CliAuthTokenKey) -> Self {
         let mut roles = vec![AccessRole::Admin];
         AuthToken { event_id, roles }
     }
@@ -101,7 +101,13 @@ pub struct GlobalAuthToken {
 }
 
 impl GlobalAuthToken {
-    pub(crate) fn create_for_cli(_token: &CliAuthTokenKey) -> Self {
+    pub(crate) fn create_for_cli(_key: &CliAuthTokenKey) -> Self {
+        let mut roles = vec![AccessRole::Admin];
+        GlobalAuthToken { roles }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn create_for_test() -> Self {
         let mut roles = vec![AccessRole::Admin];
         GlobalAuthToken { roles }
     }

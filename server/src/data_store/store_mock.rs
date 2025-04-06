@@ -314,7 +314,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         Ok(())
     }
 
-    fn authorize(
+    fn authenticate_with_passphrase(
         &mut self,
         _event_id: i32,
         passphrase: &str,
@@ -335,7 +335,7 @@ impl<'a> crate::data_store::KueaPlanStoreFacade for StoreMockFacade<'a> {
         }
     }
 
-    fn check_authorization(
+    fn get_auth_token_for_session(
         &mut self,
         session_token: &SessionToken,
         event_id: EventId,

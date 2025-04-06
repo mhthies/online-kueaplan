@@ -451,7 +451,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         Ok(())
     }
 
-    fn authorize(
+    fn authenticate_with_passphrase(
         &mut self,
         the_event_id: i32,
         the_passphrase: &str,
@@ -471,7 +471,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         }
     }
 
-    fn check_authorization(
+    fn get_auth_token_for_session(
         &mut self,
         session_token: &SessionToken,
         the_event_id: EventId,

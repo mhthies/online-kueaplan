@@ -5,7 +5,7 @@
 //!
 //! The authorization state is described as a list of database ids of passphrases that have
 //! been provided by this client in the past. Use
-//! [crate::data_store::KueaPlanStoreFacade::check_authorization] to get the user roles and
+//! [crate::data_store::KueaPlanStoreFacade::get_auth_token_for_session] to get the user roles and
 //! privileges implied by these passphrases, represented as a [crate::data_store::auth_token::AuthToken].
 use crate::data_store::PassphraseId;
 use base64::{DecodeError, Engine};

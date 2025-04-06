@@ -151,20 +151,19 @@ pub trait KueaPlanStoreFacade {
         category_id: CategoryId,
     ) -> Result<(), StoreError>;
 
-    /// Try to authenticate a client as a new user role for the given event, using the given
+    /// Try to authenticate a client as a new access role for the given event, using the given
     /// passphrase.
     ///
     /// On success, the given session token is updated with the new passphrase id.
-    fn authorize(
+    fn authenticate_with_passphrase(
         &mut self,
         event_id: i32,
         passphrase: &str,
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError>;
 
-    /// Get an [AuthToken] instance for a client, representing the client's user roles
-    ///
-    fn check_authorization(
+    /// Get an [AuthToken] instance for a client, representing the client's access roles
+    fn get_auth_token_for_session(
         &mut self,
         session_token: &SessionToken,
         event_id: EventId,

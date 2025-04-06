@@ -20,7 +20,7 @@ async fn list_entries(
         .session_token(&state.secret)?;
     let entries: Vec<kueaplan_api_types::Entry> = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok(store.get_entries_filtered(&auth, event_id, query.into_inner().into())?)
     })
     .await??
@@ -63,7 +63,7 @@ async fn get_entry(
         .session_token(&state.secret)?;
     let entry: kueaplan_api_types::Entry = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok(store.get_entry(&auth, entry_id)?)
     })
     .await??
@@ -89,7 +89,7 @@ async fn create_or_update_entry(
     }
     let created = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok(store.create_or_update_entry(&auth, FullNewEntry::from_api(entry, event_id), false)?)
     })
     .await??;
@@ -114,7 +114,7 @@ async fn delete_entry(
         .session_token(&state.secret)?;
     web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         store.delete_entry(&auth, event_id, entry_id)?;
         Ok(())
     })

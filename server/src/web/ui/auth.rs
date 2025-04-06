@@ -1,5 +1,5 @@
 use crate::auth_session::{SessionError, SessionToken};
-use crate::data_store::auth_token::AccessRole;
+use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::web::ui::{util, AppError, BaseTemplateContext};
 use crate::web::AppState;
 use actix_web::http::header;
@@ -51,7 +51,7 @@ async fn login(
     let store = state.store.clone();
     let event = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
-        let auth = store.check_authorization(&SessionToken::new(), event_id)?;
+        let auth = store.get_auth_token_for_session(&SessionToken::new(), event_id)?;
         let event = store.get_event(&auth, event_id)?;
         Ok(event)
     })
@@ -59,10 +59,13 @@ async fn login(
     let store = state.store.clone();
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
-        store.authorize(event_id, &data.passphrase, &mut session_token)?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        store.authenticate_with_passphrase(event_id, &data.passphrase, &mut session_token)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         // TODO check if dynamic configurable privilege has been unlocked
-        Ok((session_token, auth.has_privilege(AccessRole::User)))
+        Ok((
+            session_token,
+            auth.has_privilege(event_id, Privilege::ShowKueaPlan),
+        ))
     })
     .await?;
 

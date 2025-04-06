@@ -34,7 +34,7 @@ async fn edit_entry_form(
     let store = state.store.clone();
     let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
             store.get_event(&auth, event_id)?,
@@ -82,7 +82,7 @@ async fn edit_entry(
     let store = state.store.clone();
     let (event, old_entry, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_event(&auth, event_id)?,
             store.get_entry(&auth, entry_id)?,

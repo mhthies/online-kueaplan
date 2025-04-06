@@ -19,8 +19,8 @@ async fn check_authorization(
     let authorization: Vec<kueaplan_api_types::Authorization> = if let Some(token) = session_token {
         web::block(move || -> Result<_, APIError> {
             let mut store = state.store.get_facade()?;
-            let auth = store.check_authorization(&token, event_id)?;
-            Ok(auth.list_api_privileges())
+            let auth = store.get_auth_token_for_session(&token, event_id)?;
+            Ok(auth.list_api_access_roles())
         })
         .await??
     } else {
@@ -60,13 +60,13 @@ async fn authorize(
             let mut session_token = session_token;
             let mut store = store.get_facade()?;
             store
-                .authorize(event_id, &body.passphrase, &mut session_token)
+                .authenticate_with_passphrase(event_id, &body.passphrase, &mut session_token)
                 .map_err(|e| match e {
                     StoreError::NotExisting => APIError::AuthenticationFailed,
                     e => e.into(),
                 })?;
-            let auth = store.check_authorization(&session_token, event_id)?;
-            Ok((auth.list_api_privileges(), session_token))
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((auth.list_api_access_roles(), session_token))
         })
         .await??
     };

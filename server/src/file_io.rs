@@ -27,7 +27,7 @@ pub fn load_event_from_file(
     let f = File::open(path)?;
     let data: SavedEvent = serde_json::from_reader(BufReader::new(f))?;
 
-    let admin_auth_token = GlobalAuthToken::get_global_cli_authorization(&token);
+    let admin_auth_token = GlobalAuthToken::create_for_cli(&token);
     let event_id = data_store.create_event(&admin_auth_token, data.event.into())?;
 
     let auth_token = AuthToken::create_for_cli(event_id, &token);

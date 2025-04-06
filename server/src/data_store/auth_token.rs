@@ -11,7 +11,7 @@ pub struct EnumMemberNotExistingError;
 /// This structure is our main protection against accidental unauthorized-access bugs: All
 /// data_store access function require an AuthToken and check the validity of the AuthToken
 /// for the required event id and privilege. An AuthToken can only be created by
-/// [crate::data_store::KueaPlanStoreFacade::check_authorization], based on the authenticated
+/// [crate::data_store::KueaPlanStoreFacade::get_auth_token_for_session], based on the authenticated
 /// passphrases in a client's session, and by cli functions via [create_for_cli].
 ///
 /// For global, not event-specific authorization, a GlobalAuthToken is required instead.
@@ -26,7 +26,7 @@ impl AuthToken {
     /// [crate::auth_session::SessionToken].
     ///
     /// This function must only be used by implementations of
-    /// [crate::data_store::KueaPlanStoreFacade::check_authorization]
+    /// [crate::data_store::KueaPlanStoreFacade::get_auth_token_for_session]
     /// after checking the validity of the client's authenticated passphrase ids and their implied
     /// user roles!
     pub(super) fn create_for_session(event_id: i32, roles: Vec<AccessRole>) -> Self {
@@ -44,22 +44,29 @@ impl AuthToken {
         AuthToken { event_id, roles }
     }
 
+    /// Check if the AuthToken authorizes for the given `privilege`.
+    ///
+    /// The actual authorization check is delegated to [Privilege::qualifying_roles], by checking if
+    /// any of the active in the context (i.e. roles contained in the AuthToken)
+    pub fn has_privilege(&self, event_id: EventId, privilege: Privilege) -> bool {
+        event_id == self.event_id
+            && privilege
+                .qualifying_roles()
+                .iter()
+                .any(|role| self.roles.contains(role))
+    }
+
     /// Check if the AuthToken authorizes for the given `privilege`. If not, return an appropriate
     /// PermissionDenied error.
     ///
-    /// The actual authorization check is delegated to [Privilege::required_roles], by checking if
+    /// The actual authorization check is delegated to [Privilege::qualifying_roles], by checking if
     /// any of the active in the context (i.e. roles contained in the AuthToken)
     pub fn check_privilege(
         &self,
         event_id: EventId,
         privilege: Privilege,
     ) -> Result<(), StoreError> {
-        if event_id == self.event_id
-            && privilege
-                .required_roles()
-                .iter()
-                .any(|role| self.roles.contains(role))
-        {
+        if self.has_privilege(event_id, privilege.clone()) {
             Ok(())
         } else {
             Err(StoreError::PermissionDenied {
@@ -72,17 +79,13 @@ impl AuthToken {
     ///
     /// This is used by the [crate::web::api::endpoints_auth::check_authorization] endpoint,
     /// allowing the client to query its current active roles.
-    pub fn list_api_privileges(&self) -> Vec<kueaplan_api_types::Authorization> {
+    pub fn list_api_access_roles(&self) -> Vec<kueaplan_api_types::Authorization> {
         self.roles
             .iter()
             .map(|role| kueaplan_api_types::Authorization {
                 role: (*role).into(),
             })
             .collect()
-    }
-
-    pub fn has_privilege(&self, privilege_level: AccessRole) -> bool {
-        self.roles.contains(&privilege_level)
     }
 }
 
@@ -98,12 +101,20 @@ pub struct GlobalAuthToken {
 }
 
 impl GlobalAuthToken {
-    pub(crate) fn check_privilege(&self, privilege: Privilege) -> Result<(), StoreError> {
-        if privilege
-            .required_roles()
+    pub(crate) fn create_for_cli(_token: &CliAuthTokenKey) -> Self {
+        let mut roles = vec![AccessRole::Admin];
+        GlobalAuthToken { roles }
+    }
+
+    pub fn has_privilege(&self, privilege: Privilege) -> bool {
+        privilege
+            .qualifying_roles()
             .iter()
             .any(|role| self.roles.contains(role))
-        {
+    }
+
+    pub fn check_privilege(&self, privilege: Privilege) -> Result<(), StoreError> {
+        if self.has_privilege(privilege.clone()) {
             Ok(())
         } else {
             Err(StoreError::PermissionDenied {
@@ -111,16 +122,11 @@ impl GlobalAuthToken {
             })
         }
     }
-
-    pub fn get_global_cli_authorization(_token: &CliAuthTokenKey) -> Self {
-        let mut roles = vec![AccessRole::Admin];
-        GlobalAuthToken { roles }
-    }
 }
 
 /// Possible roles, a client can authenticate for, using passphrases.
 ///
-/// Each role qualifies for a set of [Privileges]. See [Privilege::required_roles].
+/// Each role qualifies for a set of [Privileges]. See [Privilege::qualifying_roles].
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
 #[repr(i32)]
 pub enum AccessRole {
@@ -155,7 +161,7 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
 /// Enum of available authorization privileges.
 ///
 /// Each data_store action and web endpoint typically requires a single privilege.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Privilege {
     ShowKueaPlan,
     ManageEntries,
@@ -173,7 +179,7 @@ impl Privilege {
     /// This is function is our source of truth for authorization!
     /// It can also be used to inform the user about possible roles they would need to authenticate
     /// for, in order to unlock a specific action.
-    pub fn required_roles(&self) -> &'static [AccessRole] {
+    pub fn qualifying_roles(&self) -> &'static [AccessRole] {
         match self {
             Privilege::ShowKueaPlan => &[AccessRole::User, AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageEntries => &[AccessRole::Orga, AccessRole::Admin],

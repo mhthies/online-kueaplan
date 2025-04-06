@@ -29,7 +29,7 @@ async fn main_list(
     )?;
     let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_event(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,

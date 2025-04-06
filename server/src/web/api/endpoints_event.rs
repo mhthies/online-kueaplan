@@ -15,7 +15,7 @@ async fn get_event_info(
         .session_token(&state.secret)?;
     let event: kueaplan_api_types::Event = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
-        let auth = store.check_authorization(&session_token, event_id)?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok(store.get_event(&auth, event_id)?)
     })
     .await??

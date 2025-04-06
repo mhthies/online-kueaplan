@@ -8,7 +8,7 @@ use uuid::uuid;
 pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
     let mut facade = store.get_facade().unwrap();
     let cli_auth_token = crate::CliAuthTokenKey::new();
-    let admin_token = GlobalAuthToken::get_global_cli_authorization(&cli_auth_token);
+    let admin_token = GlobalAuthToken::create_for_cli(&cli_auth_token);
     facade
         .create_event(
             &admin_token,
@@ -21,7 +21,9 @@ pub(crate) fn fill_sample_data(store: &impl KuaPlanStore) {
         .unwrap();
     let mut session_token = SessionToken::new();
     session_token.add_authorization(2);
-    let auth_token = facade.check_authorization(&session_token, 42).unwrap();
+    let auth_token = facade
+        .get_auth_token_for_session(&session_token, 42)
+        .unwrap();
     facade
         .create_or_update_category(
             &auth_token,

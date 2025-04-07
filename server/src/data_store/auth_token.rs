@@ -1,7 +1,21 @@
 use crate::cli::CliAuthTokenKey;
 use crate::data_store::{EventId, StoreError};
+use std::fmt::{Display, Formatter};
 
-pub struct EnumMemberNotExistingError;
+pub struct EnumMemberNotExistingError {
+    pub member_value: i32,
+    pub enum_name: &'static str,
+}
+
+impl Display for EnumMemberNotExistingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} is not a valid value for {} neum",
+            self.member_value, self.enum_name
+        )
+    }
+}
 
 /// Authorization token for authorizing access to the data_store for a specific event
 ///
@@ -149,7 +163,10 @@ impl TryFrom<i32> for AccessRole {
             1 => Ok(AccessRole::User),
             2 => Ok(AccessRole::Orga),
             3 => Ok(AccessRole::Admin),
-            _ => Err(EnumMemberNotExistingError {}),
+            value => Err(EnumMemberNotExistingError {
+                member_value: value,
+                enum_name: "AccessRole",
+            }),
         }
     }
 }
@@ -160,6 +177,16 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
             AccessRole::Admin => unimplemented!(),
+        }
+    }
+}
+
+impl AccessRole {
+    pub fn name(&self) -> &str {
+        match self {
+            AccessRole::User => "User",
+            AccessRole::Orga => "Orga",
+            AccessRole::Admin => "Admin",
         }
     }
 }

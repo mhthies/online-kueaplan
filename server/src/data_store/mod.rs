@@ -16,7 +16,7 @@
 
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use auth_token::{AuthToken, EnumMemberNotExistingError, GlobalAuthToken};
+use auth_token::{AuthToken, GlobalAuthToken};
 use std::env;
 use std::fmt::Debug;
 
@@ -287,13 +287,27 @@ pub trait KuaPlanStore: Send + Sync {
 
 #[derive(Debug)]
 pub enum StoreError {
-    ConnectionPoolError(String),
-    ConnectionError(diesel::result::ConnectionError),
+    /// Connection the database failed. See string description for details.
+    ConnectionError(String),
+    /// The query could not be executed because of some error not covered by the other members (see
+    /// string description)
     QueryError(diesel::result::Error),
+    /// Database transaction could not be commited due to a conflicting concurrent transaction  
+    TransactionConflict,
+    /// The requested entity does not exist
     NotExisting,
+    /// The entity could not be created because it already exists, but cannot be updated with the
+    /// provided data.
     ConflictEntityExists,
+    /// The client is not authorized for this action. It would need to authenticate for an access
+    /// role qualifying for the `required_privilege`.
     PermissionDenied { required_privilege: Privilege },
-    InvalidData,
+    /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
+    /// SQL constraint. See string description for details.
+    InvalidInputData(String),
+    /// Some data queried from the database could not be deserialized. See string description for
+    /// details.
+    InvalidDataInDatabase(String),
 }
 
 impl From<diesel::result::Error> for StoreError {
@@ -304,47 +318,48 @@ impl From<diesel::result::Error> for StoreError {
                 diesel::result::DatabaseErrorKind::UniqueViolation,
                 _,
             ) => Self::ConflictEntityExists,
+            diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::SerializationFailure,
+                _,
+            ) => Self::TransactionConflict,
+            diesel::result::Error::DatabaseError(
+                e @ diesel::result::DatabaseErrorKind::ForeignKeyViolation
+                | e @ diesel::result::DatabaseErrorKind::CheckViolation,
+                _,
+            ) => Self::InvalidInputData(format!("{:?}", e)),
+            diesel::result::Error::SerializationError(e) => Self::InvalidInputData(e.to_string()),
+            diesel::result::Error::DeserializationError(e) => {
+                Self::InvalidDataInDatabase(e.to_string())
+            }
             _ => Self::QueryError(error),
         }
     }
 }
 
-impl From<EnumMemberNotExistingError> for StoreError {
-    fn from(_value: EnumMemberNotExistingError) -> Self {
-        StoreError::InvalidData
-    }
-}
-
 impl From<r2d2::Error> for StoreError {
     fn from(error: r2d2::Error) -> Self {
-        Self::ConnectionPoolError(error.to_string())
-    }
-}
-
-impl From<diesel::result::ConnectionError> for StoreError {
-    fn from(error: diesel::result::ConnectionError) -> Self {
-        Self::ConnectionError(error)
+        Self::ConnectionError(error.to_string())
     }
 }
 
 impl std::fmt::Display for StoreError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ConnectionPoolError(e) => {
-                write!(f, "Could not get database connection from pool: {}", e)
-            }
             Self::ConnectionError(e) => write!(f, "Error connecting to database: {}", e),
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
+            Self::TransactionConflict => f.write_str("Database transaction could not be commited due to a conflicting concurrent transaction"),
             Self::NotExisting => f.write_str("Database record does not exist."),
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::PermissionDenied {
-                required_privilege: _,
+                required_privilege,
             } => {
-                // TODO add list of possible roles to error message
-                f.write_str("Client is not authorized to perform this action.")
+                write!(f, "Client is not authorized to perform this action. {:?} privilege required.", required_privilege)
             }
-            Self::InvalidData => {
-                f.write_str("Data loaded or stored from/in database is not valid.")
+            Self::InvalidInputData(e) => {
+                write!(f, "Data to be stored in database is not valid: {}", e)
+            }
+            StoreError::InvalidDataInDatabase(e) => {
+                write!(f, "Data queried from database could not be deserialized: {}", e)
             }
         }
     }

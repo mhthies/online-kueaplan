@@ -22,6 +22,7 @@ fn main() {
         warn!("Could not read .env file: {}", dotenv_result.unwrap_err());
     }
 
+    // TODO exit with return code according to error type
     match args.command {
         Command::LoadData { path } => {
             kueaplan_server::cli::file_io::load_event_from_file(&path).unwrap()

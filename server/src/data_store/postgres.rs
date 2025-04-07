@@ -487,7 +487,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         let mut roles = role_ids
             .iter()
             .map(|r| (*r).try_into())
-            .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()?;
+            .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()
+            .map_err(|e| StoreError::InvalidDataInDatabase(e.to_string()))?;
         roles.sort_unstable();
         roles.dedup();
 

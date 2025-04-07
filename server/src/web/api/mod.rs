@@ -51,8 +51,9 @@ enum APIError {
     InvalidSessionToken,
     AuthenticationFailed,
     InvalidJson(actix_web::error::JsonPayloadError),
+    InvalidData(String),
     EntityIdMissmatch,
-    BackendError(String),
+    TransactionConflict,
     InternalError(String),
 }
 
@@ -63,9 +64,14 @@ impl Display for APIError {
             Self::AlreadyExisting => {
                 f.write_str("Element already exists")?;
             },
-            Self::PermissionDenied{required_privilege: _} => {
-                // TODO add list of possible roles to error message
-                f.write_str("Client is not authorized to perform this action")?
+            Self::PermissionDenied{required_privilege} => {
+                write!(f, "Client is not authorized to perform this action. Authentication as {} is required",
+                       required_privilege
+                           .qualifying_roles()
+                           .iter()
+                           .map(|role| role.name().to_owned())
+                           .collect::<Vec<String>>()
+                           .join(" or "))?
             },
             Self::NoSessionToken => {
                 f.write_str("This action requires authentication, but client did not send authentication session token.")?
@@ -76,20 +82,21 @@ impl Display for APIError {
             Self::AuthenticationFailed => {
                 f.write_str("Authentication with the given passphrase failed.")?
             }
-            Self::BackendError(s) => {
-                f.write_str("Database error: ")?;
-                f.write_str(s)?;
-            },
             Self::InternalError(s) => {
                 f.write_str("Internal error: ")?;
                 f.write_str(s)?;
             },
             Self::InvalidJson(e) => {
-                f.write_str("Invalid JSON request data: ")?;
-                write!(f, "{}", e)?;
+                write!(f, "Invalid JSON request data: {}", e)?;
+            },
+            Self::InvalidData(e) => {
+                write!(f, "Invalid request data: {}", e)?;
             },
             Self::EntityIdMissmatch => {
                 f.write_str("Entity id in given data does not match URL")?;
+            },
+            Self::TransactionConflict => {
+                f.write_str("Concurrent database transaction conflict. Please retry request.")?;
             }
         };
         Ok(())
@@ -117,7 +124,6 @@ impl ResponseError for APIError {
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
             Self::AuthenticationFailed => StatusCode::FORBIDDEN,
-            Self::BackendError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidJson(e) => match e {
                 JsonPayloadError::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -126,7 +132,9 @@ impl ResponseError for APIError {
                 }
                 _ => StatusCode::BAD_REQUEST,
             },
+            &APIError::InvalidData(_) => StatusCode::UNPROCESSABLE_ENTITY,
             &APIError::EntityIdMissmatch => StatusCode::UNPROCESSABLE_ENTITY,
+            &APIError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
         }
     }
 }
@@ -134,20 +142,24 @@ impl ResponseError for APIError {
 impl From<StoreError> for APIError {
     fn from(e: StoreError) -> Self {
         match e {
-            StoreError::ConnectionPoolError(r2d2_error) => Self::BackendError(format!(
-                "Could not get database connection from pool: {}",
-                r2d2_error
-            )),
-            StoreError::ConnectionError(diesel_error) => {
-                Self::BackendError(diesel_error.to_string())
+            StoreError::ConnectionError(error) => {
+                Self::InternalError(format!("Could not connect to database: {}", error))
             }
-            StoreError::QueryError(diesel_error) => Self::BackendError(diesel_error.to_string()),
+            StoreError::QueryError(diesel_error) => Self::InternalError(format!(
+                "Error while executing database query: {}",
+                diesel_error
+            )),
+            StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
             StoreError::PermissionDenied { required_privilege } => {
                 Self::PermissionDenied { required_privilege }
             }
-            StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
+            StoreError::InvalidInputData(e) => Self::InvalidData(e),
+            StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
+                "Data queried from database could not be deserialized: {}",
+                e
+            )),
         }
     }
 }

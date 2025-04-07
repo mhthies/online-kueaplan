@@ -96,21 +96,21 @@ enum AppError {
     PermissionDenied { required_privilege: Privilege },
     TemplateError(askama::Error),
     UrlError(UrlGenerationError),
-    BackendError(String),
+    TransactionConflict,
     InternalError(String),
 }
 
 impl From<StoreError> for AppError {
     fn from(e: StoreError) -> Self {
         match e {
-            StoreError::ConnectionPoolError(r2d2_error) => Self::BackendError(format!(
-                "Could not get database connection from pool: {}",
-                r2d2_error
-            )),
-            StoreError::ConnectionError(diesel_error) => {
-                Self::BackendError(diesel_error.to_string())
+            StoreError::ConnectionError(error) => {
+                Self::InternalError(format!("Could not connect to database: {}", error))
             }
-            StoreError::QueryError(diesel_error) => Self::BackendError(diesel_error.to_string()),
+            StoreError::QueryError(diesel_error) => Self::InternalError(format!(
+                "Error while executing database query: {}",
+                diesel_error
+            )),
+            StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::EntityNotFound,
             StoreError::ConflictEntityExists => {
                 Self::InternalError("Conflicting entity exists".to_owned())
@@ -118,7 +118,11 @@ impl From<StoreError> for AppError {
             StoreError::PermissionDenied { required_privilege } => {
                 Self::PermissionDenied { required_privilege }
             }
-            StoreError::InvalidData => Self::InternalError("Invalid data".to_owned()),
+            StoreError::InvalidInputData(e) => Self::InternalError(format!("Invalid data: {}", e)),
+            StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
+                "Data queried from database could not be deserialized: {}",
+                e
+            )),
         }
     }
 }
@@ -161,12 +165,20 @@ impl Display for AppError {
             AppError::NoSession => write!(f, "Not authenticated"),
             AppError::InvalidSessionToken => write!(f, "Invalid session token"),
             AppError::ExpiredSessionToken => write!(f, "Session is expired"),
+            AppError::TransactionConflict => {
+                write!(f, "Concurrent database transaction conflict. Please retry.")
+            }
             AppError::EntityNotFound => write!(f, "Entity not found"),
-            // TODO add list of possible roles to error message
-            AppError::PermissionDenied {
-                required_privilege: _,
-            } => write!(f, "Permission denied"),
-            AppError::BackendError(e) => write!(f, "Internal database error: {}", e),
+            AppError::PermissionDenied { required_privilege } => write!(
+                f,
+                "Client is not authorized to perform this action. Authentication as {} is required",
+                required_privilege
+                    .qualifying_roles()
+                    .iter()
+                    .map(|role| role.name().to_owned())
+                    .collect::<Vec<String>>()
+                    .join(" or ")
+            ),
             AppError::InternalError(e) => write!(f, "Internal error: {}", e),
         }
     }
@@ -182,7 +194,10 @@ impl ResponseError for AppError {
             | AppError::PermissionDenied {
                 required_privilege: _,
             } => StatusCode::FORBIDDEN,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::TemplateError(_) | AppError::UrlError(_) | AppError::InternalError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
         }
     }
 }

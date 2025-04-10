@@ -1,37 +1,15 @@
+use crate::cli_error::CliError;
 use crate::data_store::get_store_from_env;
+use crate::setup::get_secret_from_env;
 use actix_web::{middleware, web, App, HttpServer};
 use std::env;
-use std::fmt::Display;
 use std::sync::Arc;
 
 mod api;
 mod ui;
 
-#[derive(Debug)]
-pub enum ApplicationStartupError {
-    BindError(std::io::Error),
-    ServerError(std::io::Error),
-    SetupError(String),
-}
-
-impl Display for ApplicationStartupError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ApplicationStartupError::BindError(e) => {
-                write!(f, "Error binding listening port: {}", e)
-            }
-            ApplicationStartupError::ServerError(e) => write!(f, "Error running web server: {}", e),
-            ApplicationStartupError::SetupError(e) => write!(
-                f,
-                "Error in environment settings for online-kueaplan: {}",
-                e
-            ),
-        }
-    }
-}
-
-pub fn serve() -> Result<(), ApplicationStartupError> {
-    let state = AppState::new().map_err(ApplicationStartupError::SetupError)?;
+pub fn serve() -> Result<(), CliError> {
+    let state = AppState::new()?;
     actix_web::rt::System::new()
         .block_on(
             HttpServer::new(move || {
@@ -42,10 +20,10 @@ pub fn serve() -> Result<(), ApplicationStartupError> {
                     .wrap(middleware::Compress::default())
             })
             .bind(("127.0.0.1", 9000))
-            .map_err(ApplicationStartupError::BindError)?
+            .map_err(CliError::BindError)?
             .run(),
         )
-        .map_err(ApplicationStartupError::ServerError)
+        .map_err(CliError::ServerError)
 }
 
 #[derive(Clone)]
@@ -55,10 +33,10 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new() -> Result<Self, String> {
+    pub fn new() -> Result<Self, CliError> {
         Ok(Self {
             store: Arc::new(get_store_from_env()?),
-            secret: env::var("SECRET").map_err(|_| "SECRET must be set")?,
+            secret: get_secret_from_env()?,
         })
     }
 }

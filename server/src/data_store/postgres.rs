@@ -15,13 +15,12 @@ pub struct PgDataStore {
 }
 
 impl PgDataStore {
-    pub fn new(database_url: &str) -> Result<Self, String> {
+    pub fn new(database_url: &str) -> Result<Self, StoreError> {
         let connection_manager = diesel::r2d2::ConnectionManager::<PgConnection>::new(database_url);
         Ok(Self {
             pool: diesel::r2d2::Pool::builder()
                 .test_on_check_out(true)
-                .build(connection_manager)
-                .map_err(|e| format!("Could not create database connection pool: {}", e))?,
+                .build(connection_manager)?,
         })
     }
 }

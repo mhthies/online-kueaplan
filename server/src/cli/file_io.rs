@@ -1,4 +1,5 @@
-use crate::cli::{CliAuthTokenKey, CliError};
+use crate::cli::CliAuthTokenKey;
+use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
 use crate::data_store::models::{FullNewEntry, NewCategory, NewRoom};
 use crate::data_store::{get_store_from_env, KuaPlanStore};
@@ -18,7 +19,7 @@ struct SavedEvent {
 
 pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
     // TODO logging instead of propagating error
-    let data_store_pool = get_store_from_env().map_err(CliError::SetupError)?;
+    let data_store_pool = get_store_from_env()?;
     let mut data_store = data_store_pool.get_facade()?;
 
     let f = File::open(path).map_err(|e| {

@@ -1,8 +1,7 @@
 use crate::cli_error::CliError;
 use crate::data_store::get_store_from_env;
-use crate::setup::get_secret_from_env;
+use crate::setup::{get_listen_address_from_env, get_listen_port_from_env, get_secret_from_env};
 use actix_web::{middleware, web, App, HttpServer};
-use std::env;
 use std::sync::Arc;
 
 mod api;
@@ -19,7 +18,7 @@ pub fn serve() -> Result<(), CliError> {
                     .app_data(web::Data::new(state.clone()))
                     .wrap(middleware::Compress::default())
             })
-            .bind(("127.0.0.1", 9000))
+            .bind((get_listen_address_from_env()?, get_listen_port_from_env()?))
             .map_err(CliError::BindError)?
             .run(),
         )

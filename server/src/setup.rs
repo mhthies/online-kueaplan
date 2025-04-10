@@ -1,3 +1,4 @@
+use diesel::dsl::Set;
 use std::env;
 use std::env::VarError;
 use std::fmt::{Display, Formatter};
@@ -10,6 +11,23 @@ pub fn get_database_url_from_env() -> Result<String, SetupError> {
 /// Get the cryptographic application secret for signing secure tokens from the environment variable.
 pub fn get_secret_from_env() -> Result<String, SetupError> {
     env::var("SECRET").map_err(|e| SetupError::from_env_error(e, "SECRET"))
+}
+
+/// Get the web server TCP listening port from the environment variable
+pub fn get_listen_port_from_env() -> Result<u16, SetupError> {
+    env::var("LISTEN_PORT")
+        .map_err(|e| SetupError::from_env_error(e, "LISTEN_PORT"))
+        .and_then(|v| {
+            v.parse().map_err(|e| SetupError::EnvVariableInvalid {
+                variable_name: "LISTEN_PORT",
+                problem: "Not a valid uint16",
+            })
+        })
+}
+
+/// Get the web server TCP listening interface address from the environment variable
+pub fn get_listen_address_from_env() -> Result<String, SetupError> {
+    env::var("LISTEN_ADDRESS").map_err(|e| SetupError::from_env_error(e, "LISTEN_ADDRESS"))
 }
 
 #[derive(Debug)]

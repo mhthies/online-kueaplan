@@ -348,7 +348,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .load::<bool>(&mut self.connection)?
         };
         if upsert_result.is_empty() {
-            return Err(StoreError::NotExisting);
+            return Err(StoreError::ConflictEntityExists);
         }
         let is_updated = upsert_result[0];
         Ok(!is_updated)
@@ -422,7 +422,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .load::<bool>(&mut self.connection)?
         };
         if upsert_result.is_empty() {
-            return Err(StoreError::NotExisting);
+            return Err(StoreError::ConflictEntityExists);
         }
         let is_updated = upsert_result[0];
         Ok(!is_updated)

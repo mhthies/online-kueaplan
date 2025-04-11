@@ -1,4 +1,5 @@
-use crate::web::ui::{AppError, BaseTemplateContext};
+use crate::web::ui::error::AppError;
+use crate::web::ui::BaseTemplateContext;
 use actix_web::body::EitherBody;
 use actix_web::web::Html;
 use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};

@@ -1,8 +1,9 @@
-use super::util::{CategoryColors, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
-use super::{util, AppError, BaseTemplateContext};
+use super::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
+use super::{util, BaseTemplateContext};
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
+use crate::web::ui::error::AppError;
 use crate::web::ui::main_list::filters::css_class_for_category;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;

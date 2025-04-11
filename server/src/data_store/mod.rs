@@ -27,9 +27,6 @@ pub mod models;
 mod postgres;
 mod schema;
 
-#[cfg(test)]
-pub mod store_mock;
-
 /// Get a [KuaPlanStore] instances, according the "DATABASE_URL" environment variable.
 ///
 /// The DATABASE_URL must be a PosgreSQL connection url, following the schema

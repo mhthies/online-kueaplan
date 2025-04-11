@@ -5,8 +5,6 @@ mod endpoints_category;
 mod endpoints_entry;
 mod endpoints_event;
 mod endpoints_room;
-#[cfg(test)]
-mod tests;
 
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;

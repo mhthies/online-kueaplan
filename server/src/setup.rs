@@ -1,4 +1,3 @@
-use diesel::dsl::Set;
 use std::env;
 use std::env::VarError;
 use std::fmt::{Display, Formatter};
@@ -18,7 +17,7 @@ pub fn get_listen_port_from_env() -> Result<u16, SetupError> {
     env::var("LISTEN_PORT")
         .map_err(|e| SetupError::from_env_error(e, "LISTEN_PORT"))
         .and_then(|v| {
-            v.parse().map_err(|e| SetupError::EnvVariableInvalid {
+            v.parse().map_err(|_| SetupError::EnvVariableInvalid {
                 variable_name: "LISTEN_PORT",
                 problem: "Not a valid uint16",
             })

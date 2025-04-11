@@ -172,7 +172,7 @@ fn derive_key_from_secret(secret: &str) -> Key {
 mod tests {
     use super::*;
 
-    const MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
+    const MAX_AGE: std::time::Duration = std::time::Duration::from_secs(86400 * 365);
 
     #[test]
     fn empty_session() {

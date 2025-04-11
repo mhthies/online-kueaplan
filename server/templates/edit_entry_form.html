@@ -16,10 +16,10 @@
     </h1>
     <form method="post" action="{{post_url()?}}">
     <div class="mb-3">
-        {{ form_data.title.create_form_field("title", "Titel", None, InputType::Text, InputSize::LARGE)? }}
+        {{ form_data.title.create_form_field("title", "Titel", None, InputType::Text, InputSize::Large)? }}
     </div>
     <div class="mb-3">
-        {{ form_data.comment.create_form_field("comment", "Kommentar", Some("wird unter dem Titel angezeigt"), InputType::Text, InputSize::SMALL)? }}
+        {{ form_data.comment.create_form_field("comment", "Kommentar", Some("wird unter dem Titel angezeigt"), InputType::Text, InputSize::Small)? }}
     </div>
     <div class="mb-3">
         {{ form_data.is_cancelled.create_checkbox("is_cancelled", "fällt aus", None)? }}
@@ -27,26 +27,26 @@
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="mb-3">
-                {{ form_data.responsible_person.create_form_field("responsible_person", "von wem?", None, InputType::Text, InputSize::NORMAL)? }}
+                {{ form_data.responsible_person.create_form_field("responsible_person", "von wem?", None, InputType::Text, InputSize::Normal)? }}
             </div>
             <div class="row g-3">
                 <div class="col-sm-4">
-                    {{ form_data.day.create_select("day", &day_entries(), "Tag", None, InputSize::NORMAL)? }}
+                    {{ form_data.day.create_select("day", &day_entries(), "Tag", None, InputSize::Normal)? }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ form_data.begin.create_form_field("begin", "Beginn", None, InputType::Time, InputSize::NORMAL)? }}
+                    {{ form_data.begin.create_form_field("begin", "Beginn", None, InputType::Time, InputSize::Normal)? }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ form_data.duration.create_form_field("duration", "Dauer", None, InputType::Text, InputSize::NORMAL)? }}
+                    {{ form_data.duration.create_form_field("duration", "Dauer", None, InputType::Text, InputSize::Normal)? }}
                 </div>
                 <div class="mb-3">
-                    {{ form_data.time_comment.create_form_field("time_comment", "Kommentar zur Zeit", None, InputType::Text, InputSize::SMALL)? }}
+                    {{ form_data.time_comment.create_form_field("time_comment", "Kommentar zur Zeit", None, InputType::Text, InputSize::Small)? }}
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                {{ form_data.category.create_select("category", &category_entries(), "Kategorie", None, InputSize::NORMAL)? }}
+                {{ form_data.category.create_select("category", &category_entries(), "Kategorie", None, InputSize::Normal)? }}
             </div>
             <div class="mb-3">
                 {{ form_data.is_room_reservation.create_checkbox("is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))? }}
@@ -55,15 +55,15 @@
                 {{ form_data.is_exclusive.create_checkbox("is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))? }}
             </div>
             <div class="mb-3">
-                {{ form_data.rooms.create_form_field("rooms", "Orte", None, InputType::Text, InputSize::NORMAL)? }}
+                {{ form_data.rooms.create_form_field("rooms", "Orte", None, InputType::Text, InputSize::Normal)? }}
             </div>
             <div class="mb-3">
-                {{ form_data.room_comment.create_form_field("room_comment", "Kommentar zum Ort", None, InputType::Text, InputSize::SMALL)? }}
+                {{ form_data.room_comment.create_form_field("room_comment", "Kommentar zum Ort", None, InputType::Text, InputSize::Small)? }}
             </div>
         </div>
     </div>
     <div class="mb-3">
-        {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::NORMAL)? }}
+        {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::Normal)? }}
     </div>
     <button type="submit" class="btn btn-primary">Speichern</button>&ensp;
         <a href="{{ abort_url()? }}" class="btn btn-secondary">Abbrechen</a>

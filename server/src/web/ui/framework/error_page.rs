@@ -40,7 +40,7 @@ fn generate_app_error_page(
 ) -> HttpResponse<String> {
     let tmpl = AppErrorTemplate {
         base: BaseTemplateContext {
-            request: &http_request,
+            request: http_request,
             page_title: "Error",
         },
         error: app_error,
@@ -54,7 +54,7 @@ fn generate_generic_error_page(
 ) -> HttpResponse<String> {
     let tmpl = ErrorTemplate {
         base: BaseTemplateContext {
-            request: &http_request,
+            request: http_request,
             page_title: "Error",
         },
         error,
@@ -72,8 +72,7 @@ fn render_template_or_show_error_as_string(
         Err(err) => (
             format!(
                 "Error: {}\n(Could not render nice error page: {})",
-                error.to_string(),
-                err.to_string()
+                error, err
             ),
             error.status_code(),
         )

@@ -1,8 +1,8 @@
-use crate::web::ui;
 use crate::web::ui::framework::flash::FlashesInterface;
 use crate::web::ui::{framework, Resources};
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
+use std::fmt::Write;
 
 /// Common template data for all ui templates extending the `base.html` template
 ///
@@ -19,7 +19,7 @@ pub struct BaseTemplateContext<'a> {
 
 impl BaseTemplateContext<'_> {
     pub fn url_for_static(&self, file: &str) -> Result<String, UrlGenerationError> {
-        let mut url = self.request.url_for("static_resources", &[file])?;
+        let mut url = self.request.url_for("static_resources", [file])?;
         url.query_pairs_mut().append_pair(
             "hash",
             &Resources::get(file)
@@ -35,5 +35,8 @@ impl BaseTemplateContext<'_> {
 }
 
 fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    bytes.iter().fold(String::new(), |mut output, b| {
+        let _ = write!(output, "{:02x}", b);
+        output
+    })
 }

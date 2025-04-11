@@ -54,17 +54,6 @@ pub trait KueaPlanStoreFacade {
         event: models::NewEvent,
     ) -> Result<EventId, StoreError>;
 
-    /// Get all entries of the event.
-    ///
-    /// Entries are returned in chronological order, i.e. sorted by (begin, end)
-    fn get_entries(
-        &mut self,
-        auth_token: &AuthToken,
-        the_event_id: EventId,
-    ) -> Result<Vec<models::FullEntry>, StoreError> {
-        self.get_entries_filtered(auth_token, the_event_id, EntryFilter::default())
-    }
-
     /// Get a filtered list of entries of the event
     ///
     /// Entries are returned in chronological order, i.e. sorted by (begin, end)

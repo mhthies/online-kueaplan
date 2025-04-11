@@ -8,7 +8,6 @@ use crate::setup::get_database_url_from_env;
 use diesel::migration::Migration;
 use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use std::fmt::{Debug, Display, Formatter};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgresql");
 
@@ -25,20 +24,6 @@ pub fn run_migrations() -> Result<(), CliError> {
         .map_err(|e| CliError::DatabaseMigrationError(e.to_string()))?;
 
     Ok(())
-}
-
-#[derive(Debug)]
-struct MigrationsStateOutdatedError {
-    missing_migrations: Vec<String>,
-}
-
-impl Display for MigrationsStateOutdatedError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "Database needs to be migrated. Pending migrations: {}",
-            self.missing_migrations.join(", ")
-        ))
-    }
 }
 
 /// Check if the database schema has been migrated to the latest known migration for the current

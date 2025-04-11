@@ -1,4 +1,4 @@
-use crate::data_store::models::{Event, NewEntry};
+use crate::data_store::models::Event;
 use crate::data_store::{EntryId, EventId};
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
@@ -134,7 +134,7 @@ fn change_color_luminance(color: &palette::Hsl, new_base_luminance: f32) -> pale
     let target_luminance = new_base_luminance + color.lightness * 0.15 - 0.075;
     let luminance_difference = (target_luminance - color.lightness).abs();
     let saturation_factor = 1.0 - luminance_difference * 0.6;
-    let mut color = color.clone();
+    let mut color = *color;
     color.lightness = target_luminance;
     color.saturation *= saturation_factor;
     color
@@ -156,7 +156,7 @@ pub fn url_for_entry(
 ) -> Result<url::Url, UrlGenerationError> {
     let mut url = req.url_for(
         "main_list",
-        &[
+        [
             &event_id.to_string(),
             &get_effective_date(entry_begin).to_string(),
         ],

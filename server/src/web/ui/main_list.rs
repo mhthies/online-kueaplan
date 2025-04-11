@@ -12,7 +12,6 @@ use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
 use chrono::TimeZone;
-use palette::{IntoColor, Lighten};
 use std::collections::BTreeMap;
 
 #[get("/{event_id}/list/{date}")]
@@ -208,6 +207,6 @@ mod filters {
     }
 
     pub fn css_class_for_category(category: &Category) -> askama::Result<String> {
-        Ok(format!("category-{}", category.id.to_string()))
+        Ok(format!("category-{}", category.id))
     }
 }

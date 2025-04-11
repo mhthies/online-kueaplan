@@ -46,15 +46,15 @@
 //! ```
 use actix_web::cookie::Cookie;
 use actix_web::http::header::{HeaderValue, SET_COOKIE};
-use actix_web::{post, HttpMessage, HttpRequest};
+use actix_web::{HttpMessage, HttpRequest};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub enum FlashType {
-    INFO,
-    SUCCESS,
-    WARNING,
-    ERROR,
+    Info,
+    Success,
+    Warning,
+    Error,
 }
 
 /// A single notification message to be flashed to the user
@@ -129,7 +129,7 @@ impl FlashesInterface for HttpRequest {
                 flashes.dirty = true;
                 std::mem::take(&mut flashes.flashes)
             })
-            .unwrap_or(Vec::new())
+            .unwrap_or_default()
     }
 }
 
@@ -139,8 +139,8 @@ pub async fn flash_middleware(
 ) -> Result<actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>, actix_web::Error> {
     let flashes = Flashes::from_cookie(req.request());
     // Ignore errors while parsing flashes from Request
-    if flashes.is_ok() {
-        req.extensions_mut().insert(flashes.unwrap());
+    if let Ok(flashes) = flashes {
+        req.extensions_mut().insert(flashes);
     }
 
     let mut response = next.call(req).await?;

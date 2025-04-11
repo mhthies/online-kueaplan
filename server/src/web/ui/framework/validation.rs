@@ -152,7 +152,7 @@ impl FromFormValue<'_> for NiceDurationHours {
         }
 
         RE.captures(value)
-            .and_then(|cap| {
+            .map(|cap| {
                 let days = parse_group(&cap, "d").unwrap_or(0);
                 let hours = parse_group(&cap, "H")
                     .or(parse_group(&cap, "H2"))
@@ -169,13 +169,13 @@ impl FromFormValue<'_> for NiceDurationHours {
                     })
                     .unwrap_or(0);
 
-                Some(Self(
+                Self(
                     chrono::Duration::days(days)
                         + chrono::Duration::hours(hours)
                         + chrono::Duration::minutes(minutes)
                         + chrono::Duration::seconds(seconds)
                         + chrono::Duration::nanoseconds(nanoseconds),
-                ))
+                )
             })
             .ok_or("Keine gültige Dauer".to_owned())
     }

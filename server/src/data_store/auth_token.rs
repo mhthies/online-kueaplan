@@ -54,8 +54,10 @@ impl AuthToken {
     /// This function must only be used by command line interface functions, not in the context of
     /// the web server!
     pub fn create_for_cli(event_id: i32, _key: &CliAuthTokenKey) -> Self {
-        let mut roles = vec![AccessRole::Admin];
-        AuthToken { event_id, roles }
+        AuthToken {
+            event_id,
+            roles: vec![AccessRole::Admin],
+        }
     }
 
     /// Check if the AuthToken authorizes for the given `privilege`.
@@ -116,13 +118,7 @@ pub struct GlobalAuthToken {
 
 impl GlobalAuthToken {
     pub(crate) fn create_for_cli(_key: &CliAuthTokenKey) -> Self {
-        let mut roles = vec![AccessRole::Admin];
-        GlobalAuthToken { roles }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn create_for_test() -> Self {
-        let mut roles = vec![AccessRole::Admin];
+        let roles = vec![AccessRole::Admin];
         GlobalAuthToken { roles }
     }
 

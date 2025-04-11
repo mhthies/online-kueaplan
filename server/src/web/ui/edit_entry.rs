@@ -117,7 +117,7 @@ async fn edit_entry(
 
         // TODO allow creating new previous_date
         req.add_flash_message(FlashMessage {
-            flash_type: FlashType::SUCCESS,
+            flash_type: FlashType::Success,
             message: "Änderung wurde gespeichert.".to_owned(),
         });
         Ok(Either::Left(
@@ -126,7 +126,7 @@ async fn edit_entry(
         ))
     } else {
         req.add_flash_message(FlashMessage {
-            flash_type: FlashType::ERROR,
+            flash_type: FlashType::Error,
             message: "Validierung fehlgeschlagen.".to_owned(),
         });
         let tmpl = EditEntryFormTemplate {

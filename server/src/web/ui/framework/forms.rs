@@ -12,7 +12,7 @@ pub struct FormValue {
 
 impl FormValue {
     pub fn validate<'a, T: FromFormValue<'a>>(&'a mut self) -> Option<T> {
-        match T::from_form_value(&mut self.value) {
+        match T::from_form_value(&self.value) {
             Ok(v) => Some(v),
             Err(e) => {
                 self.errors.push(e);
@@ -24,7 +24,7 @@ impl FormValue {
         &'a mut self,
         data: T::AdditionalData,
     ) -> Option<T> {
-        match T::from_form_value(&mut self.value, data) {
+        match T::from_form_value(&self.value, data) {
             Ok(v) => Some(v),
             Err(e) => {
                 self.errors.push(e);
@@ -115,9 +115,9 @@ impl<T: IntoFormValue> From<T> for FormValue {
 }
 
 pub enum InputSize {
-    SMALL,
-    NORMAL,
-    LARGE,
+    Small,
+    Normal,
+    Large,
 }
 
 #[derive(Debug)]

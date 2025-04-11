@@ -22,18 +22,18 @@
 <div class="toast-container top-0 end-0 p-3 position-fixed">
     {% for flash in flashes.iter() %}
     <div class="toast {% match flash.flash_type %}
-                      {%- when crate::web::ui::framework::flash::FlashType::INFO%}text-bg-info
-                      {%- when crate::web::ui::framework::flash::FlashType::SUCCESS%}text-bg-success
-                      {%- when crate::web::ui::framework::flash::FlashType::WARNING%}text-bg-warning
-                      {%- when crate::web::ui::framework::flash::FlashType::ERROR%}text-bg-danger{% endmatch %}"
+                      {%- when crate::web::ui::framework::flash::FlashType::Info%}text-bg-info
+                      {%- when crate::web::ui::framework::flash::FlashType::Success%}text-bg-success
+                      {%- when crate::web::ui::framework::flash::FlashType::Warning%}text-bg-warning
+                      {%- when crate::web::ui::framework::flash::FlashType::Error%}text-bg-danger{% endmatch %}"
          role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
             <strong class="me-auto">
             {% match flash.flash_type %}
-                {%- when crate::web::ui::framework::flash::FlashType::INFO%}<i class="bi bi-info-circle"></i> Information
-                {%- when crate::web::ui::framework::flash::FlashType::SUCCESS%}<i class="bi bi-check-lg"></i> Erfolg
-                {%- when crate::web::ui::framework::flash::FlashType::WARNING%}<i class="bi bi-exclamation-triangle-fill"></i> Warning
-                {%- when crate::web::ui::framework::flash::FlashType::ERROR%}<i class="bi bi-x-circle-fill"></i> Fehler{% endmatch %}
+                {%- when crate::web::ui::framework::flash::FlashType::Info%}<i class="bi bi-info-circle"></i> Information
+                {%- when crate::web::ui::framework::flash::FlashType::Success%}<i class="bi bi-check-lg"></i> Erfolg
+                {%- when crate::web::ui::framework::flash::FlashType::Warning%}<i class="bi bi-exclamation-triangle-fill"></i> Warning
+                {%- when crate::web::ui::framework::flash::FlashType::Error%}<i class="bi bi-x-circle-fill"></i> Fehler{% endmatch %}
             </strong>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>

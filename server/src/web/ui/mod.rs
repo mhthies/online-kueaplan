@@ -2,9 +2,8 @@ use crate::web::ui::framework::error_page::error_page_middleware;
 use crate::web::ui::framework::flash::flash_middleware;
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::middleware::from_fn;
-use actix_web::{get, web, HttpResponse, Responder, ResponseError};
+use actix_web::{get, web, HttpResponse, Responder};
 use error::AppError;
-use framework::flash::FlashesInterface;
 use rust_embed::Embed;
 
 mod auth;

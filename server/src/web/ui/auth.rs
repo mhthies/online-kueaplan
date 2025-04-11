@@ -14,11 +14,7 @@ use serde::Deserialize;
 const SESSION_COOKIE_NAME: &str = "kuea-plan-session";
 
 #[get("/{event_id}/login")]
-async fn login_form(
-    path: web::Path<i32>,
-    state: web::Data<AppState>,
-    req: HttpRequest,
-) -> Result<impl Responder, AppError> {
+async fn login_form(path: web::Path<i32>, req: HttpRequest) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
 
     // TODO add event name; 404 if event does not exist

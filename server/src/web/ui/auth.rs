@@ -1,7 +1,8 @@
 use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::error::AppError;
-use crate::web::ui::{util, BaseTemplateContext};
+use crate::web::ui::framework::base_template::BaseTemplateContext;
+use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};

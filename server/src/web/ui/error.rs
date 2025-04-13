@@ -6,6 +6,14 @@ use actix_web::http::StatusCode;
 use actix_web::ResponseError;
 use std::fmt::{Display, Formatter};
 
+/// Semantic error type for ui endpoint functions
+///
+/// The different enum items are meant to produce different descriptive and helpful error pages for
+/// the user, with an appropriate HTTP status code.
+///
+/// The error pages are generated using the
+/// [crate::web::ui::framework::error_page::error_page_middleware] middleware, because actix-web's
+/// ResponseError trait is quite restricted in what it can do.
 #[derive(Debug)]
 pub enum AppError {
     PageNotFound,

@@ -5,10 +5,10 @@ use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
-use crate::web::ui::util::{
-    event_days, get_effective_date, timestamp_from_effective_date_and_time, url_for_entry,
-    TIME_ZONE,
+use crate::web::ui::time_calculation::{
+    get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
+use crate::web::ui::util::{event_days, url_for_entry};
 use crate::web::ui::validation;
 use crate::web::ui::SESSION_COOKIE_MAX_AGE;
 use crate::web::AppState;

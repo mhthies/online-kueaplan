@@ -2,7 +2,7 @@ use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
-use crate::web::ui::{util, SESSION_COOKIE_MAX_AGE};
+use crate::web::ui::{time_calculation, util, SESSION_COOKIE_MAX_AGE};
 use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
@@ -109,7 +109,7 @@ async fn login(
                     "main_list",
                     &[
                         event_id.to_string(),
-                        util::most_reasonable_date(event).to_string(),
+                        time_calculation::most_reasonable_date(event).to_string(),
                     ],
                 )?
                 .to_string(),

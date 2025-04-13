@@ -7,11 +7,13 @@ use flash::flash_middleware;
 use rust_embed::Embed;
 
 pub mod base_template;
+mod colors;
 mod endpoints;
 mod error;
 pub mod error_page;
 pub mod flash;
 pub mod forms;
+mod time_calculation;
 mod util;
 pub mod validation;
 

@@ -31,6 +31,13 @@ pub fn get_effective_date(date_time: &DateTime<chrono::Utc>) -> chrono::NaiveDat
     .date_naive()
 }
 
+/// Calculate a (common) UTC timestamp from an effective date (i.e. using EFFECTIVE_BEGIN_OF_DAY
+/// instead of 0:00 as begin of day) and a local time.
+///
+/// For example, with EFFECTIVE_BEGIN_OF_DAY = 05:30 and localtime = UTC+2:
+/// * effective_date=2025-08-13, local_time=06:00 => 2025-08-13T04:00:00
+/// * effective_date=2025-08-13, local_time=17:00 => 2025-08-13T15:00:00
+/// * effective_date=2025-08-13, local_time=03:00 => 2025-08-14T01:00:00
 pub fn timestamp_from_effective_date_and_time(
     effective_date: NaiveDate,
     local_time: chrono::NaiveTime,
@@ -62,16 +69,28 @@ pub fn most_reasonable_date(event: Event) -> chrono::NaiveDate {
     effective_date.clamp(event.begin_date, event.end_date)
 }
 
+/// Set of display colors for a category, derived from the category's base color.
+///
+/// Provides background, border and text colors for dark and light theme. The colors try to mimic
+/// the color grading of Bootstrap's semantic colors: https://getbootstrap.com/docs/5.3/customize/color/
 pub struct CategoryColors {
+    /// background color for the light theme (very bright, tinted according the base color)
     background_light: palette::Srgb<u8>,
+    /// border color for the light theme
     border_light: palette::Srgb<u8>,
+    /// text color for the light theme (black-ish)
     text_light: palette::Srgb<u8>,
+    /// background color for the dark theme (very bright, tinted according the base color)
     background_dark: palette::Srgb<u8>,
+    /// border color for the dark theme
     border_dark: palette::Srgb<u8>,
+    /// background color for the dark theme (white-ish)
     text_dark: palette::Srgb<u8>,
 }
 
 impl CategoryColors {
+    /// Generate a full set of colors (text, background, border; light and dark), corresponding to
+    /// a user-selected base color of a category.
     pub fn from_base_color_hex(base_color_hex: &str) -> Result<Self, String> {
         let base_color: palette::Srgb<u8> = base_color_hex.parse().map_err(|e| format!("{}", e))?;
         let base_color_hsl: palette::Hsl = base_color.into_format::<f32>().into_color();
@@ -110,6 +129,8 @@ impl CategoryColors {
         })
     }
 
+    /// Create a CSS style string, which sets all display colors to custom CSS properties, to be
+    /// picked up by our CSS styling rules from the main.css file.  
     pub fn as_css(&self) -> String {
         format!(
             "--category-bg:#{:x};--category-text:#{:x};--category-border:#{:x};\
@@ -148,6 +169,10 @@ pub fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
         .collect()
 }
 
+/// Generate a URL that takes the user directly to a specific kueaplan entry in the main list.
+///
+/// The URL for the main_list endpoint with the correct date, according to the entry's begin is
+/// used, augmented with the anchor link of the entry,
 pub fn url_for_entry(
     req: &HttpRequest,
     event_id: EventId,

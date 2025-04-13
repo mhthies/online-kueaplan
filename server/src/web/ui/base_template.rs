@@ -1,5 +1,6 @@
-use crate::web::ui::framework::flash::FlashesInterface;
-use crate::web::ui::{framework, Resources};
+use crate::web::ui;
+use crate::web::ui::flash::FlashesInterface;
+use crate::web::ui::Resources;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
 use std::fmt::Write;
@@ -29,7 +30,7 @@ impl BaseTemplateContext<'_> {
         Ok(url.to_string())
     }
 
-    pub fn get_flashes(&self) -> Vec<framework::flash::FlashMessage> {
+    pub fn get_flashes(&self) -> Vec<ui::flash::FlashMessage> {
         self.request.get_and_clear_flashes()
     }
 }

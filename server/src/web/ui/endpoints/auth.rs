@@ -1,7 +1,7 @@
 use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::auth_token::Privilege;
+use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
-use crate::web::ui::framework::base_template::BaseTemplateContext;
 use crate::web::ui::{util, SESSION_COOKIE_MAX_AGE};
 use crate::web::AppState;
 use actix_web::http::header;

@@ -5,8 +5,8 @@
 //! of an error. In contrast to rendering the error page in our [actix_web::ResponseError]
 //! implementation, this allows us to access the HTTP Request, e.g. for generating URLs to static
 //! files and other pages.
+use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
-use crate::web::ui::framework::base_template::BaseTemplateContext;
 use actix_web::body::EitherBody;
 use actix_web::web::Html;
 use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};

@@ -12,7 +12,7 @@ use std::fmt::{Display, Formatter};
 /// the user, with an appropriate HTTP status code.
 ///
 /// The error pages are generated using the
-/// [crate::web::ui::framework::error_page::error_page_middleware] middleware, because actix-web's
+/// [crate::web::ui::error_page::error_page_middleware] middleware, because actix-web's
 /// ResponseError trait is quite restricted in what it can do.
 #[derive(Debug)]
 pub enum AppError {

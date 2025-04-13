@@ -1,15 +1,18 @@
-use super::framework::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
-use super::util::{
-    event_days, get_effective_date, timestamp_from_effective_date_and_time, url_for_entry,
-    TIME_ZONE,
-};
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
 use crate::data_store::EntryId;
 use crate::web::ui::error::AppError;
 use crate::web::ui::framework::base_template::BaseTemplateContext;
 use crate::web::ui::framework::flash::{FlashMessage, FlashType, FlashesInterface};
+use crate::web::ui::framework::forms::{
+    BoolFormValue, FormValue, InputSize, InputType, SelectEntry,
+};
 use crate::web::ui::framework::validation;
+use crate::web::ui::util::{
+    event_days, get_effective_date, timestamp_from_effective_date_and_time, url_for_entry,
+    TIME_ZONE,
+};
+use crate::web::ui::SESSION_COOKIE_MAX_AGE;
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
@@ -30,7 +33,7 @@ async fn edit_entry_form(
             .ok_or(AppError::NoSession)?
             .value(),
         &state.secret,
-        super::SESSION_COOKIE_MAX_AGE,
+        SESSION_COOKIE_MAX_AGE,
     )?;
     let store = state.store.clone();
     let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
@@ -78,7 +81,7 @@ async fn edit_entry(
             .ok_or(AppError::NoSession)?
             .value(),
         &state.secret,
-        super::SESSION_COOKIE_MAX_AGE,
+        SESSION_COOKIE_MAX_AGE,
     )?;
     let store = state.store.clone();
     let (event, old_entry, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {

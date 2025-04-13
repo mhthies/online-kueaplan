@@ -1,11 +1,11 @@
-use super::util;
-use super::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
 use crate::auth_session::SessionToken;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
+use crate::web::ui::endpoints::main_list::filters::css_class_for_category;
 use crate::web::ui::error::AppError;
 use crate::web::ui::framework::base_template::BaseTemplateContext;
-use crate::web::ui::main_list::filters::css_class_for_category;
+use crate::web::ui::util::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
+use crate::web::ui::{util, SESSION_COOKIE_MAX_AGE};
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
@@ -26,7 +26,7 @@ async fn main_list(
             .ok_or(AppError::NoSession)?
             .value(),
         &state.secret,
-        super::SESSION_COOKIE_MAX_AGE,
+        SESSION_COOKIE_MAX_AGE,
     )?;
     let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;

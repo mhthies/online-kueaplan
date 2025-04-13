@@ -2,7 +2,7 @@ use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::error::AppError;
 use crate::web::ui::framework::base_template::BaseTemplateContext;
-use crate::web::ui::util;
+use crate::web::ui::{util, SESSION_COOKIE_MAX_AGE};
 use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
@@ -41,7 +41,7 @@ async fn login(
     let mut session_token = req
         .cookie(SESSION_COOKIE_NAME)
         .map(|cookie| {
-            SessionToken::from_string(cookie.value(), &state.secret, super::SESSION_COOKIE_MAX_AGE)
+            SessionToken::from_string(cookie.value(), &state.secret, SESSION_COOKIE_MAX_AGE)
         })
         .unwrap_or(Err(SessionError::InvalidTokenStructure))
         .unwrap_or(SessionToken::new());
@@ -122,9 +122,7 @@ fn create_session_cookie(session_token: SessionToken, secret: &str) -> actix_web
     let mut cookie =
         actix_web::cookie::Cookie::new(SESSION_COOKIE_NAME, session_token.as_string(secret));
     cookie.set_path("/");
-    cookie.set_expires(
-        actix_web::cookie::time::OffsetDateTime::now_utc() + super::SESSION_COOKIE_MAX_AGE,
-    );
+    cookie.set_expires(actix_web::cookie::time::OffsetDateTime::now_utc() + SESSION_COOKIE_MAX_AGE);
     cookie
 }
 

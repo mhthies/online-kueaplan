@@ -6,11 +6,9 @@ use actix_web::{get, web, HttpResponse, Responder};
 use error::AppError;
 use rust_embed::Embed;
 
-mod auth;
-mod edit_entry;
+mod endpoints;
 mod error;
 mod framework;
-mod main_list;
 mod util;
 
 #[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
@@ -27,11 +25,11 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
-        .service(main_list::main_list)
-        .service(auth::login_form)
-        .service(auth::login)
-        .service(edit_entry::edit_entry_form)
-        .service(edit_entry::edit_entry)
+        .service(endpoints::main_list::main_list)
+        .service(endpoints::auth::login_form)
+        .service(endpoints::auth::login)
+        .service(endpoints::edit_entry::edit_entry_form)
+        .service(endpoints::edit_entry::edit_entry)
         .default_service(web::to(not_found_handler))
 }
 

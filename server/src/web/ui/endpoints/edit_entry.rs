@@ -1,4 +1,4 @@
-use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
 use crate::data_store::EntryId;
 use crate::web::ui::base_template::BaseTemplateContext;
@@ -9,8 +9,7 @@ use crate::web::ui::time_calculation::{
     get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
 use crate::web::ui::util::{event_days, url_for_entry};
-use crate::web::ui::validation;
-use crate::web::ui::SESSION_COOKIE_MAX_AGE;
+use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
@@ -26,13 +25,8 @@ async fn edit_entry_form(
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let (event_id, entry_id) = path.into_inner();
-    let session_token = SessionToken::from_string(
-        req.cookie("kuea-plan-session")
-            .ok_or(AppError::NoSession)?
-            .value(),
-        &state.secret,
-        SESSION_COOKIE_MAX_AGE,
-    )?;
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
     let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
@@ -74,13 +68,8 @@ async fn edit_entry(
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let (event_id, entry_id) = path.into_inner();
-    let session_token = SessionToken::from_string(
-        req.cookie("kuea-plan-session")
-            .ok_or(AppError::NoSession)?
-            .value(),
-        &state.secret,
-        SESSION_COOKIE_MAX_AGE,
-    )?;
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
     let (event, old_entry, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;

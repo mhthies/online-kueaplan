@@ -90,9 +90,20 @@ impl From<StoreError> for CliError {
             StoreError::ConflictEntityExists => {
                 Self::DataError("Conflicting entity exists".to_string())
             }
-            StoreError::PermissionDenied { required_privilege } => Self::UnexpectedStoreError(
-                format!("Missing data_store privilege: {:?}", required_privilege),
-            ),
+            StoreError::PermissionDenied {
+                required_privilege,
+                event_id: Some(event_id),
+            } => Self::UnexpectedStoreError(format!(
+                "Missing data_store privilege: {:?} for event {}",
+                required_privilege, event_id
+            )),
+            StoreError::PermissionDenied {
+                required_privilege,
+                event_id: None,
+            } => Self::UnexpectedStoreError(format!(
+                "Missing global data_store privilege: {:?}",
+                required_privilege
+            )),
             StoreError::InvalidInputData(e) => Self::DataError(e),
             StoreError::InvalidDataInDatabase(e) => Self::UnexpectedStoreError(e),
         }

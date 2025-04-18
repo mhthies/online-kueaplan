@@ -5,9 +5,12 @@
 //! of an error. In contrast to rendering the error page in our [actix_web::ResponseError]
 //! implementation, this allows us to access the HTTP Request, e.g. for generating URLs to static
 //! files and other pages.
+use crate::data_store::auth_token::Privilege;
+use crate::data_store::EventId;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use actix_web::body::EitherBody;
+use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
 use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
 use askama::Template;
@@ -75,9 +78,13 @@ fn generate_app_error_page(
     let tmpl = AppErrorTemplate {
         base: BaseTemplateContext {
             request: http_request,
-            page_title: "Error",
+            page_title: "Fehler",
         },
         error: app_error,
+        url: &http_request.full_url(),
+        timestamp: chrono::Local::now(),
+        admin_name: "TODO",
+        admin_email: "mail@example.com",
     };
     render_template_or_show_error_as_string(tmpl, app_error, http_request)
 }
@@ -93,6 +100,10 @@ fn generate_generic_error_page(
             page_title: "Error",
         },
         error,
+        url: &http_request.full_url(),
+        timestamp: chrono::Local::now(),
+        admin_name: "TODO",
+        admin_email: "mail@example.com",
     };
     render_template_or_show_error_as_string(tmpl, error, http_request)
 }
@@ -122,10 +133,14 @@ fn render_template_or_show_error_as_string(
 
 // TODO better template for App errors
 #[derive(Debug, Template)]
-#[template(path = "error.html")]
+#[template(path = "app_error.html")]
 struct AppErrorTemplate<'a> {
     base: BaseTemplateContext<'a>,
     error: &'a AppError,
+    url: &'a url::Url,
+    timestamp: chrono::DateTime<chrono::Local>,
+    admin_name: &'a str,
+    admin_email: &'a str,
 }
 
 #[derive(Debug, Template)]
@@ -133,4 +148,41 @@ struct AppErrorTemplate<'a> {
 struct ErrorTemplate<'a> {
     base: BaseTemplateContext<'a>,
     error: &'a dyn ResponseError,
+    url: &'a url::Url,
+    timestamp: chrono::DateTime<chrono::Local>,
+    admin_name: &'a str,
+    admin_email: &'a str,
+}
+
+impl AppErrorTemplate<'_> {
+    fn login_url_for(
+        &self,
+        redirect_url: &url::Url,
+        privilege: Privilege,
+        event_id: EventId,
+    ) -> Result<String, UrlGenerationError> {
+        // FIXME: Oh no, where do we get the event_id from?
+        let mut url = self
+            .base
+            .request
+            .url_for("login_form", [&event_id.to_string()])?;
+        url.query_pairs_mut().append_pair(
+            "privilege",
+            serde_variant::to_variant_name(&privilege)
+                .expect("Privilege enum should be supported by serde_variant"),
+        );
+        url.query_pairs_mut()
+            .append_pair("redirect", &redirect_url.to_string());
+        Ok(url.to_string())
+    }
+}
+
+fn privilege_access_roles(
+    privilege: &crate::data_store::auth_token::Privilege,
+) -> Vec<&'static str> {
+    privilege
+        .qualifying_roles()
+        .iter()
+        .map(|r| r.name())
+        .collect()
 }

@@ -17,9 +17,6 @@ mod time_calculation;
 mod util;
 pub mod validation;
 
-#[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
-const SESSION_COOKIE_MAX_AGE: std::time::Duration = std::time::Duration::from_secs(1 * 86400 * 365);
-
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(
         get_ui_service()

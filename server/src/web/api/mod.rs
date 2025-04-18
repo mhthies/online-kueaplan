@@ -150,9 +150,10 @@ impl From<StoreError> for APIError {
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
-            StoreError::PermissionDenied { required_privilege } => {
-                Self::PermissionDenied { required_privilege }
-            }
+            StoreError::PermissionDenied {
+                required_privilege,
+                event_id: _,
+            } => Self::PermissionDenied { required_privilege },
             StoreError::InvalidInputData(e) => Self::InvalidData(e),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",

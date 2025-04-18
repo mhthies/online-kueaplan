@@ -284,8 +284,12 @@ pub enum StoreError {
     /// provided data.
     ConflictEntityExists,
     /// The client is not authorized for this action. It would need to authenticate for an access
-    /// role qualifying for the `required_privilege`.
-    PermissionDenied { required_privilege: Privilege },
+    /// role qualifying for the `required_privilege` on the `event` (or globally if `event_id` is
+    /// None).
+    PermissionDenied {
+        required_privilege: Privilege,
+        event_id: Option<EventId>,
+    },
     /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
     /// SQL constraint. See string description for details.
     InvalidInputData(String),
@@ -336,15 +340,22 @@ impl std::fmt::Display for StoreError {
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::PermissionDenied {
                 required_privilege,
+                event_id: Some(event_id),
             } => {
-                write!(f, "Client is not authorized to perform this action. {:?} privilege required.", required_privilege)
+                write!(f, "Client is not authorized to perform this action. {:?} privilege on event {} required.", required_privilege, event_id)
+            }
+            Self::PermissionDenied {
+                required_privilege,
+                event_id: None,
+            } => {
+                write!(f, "Client is not authorized to perform this action. Global {:?} privilege required.", required_privilege)
             }
             Self::InvalidInputData(e) => {
                 write!(f, "Data to be stored in database is not valid: {}", e)
             }
             StoreError::InvalidDataInDatabase(e) => {
                 write!(f, "Data queried from database could not be deserialized: {}", e)
-            }
+            },
         }
     }
 }

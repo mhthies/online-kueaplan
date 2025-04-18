@@ -1,6 +1,6 @@
 use crate::auth_session::SessionError;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::StoreError;
+use crate::data_store::{EventId, StoreError};
 use actix_web::error::UrlGenerationError;
 use actix_web::http::StatusCode;
 use actix_web::ResponseError;
@@ -18,34 +18,43 @@ use std::fmt::{Display, Formatter};
 pub enum AppError {
     PageNotFound,
     EntityNotFound,
-    NoSession,
-    InvalidSessionToken,
-    ExpiredSessionToken,
-    PermissionDenied { required_privilege: Privilege },
-    TemplateError(askama::Error),
-    UrlError(UrlGenerationError),
+    PermissionDenied {
+        required_privilege: Privilege,
+        event_id: EventId,
+        session_error: Option<SessionError>,
+    },
     TransactionConflict,
+    DatabaseConnectionError(String),
     InternalError(String),
 }
 
 impl From<StoreError> for AppError {
     fn from(e: StoreError) -> Self {
         match e {
-            StoreError::ConnectionError(error) => {
-                Self::InternalError(format!("Could not connect to database: {}", error))
+            StoreError::ConnectionError(error) => Self::DatabaseConnectionError(error),
+            StoreError::QueryError(diesel_error) => {
+                Self::InternalError(format!("Database query failed: {}", diesel_error))
             }
-            StoreError::QueryError(diesel_error) => Self::InternalError(format!(
-                "Error while executing database query: {}",
-                diesel_error
-            )),
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::EntityNotFound,
             StoreError::ConflictEntityExists => {
                 Self::InternalError("Conflicting entity exists".to_owned())
             }
-            StoreError::PermissionDenied { required_privilege } => {
-                Self::PermissionDenied { required_privilege }
-            }
+            StoreError::PermissionDenied {
+                required_privilege,
+                event_id: Some(event_id),
+            } => Self::PermissionDenied {
+                required_privilege,
+                event_id,
+                session_error: None,
+            },
+            StoreError::PermissionDenied {
+                required_privilege,
+                event_id: None,
+            } => Self::InternalError(format!(
+                "Global privilege {:?} required.",
+                required_privilege
+            )),
             StoreError::InvalidInputData(e) => Self::InternalError(format!("Invalid data: {}", e)),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",
@@ -65,22 +74,13 @@ impl From<actix_web::error::BlockingError> for AppError {
 
 impl From<askama::Error> for AppError {
     fn from(value: askama::Error) -> Self {
-        AppError::TemplateError(value)
+        AppError::InternalError(format!("Error while rendering template: {}", value))
     }
 }
 
 impl From<UrlGenerationError> for AppError {
     fn from(value: UrlGenerationError) -> Self {
-        AppError::UrlError(value)
-    }
-}
-
-impl From<SessionError> for AppError {
-    fn from(value: SessionError) -> Self {
-        match value {
-            SessionError::ExpiredToken => AppError::ExpiredSessionToken,
-            _ => AppError::InvalidSessionToken,
-        }
+        AppError::InternalError(format!("Could not generate URL: {}", value))
     }
 }
 
@@ -88,26 +88,38 @@ impl Display for AppError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             AppError::PageNotFound => write!(f, "Not found"),
-            AppError::TemplateError(e) => write!(f, "Error rendering template: {}", e),
-            AppError::UrlError(e) => write!(f, "Could not generate url: {}", e),
-            AppError::NoSession => write!(f, "Not authenticated"),
-            AppError::InvalidSessionToken => write!(f, "Invalid session token"),
-            AppError::ExpiredSessionToken => write!(f, "Session is expired"),
             AppError::TransactionConflict => {
                 write!(f, "Concurrent database transaction conflict. Please retry.")
             }
             AppError::EntityNotFound => write!(f, "Entity not found"),
-            AppError::PermissionDenied { required_privilege } => write!(
-                f,
-                "Client is not authorized to perform this action. Authentication as {} is required",
-                required_privilege
-                    .qualifying_roles()
-                    .iter()
-                    .map(|role| role.name().to_owned())
-                    .collect::<Vec<String>>()
-                    .join(" or ")
-            ),
-            AppError::InternalError(e) => write!(f, "Internal error: {}", e),
+            AppError::PermissionDenied {
+                required_privilege,
+                event_id: _,
+                session_error,
+            } => {
+                write!(
+                    f,
+                    "Client is not authorized to perform this action. Authentication as {} is required",
+                    required_privilege
+                        .qualifying_roles()
+                        .iter()
+                        .map(|role| role.name().to_owned())
+                        .collect::<Vec<String>>()
+                        .join(" or ")
+                )?;
+                if let Some(session_error) = session_error {
+                    write!(
+                        f,
+                        " Session was present, but invalid, because of {:?}",
+                        session_error
+                    )?;
+                }
+                Ok(())
+            }
+            AppError::DatabaseConnectionError(e) => {
+                write!(f, "Could not connect to database: {}", e)
+            }
+            AppError::InternalError(e) => write!(f, "Internal program error: {}", e),
         }
     }
 }
@@ -116,14 +128,9 @@ impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self {
             AppError::PageNotFound | AppError::EntityNotFound => StatusCode::NOT_FOUND,
-            AppError::NoSession
-            | AppError::InvalidSessionToken
-            | AppError::ExpiredSessionToken
-            | AppError::PermissionDenied {
-                required_privilege: _,
-            } => StatusCode::FORBIDDEN,
+            AppError::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             AppError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
-            AppError::TemplateError(_) | AppError::UrlError(_) | AppError::InternalError(_) => {
+            AppError::DatabaseConnectionError(_) | AppError::InternalError(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         }

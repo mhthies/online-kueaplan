@@ -1,0 +1,93 @@
+{% extends "error.html" %}
+
+{% block error_message %}
+{% match error %}
+    {% when AppError::PageNotFound %}
+        Diese Seite existiert nicht.
+    {% when AppError::EntityNotFound %}
+        Die Entität existiert nicht.
+    {% when AppError::PermissionDenied { required_privilege, .. } %}
+        Zugriff verweigert: Für diese Seite ist eine Authentifizierung als {{ self::privilege_access_roles(required_privilege) | join(" oder ")}} erforderlich.
+    {% when AppError::DatabaseConnectionError(_) %}
+        Interner Server-Fehler: Keine Verbindung zur Datenbank.
+    {% when AppError::TransactionConflict %}
+        Ein Konflikt mit einer anderen Datenbank-Transaktion ist aufgetreten.
+    {% when AppError::InternalError(error_cause) %}
+        Interner Programmfehler.
+{% endmatch %}
+{% endblock %}
+
+{% block error_description %}
+{% match error %}
+    {% when AppError::PageNotFound %}
+        <p>
+            Wenn du über einen internen Link innerhalb des Online-KüA-Plans hierher gelangt bist, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}}
+            &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::EntityNotFound %}
+        <p>
+            In unserer Datenbank gibt es leider keinen passenden Eintrag.
+            Eventuell wurde dieser schon wieder gelöscht?
+        </p>
+        <p>
+            Wenn du das für einen Programmfehler hältst, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::PermissionDenied { required_privilege, event_id, session_error } %}
+        {% if *required_privilege == Privilege::ShowKueaPlan %}
+            <p>
+                Damit der KüA-Plan nur anwesenden Teilnehmer*innen auf der Akademie zugänglich ist, wird er durch eine Passphrase geschützt.
+                Bitte folge dem folgenden Link zum Login-Formular, um die Passphrase einzugeben und Zugriff zu erhalten.
+            </p>
+        {% else %}
+            <p>
+                Für den Zugriff auf diese Seite musst du dich als {{ self::privilege_access_roles(required_privilege) | join(" oder ")}} authentifizieren.
+                Bitte folge dem folgenden Link zum Login-Formular und gib eine passende Passphrase mit diesen Zugriffsberechtigungen ein.
+            </p>
+        {% endif %}
+        {% if let Some(session_error) = session_error %}
+            <p>
+                Deine bereits eingegebenen Passphrasen konnten leider nicht geladen werden.
+                Grund dafür ist, dass
+                {% match session_error %}
+                    {% when crate::auth_session::SessionError::InvalidTokenEncoding %}
+                        der Session-Token ungültig ist (ungültiges base64-Encoding).
+                    {% when crate::auth_session::SessionError::InvalidTokenStructure %}
+                        der Session-Token ungültig ist (ungültige Länge).
+                    {% when crate::auth_session::SessionError::SignatureVerificationFailed %}
+                        der Session-Token ungültig ist (Signatur-Prüfung fehlgeschlagen).
+                    {% when crate::auth_session::SessionError::ExpiredToken %}
+                        der Session-Token nicht mehr gültig ist.
+                {% endmatch %}
+            </p>
+        {% endif %}
+        <p>
+            <a class="btn btn-primary" href="{{ login_url_for(url, **required_privilege, **event_id)? }}">Zum Login-Formular…</a>
+        </p>
+        <p>
+            Falls du trotz korrekt eingegebener Passphrase wiederholt auf diesen Fehler stößt, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::DatabaseConnectionError(_) %}
+        <p>
+            Die KüA-Plan-Software kann nicht auf die Datenbank zugreifen, in der alle Daten des KüA-Plans gespeichert sind.
+            Probiere am besten, die Seite in ca. 1min noch einmal neu zu laden.
+            Vielleicht fängt sich der Server ja.
+            Falls der Fehler bestehen bleibt, informiere bitte den Admin dieser Seite
+            ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;) mit den folgenden technischen Daten:
+        </p>
+    {% when AppError::TransactionConflict %}
+        <p>
+            Deine Anfrage konnte nicht bearbeitet werden, da es zu einem Konflikt mit einer parallelen Anfrage in der Datenbank kam.
+            Das kann immer mal passieren.
+            Bitte lade die Seite neu und bestätige ggf. dass die Daten erneut gesendet werden sollen, um es noch mal zu versuchen!
+        </p>
+        <p>
+            Falls der Fehler immer wieder auftritt, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::InternalError(error_cause) %}
+{% endmatch %}
+
+{% endblock %}

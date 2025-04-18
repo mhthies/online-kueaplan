@@ -38,3 +38,11 @@ nav[data-toggle="toc"] {
     border: 0 solid var(--bs-border-color);
     color: var(--bs-body-color);
 }
+
+.error-technical-info {
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+    padding: 1rem;
+    border-left: 0.25rem solid var(--bs-secondary-border-subtle);
+    border-radius: var(--bs-border-radius);
+}

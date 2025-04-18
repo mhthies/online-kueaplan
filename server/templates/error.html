@@ -2,9 +2,25 @@
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="mb-4">KüA-Plan</h1>
-    <div class="alert alert-danger" role="alert">
-        <i class="bi-exclamation-circle-fill"></i> {{ error.to_string() }}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">{{ base.page_title }}</h1>
+            <div class="alert alert-danger" role="alert">
+                <i class="bi-exclamation-circle-fill"></i> {% block error_message %}Diese Seite existiert nicht.{% endblock %}
+            </div>
+            {% block error_description %}
+                <p>
+                    Wenn du über einen internen Link innerhalb des Online-KüA-Plans hierher gelangt bist, melde dich bitte mit
+                    den folgenden Informationen beim Admin dieser Seite ({{admin_name}}
+                    &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+                </p>
+            {% endblock %}
+            <div class="error-technical-info">
+                Timestamp: {{ timestamp }}<br>
+                URL: {{ url }}<br>
+                Error: {{ "{:?}"|format(error) }}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

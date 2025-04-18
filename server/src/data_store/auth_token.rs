@@ -1,5 +1,6 @@
 use crate::cli::CliAuthTokenKey;
 use crate::data_store::{EventId, StoreError};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
 pub struct EnumMemberNotExistingError {
@@ -82,11 +83,12 @@ impl AuthToken {
         event_id: EventId,
         privilege: Privilege,
     ) -> Result<(), StoreError> {
-        if self.has_privilege(event_id, privilege.clone()) {
+        if self.has_privilege(event_id, privilege) {
             Ok(())
         } else {
             Err(StoreError::PermissionDenied {
                 required_privilege: privilege,
+                event_id: Some(event_id),
             })
         }
     }
@@ -130,11 +132,12 @@ impl GlobalAuthToken {
     }
 
     pub fn check_privilege(&self, privilege: Privilege) -> Result<(), StoreError> {
-        if self.has_privilege(privilege.clone()) {
+        if self.has_privilege(privilege) {
             Ok(())
         } else {
             Err(StoreError::PermissionDenied {
                 required_privilege: privilege,
+                event_id: None,
             })
         }
     }
@@ -190,7 +193,7 @@ impl AccessRole {
 /// Enum of available authorization privileges.
 ///
 /// Each data_store action and web endpoint typically requires a single privilege.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Privilege {
     ShowKueaPlan,
     ManageEntries,

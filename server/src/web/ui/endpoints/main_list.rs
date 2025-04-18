@@ -1,11 +1,11 @@
-use crate::auth_session::SessionToken;
+use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{EntryFilter, EntryFilterBuilder};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::endpoints::main_list::filters::css_class_for_category;
 use crate::web::ui::error::AppError;
 use crate::web::ui::time_calculation::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
-use crate::web::ui::{util, SESSION_COOKIE_MAX_AGE};
+use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
@@ -21,13 +21,8 @@ async fn main_list(
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let (event_id, date) = path.into_inner();
-    let session_token = SessionToken::from_string(
-        req.cookie("kuea-plan-session")
-            .ok_or(AppError::NoSession)?
-            .value(),
-        &state.secret,
-        SESSION_COOKIE_MAX_AGE,
-    )?;
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;

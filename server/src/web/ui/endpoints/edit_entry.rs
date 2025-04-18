@@ -31,6 +31,7 @@ async fn edit_entry_form(
     let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
             store.get_event(&auth, event_id)?,
@@ -74,6 +75,7 @@ async fn edit_entry(
     let (event, old_entry, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_event(&auth, event_id)?,
             store.get_entry(&auth, entry_id)?,

@@ -63,7 +63,9 @@
             </p>
         {% endif %}
         <p>
-            <a class="btn btn-primary" href="{{ login_url_for(url, **required_privilege, **event_id)? }}">Zum Login-Formular…</a>
+            <a class="btn btn-outline-primary" href="{{ login_url_for(url, **required_privilege, **event_id)? }}">
+                <i class="bi-arrow-up-right-circle" aria-hidden="true"></i> Zum Login-Formular…
+            </a>
         </p>
         <p>
             Falls du trotz korrekt eingegebener Passphrase wiederholt auf diesen Fehler stößt, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite

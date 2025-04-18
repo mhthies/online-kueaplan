@@ -2,19 +2,33 @@ use crate::auth_session::{SessionError, SessionToken};
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
+use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::time_calculation;
 use crate::web::ui::util::{SESSION_COOKIE_MAX_AGE, SESSION_COOKIE_NAME};
 use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
-use actix_web::web::Html;
+use actix_web::web::{Html, Query};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use askama::Template;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize)]
+pub struct LoginQueryData {
+    pub redirect_to: Option<String>,
+    pub privilege: Option<Privilege>,
+}
 
 #[get("/{event_id}/login")]
-async fn login_form(path: web::Path<i32>, req: HttpRequest) -> Result<impl Responder, AppError> {
+async fn login_form(
+    path: web::Path<i32>,
+    req: HttpRequest,
+    query_data: Query<LoginQueryData>,
+) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
+
+    let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
+    form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
 
     // TODO add event name; 404 if event does not exist
     let tmpl = LoginFormTemplate {
@@ -22,8 +36,7 @@ async fn login_form(path: web::Path<i32>, req: HttpRequest) -> Result<impl Respo
             request: &req,
             page_title: "Login",
         },
-        login_url: req.url_for("login", &[event_id.to_string()])?,
-        error: None,
+        login_url: form_submit_url,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -33,6 +46,7 @@ async fn login(
     path: web::Path<i32>,
     state: web::Data<AppState>,
     data: web::Form<LoginFormData>,
+    query_data: Query<LoginQueryData>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
@@ -54,14 +68,17 @@ async fn login(
     })
     .await??;
     let store = state.store.clone();
+    let expected_privilege = query_data.privilege;
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         store.authenticate_with_passphrase(event_id, &data.passphrase, &mut session_token)?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        // TODO check if dynamic configurable privilege has been unlocked
         Ok((
             session_token,
-            auth.has_privilege(event_id, Privilege::ShowKueaPlan),
+            auth.has_privilege(
+                event_id,
+                expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
+            ),
         ))
     })
     .await?;
@@ -77,13 +94,18 @@ async fn login(
     };
 
     if let Some(error) = error {
+        req.add_flash_message(FlashMessage {
+            flash_type: FlashType::Error,
+            message: error.to_string(),
+        });
+        let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
+        form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
         let tmpl = LoginFormTemplate {
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
             },
-            login_url: req.url_for("login", &[event_id.to_string()])?,
-            error: Some(error),
+            login_url: form_submit_url,
         };
 
         let mut response = HttpResponse::UnprocessableEntity();
@@ -101,17 +123,25 @@ async fn login(
         if let Some(session_token) = session_token {
             response.cookie(create_session_cookie(session_token, &state.secret));
         }
+        req.add_flash_message(FlashMessage {
+            flash_type: FlashType::Success,
+            message: "Login erfolgreich".to_owned(),
+        });
         Ok(response
             .append_header((
                 header::LOCATION,
-                req.url_for(
-                    "main_list",
-                    &[
-                        event_id.to_string(),
-                        time_calculation::most_reasonable_date(event).to_string(),
-                    ],
-                )?
-                .to_string(),
+                if let Some(ref redirect_to) = query_data.redirect_to {
+                    redirect_to.clone()
+                } else {
+                    req.url_for(
+                        "main_list",
+                        &[
+                            event_id.to_string(),
+                            time_calculation::most_reasonable_date(event).to_string(),
+                        ],
+                    )?
+                    .to_string()
+                },
             ))
             .finish())
     }
@@ -130,7 +160,6 @@ fn create_session_cookie(session_token: SessionToken, secret: &str) -> actix_web
 struct LoginFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     login_url: url::Url,
-    error: Option<&'a str>,
 }
 
 #[derive(Deserialize)]

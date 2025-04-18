@@ -4,6 +4,7 @@ use crate::data_store::{EventId, StoreError};
 use actix_web::error::UrlGenerationError;
 use actix_web::http::StatusCode;
 use actix_web::ResponseError;
+use serde_urlencoded::ser::Error;
 use std::fmt::{Display, Formatter};
 
 /// Semantic error type for ui endpoint functions
@@ -81,6 +82,15 @@ impl From<askama::Error> for AppError {
 impl From<UrlGenerationError> for AppError {
     fn from(value: UrlGenerationError) -> Self {
         AppError::InternalError(format!("Could not generate URL: {}", value))
+    }
+}
+
+impl From<serde_urlencoded::ser::Error> for AppError {
+    fn from(value: Error) -> Self {
+        AppError::InternalError(format!(
+            "Error while serializing URL query parameters: {}",
+            value
+        ))
     }
 }
 

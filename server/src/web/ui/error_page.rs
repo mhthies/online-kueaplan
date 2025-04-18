@@ -10,7 +10,6 @@ use crate::data_store::EventId;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use actix_web::body::EitherBody;
-use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
 use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
 use askama::Template;
@@ -131,7 +130,6 @@ fn render_template_or_show_error_as_string(
     }
 }
 
-// TODO better template for App errors
 #[derive(Debug, Template)]
 #[template(path = "app_error.html")]
 struct AppErrorTemplate<'a> {
@@ -160,19 +158,18 @@ impl AppErrorTemplate<'_> {
         redirect_url: &url::Url,
         privilege: Privilege,
         event_id: EventId,
-    ) -> Result<String, UrlGenerationError> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         // FIXME: Oh no, where do we get the event_id from?
         let mut url = self
             .base
             .request
             .url_for("login_form", [&event_id.to_string()])?;
-        url.query_pairs_mut().append_pair(
-            "privilege",
-            serde_variant::to_variant_name(&privilege)
-                .expect("Privilege enum should be supported by serde_variant"),
-        );
-        url.query_pairs_mut()
-            .append_pair("redirect", &redirect_url.to_string());
+        url.set_query(Some(&serde_urlencoded::to_string(
+            super::endpoints::auth::LoginQueryData {
+                privilege: Some(privilege),
+                redirect_to: Some(redirect_url.to_string()),
+            },
+        )?));
         Ok(url.to_string())
     }
 }

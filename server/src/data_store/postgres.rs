@@ -382,7 +382,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         the_event_id: i32,
     ) -> Result<Vec<models::Category>, StoreError> {
         use schema::categories::dsl::*;
-        auth_token.check_privilege(the_event_id, Privilege::ManageCategories)?;
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
 
         Ok(categories
             .select(models::Category::as_select())

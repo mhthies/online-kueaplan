@@ -23,7 +23,7 @@ async fn main_list(
     let (event_id, date) = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
+    let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
@@ -31,6 +31,7 @@ async fn main_list(
             store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
+            auth,
         ))
     })
     .await??;
@@ -52,6 +53,7 @@ async fn main_list(
         date,
         event: &event,
         event_days: util::event_days(&event),
+        user_can_edit_entries: auth.has_privilege(event_id, Privilege::ManageEntries),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -68,6 +70,7 @@ struct MainListTemplate<'a> {
     date: chrono::NaiveDate,
     event: &'a Event,
     event_days: Vec<chrono::NaiveDate>,
+    user_can_edit_entries: bool,
 }
 
 impl<'a> MainListTemplate<'a> {
@@ -81,6 +84,17 @@ impl<'a> MainListTemplate<'a> {
             .base
             .request
             .url_for("main_list", &[self.event.id.to_string(), date.to_string()])?
+            .to_string())
+    }
+
+    fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
+        Ok(self
+            .base
+            .request
+            .url_for(
+                "edit_entry_form",
+                &[entry.entry.event_id.to_string(), entry.entry.id.to_string()],
+            )?
             .to_string())
     }
 
@@ -203,5 +217,16 @@ mod filters {
 
     pub fn css_class_for_category(category: &Category) -> askama::Result<String> {
         Ok(format!("category-{}", category.id))
+    }
+
+    pub fn ellipsis(value: &str, length: usize) -> askama::Result<String> {
+        if value.chars().count() > length {
+            Ok(format!(
+                "{}…",
+                value.chars().take(length - 1).collect::<String>()
+            ))
+        } else {
+            Ok(value.to_owned())
+        }
     }
 }

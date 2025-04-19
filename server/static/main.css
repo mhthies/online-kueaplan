@@ -1,4 +1,5 @@
 
+/* KüA list special markup */
 .kuealist .comment {
     font-size: .875em;
 }
@@ -16,10 +17,7 @@
     text-decoration: line-through;
 }
 
-nav[data-toggle="toc"] {
-    top: 60px;
-}
-
+/* KüA list category colors */
 .table.kuealist > :not(caption) > .kuea-with-category > * {
     background: var(--category-bg);
     color: var(--category-text);
@@ -30,6 +28,7 @@ nav[data-toggle="toc"] {
     color: var(--category-text-dark);
 }
 
+/* Fixes for tom-select dark theme colors */
 .ts-control, .ts-control input, .ts-dropdown {
     color: var(--bs-body-color);
 }
@@ -39,6 +38,7 @@ nav[data-toggle="toc"] {
     color: var(--bs-body-color);
 }
 
+/* Extra component for error pages */
 .error-technical-info {
     color: var(--bs-secondary-color);
     background: var(--bs-secondary-bg);

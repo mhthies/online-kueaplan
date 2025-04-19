@@ -14,3 +14,7 @@
 #link-footer, #error-footer {
     display: none;
 }
+
+table.kuealist .table-aside-buttons {
+    display: none;
+}

@@ -1,4 +1,4 @@
-
+/* KüA list responsive wrapping */
 @media (max-width: 576px) {
     .kuealist, .kuealist>tbody {
         display: block;
@@ -25,6 +25,9 @@
     .kuealist td.kuea-title {
         border-bottom-style: solid;
     }
+    .kuealist td.kuea-title:after {
+        clear: both;
+    }
     .kuealist td.kuea-place {
         font-size: .875em;
     }
@@ -49,6 +52,44 @@
 
 }
 
+/* KüA list aside buttons */
+table.kuealist .aside-container {
+    position: relative;
+}
+table.kuealist .aside-container .table-aside-buttons {
+    position: absolute;
+    right: 100%;
+    background: none;
+    color: var(--bs-body-color);
+    text-wrap: nowrap;
+    top: 0;
+    padding: .5rem;
+}
+.table-aside-buttons {
+    opacity: 0;
+    transition: opacity .15s ease-in-out;
+}
+.table-aside-buttons:hover, .table-aside-buttons:has(:focus), .aside-container:hover .table-aside-buttons {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion) {
+    .table-aside-buttons {
+        transition: none;
+        opacity: 1;
+    }
+}
+/* KüA list aside buttons responsive wrapping */
+@media (max-width: 576px) {
+    table.kuealist .aside-container .table-aside-buttons {
+        position: static;
+        float: right;
+        padding: 0;
+    }
+}
+
+
+/* Fix for avoiding scrolling of anchor behind navbar. */
 #main * {
     scroll-margin-top: 60px;
 }

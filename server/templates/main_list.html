@@ -43,12 +43,19 @@
             </thead>
             <tbody>
                 {% for entry in entries %}
-                    <tr class="{{ css_class_for_entry(entry) }}">
+                    <tr class="{{ css_class_for_entry(entry) }} aside-container">
                         <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
                             {% if entry.entry.is_cancelled %}
                                 <span class="visually-hidden">Abgesagt: </span>
                             {% endif %}
                             <span class="content">{{ entry.entry.title }}</span>
+                            {% if user_can_edit_entries %}
+                            <div class="table-aside-buttons">
+                                <a href="{{ url_for_edit_entry(entry)? }}" aria-label="Eintrag bearbeiten"
+                                   title="Eintrag &quot;{{entry.entry.title|ellipsis(30)}}&quot; bearbeiten">
+                                    <i class="bi-pencil" aria-hidden="true"></i></a>
+                            </div>
+                            {% endif %}
                             {% if !entry.entry.description.is_empty() %}
                                 <a href="#entry-desc-{{ entry.entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
                             {% endif %}

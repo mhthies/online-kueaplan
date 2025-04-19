@@ -175,10 +175,32 @@ mod filters {
     use chrono::{Datelike, Weekday};
 
     pub fn markdown(input: &str) -> askama::Result<askama::filters::Safe<String>> {
-        Ok(askama::filters::Safe(comrak::markdown_to_html(
-            input,
-            &comrak::ComrakOptions::default(),
-        )))
+        let arena = comrak::Arena::new();
+        let ast_root = comrak::parse_document(&arena, input, &comrak::Options::default());
+
+        markdown_increase_heading_level(ast_root, 3);
+
+        let mut bw = std::io::BufWriter::new(Vec::new());
+        comrak::format_html(ast_root, &comrak::Options::default(), &mut bw)?;
+        Ok(askama::filters::Safe(
+            String::from_utf8(
+                bw.into_inner()
+                    .expect("Extracting vector from BufWriter should not fail."),
+            )
+            .expect("comrak HTML formatter should only generate valid UTF-8 bytes."),
+        ))
+    }
+
+    fn markdown_increase_heading_level<'a>(
+        ast_root: &'a comrak::nodes::AstNode<'a>,
+        increase_by: u8,
+    ) {
+        for node in ast_root.descendants() {
+            if let comrak::nodes::NodeValue::Heading(ref mut heading) = node.data.borrow_mut().value
+            {
+                heading.level = (heading.level + increase_by).clamp(1, 6);
+            }
+        }
     }
 
     pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {

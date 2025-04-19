@@ -26,6 +26,7 @@ async fn login_form(
     query_data: Query<LoginQueryData>,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
+    let expected_privilege = query_data.privilege;
 
     let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
     form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
@@ -37,6 +38,7 @@ async fn login_form(
             page_title: "Login",
         },
         login_url: form_submit_url,
+        expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -107,6 +109,7 @@ async fn login(
                 page_title: "Login",
             },
             login_url: form_submit_url,
+            expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
         };
 
         let mut response = HttpResponse::UnprocessableEntity();
@@ -162,6 +165,7 @@ fn create_session_cookie(session_token: SessionToken, secret: &str) -> actix_web
 struct LoginFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     login_url: url::Url,
+    expected_privilege: Privilege,
 }
 
 #[derive(Deserialize)]

@@ -173,13 +173,3 @@ impl AppErrorTemplate<'_> {
         Ok(url.to_string())
     }
 }
-
-fn privilege_access_roles(
-    privilege: &crate::data_store::auth_token::Privilege,
-) -> Vec<&'static str> {
-    privilege
-        .qualifying_roles()
-        .iter()
-        .map(|r| r.name())
-        .collect()
-}

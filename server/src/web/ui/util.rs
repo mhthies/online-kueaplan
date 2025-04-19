@@ -70,3 +70,11 @@ pub fn extract_session_token(
         session_error: Some(session_error),
     })
 }
+
+pub fn privilege_access_roles_names(privilege: &Privilege) -> Vec<&'static str> {
+    privilege
+        .qualifying_roles()
+        .iter()
+        .map(|r| r.name())
+        .collect()
+}

@@ -4,22 +4,32 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <h1 class="mb-4">KüA-Plan</h1>
-            <p>
-                Damit der KüA-Plan nur anwesenden Teilnehmer*innen auf der Akademie zugänglich ist, wird er durch eine Passphrase geschützt.
-                Die Passphrase ist im Feriendorf an den bekannten Stellen ausgehängt.
-                Ggf. ändert sich die gültige Passphrase im Lauf der Akademie.
-            </p>
-            <p>
-                Bitte gebt die Passphrase nur mündlich vor Ort weiter, nicht in Telegram-Gruppen.
-            </p>
+            {% if expected_privilege == Privilege::ShowKueaPlan %}
+                <h1 class="mb-4">KüA-Plan Login</h1>
+                <p>
+                    Damit der KüA-Plan nur anwesenden Teilnehmer*innen auf der Akademie zugänglich ist, wird er durch eine Passphrase geschützt.
+                    Die Passphrase ist im Feriendorf an den bekannten Stellen ausgehängt.
+                    Ggf. ändert sich die gültige Passphrase im Lauf der Akademie.
+                </p>
+                <p>
+                    Bitte gebt die Passphrase nur mündlich vor Ort weiter, nicht in Telegram-Gruppen.
+                </p>
+            {% else %}
+                <h1 class="mb-4">Erweiterter Login</h1>
+                <p>
+                    Bitte gib hier eine passende Passphrase ein, die dich als
+                    {{ crate::web::ui::util::privilege_access_roles_names(expected_privilege) | join(" oder ")}}
+                    zu authentifiziert.
+                </p>
+            {% endif %}
             <form id="loginForm" action="{{ login_url.to_string() }}" method="post">
                 <div class="mb-3">
                     <label for="passphrase" class="form-label">Passphrase</label>
                     <input type="password" class="form-control" id="passphrase" name="passphrase" required>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi-box-arrow-in-right" aria-hidden="true"></i> Zum KüA-Plan…
+                    <i class="bi-box-arrow-in-right" aria-hidden="true"></i>
+                    {% if expected_privilege == Privilege::ShowKueaPlan %}Zum KüA-Plan…{% else %}Login…{% endif %}
                 </button>
             </form>
         </div>

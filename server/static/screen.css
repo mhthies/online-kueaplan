@@ -73,6 +73,11 @@ table.kuealist .aside-container .table-aside-buttons {
     opacity: 1;
 }
 
+@media (hover: none) {
+    .table-aside-buttons {
+        opacity: .4;
+    }
+}
 @media (prefers-reduced-motion) {
     .table-aside-buttons {
         transition: none;

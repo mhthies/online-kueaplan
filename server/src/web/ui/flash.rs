@@ -60,8 +60,15 @@ pub enum FlashType {
 /// A single notification message to be flashed to the user
 #[derive(Serialize, Deserialize)]
 pub struct FlashMessage {
+    #[serde(rename = "type")]
     pub flash_type: FlashType,
     pub message: String,
+    #[serde(default, skip_serializing_if = "not", rename = "keep")]
+    pub keep_open: bool,
+}
+
+fn not(v: &bool) -> bool {
+    !v
 }
 
 /// Struct for holding the pending flash messages, to be added as an extension to a

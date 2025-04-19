@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
-use crate::data_store::EntryId;
+use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -95,47 +95,105 @@ async fn edit_entry(
         &categories.iter().map(|c| c.id).collect(),
     );
 
-    if let Some(mut entry) = entry {
+    let result = if let Some(mut entry) = entry {
         entry.entry.id = entry_id;
         entry.entry.event_id = event_id;
         let entry_begin = entry.entry.begin;
-        web::block(move || -> Result<_, AppError> {
+        let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             store.create_or_update_entry(&auth, entry, true)?;
             Ok(())
         })
-        .await??;
-        // TODO if storing entry failed, show flash notification and show form again
-
+        .await?;
         // TODO allow creating new previous_date
-        req.add_flash_message(FlashMessage {
-            flash_type: FlashType::Success,
-            message: "Änderung wurde gespeichert.".to_owned(),
-        });
-        Ok(Either::Left(
-            Redirect::to(url_for_entry(&req, event_id, &entry_id, &entry_begin)?.to_string())
-                .see_other(),
-        ))
-    } else {
-        req.add_flash_message(FlashMessage {
-            flash_type: FlashType::Error,
-            message: "Validierung fehlgeschlagen.".to_owned(),
-        });
-        let tmpl = EditEntryFormTemplate {
-            base: BaseTemplateContext {
-                request: &req,
-                page_title: "Eintrag bearbeiten", // TODO
+
+        match result {
+            Ok(()) => FormSubmitResult::Success { entry_begin },
+            Err(e) => match e {
+                StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
+                _ => FormSubmitResult::UnexpectedError(e.into()),
             },
-            event: &event,
-            entry_id: &entry_id,
-            form_data: &data,
-            rooms: &rooms,
-            categories: &categories,
-            entry_begin: &old_entry.entry.begin,
-        };
-        Ok(Either::Right(
-            HttpResponse::UnprocessableEntity().body(tmpl.render()?),
-        ))
+        }
+    } else {
+        FormSubmitResult::ValidationError
+    };
+
+    let tmpl = EditEntryFormTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: "Eintrag bearbeiten", // TODO
+        },
+        event: &event,
+        entry_id: &entry_id,
+        form_data: &data,
+        rooms: &rooms,
+        categories: &categories,
+        entry_begin: &old_entry.entry.begin,
+    };
+
+    create_edit_form_response(result, event_id, tmpl)
+}
+
+/// Helper type for representing the different possible outcomes of submitting the edit form.
+///
+/// They are used to delegate creating appropriate response to [create_edit_form_response()].
+enum FormSubmitResult {
+    Success {
+        entry_begin: chrono::DateTime<chrono::Utc>,
+    },
+    ValidationError,
+    TransactionConflict,
+    UnexpectedError(AppError),
+}
+
+/// Helper function for generating the HTTP response in [edit_entry()].
+///
+/// Together with the [FormSubmitResult] helper type, this function helps keeping the code of
+/// edit_entry() more readable. Without these tricks we'd have error message creation functions
+/// scattered all over the code.
+fn create_edit_form_response(
+    result: FormSubmitResult,
+    event_id: EventId,
+    tmpl: EditEntryFormTemplate,
+) -> Result<impl Responder, AppError> {
+    match result {
+        FormSubmitResult::Success { entry_begin } => {
+            tmpl.base.request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Success,
+                message: "Änderung wurde gespeichert.".to_owned(),
+                keep_open: false,
+            });
+            Ok(Either::Left(
+                Redirect::to(
+                    url_for_entry(&tmpl.base.request, event_id, &tmpl.entry_id, &entry_begin)?
+                        .to_string(),
+                )
+                .see_other(),
+            ))
+        }
+        FormSubmitResult::ValidationError => {
+            tmpl.base.request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
+                    .to_owned(),
+                keep_open: false,
+            });
+            Ok(Either::Right(
+                HttpResponse::UnprocessableEntity().body(tmpl.render()?),
+            ))
+        }
+        FormSubmitResult::TransactionConflict => {
+            tmpl.base.request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Warning,
+                message: "Konnte wegen parallelem Datenbank-Zugriff nicht speichern. Bitte Formular erneut absenden."
+                    .to_owned(),
+                keep_open: true,
+            });
+            Ok(Either::Right(
+                HttpResponse::ServiceUnavailable().body(tmpl.render()?),
+            ))
+        }
+        FormSubmitResult::UnexpectedError(e) => Err(e),
     }
 }
 

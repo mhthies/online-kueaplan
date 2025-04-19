@@ -26,7 +26,8 @@
                       {%- when crate::web::ui::flash::FlashType::Success%}text-bg-success
                       {%- when crate::web::ui::flash::FlashType::Warning%}text-bg-warning
                       {%- when crate::web::ui::flash::FlashType::Error%}text-bg-danger{% endmatch %}"
-         role="alert" aria-live="assertive" aria-atomic="true">
+         role="alert" aria-live="assertive" aria-atomic="true"
+         {%- if flash.keep_open %} data-bs-autohide="false"{% endif %}>
         <div class="toast-header">
             <strong class="me-auto">
             {% match flash.flash_type %}

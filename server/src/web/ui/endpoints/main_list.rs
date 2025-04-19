@@ -176,12 +176,23 @@ mod filters {
 
     pub fn markdown(input: &str) -> askama::Result<askama::filters::Safe<String>> {
         let arena = comrak::Arena::new();
-        let ast_root = comrak::parse_document(&arena, input, &comrak::Options::default());
+        let options = comrak::ComrakOptions {
+            extension: comrak::ExtensionOptions::builder()
+                .strikethrough(true)
+                .tagfilter(true)
+                .table(true)
+                .footnotes(true)
+                .underline(true)
+                .build(),
+            parse: Default::default(),
+            render: comrak::RenderOptions::builder().escape(true).build(),
+        };
+        let ast_root = comrak::parse_document(&arena, input, &options);
 
         markdown_increase_heading_level(ast_root, 3);
 
         let mut bw = std::io::BufWriter::new(Vec::new());
-        comrak::format_html(ast_root, &comrak::Options::default(), &mut bw)?;
+        comrak::format_html(ast_root, &options, &mut bw)?;
         Ok(askama::filters::Safe(
             String::from_utf8(
                 bw.into_inner()

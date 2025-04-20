@@ -65,6 +65,15 @@ pub struct FlashMessage {
     pub message: String,
     #[serde(default, skip_serializing_if = "not", rename = "keep")]
     pub keep_open: bool,
+    pub button: Option<FlashMessageActionButton>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum FlashMessageActionButton {
+    /// Button to clean-reload a form by navigating to the form's url
+    ReloadCleanForm { form_url: String },
+    /// Button to submit the form (if it is located on the current page)
+    SubmitForm { form_id: String },
 }
 
 fn not(v: &bool) -> bool {

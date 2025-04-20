@@ -100,6 +100,7 @@ async fn login(
             flash_type: FlashType::Error,
             message: error.to_string(),
             keep_open: true,
+            button: None,
         });
         let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
         form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
@@ -131,6 +132,7 @@ async fn login(
             flash_type: FlashType::Success,
             message: "Login erfolgreich".to_owned(),
             keep_open: false,
+            button: None,
         });
         Ok(response
             .append_header((

@@ -3,7 +3,7 @@ use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEnt
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
-use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
+use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
 use crate::web::ui::time_calculation::{
     get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
@@ -164,6 +164,7 @@ fn create_edit_form_response(
                 flash_type: FlashType::Success,
                 message: "Änderung wurde gespeichert.".to_owned(),
                 keep_open: false,
+                button: None,
             });
             Ok(Either::Left(
                 Redirect::to(
@@ -179,6 +180,7 @@ fn create_edit_form_response(
                 message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
                     .to_owned(),
                 keep_open: false,
+                button: None,
             });
             Ok(Either::Right(
                 HttpResponse::UnprocessableEntity().body(tmpl.render()?),
@@ -190,6 +192,10 @@ fn create_edit_form_response(
                 message: "Der Eintrag wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen."
                     .to_owned(),
                 keep_open: true,
+                button: Some(FlashMessageActionButton::ReloadCleanForm {
+                    form_url: tmpl.base.request.url_for("edit_entry_form",
+                                                        &[event_id.to_string(), tmpl.entry_id.to_string()])?
+                        .to_string()})
             });
             Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
         }
@@ -199,6 +205,7 @@ fn create_edit_form_response(
                 message: "Konnte wegen parallelem Datenbank-Zugriff nicht speichern. Bitte Formular erneut absenden."
                     .to_owned(),
                 keep_open: true,
+                button: Some(FlashMessageActionButton::SubmitForm {form_id: "edit_entry_form".to_string()})
             });
             Ok(Either::Right(
                 HttpResponse::ServiceUnavailable().body(tmpl.render()?),

@@ -17,7 +17,7 @@
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
        the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
        To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}
-    <form method="post" action="{{post_url()?}}" autocomplete="off">
+    <form method="post" action="{{post_url()?}}" autocomplete="off" id="edit_entry_form">
     <div class="mb-3">
         {{ form_data.title.create_form_field("title", "Titel", None, InputType::Text, InputSize::Large)? }}
     </div>
@@ -69,8 +69,8 @@
         {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::Normal)? }}
     </div>
     {{ form_data.last_updated.create_hidden_input("last_updated")? }}
-    <button type="submit" class="btn btn-primary"><i class="bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
-        <a href="{{ abort_url()? }}" class="btn btn-secondary"><i class="bi-x-square" aria-hidden="true"></i> Abbrechen</a>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+        <a href="{{ abort_url()? }}" class="btn btn-secondary"><i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen</a>
     </form>
 </div>
 {% endblock %}

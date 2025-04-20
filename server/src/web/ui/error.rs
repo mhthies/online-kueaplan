@@ -4,7 +4,6 @@ use crate::data_store::{EventId, StoreError};
 use actix_web::error::UrlGenerationError;
 use actix_web::http::StatusCode;
 use actix_web::ResponseError;
-use serde_urlencoded::ser::Error;
 use std::fmt::{Display, Formatter};
 
 /// Semantic error type for ui endpoint functions
@@ -15,7 +14,7 @@ use std::fmt::{Display, Formatter};
 /// The error pages are generated using the
 /// [crate::web::ui::error_page::error_page_middleware] middleware, because actix-web's
 /// ResponseError trait is quite restricted in what it can do.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AppError {
     PageNotFound,
     EntityNotFound,
@@ -29,6 +28,8 @@ pub enum AppError {
     DatabaseConnectionError(String),
     InternalError(String),
 }
+
+impl std::error::Error for AppError {}
 
 impl From<StoreError> for AppError {
     fn from(e: StoreError) -> Self {
@@ -77,6 +78,21 @@ impl From<actix_web::error::BlockingError> for AppError {
 
 impl From<askama::Error> for AppError {
     fn from(value: askama::Error) -> Self {
+        if let askama::Error::Custom(error) = value {
+            match error.downcast::<AppError>() {
+                Ok(e) => {
+                    return *e;
+                }
+                Err(error) => match error.downcast::<StoreError>() {
+                    Ok(e) => {
+                        return (*e).into();
+                    }
+                    Err(error) => {
+                        return AppError::InternalError(format!("{:?}", error));
+                    }
+                },
+            }
+        }
         AppError::InternalError(format!("Error while rendering template: {}", value))
     }
 }
@@ -88,7 +104,7 @@ impl From<UrlGenerationError> for AppError {
 }
 
 impl From<serde_urlencoded::ser::Error> for AppError {
-    fn from(value: Error) -> Self {
+    fn from(value: serde_urlencoded::ser::Error) -> Self {
         AppError::InternalError(format!(
             "Error while serializing URL query parameters: {}",
             value

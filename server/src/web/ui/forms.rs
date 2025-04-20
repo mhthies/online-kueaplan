@@ -1,3 +1,4 @@
+use crate::web::ui::error::AppError;
 use askama::Template;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -74,6 +75,22 @@ impl FormValue {
         };
         Ok(askama::filters::Safe(template.render()?))
     }
+
+    pub fn create_hidden_input(
+        &self,
+        name: &str,
+    ) -> Result<askama::filters::Safe<String>, AppError> {
+        if !self.errors.is_empty() {
+            // TODO special error type?
+            return Err(AppError::InternalError(format!(
+                "Validation error in hidden field {}: {}",
+                name,
+                self.errors.join(", ")
+            )));
+        }
+        let template = HiddenInputTemplate { name, data: self };
+        Ok(askama::filters::Safe(template.render()?))
+    }
 }
 
 pub trait IntoFormValue {
@@ -145,6 +162,13 @@ struct FormFieldTemplate<'a> {
     info: Option<&'a str>,
     input_type: InputType,
     size: InputSize,
+    data: &'a FormValue,
+}
+
+#[derive(Template)]
+#[template(path = "forms/hidden_input.html")]
+struct HiddenInputTemplate<'a> {
+    name: &'a str,
     data: &'a FormValue,
 }
 

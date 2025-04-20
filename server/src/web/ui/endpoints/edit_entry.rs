@@ -95,13 +95,13 @@ async fn edit_entry(
         &categories.iter().map(|c| c.id).collect(),
     );
 
-    let result = if let Some(mut entry) = entry {
+    let result = if let Some((mut entry, privious_last_updated)) = entry {
         entry.entry.id = entry_id;
         entry.entry.event_id = event_id;
         let entry_begin = entry.entry.begin;
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
-            store.create_or_update_entry(&auth, entry, true)?;
+            store.create_or_update_entry(&auth, entry, true, Some(privious_last_updated))?;
             Ok(())
         })
         .await?;
@@ -111,6 +111,7 @@ async fn edit_entry(
             Ok(()) => FormSubmitResult::Success { entry_begin },
             Err(e) => match e {
                 StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
+                StoreError::ConcurrentEditConflict => FormSubmitResult::ConcurrentEditConflict,
                 _ => FormSubmitResult::UnexpectedError(e.into()),
             },
         }
@@ -143,6 +144,7 @@ enum FormSubmitResult {
     },
     ValidationError,
     TransactionConflict,
+    ConcurrentEditConflict,
     UnexpectedError(AppError),
 }
 
@@ -181,6 +183,15 @@ fn create_edit_form_response(
             Ok(Either::Right(
                 HttpResponse::UnprocessableEntity().body(tmpl.render()?),
             ))
+        }
+        FormSubmitResult::ConcurrentEditConflict => {
+            tmpl.base.request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: "Der Eintrag wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen."
+                    .to_owned(),
+                keep_open: true,
+            });
+            Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
         }
         FormSubmitResult::TransactionConflict => {
             tmpl.base.request.add_flash_message(FlashMessage {
@@ -269,10 +280,15 @@ struct EntryFormData {
     is_cancelled: BoolFormValue,
     is_room_reservation: BoolFormValue,
     is_exclusive: BoolFormValue,
+    last_updated: FormValue,
 }
 
 impl EntryFormData {
-    fn validate(&mut self, rooms: &Vec<Uuid>, categories: &Vec<Uuid>) -> Option<FullNewEntry> {
+    fn validate(
+        &mut self,
+        rooms: &Vec<Uuid>,
+        categories: &Vec<Uuid>,
+    ) -> Option<(FullNewEntry, chrono::DateTime<chrono::Utc>)> {
         let title: Option<validation::NonEmptyString> = self.title.validate();
         let comment: Option<String> = self.comment.validate();
         let time_comment: Option<String> = self.time_comment.validate();
@@ -288,28 +304,33 @@ impl EntryFormData {
         let day: Option<validation::IsoDate> = self.day.validate();
         let time: Option<validation::TimeOfDay> = self.begin.validate();
         let duration: Option<validation::NiceDurationHours> = self.duration.validate();
+        let previous_last_updated: Option<validation::SimpleTimestampMicroseconds> =
+            self.last_updated.validate();
 
         let begin = timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner());
-        Some(FullNewEntry {
-            entry: NewEntry {
-                id: Default::default(),
-                title: title?.into_inner(),
-                description: description?,
-                responsible_person: responsible_person?,
-                is_room_reservation,
-                event_id: 0,
-                begin,
-                end: begin + duration?.into_inner(),
-                category: category?.into_inner(),
-                comment: comment?,
-                time_comment: time_comment?,
-                room_comment: room_comment?,
-                is_exclusive,
-                is_cancelled,
+        Some((
+            FullNewEntry {
+                entry: NewEntry {
+                    id: Default::default(),
+                    title: title?.into_inner(),
+                    description: description?,
+                    responsible_person: responsible_person?,
+                    is_room_reservation,
+                    event_id: 0,
+                    begin,
+                    end: begin + duration?.into_inner(),
+                    category: category?.into_inner(),
+                    comment: comment?,
+                    time_comment: time_comment?,
+                    room_comment: room_comment?,
+                    is_exclusive,
+                    is_cancelled,
+                },
+                room_ids: room_ids?.into_inner(),
+                previous_dates: vec![],
             },
-            room_ids: room_ids?.into_inner(),
-            previous_dates: vec![],
-        })
+            previous_last_updated?.0,
+        ))
     }
 }
 
@@ -338,6 +359,7 @@ impl From<FullEntry> for EntryFormData {
             is_cancelled: value.entry.is_cancelled.into(),
             is_room_reservation: value.entry.is_room_reservation.into(),
             is_exclusive: value.entry.is_exclusive.into(),
+            last_updated: value.entry.last_updated.timestamp_micros().into(),
         }
     }
 }

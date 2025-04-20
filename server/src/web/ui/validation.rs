@@ -203,3 +203,22 @@ impl IntoFormValue for NiceDurationHours {
         result
     }
 }
+
+pub struct SimpleTimestampMicroseconds(pub chrono::DateTime<chrono::Utc>);
+
+impl FromFormValue<'_> for SimpleTimestampMicroseconds {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        Ok(SimpleTimestampMicroseconds(
+            chrono::DateTime::from_timestamp_micros(
+                i64::from_str_radix(value, 10).map_err(|e| e.to_string())?,
+            )
+            .ok_or("Value out of range for chrono::DateTime".to_string())?,
+        ))
+    }
+}
+
+impl IntoFormValue for SimpleTimestampMicroseconds {
+    fn into_form_value_string(self) -> String {
+        self.0.timestamp_micros().to_string()
+    }
+}

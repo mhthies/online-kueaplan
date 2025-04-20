@@ -140,7 +140,7 @@ impl SessionToken {
 }
 
 /// Error type to be used when a session operation fails, especially for [SessionToken::from_string]
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum SessionError {
     InvalidTokenEncoding,
     InvalidTokenStructure,

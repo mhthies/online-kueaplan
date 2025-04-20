@@ -211,6 +211,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
         extend_previous_dates: bool,
+        expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError> {
         use diesel::dsl::not;
         use schema::entries::dsl::*;
@@ -221,6 +222,17 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token.check_privilege(entry.entry.event_id, Privilege::ManageEntries)?;
 
         self.connection.transaction(|connection| {
+            if let Some(expected_last_update) = expected_last_update {
+                let actual_last_update = entries
+                    .filter(id.eq(entry.entry.id))
+                    .filter(not(deleted))
+                    .select(last_updated)
+                    .first::<chrono::DateTime<chrono::Utc>>(connection)?;
+                if expected_last_update != actual_last_update {
+                    return Err(StoreError::ConcurrentEditConflict);
+                }
+            }
+
             // entry
             let upsert_result = {
                 // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by

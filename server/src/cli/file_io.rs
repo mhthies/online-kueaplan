@@ -44,6 +44,7 @@ pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
             &auth_token,
             FullNewEntry::from_api(entry, event_id),
             false,
+            None,
         )?;
     }
 

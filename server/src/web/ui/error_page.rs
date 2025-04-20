@@ -96,7 +96,7 @@ fn generate_generic_error_page(
     let tmpl = ErrorTemplate {
         base: BaseTemplateContext {
             request: http_request,
-            page_title: "Error",
+            page_title: "Fehler",
         },
         error,
         url: &http_request.full_url(),

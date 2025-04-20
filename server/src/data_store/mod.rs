@@ -11,8 +11,8 @@
 //! ([postgres::PgDataStoreFacade]) hold a reference to one pooled connection each, using the Diesel
 //! query DSL for implementing the database interaction.
 //!
-//! There is also a mock implementation for unittests. Other [KueaPlanStore] implementations may be
-//! added later and selected via the "DATABASE_URL" environment variable.
+//! Other [KueaPlanStore] implementations may be added later and selected via the "DATABASE_URL"
+//! environment variable.
 
 use crate::auth_session::SessionToken;
 use crate::cli_error::CliError;
@@ -71,17 +71,31 @@ pub trait KueaPlanStoreFacade {
     ) -> Result<models::FullEntry, StoreError>;
     /// Create a new entry or update the existing entry with the same id.
     ///
+    /// If `extend_previous_dates` is true, the previous dates of the (existing) entry are not
+    /// replaced with the given ones but instead extended by them.
+    ///
+    /// If `expected_last_update` is not None, it is checked against the current `last_updated`
+    /// value of the entry is checked for equality before updating the entry with the given data. If
+    /// it's not equal to the given value, the update is rejected with a `ConcurrentEditConflict`
+    /// error If the entity does not exist yet, but `base_version_tag` is given, a `NotExisting`
+    /// error is returned.
+    ///
     /// # return value
     /// - `Ok(true)` if the entry has been created, successfully
     /// - `Ok(false)` if an existing entry has been updated, successfully
     /// - `Err(StoreError::ConflictEntityExists)` if the entry exists but could not be updated
     ///   (assigned to another event or deleted already)
+    /// - `Err(StoreError::ConcurrentEditConflict)` if `expected_last_update` is given but the
+    ///   `last_updated` field does not match
+    /// - `Err(StoreError::NotExisting)` if `expected_last_update` is given but the entry
+    ///    does not exist in the database.
     /// - `Err(_)` if something different went wrong, as usual
     fn create_or_update_entry(
         &mut self,
         auth_token: &AuthToken,
         entry: models::FullNewEntry,
         extend_previous_dates: bool,
+        expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError>;
     fn delete_entry(
         &mut self,

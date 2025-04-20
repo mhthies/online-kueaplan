@@ -6,12 +6,14 @@
         <div class="col-lg-8">
             <h1 class="mb-4">{{ base.page_title }}</h1>
             <div class="alert alert-danger" role="alert">
-                <i class="bi-exclamation-circle-fill"></i> {% block error_message %}Diese Seite existiert nicht.{% endblock %}
+                <i class="bi-exclamation-circle-fill"></i> {% block error_message %}Interner Fehler: {{ "{:?}"|format(error) }}{% endblock %}
             </div>
             {% block error_description %}
                 <p>
-                    Wenn du über einen internen Link innerhalb des Online-KüA-Plans hierher gelangt bist, melde dich bitte mit
-                    den folgenden Informationen beim Admin dieser Seite ({{admin_name}}
+                    Das sollte nicht passieren.
+                </p>
+                <p>
+                    Bitte melde dich mit den folgenden Informationen beim Admin dieser Seite ({{admin_name}}
                     &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
                 </p>
             {% endblock %}

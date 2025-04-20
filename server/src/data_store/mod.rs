@@ -283,6 +283,9 @@ pub enum StoreError {
     /// The entity could not be created because it already exists, but cannot be updated with the
     /// provided data.
     ConflictEntityExists,
+    /// The entity has not been updated because it has been changed since the provided "last
+    /// modification date".
+    ConcurrentEditConflict,
     /// The client is not authorized for this action. It would need to authenticate for an access
     /// role qualifying for the `required_privilege` on the `event` (or globally if `event_id` is
     /// None).
@@ -338,6 +341,7 @@ impl std::fmt::Display for StoreError {
             Self::TransactionConflict => f.write_str("Database transaction could not be commited due to a conflicting concurrent transaction"),
             Self::NotExisting => f.write_str("Database record does not exist."),
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
+            Self::ConcurrentEditConflict => f.write_str("Updating the entity has been rejected, because the change is not based on the latest version."),
             Self::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),

@@ -90,6 +90,9 @@ impl From<StoreError> for CliError {
             StoreError::ConflictEntityExists => {
                 Self::DataError("Conflicting entity exists".to_string())
             }
+            StoreError::ConcurrentEditConflict => {
+                Self::UnexpectedStoreError("Concurrent edit conflict".to_string())
+            }
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),

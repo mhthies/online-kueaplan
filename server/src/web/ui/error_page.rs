@@ -159,7 +159,6 @@ impl AppErrorTemplate<'_> {
         privilege: Privilege,
         event_id: EventId,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        // FIXME: Oh no, where do we get the event_id from?
         let mut url = self
             .base
             .request

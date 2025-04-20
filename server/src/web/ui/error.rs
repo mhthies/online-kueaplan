@@ -24,6 +24,7 @@ pub enum AppError {
         event_id: EventId,
         session_error: Option<SessionError>,
     },
+    ConcurrentEditConflict,
     TransactionConflict,
     DatabaseConnectionError(String),
     InternalError(String),
@@ -41,6 +42,7 @@ impl From<StoreError> for AppError {
             StoreError::ConflictEntityExists => {
                 Self::InternalError("Conflicting entity exists".to_owned())
             }
+            StoreError::ConcurrentEditConflict => Self::ConcurrentEditConflict,
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
@@ -126,6 +128,9 @@ impl Display for AppError {
                 }
                 Ok(())
             }
+            AppError::ConcurrentEditConflict => {
+                f.write_str("Editing entity refused due to a concurrent update of the entity.")
+            }
             AppError::DatabaseConnectionError(e) => {
                 write!(f, "Could not connect to database: {}", e)
             }
@@ -140,6 +145,7 @@ impl ResponseError for AppError {
             AppError::PageNotFound | AppError::EntityNotFound => StatusCode::NOT_FOUND,
             AppError::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             AppError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
+            AppError::ConcurrentEditConflict => StatusCode::CONFLICT,
             AppError::DatabaseConnectionError(_) | AppError::InternalError(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             }

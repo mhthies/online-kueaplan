@@ -10,6 +10,8 @@
         Zugriff verweigert: Für diese Seite ist eine Authentifizierung als
         {{ super::util::privilege_access_roles_names(required_privilege) | join(" oder ")}}
         erforderlich.
+    {% when AppError::ConcurrentEditConflict %}
+        Die Änderung wurde wegen einer zwischenzeitlichen Änderung des Objekts abgelehnt.
     {% when AppError::DatabaseConnectionError(_) %}
         Interner Server-Fehler: Keine Verbindung zur Datenbank.
     {% when AppError::TransactionConflict %}
@@ -73,6 +75,16 @@
         </p>
         <p>
             Falls du trotz korrekt eingegebener Passphrase wiederholt auf diesen Fehler stößt, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::ConcurrentEditConflict %}
+        <p>
+            Dieses Objekt wurde zeitgleich anderswo verändert.
+            Das Speichern der Änderungen würde diese zeitgleichen Änderungen rückgängig machen bzw. überschreiben und wird daher abgelehnt.
+            Bitte beginne deine Bearbeitung erneut, basierend auf der neuen Version.
+        </p>
+        <p>
+            Falls der Fehler immer wieder auftritt, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
             ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
         </p>
     {% when AppError::DatabaseConnectionError(_) %}

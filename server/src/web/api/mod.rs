@@ -52,6 +52,7 @@ enum APIError {
     InvalidData(String),
     EntityIdMissmatch,
     TransactionConflict,
+    ConcurrentEditConflict,
     InternalError(String),
 }
 
@@ -95,7 +96,10 @@ impl Display for APIError {
             },
             Self::TransactionConflict => {
                 f.write_str("Concurrent database transaction conflict. Please retry request.")?;
-            }
+            },
+            Self::ConcurrentEditConflict => {
+                f.write_str("Editing entity refused due to a concurrent update of the entity.")?;
+            },
         };
         Ok(())
     }
@@ -133,6 +137,7 @@ impl ResponseError for APIError {
             &APIError::InvalidData(_) => StatusCode::UNPROCESSABLE_ENTITY,
             &APIError::EntityIdMissmatch => StatusCode::UNPROCESSABLE_ENTITY,
             &APIError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
+            Self::ConcurrentEditConflict => StatusCode::CONFLICT,
         }
     }
 }
@@ -150,6 +155,7 @@ impl From<StoreError> for APIError {
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
+            StoreError::ConcurrentEditConflict => Self::ConcurrentEditConflict,
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: _,

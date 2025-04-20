@@ -32,7 +32,6 @@ pub struct Entry {
     pub begin: DateTime<Utc>,
     pub end: DateTime<Utc>,
     pub category: Uuid,
-    pub deleted: bool,
     pub last_updated: DateTime<Utc>,
     pub comment: String,
     pub time_comment: String,
@@ -81,6 +80,7 @@ pub struct Room {
     pub title: String,
     pub description: String,
     pub event_id: i32,
+    pub last_updated: DateTime<Utc>,
 }
 
 #[derive(Insertable, AsChangeset)]
@@ -150,6 +150,7 @@ pub struct Category {
     pub color: String,
     pub event_id: i32,
     pub is_official: bool,
+    pub last_updated: DateTime<Utc>,
 }
 
 #[derive(Insertable, AsChangeset)]

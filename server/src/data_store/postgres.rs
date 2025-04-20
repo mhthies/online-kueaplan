@@ -161,13 +161,10 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         self.connection.transaction(|connection| {
             let entry = entries
                 .filter(id.eq(entry_id))
+                .filter(not(deleted))
                 .select(models::Entry::as_select())
                 .first::<models::Entry>(connection)?;
             auth_token.check_privilege(entry.event_id, Privilege::ShowKueaPlan)?;
-
-            if entry.deleted {
-                return Err(StoreError::NotExisting);
-            }
 
             let room_ids = entry_rooms::table
                 .inner_join(rooms::table)
@@ -320,6 +317,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         room: models::NewRoom,
     ) -> Result<bool, StoreError> {
+        use diesel::dsl::not;
         use schema::rooms::dsl::*;
 
         // The event_id of the existing room is ensured to be the same (see below), so the
@@ -342,7 +340,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 // loophole
                 .set(&room)
                 .filter(event_id.eq(room.event_id))
-                .filter(deleted.eq(false))
+                .filter(not(deleted))
                 .returning(sql_upsert_is_updated())
                 .load::<bool>(&mut self.connection)?
         };
@@ -381,13 +379,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         the_event_id: i32,
     ) -> Result<Vec<models::Category>, StoreError> {
+        use diesel::dsl::not;
         use schema::categories::dsl::*;
         auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
 
         Ok(categories
             .select(models::Category::as_select())
             .filter(event_id.eq(the_event_id))
-            .filter(deleted.eq(false))
+            .filter(not(deleted))
             .load::<models::Category>(&mut self.connection)?)
     }
 
@@ -396,6 +395,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         category: models::NewCategory,
     ) -> Result<bool, StoreError> {
+        use diesel::dsl::not;
         use schema::categories::dsl::*;
 
         auth_token.check_privilege(category.event_id, Privilege::ManageCategories)?;
@@ -416,7 +416,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 // a security loophole
                 .set(&category)
                 .filter(event_id.eq(category.event_id))
-                .filter(deleted.eq(false))
+                .filter(not(deleted))
                 .returning(sql_upsert_is_updated())
                 .load::<bool>(&mut self.connection)?
         };

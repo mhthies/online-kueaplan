@@ -1,7 +1,9 @@
 use crate::web::ui::error::AppError;
 use askama::Template;
-use serde::{Deserialize, Serialize};
+use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
+use std::fmt::Formatter;
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(transparent)]
@@ -189,22 +191,15 @@ struct SelectTemplate<'a> {
     data: &'a FormValue,
 }
 
-#[derive(Debug, Deserialize, Default)]
-#[serde(transparent)]
+#[derive(Debug, Default)]
 pub struct BoolFormValue {
-    // This is a bit hacky: In the end, we only want to store a boolean here (checked/not checked
-    // aka. value is present in the encoded form data or not). However, we need to trick serde into
-    // accepting both, a missing value or any string. Using the derive(Deserialize) macro with an
-    // Option<String> field is the easiest way to do so.
-    // TODO replace with custom Deserialize implementation
-    value: Option<String>,
-    #[serde(skip, default)]
+    value: bool,
     errors: Vec<String>,
 }
 
 impl BoolFormValue {
     pub fn get_value(&self) -> bool {
-        self.value.is_some()
+        self.value
     }
 
     pub fn add_error(&mut self, error: String) {
@@ -227,14 +222,59 @@ impl BoolFormValue {
     }
 }
 
+/// Custom serde Deserialize implementation for BoolFormValue:
+/// We want to treat the value like an Option<()>: The value shall be `true` when the field is
+/// present (with any value) and `false` if the field is not present.
+///
+/// We achive this by the custom simple Visitor implementation [BoolFormValueVisitor] that only
+/// reacts to `visit_some()` and `visit_none()`
+impl<'de> serde::Deserialize<'de> for BoolFormValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_option(BoolFormValueVisitor {})
+    }
+}
+
+/// A very simple serde deserialization visitor for BoolFormValue:
+/// It only implements [serde::de::Visitor::visit_some] and [serde::de::Visitor::visit_none] to
+/// create a truthy BoolFormValue when the field is present in the input and a falsy BoolFormValue
+/// when the field is not present at all.
+struct BoolFormValueVisitor;
+
+impl<'de> serde::de::Visitor<'de> for BoolFormValueVisitor {
+    type Value = BoolFormValue;
+
+    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
+        formatter.write_str("any value (true) or no such field at all")
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        Ok(BoolFormValue {
+            value: false,
+            errors: vec![],
+        })
+    }
+
+    fn visit_some<D>(self, _deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(BoolFormValue {
+            value: true,
+            errors: vec![],
+        })
+    }
+}
+
 impl From<bool> for BoolFormValue {
     fn from(value: bool) -> Self {
         Self {
-            value: if value {
-                Some("true".to_string())
-            } else {
-                None
-            },
+            value,
             errors: vec![],
         }
     }

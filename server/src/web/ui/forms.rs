@@ -1,32 +1,45 @@
+//! This module provides the `FormValue` helper types that allow creating HTML form input fields
+//! with pre-filled values and validation error messages.
+
 use crate::web::ui::error::AppError;
 use askama::Template;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
-use std::fmt::Formatter;
+use std::fmt::{Debug, Display, Formatter};
+use std::marker::PhantomData;
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize)]
 #[serde(transparent)]
-pub struct FormValue {
+pub struct FormValue<T: FormValueRepresentation> {
     value: String,
     #[serde(skip)]
     errors: Vec<String>,
+    #[serde(skip)]
+    _phantom: PhantomData<T>,
 }
 
-impl FormValue {
-    pub fn validate<'a, T: FromFormValue<'a>>(&'a mut self) -> Option<T> {
-        match T::from_form_value(&self.value) {
-            Ok(v) => Some(v),
-            Err(e) => {
-                self.errors.push(e);
-                None
-            }
-        }
+pub trait FormValueRepresentation: Sized + Debug {
+    fn into_form_value_string(self) -> String;
+    type ValidationData;
+
+    fn from_form_value<'d>(value: &'_ str, data: &'d Self::ValidationData) -> Result<Self, String>;
+}
+
+impl FormValueRepresentation for String {
+    fn into_form_value_string(self) -> String {
+        self
     }
-    pub fn validate_with<'a, 'd, T: FromFormValueWithData<'a, 'd>>(
-        &'a mut self,
-        data: T::AdditionalData,
-    ) -> Option<T> {
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &'_ Self::ValidationData) -> Result<Self, String> {
+        Ok(value.to_string())
+    }
+}
+
+impl<T: FormValueRepresentation> FormValue<T> {
+    pub fn validate_with<'d>(&'_ mut self, data: &'d T::ValidationData) -> Option<T> {
         match T::from_form_value(&self.value, data) {
             Ok(v) => Some(v),
             Err(e) => {
@@ -95,43 +108,49 @@ impl FormValue {
     }
 }
 
-pub trait IntoFormValue {
-    fn into_form_value_string(self) -> String;
-}
-pub trait FromFormValue<'a>: Sized {
-    fn from_form_value(value: &'a str) -> Result<Self, String>;
-}
-pub trait FromFormValueWithData<'a, 'd>: Sized {
-    type AdditionalData: 'd;
-
-    fn from_form_value(value: &'a str, data: Self::AdditionalData) -> Result<Self, String>;
-}
-
-impl<T> IntoFormValue for T
+impl<T: FormValueRepresentation> Default for FormValue<T>
 where
-    T: ToString,
+    T: Default,
 {
-    fn into_form_value_string(self) -> String {
-        self.to_string()
-    }
-}
-impl<'a, T> FromFormValue<'a> for T
-where
-    T: TryFrom<&'a str> + Sized,
-    T::Error: std::fmt::Display,
-{
-    fn from_form_value(value: &'a str) -> Result<Self, String> {
-        <T as TryFrom<&str>>::try_from(value).map_err(|e| e.to_string())
-    }
-}
-impl<T: IntoFormValue> From<T> for FormValue {
-    fn from(value: T) -> Self {
+    fn default() -> Self {
         FormValue {
-            value: value.into_form_value_string(),
-            errors: Vec::new(),
+            value: T::default().into_form_value_string(),
+            errors: vec![],
+            _phantom: Default::default(),
         }
     }
 }
+
+impl<T: FormValueRepresentation> From<T> for FormValue<T> {
+    fn from(value: T) -> Self {
+        FormValue {
+            value: value.into_form_value_string(),
+            errors: vec![],
+            _phantom: Default::default(),
+        }
+    }
+}
+
+/// Helper trait with a simplified version of the [FormValue::validate] method that is added to the
+/// [FormValue] type when the data type `T` does not have associated validation data (i.e. the
+/// [FormValueRepresentation::ValidationData] type is the unit type (`()`)),
+pub trait _FormValidSimpleValidate<T> {
+    fn validate(&mut self) -> Option<T>;
+}
+
+impl<T: FormValueRepresentation> _FormValidSimpleValidate<T> for FormValue<T>
+where
+    T::ValidationData: Trivial,
+{
+    fn validate(&mut self) -> Option<T> {
+        self.validate_with(&T::ValidationData::default())
+    }
+}
+
+/// A more or less ugly trait to allow implementing functions when an associated type is the unit
+/// type.
+trait Trivial: Default {}
+impl Trivial for () {}
 
 pub enum InputSize {
     Small,
@@ -158,20 +177,20 @@ impl InputType {
 
 #[derive(Template)]
 #[template(path = "forms/form_field.html")]
-struct FormFieldTemplate<'a> {
+struct FormFieldTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     label: &'a str,
     info: Option<&'a str>,
     input_type: InputType,
     size: InputSize,
-    data: &'a FormValue,
+    data: &'a FormValue<T>,
 }
 
 #[derive(Template)]
 #[template(path = "forms/hidden_input.html")]
-struct HiddenInputTemplate<'a> {
+struct HiddenInputTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
-    data: &'a FormValue,
+    data: &'a FormValue<T>,
 }
 
 #[derive(Serialize)]
@@ -182,13 +201,13 @@ pub struct SelectEntry<'a> {
 
 #[derive(Template)]
 #[template(path = "forms/select.html")]
-struct SelectTemplate<'a> {
+struct SelectTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     entries: &'a Vec<SelectEntry<'a>>,
     label: &'a str,
     info: Option<&'a str>,
     size: InputSize,
-    data: &'a FormValue,
+    data: &'a FormValue<T>,
 }
 
 #[derive(Debug, Default)]

@@ -4,7 +4,9 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
-use crate::web::ui::forms::{BoolFormValue, FormValue, InputSize, InputType, SelectEntry};
+use crate::web::ui::forms::{
+    BoolFormValue, FormValue, InputSize, InputType, SelectEntry, _FormValidSimpleValidate,
+};
 use crate::web::ui::time_calculation::{
     get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
@@ -273,21 +275,21 @@ impl<'a> EditEntryFormTemplate<'a> {
 
 #[derive(Default, Deserialize, Debug)]
 struct EntryFormData {
-    title: FormValue,
-    comment: FormValue,
-    room_comment: FormValue,
-    time_comment: FormValue,
-    description: FormValue,
-    responsible_person: FormValue,
-    day: FormValue,
-    begin: FormValue,
-    duration: FormValue,
-    category: FormValue,
-    rooms: FormValue,
+    title: FormValue<validation::NonEmptyString>,
+    comment: FormValue<String>,
+    room_comment: FormValue<String>,
+    time_comment: FormValue<String>,
+    description: FormValue<String>,
+    responsible_person: FormValue<String>,
+    day: FormValue<validation::IsoDate>,
+    begin: FormValue<validation::TimeOfDay>,
+    duration: FormValue<validation::NiceDurationHours>,
+    category: FormValue<validation::UuidFromList>,
+    rooms: FormValue<validation::CommaSeparatedUuidsFromList>,
     is_cancelled: BoolFormValue,
     is_room_reservation: BoolFormValue,
     is_exclusive: BoolFormValue,
-    last_updated: FormValue,
+    last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
 }
 
 impl EntryFormData {
@@ -296,23 +298,21 @@ impl EntryFormData {
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
     ) -> Option<(FullNewEntry, chrono::DateTime<chrono::Utc>)> {
-        let title: Option<validation::NonEmptyString> = self.title.validate();
-        let comment: Option<String> = self.comment.validate();
-        let time_comment: Option<String> = self.time_comment.validate();
-        let room_comment: Option<String> = self.room_comment.validate();
-        let description: Option<String> = self.description.validate();
-        let responsible_person: Option<String> = self.responsible_person.validate();
-        let is_cancelled: bool = self.is_cancelled.get_value();
-        let is_room_reservation: bool = self.is_room_reservation.get_value();
-        let is_exclusive: bool = self.is_exclusive.get_value();
-        let category: Option<validation::UuidFromList> = self.category.validate_with(categories);
-        let room_ids: Option<validation::CommaSeparatedUuidsFromList> =
-            self.rooms.validate_with(rooms);
-        let day: Option<validation::IsoDate> = self.day.validate();
-        let time: Option<validation::TimeOfDay> = self.begin.validate();
-        let duration: Option<validation::NiceDurationHours> = self.duration.validate();
-        let previous_last_updated: Option<validation::SimpleTimestampMicroseconds> =
-            self.last_updated.validate();
+        let title = self.title.validate();
+        let comment = self.comment.validate();
+        let time_comment = self.time_comment.validate();
+        let room_comment = self.room_comment.validate();
+        let description = self.description.validate();
+        let responsible_person = self.responsible_person.validate();
+        let is_cancelled = self.is_cancelled.get_value();
+        let is_room_reservation = self.is_room_reservation.get_value();
+        let is_exclusive = self.is_exclusive.get_value();
+        let category = self.category.validate_with(categories);
+        let room_ids = self.rooms.validate_with(rooms);
+        let day = self.day.validate();
+        let time = self.begin.validate();
+        let duration = self.duration.validate();
+        let previous_last_updated = self.last_updated.validate();
 
         let begin = timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner());
         Some((
@@ -344,7 +344,7 @@ impl EntryFormData {
 impl From<FullEntry> for EntryFormData {
     fn from(value: FullEntry) -> Self {
         Self {
-            title: value.entry.title.into(),
+            title: validation::NonEmptyString(value.entry.title).into(),
             comment: value.entry.comment.into(),
             room_comment: value.entry.room_comment.into(),
             time_comment: value.entry.time_comment.into(),
@@ -361,12 +361,12 @@ impl From<FullEntry> for EntryFormData {
             )
             .into(),
             duration: validation::NiceDurationHours(value.entry.end - value.entry.begin).into(),
-            category: value.entry.category.into(),
+            category: validation::UuidFromList(value.entry.category).into(),
             rooms: validation::CommaSeparatedUuidsFromList(value.room_ids).into(),
             is_cancelled: value.entry.is_cancelled.into(),
             is_room_reservation: value.entry.is_room_reservation.into(),
             is_exclusive: value.entry.is_exclusive.into(),
-            last_updated: value.entry.last_updated.timestamp_micros().into(),
+            last_updated: validation::SimpleTimestampMicroseconds(value.entry.last_updated).into(),
         }
     }
 }

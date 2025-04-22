@@ -1,8 +1,9 @@
-use crate::web::ui::forms::{FromFormValue, FromFormValueWithData, IntoFormValue};
+use crate::web::ui::forms::FormValueRepresentation;
 use chrono::Timelike;
 use lazy_static::lazy_static;
 use uuid::Uuid;
 
+#[derive(Default, Debug)]
 pub struct NonEmptyString(pub String);
 
 impl NonEmptyString {
@@ -11,8 +12,14 @@ impl NonEmptyString {
     }
 }
 
-impl FromFormValue<'_> for NonEmptyString {
-    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+impl FormValueRepresentation for NonEmptyString {
+    fn into_form_value_string(self) -> String {
+        self.0
+    }
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
         if value.is_empty() {
             Err("Darf nicht leer sein".to_owned())
         } else {
@@ -21,6 +28,7 @@ impl FromFormValue<'_> for NonEmptyString {
     }
 }
 
+#[derive(Default, Debug)]
 pub struct UuidFromList(pub Uuid);
 
 impl UuidFromList {
@@ -29,10 +37,14 @@ impl UuidFromList {
     }
 }
 
-impl<'d> FromFormValueWithData<'_, 'd> for UuidFromList {
-    type AdditionalData = &'d Vec<Uuid>;
+impl FormValueRepresentation for UuidFromList {
+    fn into_form_value_string(self) -> String {
+        self.0.to_string()
+    }
 
-    fn from_form_value(value: &'_ str, known_ids: Self::AdditionalData) -> Result<Self, String> {
+    type ValidationData = Vec<Uuid>;
+
+    fn from_form_value<'d>(value: &'_ str, known_ids: &'d Vec<Uuid>) -> Result<Self, String> {
         let id = Uuid::parse_str(value).map_err(|e| e.to_string())?;
         if known_ids.contains(&id) {
             Ok(UuidFromList(id))
@@ -42,6 +54,7 @@ impl<'d> FromFormValueWithData<'_, 'd> for UuidFromList {
     }
 }
 
+#[derive(Default, Debug)]
 pub struct CommaSeparatedUuidsFromList(pub Vec<Uuid>);
 
 impl CommaSeparatedUuidsFromList {
@@ -50,10 +63,18 @@ impl CommaSeparatedUuidsFromList {
     }
 }
 
-impl<'d> FromFormValueWithData<'_, 'd> for CommaSeparatedUuidsFromList {
-    type AdditionalData = &'d Vec<Uuid>;
+impl FormValueRepresentation for CommaSeparatedUuidsFromList {
+    fn into_form_value_string(self) -> String {
+        self.0
+            .iter()
+            .map(|r| r.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
 
-    fn from_form_value(value: &'_ str, known_ids: Self::AdditionalData) -> Result<Self, String> {
+    type ValidationData = Vec<Uuid>;
+
+    fn from_form_value<'d>(value: &'_ str, known_ids: &'d Vec<Uuid>) -> Result<Self, String> {
         let ids_str = value.split(',');
         let ids = ids_str
             .map(|id_str| {
@@ -69,16 +90,7 @@ impl<'d> FromFormValueWithData<'_, 'd> for CommaSeparatedUuidsFromList {
     }
 }
 
-impl IntoFormValue for CommaSeparatedUuidsFromList {
-    fn into_form_value_string(self) -> String {
-        self.0
-            .iter()
-            .map(|r| r.to_string())
-            .collect::<Vec<String>>()
-            .join(",")
-    }
-}
-
+#[derive(Default, Debug)]
 pub struct TimeOfDay(pub chrono::NaiveTime);
 
 impl TimeOfDay {
@@ -87,8 +99,18 @@ impl TimeOfDay {
     }
 }
 
-impl FromFormValue<'_> for TimeOfDay {
-    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+impl FormValueRepresentation for TimeOfDay {
+    fn into_form_value_string(self) -> String {
+        if self.0.second() != 0 || self.0.nanosecond() != 0 {
+            self.0.format("%H:%M:%S%.f").to_string()
+        } else {
+            self.0.format("%H:%M").to_string()
+        }
+    }
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
         chrono::NaiveTime::parse_from_str(value, "%H:%M:%S%.f")
             .or_else(|_| chrono::NaiveTime::parse_from_str(value, "%H:%M"))
             .or_else(|_| chrono::NaiveTime::parse_from_str(value, "%H"))
@@ -97,16 +119,7 @@ impl FromFormValue<'_> for TimeOfDay {
     }
 }
 
-impl IntoFormValue for TimeOfDay {
-    fn into_form_value_string(self) -> String {
-        if self.0.second() != 0 || self.0.nanosecond() != 0 {
-            self.0.format("%H:%M:%S%.f").to_string()
-        } else {
-            self.0.format("%H:%M").to_string()
-        }
-    }
-}
-
+#[derive(Default, Debug)]
 pub struct IsoDate(pub chrono::NaiveDate);
 
 impl IsoDate {
@@ -115,20 +128,21 @@ impl IsoDate {
     }
 }
 
-impl FromFormValue<'_> for IsoDate {
-    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+impl FormValueRepresentation for IsoDate {
+    fn into_form_value_string(self) -> String {
+        self.0.format("%Y-%m-%d").to_string()
+    }
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
         chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d")
             .map(IsoDate)
             .map_err(|e| e.to_string())
     }
 }
 
-impl IntoFormValue for IsoDate {
-    fn into_form_value_string(self) -> String {
-        self.0.format("%Y-%m-%d").to_string()
-    }
-}
-
+#[derive(Default, Debug)]
 pub struct NiceDurationHours(pub chrono::Duration);
 
 impl NiceDurationHours {
@@ -137,8 +151,31 @@ impl NiceDurationHours {
     }
 }
 
-impl FromFormValue<'_> for NiceDurationHours {
-    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+impl FormValueRepresentation for NiceDurationHours {
+    fn into_form_value_string(self) -> String {
+        let days = self.0.num_days();
+        let hours = self.0.num_hours() - 24 * self.0.num_days();
+        let minutes = self.0.num_minutes() - 60 * self.0.num_hours();
+        let seconds = self.0.num_seconds() - 60 * self.0.num_minutes();
+        let milliseconds = self.0.subsec_nanos() / 1_000_000;
+
+        let mut result = String::with_capacity(17);
+        if days > 0 {
+            result.push_str(&format!("{}d", days));
+        }
+        result.push_str(&format!("{:02}:{:02}", hours, minutes));
+        if seconds > 0 || milliseconds > 0 {
+            result.push_str(&format!(":{:02}", seconds));
+            if milliseconds > 0 {
+                result.push_str(&format!(".{:03}", milliseconds));
+            }
+        }
+        result
+    }
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
         lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new(
                 r"(?:(?P<d>\d+)d )?(?:(?P<H2>\d+)h|(?:(?P<H>\d+):)?(?P<M>\d+)(?::(?P<S>\d+)(?:\.(?P<f>\d+))?)?)").unwrap();
@@ -181,44 +218,22 @@ impl FromFormValue<'_> for NiceDurationHours {
     }
 }
 
-impl IntoFormValue for NiceDurationHours {
-    fn into_form_value_string(self) -> String {
-        let days = self.0.num_days();
-        let hours = self.0.num_hours() - 24 * self.0.num_days();
-        let minutes = self.0.num_minutes() - 60 * self.0.num_hours();
-        let seconds = self.0.num_seconds() - 60 * self.0.num_minutes();
-        let milliseconds = self.0.subsec_nanos() / 1_000_000;
-
-        let mut result = String::with_capacity(17);
-        if days > 0 {
-            result.push_str(&format!("{}d", days));
-        }
-        result.push_str(&format!("{:02}:{:02}", hours, minutes));
-        if seconds > 0 || milliseconds > 0 {
-            result.push_str(&format!(":{:02}", seconds));
-            if milliseconds > 0 {
-                result.push_str(&format!(".{:03}", milliseconds));
-            }
-        }
-        result
-    }
-}
-
+#[derive(Default, Debug)]
 pub struct SimpleTimestampMicroseconds(pub chrono::DateTime<chrono::Utc>);
 
-impl FromFormValue<'_> for SimpleTimestampMicroseconds {
-    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+impl FormValueRepresentation for SimpleTimestampMicroseconds {
+    fn into_form_value_string(self) -> String {
+        self.0.timestamp_micros().to_string()
+    }
+
+    type ValidationData = ();
+
+    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
         Ok(SimpleTimestampMicroseconds(
             chrono::DateTime::from_timestamp_micros(
                 i64::from_str_radix(value, 10).map_err(|e| e.to_string())?,
             )
             .ok_or("Value out of range for chrono::DateTime".to_string())?,
         ))
-    }
-}
-
-impl IntoFormValue for SimpleTimestampMicroseconds {
-    fn into_form_value_string(self) -> String {
-        self.0.timestamp_micros().to_string()
     }
 }

@@ -6,7 +6,7 @@ use askama::Template;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 #[derive(Debug, Deserialize)]
@@ -19,28 +19,56 @@ pub struct FormValue<T: FormValueRepresentation> {
     _phantom: PhantomData<T>,
 }
 
-pub trait FormValueRepresentation: Sized + Debug {
+/// Implemented by types that can be used as an HTML form string value
+///
+/// In general this includes two functionalities:
+/// * converting the type into a string for form value representation ([into_form_value_string]),
+///   **and**
+/// * validating a submitted form input string and converting it to this type.
+///
+/// Validation can either be implemented via the [ValidateFromFormInput] trait (when no additional
+/// data is required for validating/converting a value) or by implementing
+/// [ValidateDataForFormValue] for one or more additional data type.
+pub trait FormValueRepresentation: Debug {
     fn into_form_value_string(self) -> String;
-    type ValidationData;
+}
 
-    fn from_form_value<'d>(value: &'_ str, data: &'d Self::ValidationData) -> Result<Self, String>;
+/// Trait for [FormValueRepresentation]-implementing types that can be validated and converted
+/// directly from  their form string representation, without additional data.
+///
+/// This allows validating (and converting) the value of a [FormValue] of this type by calling
+/// `form_value.validate()` (implemented in [_FormValidSimpleValidate::validate] trait).
+pub trait ValidateFromFormInput: FormValueRepresentation + Sized {
+    fn from_form_value(value: &'_ str) -> Result<Self, String>;
+}
+
+/// Allow validating/converting the [FormValueRepresentation] type `R` with the help of this type.
+///
+/// Every type `D` implementing this trait, can be used as additional validation data for validating
+/// (and converting) the value of a [FormValue] of type `R` via the [FormValue::validate_with]
+/// function.
+pub trait ValidationDataForFormValue<R: FormValueRepresentation> {
+    fn validate_form_value(self, value: &'_ str) -> Result<R, String>;
 }
 
 impl FormValueRepresentation for String {
     fn into_form_value_string(self) -> String {
         self
     }
+}
 
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &'_ Self::ValidationData) -> Result<Self, String> {
-        Ok(value.to_string())
+impl ValidateFromFormInput for String {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        Ok(value.to_owned())
     }
 }
 
 impl<T: FormValueRepresentation> FormValue<T> {
-    pub fn validate_with<'d>(&'_ mut self, data: &'d T::ValidationData) -> Option<T> {
-        match T::from_form_value(&self.value, data) {
+    pub fn validate_with<'d, D: ValidationDataForFormValue<T> + 'd>(
+        &'_ mut self,
+        data: D,
+    ) -> Option<T> {
+        match data.validate_form_value(&self.value) {
             Ok(v) => Some(v),
             Err(e) => {
                 self.errors.push(e);
@@ -138,19 +166,17 @@ pub trait _FormValidSimpleValidate<T> {
     fn validate(&mut self) -> Option<T>;
 }
 
-impl<T: FormValueRepresentation> _FormValidSimpleValidate<T> for FormValue<T>
-where
-    T::ValidationData: Trivial,
-{
+impl<T: ValidateFromFormInput> _FormValidSimpleValidate<T> for FormValue<T> {
     fn validate(&mut self) -> Option<T> {
-        self.validate_with(&T::ValidationData::default())
+        match T::from_form_value(&self.value) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                self.errors.push(e);
+                None
+            }
+        }
     }
 }
-
-/// A more or less ugly trait to allow implementing functions when an associated type is the unit
-/// type.
-trait Trivial: Default {}
-impl Trivial for () {}
 
 pub enum InputSize {
     Small,

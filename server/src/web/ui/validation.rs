@@ -1,4 +1,6 @@
-use crate::web::ui::forms::FormValueRepresentation;
+use crate::web::ui::forms::{
+    FormValueRepresentation, ValidateFromFormInput, ValidationDataForFormValue,
+};
 use chrono::Timelike;
 use lazy_static::lazy_static;
 use uuid::Uuid;
@@ -16,10 +18,9 @@ impl FormValueRepresentation for NonEmptyString {
     fn into_form_value_string(self) -> String {
         self.0
     }
-
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
+}
+impl ValidateFromFormInput for NonEmptyString {
+    fn from_form_value(value: &str) -> Result<Self, String> {
         if value.is_empty() {
             Err("Darf nicht leer sein".to_owned())
         } else {
@@ -41,12 +42,12 @@ impl FormValueRepresentation for UuidFromList {
     fn into_form_value_string(self) -> String {
         self.0.to_string()
     }
+}
 
-    type ValidationData = Vec<Uuid>;
-
-    fn from_form_value<'d>(value: &'_ str, known_ids: &'d Vec<Uuid>) -> Result<Self, String> {
+impl ValidationDataForFormValue<UuidFromList> for &Vec<Uuid> {
+    fn validate_form_value(self, value: &'_ str) -> Result<UuidFromList, String> {
         let id = Uuid::parse_str(value).map_err(|e| e.to_string())?;
-        if known_ids.contains(&id) {
+        if self.contains(&id) {
             Ok(UuidFromList(id))
         } else {
             Err("Unbekannte id".to_owned())
@@ -71,22 +72,22 @@ impl FormValueRepresentation for CommaSeparatedUuidsFromList {
             .collect::<Vec<String>>()
             .join(",")
     }
+}
 
-    type ValidationData = Vec<Uuid>;
-
-    fn from_form_value<'d>(value: &'_ str, known_ids: &'d Vec<Uuid>) -> Result<Self, String> {
+impl ValidationDataForFormValue<CommaSeparatedUuidsFromList> for &Vec<Uuid> {
+    fn validate_form_value(self, value: &'_ str) -> Result<CommaSeparatedUuidsFromList, String> {
         let ids_str = value.split(',');
         let ids = ids_str
             .map(|id_str| {
                 let id = Uuid::parse_str(id_str).map_err(|e| e.to_string())?;
-                if known_ids.contains(&id) {
+                if self.contains(&id) {
                     Ok(id)
                 } else {
                     Err("Unbekannte id '{}'".to_owned())
                 }
             })
             .collect::<Result<Vec<Uuid>, String>>()?;
-        Ok(Self(ids))
+        Ok(CommaSeparatedUuidsFromList(ids))
     }
 }
 
@@ -107,10 +108,9 @@ impl FormValueRepresentation for TimeOfDay {
             self.0.format("%H:%M").to_string()
         }
     }
-
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
+}
+impl ValidateFromFormInput for TimeOfDay {
+    fn from_form_value(value: &str) -> Result<Self, String> {
         chrono::NaiveTime::parse_from_str(value, "%H:%M:%S%.f")
             .or_else(|_| chrono::NaiveTime::parse_from_str(value, "%H:%M"))
             .or_else(|_| chrono::NaiveTime::parse_from_str(value, "%H"))
@@ -132,10 +132,9 @@ impl FormValueRepresentation for IsoDate {
     fn into_form_value_string(self) -> String {
         self.0.format("%Y-%m-%d").to_string()
     }
-
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
+}
+impl ValidateFromFormInput for IsoDate {
+    fn from_form_value(value: &str) -> Result<Self, String> {
         chrono::NaiveDate::parse_from_str(value, "%Y-%m-%d")
             .map(IsoDate)
             .map_err(|e| e.to_string())
@@ -172,10 +171,9 @@ impl FormValueRepresentation for NiceDurationHours {
         }
         result
     }
-
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
+}
+impl ValidateFromFormInput for NiceDurationHours {
+    fn from_form_value(value: &str) -> Result<Self, String> {
         lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new(
                 r"(?:(?P<d>\d+)d )?(?:(?P<H2>\d+)h|(?:(?P<H>\d+):)?(?P<M>\d+)(?::(?P<S>\d+)(?:\.(?P<f>\d+))?)?)").unwrap();
@@ -225,10 +223,9 @@ impl FormValueRepresentation for SimpleTimestampMicroseconds {
     fn into_form_value_string(self) -> String {
         self.0.timestamp_micros().to_string()
     }
-
-    type ValidationData = ();
-
-    fn from_form_value(value: &str, _data: &()) -> Result<Self, String> {
+}
+impl ValidateFromFormInput for SimpleTimestampMicroseconds {
+    fn from_form_value(value: &str) -> Result<Self, String> {
         Ok(SimpleTimestampMicroseconds(
             chrono::DateTime::from_timestamp_micros(
                 i64::from_str_radix(value, 10).map_err(|e| e.to_string())?,

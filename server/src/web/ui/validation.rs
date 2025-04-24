@@ -161,7 +161,7 @@ impl FormValueRepresentation for NiceDurationHours {
 
         let mut result = String::with_capacity(17);
         if days > 0 {
-            result.push_str(&format!("{}d", days));
+            result.push_str(&format!("{}d ", days));
         }
         result.push_str(&format!("{:02}:{:02}", hours, minutes));
         if seconds > 0 || milliseconds > 0 {
@@ -177,7 +177,7 @@ impl ValidateFromFormInput for NiceDurationHours {
     fn from_form_value(value: &str) -> Result<Self, String> {
         lazy_static! {
             static ref RE: regex::Regex = regex::Regex::new(
-                r"(?:(?P<d>\d+)d )?(?:(?P<H2>\d+)h|(?:(?P<H>\d+):)?(?P<M>\d+)(?::(?P<S>\d+)(?:\.(?P<f>\d+))?)?)").unwrap();
+                r"^(?:(?P<d>\d+)d\s*)?(?P<H>\d+)(?:[\.,](?P<Hf>\d{1,7}))?(?::(?P<M>\d+)(?:[\.,](?P<Mf>\d{1,5}))?(?::(?P<S>\d+)(?:[\.,](?P<Sf>\d{1,3}))?)?)?$").unwrap();
         }
         fn parse_group(cap: &regex::Captures, name: &str) -> Option<i64> {
             cap.name(name).map(|s| {
@@ -186,31 +186,41 @@ impl ValidateFromFormInput for NiceDurationHours {
                     .expect("digits should be parseable as integer")
             })
         }
+        fn parse_fraction_group(
+            cap: &regex::Captures,
+            name: &str,
+            pad_right_to_length: usize,
+            to_ms_nom: i64,
+            to_ms_denom: i64,
+        ) -> Option<i64> {
+            cap.name(name)
+                .map(|s| {
+                    let padded = format!("{0:0<1$}", s.as_str(), pad_right_to_length);
+                    padded
+                        .parse::<i64>()
+                        .expect("digits should be parseable as integer")
+                })
+                .map(|num| num * to_ms_nom / to_ms_denom)
+        }
 
         RE.captures(value)
             .map(|cap| {
                 let days = parse_group(&cap, "d").unwrap_or(0);
-                let hours = parse_group(&cap, "H")
-                    .or(parse_group(&cap, "H2"))
-                    .unwrap_or(0);
+                let hours = parse_group(&cap, "H").unwrap_or(0);
+                let hour_fraction_ms = parse_fraction_group(&cap, "Hf", 7, 9, 25).unwrap_or(0);
                 let minutes = parse_group(&cap, "M").unwrap_or(0);
+                let minute_fraction_ms = parse_fraction_group(&cap, "Mf", 5, 3, 5).unwrap_or(0);
                 let seconds = parse_group(&cap, "S").unwrap_or(0);
-                let nanoseconds = cap
-                    .name("f")
-                    .map(|s| {
-                        let padded = format!("{:0<9}", s.as_str());
-                        padded
-                            .parse::<i64>()
-                            .expect("digits should be parseable as integer")
-                    })
-                    .unwrap_or(0);
+                let milliseconds = parse_fraction_group(&cap, "Sf", 3, 1, 1).unwrap_or(0);
 
                 Self(
                     chrono::Duration::days(days)
                         + chrono::Duration::hours(hours)
+                        + chrono::Duration::milliseconds(hour_fraction_ms)
                         + chrono::Duration::minutes(minutes)
+                        + chrono::Duration::milliseconds(minute_fraction_ms)
                         + chrono::Duration::seconds(seconds)
-                        + chrono::Duration::nanoseconds(nanoseconds),
+                        + chrono::Duration::milliseconds(milliseconds),
                 )
             })
             .ok_or("Keine gültige Dauer".to_owned())
@@ -233,5 +243,134 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
             )
             .ok_or("Value out of range for chrono::DateTime".to_string())?,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_nice_duration_hours_from_string() {
+        assert_eq!(
+            NiceDurationHours::from_form_value("2")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::hours(2)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("2:30")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::hours(2) + chrono::Duration::minutes(30)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("0:15")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::minutes(15)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("0:15:20")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::minutes(15) + chrono::Duration::seconds(20)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("2,5")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::hours(2) + chrono::Duration::minutes(30)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("1d 2")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::days(1) + chrono::Duration::hours(2)
+        );
+        assert_eq!(
+            NiceDurationHours::from_form_value("1:17,25")
+                .unwrap()
+                .into_inner(),
+            chrono::Duration::hours(1)
+                + chrono::Duration::minutes(17)
+                + chrono::Duration::seconds(15)
+        );
+    }
+
+    #[test]
+    fn test_nice_duration_hours_roundtrip() {
+        let val = chrono::Duration::hours(2);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::hours(2) + chrono::Duration::minutes(30);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::minutes(15);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::minutes(15) + chrono::Duration::seconds(20);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::hours(2) + chrono::Duration::minutes(30);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::days(1) + chrono::Duration::hours(2);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::hours(1)
+            + chrono::Duration::minutes(17)
+            + chrono::Duration::seconds(15);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+        let val = chrono::Duration::hours(1)
+            + chrono::Duration::minutes(17)
+            + chrono::Duration::seconds(15)
+            + chrono::Duration::milliseconds(110);
+        assert_eq!(
+            val,
+            NiceDurationHours::from_form_value(&NiceDurationHours(val).into_form_value_string())
+                .unwrap()
+                .into_inner()
+        );
+    }
+
+    #[test]
+    fn test_nice_duration_hours_errors() {
+        assert!(NiceDurationHours::from_form_value("1:").is_err());
+        assert!(NiceDurationHours::from_form_value("1:1:1:1").is_err());
+        assert!(NiceDurationHours::from_form_value("5d 1d 1").is_err());
+        assert!(NiceDurationHours::from_form_value("").is_err());
+        assert!(NiceDurationHours::from_form_value("d").is_err());
+        assert!(NiceDurationHours::from_form_value("1a").is_err());
+        assert!(NiceDurationHours::from_form_value("abc5:5").is_err());
     }
 }

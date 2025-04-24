@@ -1,11 +1,8 @@
-//! This module provides the `FormValue` helper types that allow creating HTML form input fields
-//! with pre-filled values and validation error messages.
+//! This module provides the `FormValue` helper types that encapsulate string values and validation
+//! error messages for rendering HTML form input fields and validating the corresponding user input.
 
-use crate::web::ui::error::AppError;
-use askama::Template;
 use serde::de::Error;
-use serde::{Deserialize, Deserializer, Serialize};
-use std::borrow::Cow;
+use serde::{Deserialize, Deserializer};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
@@ -77,62 +74,35 @@ impl<T: FormValueRepresentation> FormValue<T> {
         }
     }
 
+    /// Manually add a validation error related to this form field.
+    ///
+    /// This can be used to attach error messages to a specific input field to inform the user about
+    /// higher-level validation errors that were found when checking the consistency of the overall
+    /// form/entity.
     pub fn add_error(&mut self, error: String) {
         self.errors.push(error)
     }
 
-    pub fn create_form_field(
-        &self,
-        name: &str,
-        label: &str,
-        info: Option<&str>,
-        input_type: InputType,
-        size: InputSize,
-    ) -> Result<askama::filters::Safe<String>, askama::Error> {
-        let template = FormFieldTemplate {
-            name,
-            label,
-            info,
-            input_type,
-            size,
-            data: self,
-        };
-        Ok(askama::filters::Safe(template.render()?))
+    /// Check if validation errors have occurred, related to this form value.
+    ///
+    /// This should only be used by form input sub-templates for changing the rendering of a form
+    /// input (like a text input) representing this form value.
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
     }
 
-    pub fn create_select(
-        &self,
-        name: &str,
-        entries: &Vec<SelectEntry>,
-        label: &str,
-        info: Option<&str>,
-        size: InputSize,
-    ) -> Result<askama::filters::Safe<String>, askama::Error> {
-        let template = SelectTemplate {
-            name,
-            entries,
-            label,
-            info,
-            size,
-            data: self,
-        };
-        Ok(askama::filters::Safe(template.render()?))
+    /// Get the list of validation errors related to this form value.
+    ///
+    /// This should only be used by form input sub-templates for rendering the validation errors
+    /// near to the input representing this form value.
+    pub fn errors(&self) -> &Vec<String> {
+        &self.errors
     }
 
-    pub fn create_hidden_input(
-        &self,
-        name: &str,
-    ) -> Result<askama::filters::Safe<String>, AppError> {
-        if !self.errors.is_empty() {
-            // TODO special error type?
-            return Err(AppError::InternalError(format!(
-                "Validation error in hidden field {}: {}",
-                name,
-                self.errors.join(", ")
-            )));
-        }
-        let template = HiddenInputTemplate { name, data: self };
-        Ok(askama::filters::Safe(template.render()?))
+    /// Get the current string representation of the form value to be used as the `value` attribute
+    /// when rendering the form input.
+    pub fn string_value(&self) -> &str {
+        &self.value
     }
 }
 
@@ -178,64 +148,6 @@ impl<T: ValidateFromFormInput> _FormValidSimpleValidate<T> for FormValue<T> {
     }
 }
 
-pub enum InputSize {
-    Small,
-    Normal,
-    Large,
-}
-
-#[derive(Debug)]
-pub enum InputType {
-    Text,
-    Time,
-    Textarea,
-}
-
-impl InputType {
-    fn as_html_type_attr(&self) -> &'static str {
-        match self {
-            InputType::Text => "text",
-            InputType::Time => "time",
-            _ => panic!("Input type {:?} should be handled separately.", self),
-        }
-    }
-}
-
-#[derive(Template)]
-#[template(path = "forms/form_field.html")]
-struct FormFieldTemplate<'a, T: FormValueRepresentation> {
-    name: &'a str,
-    label: &'a str,
-    info: Option<&'a str>,
-    input_type: InputType,
-    size: InputSize,
-    data: &'a FormValue<T>,
-}
-
-#[derive(Template)]
-#[template(path = "forms/hidden_input.html")]
-struct HiddenInputTemplate<'a, T: FormValueRepresentation> {
-    name: &'a str,
-    data: &'a FormValue<T>,
-}
-
-#[derive(Serialize)]
-pub struct SelectEntry<'a> {
-    pub value: Cow<'a, str>,
-    pub text: Cow<'a, str>,
-}
-
-#[derive(Template)]
-#[template(path = "forms/select.html")]
-struct SelectTemplate<'a, T: FormValueRepresentation> {
-    name: &'a str,
-    entries: &'a Vec<SelectEntry<'a>>,
-    label: &'a str,
-    info: Option<&'a str>,
-    size: InputSize,
-    data: &'a FormValue<T>,
-}
-
 #[derive(Debug, Default)]
 pub struct BoolFormValue {
     value: bool,
@@ -251,19 +163,20 @@ impl BoolFormValue {
         self.errors.push(error)
     }
 
-    pub fn create_checkbox(
-        &self,
-        name: &str,
-        label: &str,
-        info: Option<&str>,
-    ) -> Result<askama::filters::Safe<String>, askama::Error> {
-        let template = CheckboxTemplate {
-            name,
-            label,
-            info,
-            data: self,
-        };
-        Ok(askama::filters::Safe(template.render()?))
+    /// Check if validation errors have occurred, related to this form value.
+    ///
+    /// This should only be used by form input sub-templates for changing the rendering of a form
+    /// input (like a checkbox) representing this form value.
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
+    }
+
+    /// Get the list of validation errors related to this form value.
+    ///
+    /// This should only be used by form input sub-templates for rendering the validation errors
+    /// near to the input representing this form value.
+    pub fn errors(&self) -> &Vec<String> {
+        &self.errors
     }
 }
 
@@ -323,13 +236,4 @@ impl From<bool> for BoolFormValue {
             errors: vec![],
         }
     }
-}
-
-#[derive(Template)]
-#[template(path = "forms/checkbox.html")]
-struct CheckboxTemplate<'a> {
-    name: &'a str,
-    label: &'a str,
-    info: Option<&'a str>,
-    data: &'a BoolFormValue,
 }

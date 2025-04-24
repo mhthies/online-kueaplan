@@ -19,56 +19,63 @@
        To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}
     <form method="post" action="{{post_url()?}}" autocomplete="off" id="edit_entry_form">
     <div class="mb-3">
-        {{ form_data.title.create_form_field("title", "Titel", None, InputType::Text, InputSize::Large)? }}
+        {{ FormFieldTemplate::new(form_data.title, "title", "Titel", InputConfiguration::builder().size(InputSize::Large).build())|safe }}
     </div>
     <div class="mb-3">
-        {{ form_data.comment.create_form_field("comment", "Kommentar", Some("wird unter dem Titel angezeigt"), InputType::Text, InputSize::Small)? }}
+        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar", InputConfiguration::builder().size(InputSize::Small).info("wird unter dem Titel angezeigt").build())|safe }}
     </div>
     <div class="mb-3">
-        {{ form_data.is_cancelled.create_checkbox("is_cancelled", "fällt aus", None)? }}
+        {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus", None)|safe }}
     </div>
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="mb-3">
-                {{ form_data.responsible_person.create_form_field("responsible_person", "von wem?", None, InputType::Text, InputSize::Normal)? }}
+                {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem?", InputConfiguration::default())|safe }}
             </div>
             <div class="row g-3">
                 <div class="col-sm-4">
-                    {{ form_data.day.create_select("day", &day_entries(), "Tag", None, InputSize::Normal)? }}
+                    {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", None, InputSize::Normal)|safe }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ form_data.begin.create_form_field("begin", "Beginn", None, InputType::Time, InputSize::Normal)? }}
+                    {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build())|safe }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ form_data.duration.create_form_field("duration", "Dauer", None, InputType::Text, InputSize::Normal)? }}
+                    {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::default())|safe }}
                 </div>
                 <div class="mb-3">
-                    {{ form_data.time_comment.create_form_field("time_comment", "Kommentar zur Zeit", None, InputType::Text, InputSize::Small)? }}
+                    {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                {{ form_data.category.create_select("category", &category_entries(), "Kategorie", None, InputSize::Normal)? }}
+                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", None, InputSize::Normal)|safe }}
             </div>
             <div class="mb-3">
-                {{ form_data.is_room_reservation.create_checkbox("is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))? }}
+                {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))|safe }}
             </div>
             <div class="mb-3">
-                {{ form_data.is_exclusive.create_checkbox("is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))? }}
+                {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))|safe }}
             </div>
             <div class="mb-3">
-                {{ form_data.rooms.create_form_field("rooms", "Orte", None, InputType::Text, InputSize::Normal)? }}
+                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
             </div>
             <div class="mb-3">
-                {{ form_data.room_comment.create_form_field("room_comment", "Kommentar zum Ort", None, InputType::Text, InputSize::Small)? }}
+                {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
             </div>
         </div>
     </div>
     <div class="mb-3">
-        {{ form_data.description.create_form_field("description", "Beschreibung", Some("Unterstützt Markdown"), InputType::Textarea, InputSize::Normal)? }}
+        {{ FormFieldTemplate::new(
+            form_data.description,
+            "description",
+            "Beschreibung",
+            InputConfiguration::builder()
+                .input_type(InputType::Textarea)
+                .info("Unterstützt Markdown")
+                .build())|safe }}
     </div>
-    {{ form_data.last_updated.create_hidden_input("last_updated")? }}
+    {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")?|safe }}
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
         <a href="{{ abort_url()? }}" class="btn btn-secondary"><i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen</a>
     </form>

@@ -1,11 +1,11 @@
 <label for="{{name}}Input" class="form-label">{{label}}</label>
 {% match input_type %}
 {% when InputType::Textarea %}
-    <textarea class="form-control" id="{{name}}Input" name="{{name}}" rows="8">{{data.value}}</textarea>
+    <textarea class="form-control" id="{{name}}Input" name="{{name}}" rows="8">{{data.string_value()}}</textarea>
 {% else %}
     <input type="{{ input_type.as_html_type_attr() }}"
-           class="form-control {%if !data.errors.is_empty() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
+           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
            id="{{name}}Input" name="{{name}}"
-           value="{{data.value}}">
+           value="{{data.string_value()}}">
 {% endmatch %}
 {% include "_info_and_errors.html" %}

@@ -1,9 +1,9 @@
 {% if let Some(info) = info %}
 <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle"></i> {{info}}</div>
 {% endif %}
-{% if !data.errors.is_empty() %}
+{% if data.has_errors() %}
 <div id="{{name}}Errors" class="invalid-feedback">
-    {% for error in data.errors %}
+    {% for error in data.errors() %}
         <div>{{error}}</div>
     {% endfor %}
 </div>

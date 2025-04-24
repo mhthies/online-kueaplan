@@ -78,6 +78,7 @@ impl ValidationDataForFormValue<CommaSeparatedUuidsFromList> for &Vec<Uuid> {
     fn validate_form_value(self, value: &'_ str) -> Result<CommaSeparatedUuidsFromList, String> {
         let ids_str = value.split(',');
         let ids = ids_str
+            .filter(|s| !s.is_empty())
             .map(|id_str| {
                 let id = Uuid::parse_str(id_str).map_err(|e| e.to_string())?;
                 if self.contains(&id) {

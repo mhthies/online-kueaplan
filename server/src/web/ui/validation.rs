@@ -249,6 +249,53 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use uuid::uuid;
+
+    fn get_example_uuids() -> Vec<Uuid> {
+        vec![
+            uuid!("165c1143-5a9c-4b2c-8548-d68658486763"),
+            uuid!("b46b9e54-4316-4f07-a9d9-8b6323822467"),
+            uuid!("21f253ea-a0c8-4f1e-a591-4a8000e979e9"),
+        ]
+    }
+
+    #[test]
+    fn test_comma_separated_uuids_from_list() {
+        let result: CommaSeparatedUuidsFromList = get_example_uuids()
+            .validate_form_value("21f253ea-a0c8-4f1e-a591-4a8000e979e9")
+            .unwrap();
+        assert_eq!(
+            result.into_inner(),
+            vec![uuid!("21f253ea-a0c8-4f1e-a591-4a8000e979e9")]
+        );
+        let result: CommaSeparatedUuidsFromList = get_example_uuids()
+            .validate_form_value(
+                "21f253ea-a0c8-4f1e-a591-4a8000e979e9,b46b9e54-4316-4f07-a9d9-8b6323822467",
+            )
+            .unwrap();
+        assert_eq!(
+            result.into_inner(),
+            vec![
+                uuid!("21f253ea-a0c8-4f1e-a591-4a8000e979e9"),
+                uuid!("b46b9e54-4316-4f07-a9d9-8b6323822467")
+            ]
+        );
+        let result: CommaSeparatedUuidsFromList =
+            get_example_uuids().validate_form_value("").unwrap();
+        assert_eq!(result.into_inner(), Vec::<Uuid>::new());
+    }
+
+    #[test]
+    fn test_comma_separated_uuids_from_error() {
+        let result: Result<CommaSeparatedUuidsFromList, _> =
+            get_example_uuids().validate_form_value("21f253ea-a0c8-4f1e-a591-------------");
+        assert!(result.is_err());
+        let result: Result<CommaSeparatedUuidsFromList, _> = get_example_uuids()
+            .validate_form_value(
+                "21f253ea-a0c8-4f1e-a591-4a8000e979e9,9ab30a1f-f0b8-462d-ad4c-231f5ae214d6",
+            );
+        assert!(result.is_err());
+    }
 
     #[test]
     fn test_nice_duration_hours_from_string() {

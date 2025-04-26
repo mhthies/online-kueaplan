@@ -76,6 +76,17 @@
                 .info("Unterstützt Markdown")
                 .build())|safe }}
     </div>
+    <div class="card mb-3">
+        <div class="card-header">
+            {{ CheckboxTemplate::new(form_data.create_previous_date,
+            "create_previous_date",
+            "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen",
+            Some("Nur wirksam, wenn Zeit oder Orte geändert werden."))|safe }}
+        </div>
+        <div class="card-body">
+            {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
+        </div>
+    </div>
     {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")?|safe }}
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
         <a href="{{ abort_url()? }}" class="btn btn-secondary allow-exit-with-changes">

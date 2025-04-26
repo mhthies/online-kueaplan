@@ -1,5 +1,7 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, Event, FullEntry, FullNewEntry, NewEntry, Room};
+use crate::data_store::models::{
+    Category, Event, FullEntry, FullNewEntry, FullPreviousDate, NewEntry, PreviousDate, Room,
+};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
@@ -20,6 +22,7 @@ use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
 use askama::Template;
 use serde::Deserialize;
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use uuid::Uuid;
 
 #[get("/{event_id}/entry/{entry_id}/edit")]
@@ -100,17 +103,33 @@ async fn edit_entry(
         &categories.iter().map(|c| c.id).collect(),
     );
 
-    let result = if let Some((mut entry, privious_last_updated)) = entry {
+    let result = if let Some((mut entry, privious_last_updated, create_previous_date)) = entry {
         entry.entry.id = entry_id;
         entry.entry.event_id = event_id;
         let entry_begin = entry.entry.begin;
+        if let Some(previous_date_comment) = create_previous_date {
+            if entry.entry.begin != old_entry.entry.begin
+                || entry.entry.end != old_entry.entry.end
+                || !unordered_equality(&entry.room_ids, &old_entry.room_ids)
+            {
+                entry.previous_dates.push(FullPreviousDate {
+                    previous_date: PreviousDate {
+                        id: Uuid::now_v7(),
+                        entry_id,
+                        comment: previous_date_comment,
+                        begin: old_entry.entry.begin,
+                        end: old_entry.entry.end,
+                    },
+                    room_ids: old_entry.room_ids.clone(),
+                });
+            }
+        }
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             store.create_or_update_entry(&auth, entry, true, Some(privious_last_updated))?;
             Ok(())
         })
         .await?;
-        // TODO allow creating new previous_date
 
         match result {
             Ok(()) => FormSubmitResult::Success { entry_begin },
@@ -296,6 +315,8 @@ struct EntryFormData {
     is_room_reservation: BoolFormValue,
     is_exclusive: BoolFormValue,
     last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
+    create_previous_date: BoolFormValue,
+    previous_date_comment: FormValue<String>,
 }
 
 impl EntryFormData {
@@ -303,7 +324,7 @@ impl EntryFormData {
         &mut self,
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
-    ) -> Option<(FullNewEntry, chrono::DateTime<chrono::Utc>)> {
+    ) -> Option<(FullNewEntry, chrono::DateTime<chrono::Utc>, Option<String>)> {
         let title = self.title.validate();
         let comment = self.comment.validate();
         let time_comment = self.time_comment.validate();
@@ -319,6 +340,8 @@ impl EntryFormData {
         let time = self.begin.validate();
         let duration = self.duration.validate();
         let previous_last_updated = self.last_updated.validate();
+        let create_previous_date = self.create_previous_date.get_value();
+        let previous_date_comment = self.previous_date_comment.validate();
 
         let begin = timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner());
         Some((
@@ -343,6 +366,7 @@ impl EntryFormData {
                 previous_dates: vec![],
             },
             previous_last_updated?.0,
+            create_previous_date.then_some(previous_date_comment?),
         ))
     }
 }
@@ -373,6 +397,16 @@ impl From<FullEntry> for EntryFormData {
             is_room_reservation: value.entry.is_room_reservation.into(),
             is_exclusive: value.entry.is_exclusive.into(),
             last_updated: validation::SimpleTimestampMicroseconds(value.entry.last_updated).into(),
+            create_previous_date: false.into(),
+            previous_date_comment: "".to_string().into(),
         }
     }
+}
+
+fn unordered_equality<T: Eq + Ord>(a: &[T], b: &[T]) -> bool {
+    // Source: https://stackoverflow.com/a/42748484/10315508
+    let a: BTreeSet<_> = a.iter().collect();
+    let b: BTreeSet<_> = b.iter().collect();
+
+    a == b
 }

@@ -60,6 +60,7 @@ async fn edit_entry_form(
         rooms: &rooms,
         categories: &categories,
         entry_begin: &entry_begin,
+        has_unsaved_changes: false,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -134,6 +135,7 @@ async fn edit_entry(
         rooms: &rooms,
         categories: &categories,
         entry_begin: &old_entry.entry.begin,
+        has_unsaved_changes: true,
     };
 
     create_edit_form_response(result, event_id, tmpl)
@@ -230,6 +232,7 @@ struct EditEntryFormTemplate<'a> {
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
     entry_begin: &'a chrono::DateTime<chrono::Utc>,
+    has_unsaved_changes: bool,
 }
 
 impl<'a> EditEntryFormTemplate<'a> {

@@ -47,7 +47,7 @@
                 <div class="mt-2 pt-2 border-top">
                 {% match button %}
                     {%- when crate::web::ui::flash::FlashMessageActionButton::ReloadCleanForm{ form_url } %}
-                        <a href="{{ form_url }} " class="btn btn-primary btn-sm">{# -#}
+                        <a href="{{ form_url }} " class="btn btn-primary btn-sm allow-exit-with-changes-global">{# -#}
                             <i class="bi bi-arrow-clockwise"></i> Formular neuladen</a>
                     {%- when crate::web::ui::flash::FlashMessageActionButton::SubmitForm{ form_id } %}
                         <button type="submit" form="{{ form_id }}" class="btn btn-primary btn-sm">{# -#}

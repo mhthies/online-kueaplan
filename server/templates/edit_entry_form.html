@@ -17,7 +17,8 @@
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
        the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
        To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}
-    <form method="post" action="{{post_url()?}}" autocomplete="off" id="edit_entry_form">
+    <form method="post" action="{{post_url()?}}" autocomplete="off" id="edit_entry_form"
+          {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.title, "title", "Titel", InputConfiguration::builder().size(InputSize::Large).build())|safe }}
     </div>
@@ -77,15 +78,19 @@
     </div>
     {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")?|safe }}
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
-        <a href="{{ abort_url()? }}" class="btn btn-secondary"><i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen</a>
+        <a href="{{ abort_url()? }}" class="btn btn-secondary allow-exit-with-changes">
+            <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+        </a>
     </form>
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
 <script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script>
     new TomSelect("#roomsInput", {
         options: {{ room_entries()|json|safe }}
     });
+    protectChanges(document.getElementById("edit_entry_form"));
 </script>
 {% endblock %}

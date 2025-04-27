@@ -3,12 +3,6 @@
 .kuealist .comment {
     font-size: .875em;
 }
-.kuealist td.kuea-time {
-    white-space: nowrap;
-}
-.kuealist td.kuea-time .comment{
-    white-space: normal;
-}
 .kuealist .kuea-cancelled .kuea-title .content,
 .kuealist .kuea-cancelled .kuea-time,
 .kuealist .kuea-cancelled .kuea-place,

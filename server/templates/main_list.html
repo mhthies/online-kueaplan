@@ -64,11 +64,25 @@
                             {% endif %}
                         </td>
                         <td class="kuea-time">
-                            {{ to_our_timezone(entry.entry.begin).format("%H:%M") }}&nbsp;– {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
                             {% let duration = entry.entry.end.signed_duration_since(entry.entry.begin) %}
-                            {% if duration >= chrono::TimeDelta::days(1) %}
-                                (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
+                            {% let show_begin_date = to_our_timezone(entry.entry.begin).date() < date %}
+                            {% let show_end_date = duration >= chrono::TimeDelta::hours(12)
+                                                   && to_our_timezone(entry.entry.end).date() != to_our_timezone(entry.entry.begin).date() %}
+                            {% if !show_begin_date && !show_end_date %}<span class="text-nowrap">{% endif %}
+                            {% if show_begin_date %}
+                                <span class="text-nowrap">{{ to_our_timezone(entry.entry.begin).format("%d.%m. %H:%M") -}}</span>
+                            {%- else -%}
+                                {{ to_our_timezone(entry.entry.begin).format("%H:%M") -}}
+                            {% endif -%}
+                            {% if entry.entry.end != entry.entry.begin -%}
+                                &nbsp;–
+                                {% if show_end_date %}
+                                    <span class="text-nowrap">{{ to_our_timezone(entry.entry.end).format("%d.%m. %H:%M") }}</span>
+                                {% else %}
+                                    {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
+                                {% endif %}
                             {% endif %}
+                            {% if !show_begin_date && !show_end_date %}</span>{% endif %}
                             {% if !entry.entry.time_comment.is_empty() %}
                                 <div class="comment">{{ entry.entry.time_comment }}</div>
                             {% endif %}

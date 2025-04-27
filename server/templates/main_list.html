@@ -65,6 +65,10 @@
                         </td>
                         <td class="kuea-time">
                             {{ to_our_timezone(entry.entry.begin).format("%H:%M") }}&nbsp;– {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
+                            {% let duration = entry.entry.end.signed_duration_since(entry.entry.begin) %}
+                            {% if duration >= chrono::TimeDelta::days(1) %}
+                                (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
+                            {% endif %}
                             {% if !entry.entry.time_comment.is_empty() %}
                                 <div class="comment">{{ entry.entry.time_comment }}</div>
                             {% endif %}
@@ -81,7 +85,6 @@
                     </tr>
                 {% endfor %}
             </tbody>
-        </table>
         </table>
     {% endfor %}
 

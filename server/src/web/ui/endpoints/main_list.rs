@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
-use crate::data_store::{EntryFilter, EntryFilterBuilder};
+use crate::data_store::EntryFilter;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::endpoints::main_list::filters::css_class_for_category;
 use crate::web::ui::error::AppError;
@@ -107,7 +107,7 @@ impl<'a> MainListTemplate<'a> {
 fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
     let end = begin + chrono::Duration::days(1);
-    let mut filter = EntryFilterBuilder::new();
+    let mut filter = EntryFilter::builder();
     filter.after(
         TIME_ZONE
             .from_local_datetime(&begin)

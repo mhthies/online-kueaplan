@@ -585,22 +585,38 @@ fn update_previous_date_rooms(
         .map(|_| ())
 }
 
-type BoxedBoolExpression<'a> = Box<
-    dyn BoxableExpression<schema::entries::table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool>
-        + 'a,
->;
+type BoxedBoolExpression<'a, Table> =
+    Box<dyn BoxableExpression<Table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool> + 'a>;
 
-fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a> {
+fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::entries::table> {
     use diesel::dsl::{exists, not};
     use schema::entries::dsl::*;
 
-    let mut expression: BoxedBoolExpression<'a> =
+    let mut expression: BoxedBoolExpression<'a, schema::entries::table> =
         Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
     if let Some(after) = filter.after {
         expression = Box::new(expression.as_expression().and(end.gt(after)));
     }
     if let Some(before) = filter.before {
         expression = Box::new(expression.as_expression().and(begin.lt(before)));
+    }
+    if filter.include_previous_date_matches && (filter.after.is_some() || filter.before.is_some()) {
+        use schema::previous_dates::dsl::*;
+        let mut sub_query_filter: BoxedBoolExpression<'_, _> =
+            Box::new(entry_id.eq(schema::entries::dsl::id));
+        if let Some(after) = filter.after {
+            sub_query_filter = Box::new(sub_query_filter.and(end.gt(after)));
+        }
+        if let Some(before) = filter.before {
+            sub_query_filter = Box::new(sub_query_filter.and(begin.lt(before)));
+        }
+        expression = Box::new(
+            expression.as_expression().or(exists(
+                schema::previous_dates::table
+                    .select(0.as_sql::<diesel::sql_types::Integer>())
+                    .filter(sub_query_filter),
+            )),
+        );
     }
     if let Some(categories) = filter.categories {
         expression = Box::new(expression.as_expression().and(category.eq_any(categories)));

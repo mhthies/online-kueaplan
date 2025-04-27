@@ -43,9 +43,10 @@ impl From<FilterQuery> for EntryFilter {
         EntryFilter {
             after: value.after,
             before: value.before,
-            categories: None, // TODO
-            rooms: None,      // TODO
-            no_room: false,   // TODO
+            include_previous_date_matches: false, // TODO
+            categories: None,                     // TODO
+            rooms: None,                          // TODO
+            no_room: false,                       // TODO
         }
     }
 }
@@ -94,7 +95,7 @@ async fn create_or_update_entry(
             &auth,
             FullNewEntry::from_api(entry, event_id),
             false,
-            None,
+            None, // TODO allow using E-Tag for conflict checking
         )?)
     })
     .await??;

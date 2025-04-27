@@ -20,6 +20,7 @@ use crate::cli_error::CliError::UnexpectedStoreError;
 use crate::data_store::auth_token::Privilege;
 use crate::setup;
 use auth_token::{AuthToken, GlobalAuthToken};
+use chrono::Utc;
 use std::fmt::Debug;
 
 pub mod auth_token;
@@ -184,6 +185,9 @@ pub struct EntryFilter {
     /// Filter for entries that begin before the given point in time (this includes entries that
     /// span over this point in time)
     pub before: Option<chrono::DateTime<chrono::Utc>>,
+    /// If true, entries with a previous date that matches the after/before filter are included,
+    /// even if their current begin/end does not match the after/before filter.
+    pub include_previous_date_matches: bool,
     /// Filter for entries that belong to any of the given categories
     pub categories: Option<Vec<uuid::Uuid>>,
     /// Filter for entries that use any of the given rooms
@@ -193,15 +197,24 @@ pub struct EntryFilter {
 }
 
 impl EntryFilter {
+    pub fn builder() -> EntryFilterBuilder {
+        EntryFilterBuilder {
+            result: Self::default(),
+        }
+    }
+
     /// Checks if a given entry matches the filter
     ///
     /// Usually, filtering should be done by the database. This function can be used for separate
     /// checks of individual entries in software.
     pub fn matches(&self, entry: &models::FullEntry) -> bool {
-        if let Some(after) = self.after {
-            if after >= entry.entry.end {
-                return false;
-            }
+        if !self.matches_times(entry.entry.begin, entry.entry.end)
+            && !entry
+                .previous_dates
+                .iter()
+                .any(|pd| self.matches_times(pd.previous_date.begin, pd.previous_date.end))
+        {
+            return false;
         }
         if let Some(before) = self.before {
             if before <= entry.entry.begin {
@@ -223,6 +236,20 @@ impl EntryFilter {
         }
         true
     }
+
+    fn matches_times(&self, begin: chrono::DateTime<Utc>, end: chrono::DateTime<Utc>) -> bool {
+        if let Some(after) = self.after {
+            if after >= end {
+                return false;
+            }
+        }
+        if let Some(before) = self.before {
+            if before <= begin {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 /// Builder for constructing EntryFilter objects
@@ -231,18 +258,6 @@ pub struct EntryFilterBuilder {
 }
 
 impl EntryFilterBuilder {
-    pub fn new() -> Self {
-        Self {
-            result: EntryFilter {
-                after: None,
-                before: None,
-                categories: None,
-                rooms: None,
-                no_room: false,
-            },
-        }
-    }
-
     /// Add filter, to only include entries that end after the given point in time (this includes
     /// entries that span over this point in time)
     pub fn after(&mut self, after: chrono::DateTime<chrono::Utc>) -> &mut Self {
@@ -253,6 +268,12 @@ impl EntryFilterBuilder {
     /// entries that span over this point in time)
     pub fn before(&mut self, before: chrono::DateTime<chrono::Utc>) -> &mut Self {
         self.result.before = Some(before);
+        self
+    }
+    /// Change after/before filters to include entries which do not cover the specified time
+    /// interval but have a previous_date that does.
+    pub fn include_previous_date_matches(&mut self) -> &mut Self {
+        self.result.include_previous_date_matches = true;
         self
     }
     /// Add filter to only include entries that belong to one of the given categories
@@ -373,7 +394,7 @@ impl std::fmt::Display for StoreError {
             }
             StoreError::InvalidDataInDatabase(e) => {
                 write!(f, "Data queried from database could not be deserialized: {}", e)
-            },
+            }
         }
     }
 }

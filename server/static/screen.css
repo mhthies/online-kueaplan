@@ -56,9 +56,6 @@
 table.kuealist .aside-container {
     position: relative;
 }
-.table.kuealist .aside-container > * {
-    position: relative;
-}
 table.kuealist .aside-container .table-aside-buttons {
     position: absolute;
     right: 100%;

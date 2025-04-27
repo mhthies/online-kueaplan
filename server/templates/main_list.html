@@ -43,8 +43,8 @@
             </thead>
             <tbody>
                 {% for entry in entries %}
-                    <tr class="{{ css_class_for_entry(entry) }} aside-container">
-                        <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
+                    <tr class="{{ css_class_for_entry(entry) }}">
+                        <td class="kuea-title aside-container" id="entry-{{ entry.entry.id.to_string() }}">
                             {% let effective_begin_date = self::get_effective_date(entry.entry.begin) %}
                             {% if effective_begin_date < date %}
                                 <div class="small">

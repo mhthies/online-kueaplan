@@ -40,7 +40,7 @@ pub fn timestamp_from_effective_date_and_time(
 ) -> DateTime<chrono::Utc> {
     let date = effective_date
         + if local_time < EFFECTIVE_BEGIN_OF_DAY {
-            chrono::Duration::days(-1)
+            chrono::Duration::days(1)
         } else {
             chrono::Duration::days(0)
         };
@@ -63,4 +63,67 @@ pub fn most_reasonable_date(event: Event) -> chrono::NaiveDate {
             chrono::Duration::days(0)
         };
     effective_date.clamp(event.begin_date, event.end_date)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_timestamp_from_effective_date_and_time() {
+        assert_eq!(
+            timestamp_from_effective_date_and_time(
+                "2025-08-13".parse().unwrap(),
+                "06:00".parse().unwrap()
+            ),
+            "2025-08-13T04:00:00+00:00"
+                .parse::<chrono::DateTime<chrono::Utc>>()
+                .unwrap()
+        );
+        assert_eq!(
+            timestamp_from_effective_date_and_time(
+                "2025-08-13".parse().unwrap(),
+                "17:00".parse().unwrap()
+            ),
+            "2025-08-13T15:00:00+00:00"
+                .parse::<chrono::DateTime<chrono::Utc>>()
+                .unwrap()
+        );
+        assert_eq!(
+            timestamp_from_effective_date_and_time(
+                "2025-08-13".parse().unwrap(),
+                "03:00".parse().unwrap()
+            ),
+            "2025-08-14T01:00:00+00:00"
+                .parse::<chrono::DateTime<chrono::Utc>>()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn test_get_effective_date() {
+        assert_eq!(
+            get_effective_date(
+                &"2025-08-13T04:00:00+00:00"
+                    .parse::<chrono::DateTime<chrono::Utc>>()
+                    .unwrap()
+            ),
+            "2025-08-13".parse().unwrap(),
+        );
+        assert_eq!(
+            get_effective_date(
+                &"2025-08-13T15:00:00+00:00"
+                    .parse::<chrono::DateTime<chrono::Utc>>()
+                    .unwrap()
+            ),
+            "2025-08-13".parse().unwrap(),
+        );
+        assert_eq!(
+            get_effective_date(
+                &"2025-08-14T01:00:00+00:00"
+                    .parse::<chrono::DateTime<chrono::Utc>>()
+                    .unwrap()
+            ),
+            "2025-08-13".parse().unwrap(),
+        );
+    }
 }

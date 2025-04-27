@@ -45,6 +45,13 @@
                 {% for entry in entries %}
                     <tr class="{{ css_class_for_entry(entry) }} aside-container">
                         <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
+                            {% let effective_begin_date = self::get_effective_date(entry.entry.begin) %}
+                            {% if effective_begin_date < date %}
+                                <div class="small">
+                                    <i class="bi bi-arrow-return-right" aria-hidden="true"></i>
+                                    Übertrag vom {% if effective_begin_date == date.checked_sub_days(chrono::Days::new(1)).unwrap() %}Vortag{% else %}{{ effective_begin_date.format("%d.%m.") }}{% endif %}
+                                </div>
+                            {% endif %}
                             {% if entry.entry.is_cancelled %}
                                 <span class="visually-hidden">Abgesagt: </span>
                             {% endif %}

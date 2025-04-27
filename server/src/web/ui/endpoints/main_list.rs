@@ -4,7 +4,9 @@ use crate::data_store::{EntryFilter, EntryFilterBuilder};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::endpoints::main_list::filters::css_class_for_category;
 use crate::web::ui::error::AppError;
-use crate::web::ui::time_calculation::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
+use crate::web::ui::time_calculation::{
+    get_effective_date, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,
+};
 use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;

@@ -1,6 +1,6 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::Event;
+use crate::data_store::models::{Event, FullEntry};
 use crate::data_store::{EntryId, EventId};
 use crate::web::ui::error::AppError;
 use crate::web::ui::time_calculation;
@@ -40,6 +40,30 @@ pub fn url_for_entry(
     )?;
     url.set_fragment(Some(&format!("entry-{}", entry_id)));
     Ok(url)
+}
+
+/// Generate a URL that takes the user to the main list for the given event day.
+pub fn url_for_main_list(
+    req: &HttpRequest,
+    event_id: EventId,
+    date: &chrono::NaiveDate,
+) -> Result<String, UrlGenerationError> {
+    Ok(req
+        .url_for("main_list", &[event_id.to_string(), date.to_string()])?
+        .to_string())
+}
+
+/// Generate a URL for editing the given KüA-Plan entry
+pub fn url_for_edit_entry(
+    req: &HttpRequest,
+    entry: &FullEntry,
+) -> Result<String, UrlGenerationError> {
+    Ok(req
+        .url_for(
+            "edit_entry_form",
+            &[entry.entry.event_id.to_string(), entry.entry.id.to_string()],
+        )?
+        .to_string())
 }
 
 /// Extract the session token from the session token cookie and validate it

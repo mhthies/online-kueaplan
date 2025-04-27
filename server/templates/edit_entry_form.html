@@ -14,6 +14,10 @@
     <h1>
         Eintrag bearbeiten
     </h1>
+    <div class="mb-3">
+        <a href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry_id.to_string()])? }}" class="btn btn-outline-primary">
+            <i class="bi bi-clock-history"></i> Vorherige Termine</a>
+    </div>
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
        the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
        To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}

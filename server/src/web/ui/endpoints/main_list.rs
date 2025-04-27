@@ -78,24 +78,12 @@ impl<'a> MainListTemplate<'a> {
         timestamp.with_timezone(&self.timezone).naive_local()
     }
 
-    // TODO move to more generic place
     fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
-        Ok(self
-            .base
-            .request
-            .url_for("main_list", &[self.event.id.to_string(), date.to_string()])?
-            .to_string())
+        util::url_for_main_list(self.base.request, self.event.id, date)
     }
 
     fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
-        Ok(self
-            .base
-            .request
-            .url_for(
-                "edit_entry_form",
-                &[entry.entry.event_id.to_string(), entry.entry.id.to_string()],
-            )?
-            .to_string())
+        util::url_for_edit_entry(self.base.request, entry)
     }
 
     fn css_class_for_entry(&self, entry: &'a FullEntry) -> String {

@@ -214,6 +214,31 @@ impl FullNewEntry {
     }
 }
 
+impl From<FullEntry> for FullNewEntry {
+    fn from(value: FullEntry) -> Self {
+        FullNewEntry {
+            entry: NewEntry {
+                id: value.entry.id,
+                title: value.entry.title,
+                description: value.entry.description,
+                responsible_person: value.entry.responsible_person,
+                is_room_reservation: value.entry.is_room_reservation,
+                event_id: value.entry.event_id,
+                begin: value.entry.begin,
+                end: value.entry.end,
+                category: value.entry.category,
+                comment: value.entry.comment,
+                time_comment: value.entry.time_comment,
+                room_comment: value.entry.room_comment,
+                is_exclusive: value.entry.is_exclusive,
+                is_cancelled: value.entry.is_cancelled,
+            },
+            room_ids: value.room_ids,
+            previous_dates: value.previous_dates,
+        }
+    }
+}
+
 impl From<FullEntry> for kueaplan_api_types::Entry {
     fn from(value: FullEntry) -> Self {
         kueaplan_api_types::Entry {

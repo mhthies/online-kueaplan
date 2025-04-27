@@ -34,6 +34,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::auth::login)
         .service(endpoints::edit_entry::edit_entry_form)
         .service(endpoints::edit_entry::edit_entry)
+        .service(endpoints::previous_dates::previous_dates_overview)
+        .service(endpoints::previous_dates::delete_previous_date)
         .default_service(web::to(not_found_handler))
 }
 

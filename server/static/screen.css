@@ -14,6 +14,11 @@
         border-radius: 3px;
         margin-bottom: .5rem;
     }
+    .kuealist tr:after {
+        display: block;
+        clear: both;
+        content: "";
+    }
     [data-bs-theme="dark"] .kuealist tr {
         border-color: var(--category-border-dark);
     }
@@ -37,9 +42,6 @@
     .kuealist td.kuea-people {
         padding-top: 0;
         font-size: .875em;
-    }
-    .kuealist td.kuea-people:before {
-        content: "von ";
     }
     .kuealist td.kuea-time {
         float: right;

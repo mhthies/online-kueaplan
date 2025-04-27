@@ -102,7 +102,11 @@
                                 <div class="comment">{{ entry.entry.room_comment }}</div>
                             {% endif %}
                         </td>
-                        <td class="kuea-people">{{ entry.entry.responsible_person }}</td>
+                        <td class="kuea-people">
+                            {% if !entry.entry.responsible_person.is_empty() %}
+                            <span class="d-inline d-sm-none">von</span> {{ entry.entry.responsible_person }}
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

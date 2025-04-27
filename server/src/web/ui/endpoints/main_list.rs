@@ -99,12 +99,8 @@ impl<'a> MainListTemplate<'a> {
     }
 
     fn css_class_for_entry(&self, entry: &'a FullEntry) -> String {
-        let mut result = css_class_for_category(
-            self.categories
-                .get(&entry.entry.category)
-                .expect("Category should be existing"),
-        )
-        .expect("CSS class calculation cannot fail");
+        let mut result = css_class_for_category(&entry.entry.category)
+            .expect("CSS class calculation cannot fail");
         result.push_str(" kuea-with-category");
         if entry.entry.is_cancelled {
             result.push_str(" kuea-cancelled");
@@ -171,6 +167,7 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
 /// Filters for the rinja template
 mod filters {
     use crate::data_store::models::Category;
+    use crate::data_store::CategoryId;
     use crate::web::ui::colors::CategoryColors;
     use chrono::{Datelike, Weekday};
 
@@ -243,13 +240,13 @@ mod filters {
             .expect("Category color should be a valid HTML hex color string.");
         Ok(format!(
             ".{0}{{ {1} }}",
-            css_class_for_category(category)?,
+            css_class_for_category(&category.id)?,
             colors.as_css(),
         ))
     }
 
-    pub fn css_class_for_category(category: &Category) -> askama::Result<String> {
-        Ok(format!("category-{}", category.id))
+    pub fn css_class_for_category(category_id: &CategoryId) -> askama::Result<String> {
+        Ok(format!("category-{}", category_id))
     }
 
     pub fn ellipsis(value: &str, length: usize) -> askama::Result<String> {

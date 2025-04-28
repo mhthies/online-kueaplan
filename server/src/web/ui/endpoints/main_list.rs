@@ -148,6 +148,81 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     filter.build()
 }
 
+struct MainListEntry<'a> {
+    entry: &'a FullEntry,
+    sort_time: &'a chrono::DateTime<chrono::Utc>,
+    includes_entry: bool,
+    previous_dates: Vec<&'a FullPreviousDate>,
+    merged_rooms: Vec<&'a RoomId>,
+    additional_times: Vec<(
+        &'a chrono::DateTime<chrono::Utc>,
+        &'a chrono::DateTime<chrono::Utc>,
+    )>,
+}
+
+impl<'a> MainListEntry<'a> {
+    fn form_entry(entry: &'a FullEntry) -> Self {
+        Self {
+            entry,
+            sort_time: &entry.entry.begin,
+            includes_entry: true,
+            previous_dates: vec![],
+            merged_rooms: entry.room_ids.iter().collect(),
+            additional_times: vec![],
+        }
+    }
+
+    fn from_previous_date(entry: &'a FullEntry, previous_date: &'a FullPreviousDate) -> Self {
+        Self {
+            entry,
+            sort_time: &previous_date.previous_date.begin,
+            includes_entry: false,
+            previous_dates: vec![previous_date],
+            merged_rooms: previous_date.room_ids.iter().collect(),
+            additional_times: vec![(
+                &previous_date.previous_date.begin,
+                &previous_date.previous_date.end,
+            )],
+        }
+    }
+
+    fn merge_from(&mut self, other: &mut MainListEntry<'a>) {
+        assert_eq!(self.entry.entry.id, other.entry.entry.id);
+        self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
+        self.includes_entry |= other.includes_entry;
+        self.previous_dates.append(&mut other.previous_dates);
+        // TODO deduplicate additional_times (with existing and with entry's begin/end)
+        self.additional_times.append(&mut other.additional_times);
+        for room in std::mem::take(&mut other.merged_rooms) {
+            if !self.merged_rooms.contains(&room) {
+                self.merged_rooms.push(room);
+            }
+        }
+    }
+}
+
+fn generate_list_entries(entries: &Vec<FullEntry>) -> Vec<MainListEntry> {
+    let mut result = Vec::with_capacity(entries.len());
+    for entry in entries.iter() {
+        // TODO filter by date
+        result.push(MainListEntry::form_entry(entry));
+        for previous_date in entry.previous_dates.iter() {
+            // TODO filter by date
+            result.push(MainListEntry::from_previous_date(entry, previous_date))
+        }
+    }
+    result.sort_by_key(|e| e.sort_time);
+    result.dedup_by(|a, b| {
+        if a.entry.entry.id == b.entry.entry.id {
+            b.merge_from(a);
+            true
+        } else {
+            false
+        }
+    });
+    result
+}
+
 // entries must be sorted by begin timestamp
 fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullEntry>)> {
     let mut result = Vec::new();
@@ -175,4 +250,64 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
         result.push((time_block_name.to_string(), block_entries));
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_store::models::Entry;
+    use uuid::uuid;
+    #[test]
+    fn test_generate_list_entries() {
+        let room_1 = uuid!("f6ad3e0b-4371-4a84-a485-45da7f1d8cb8");
+        let room_2 = uuid!("a3820b53-e9a9-4840-b071-7fa3ba34010a");
+        let room_3 = uuid!("41d96e3c-17de-46ff-9331-690366a4a0a5");
+        let entries = vec![FullEntry {
+            entry: Entry {
+                id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                title: "A".to_string(),
+                description: "".to_string(),
+                responsible_person: "".to_string(),
+                is_room_reservation: false,
+                event_id: 1,
+                begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
+                end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
+                category: Default::default(),
+                last_updated: Default::default(),
+                comment: "".to_string(),
+                time_comment: "".to_string(),
+                room_comment: "".to_string(),
+                is_exclusive: false,
+                is_cancelled: false,
+            },
+            room_ids: vec![room_1],
+            previous_dates: vec![
+                FullPreviousDate {
+                    previous_date: PreviousDate {
+                        id: uuid!("6385b911-c641-47c8-8d50-26d2fe1ee764"),
+                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                        comment: "Wegen Kollision mit Anreise auf Nachmittag verschoben"
+                            .to_string(),
+                        begin: "2025-04-28 9:00:00+00:00".parse().unwrap(),
+                        end: "2025-04-28 10:00:00+00:00".parse().unwrap(),
+                    },
+                    room_ids: vec![room_2],
+                },
+                FullPreviousDate {
+                    previous_date: PreviousDate {
+                        id: uuid!("38023800-c9be-45a8-8d08-2f118ea6b15c"),
+                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                        comment: "Klavier steht jetzt in Raum 1".to_string(),
+                        begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
+                        end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
+                    },
+                    room_ids: vec![room_2],
+                },
+            ],
+        }];
+        // TODO two more entries: one with two previous dates (one on other date, one near event),
+        //   one on other day with previous date on current date.
+        let result = generate_list_entries(&entries);
+        // TODO check result
+    }
 }

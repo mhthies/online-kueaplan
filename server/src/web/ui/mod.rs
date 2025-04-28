@@ -6,6 +6,7 @@ use error_page::error_page_middleware;
 use flash::flash_middleware;
 use rust_embed::Embed;
 
+mod askama_filters;
 pub mod base_template;
 mod colors;
 mod endpoints;

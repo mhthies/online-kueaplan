@@ -3,7 +3,7 @@
 {% block custom_header %}
 <style>
     {% for category in categories.values() %}
-    {{ category|styles_for_category }}
+        {{ Self::styles_for_category(category) }}
     {% endfor %}
 </style>
 {% endblock %}
@@ -43,9 +43,9 @@
             </thead>
             <tbody>
                 {% for entry in entries %}
-                    <tr class="{{ css_class_for_entry(entry) }}">
+                    <tr class="{{ Self::css_class_for_entry(entry) }}">
                         <td class="kuea-title aside-container" id="entry-{{ entry.entry.id.to_string() }}">
-                            {% let effective_begin_date = self::get_effective_date(entry.entry.begin) %}
+                            {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(entry.entry.begin) %}
                             {% if effective_begin_date < date %}
                                 <div class="small">
                                     <i class="bi bi-arrow-return-right" aria-hidden="true"></i>

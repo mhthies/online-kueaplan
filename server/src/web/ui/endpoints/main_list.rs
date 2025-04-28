@@ -1,12 +1,10 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
-use crate::data_store::EntryFilter;
+use crate::data_store::{CategoryId, EntryFilter};
 use crate::web::ui::base_template::BaseTemplateContext;
-use crate::web::ui::endpoints::main_list::filters::css_class_for_category;
+use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
-use crate::web::ui::time_calculation::{
-    get_effective_date, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,
-};
+use crate::web::ui::time_calculation::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
 use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
@@ -88,9 +86,29 @@ impl<'a> MainListTemplate<'a> {
         util::url_for_edit_entry(self.base.request, entry)
     }
 
-    fn css_class_for_entry(&self, entry: &'a FullEntry) -> String {
-        let mut result = css_class_for_category(&entry.entry.category)
-            .expect("CSS class calculation cannot fail");
+    /// Generate all required (inline) CSS stylesheet content for the given category.
+    ///
+    /// This function is called within the template once for every category.
+    /// It generates CSS rules for the category's CSS class (according to [css_class_for_category])
+    /// that can be used for rendering entries belonging to that category.
+    fn styles_for_category(category: &Category) -> String {
+        let colors = CategoryColors::from_base_color_hex(&category.color)
+            .expect("Category color should be a valid HTML hex color string.");
+        format!(
+            ".{0}{{ {1} }}",
+            Self::css_class_for_category(&category.id),
+            colors.as_css(),
+        )
+    }
+
+    /// Return the CSS class name representing the Category with id `category_id`
+    fn css_class_for_category(category_id: &CategoryId) -> String {
+        format!("category-{}", category_id)
+    }
+
+    /// Generate the HTML 'class' attribute for the table row of the given `entry`
+    fn css_class_for_entry(entry: &'a FullEntry) -> String {
+        let mut result = Self::css_class_for_category(&entry.entry.category);
         result.push_str(" kuea-with-category");
         if entry.entry.is_cancelled {
             result.push_str(" kuea-cancelled");
@@ -100,6 +118,11 @@ impl<'a> MainListTemplate<'a> {
         }
         result
     }
+}
+
+/// Filters for the rinja template
+mod filters {
+    pub use crate::web::ui::askama_filters::{ellipsis, markdown, weekday, weekday_short};
 }
 
 /// Generate an EntryFilter for retrieving only the entries on the given day (using the
@@ -152,101 +175,4 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
         result.push((time_block_name.to_string(), block_entries));
     }
     result
-}
-
-/// Filters for the rinja template
-mod filters {
-    use crate::data_store::models::Category;
-    use crate::data_store::CategoryId;
-    use crate::web::ui::colors::CategoryColors;
-    use chrono::{Datelike, Weekday};
-
-    pub fn markdown(input: &str) -> askama::Result<askama::filters::Safe<String>> {
-        let arena = comrak::Arena::new();
-        let options = comrak::ComrakOptions {
-            extension: comrak::ExtensionOptions::builder()
-                .strikethrough(true)
-                .tagfilter(true)
-                .table(true)
-                .footnotes(true)
-                .underline(true)
-                .build(),
-            parse: Default::default(),
-            render: comrak::RenderOptions::builder().escape(true).build(),
-        };
-        let ast_root = comrak::parse_document(&arena, input, &options);
-
-        markdown_increase_heading_level(ast_root, 3);
-
-        let mut bw = std::io::BufWriter::new(Vec::new());
-        comrak::format_html(ast_root, &options, &mut bw)?;
-        Ok(askama::filters::Safe(
-            String::from_utf8(
-                bw.into_inner()
-                    .expect("Extracting vector from BufWriter should not fail."),
-            )
-            .expect("comrak HTML formatter should only generate valid UTF-8 bytes."),
-        ))
-    }
-
-    fn markdown_increase_heading_level<'a>(
-        ast_root: &'a comrak::nodes::AstNode<'a>,
-        increase_by: u8,
-    ) {
-        for node in ast_root.descendants() {
-            if let comrak::nodes::NodeValue::Heading(ref mut heading) = node.data.borrow_mut().value
-            {
-                heading.level = (heading.level + increase_by).clamp(1, 6);
-            }
-        }
-    }
-
-    pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
-        Ok(match date.weekday() {
-            Weekday::Mon => "Montag",
-            Weekday::Tue => "Dienstag",
-            Weekday::Wed => "Mittwoch",
-            Weekday::Thu => "Donnerstag",
-            Weekday::Fri => "Freitag",
-            Weekday::Sat => "Samstag",
-            Weekday::Sun => "Sonntag",
-        })
-    }
-
-    pub fn weekday_short(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
-        Ok(match date.weekday() {
-            Weekday::Mon => "Mo",
-            Weekday::Tue => "Di",
-            Weekday::Wed => "Mi",
-            Weekday::Thu => "Do",
-            Weekday::Fri => "Fr",
-            Weekday::Sat => "Sa",
-            Weekday::Sun => "So",
-        })
-    }
-
-    pub fn styles_for_category(category: &Category) -> askama::Result<String> {
-        let colors = CategoryColors::from_base_color_hex(&category.color)
-            .expect("Category color should be a valid HTML hex color string.");
-        Ok(format!(
-            ".{0}{{ {1} }}",
-            css_class_for_category(&category.id)?,
-            colors.as_css(),
-        ))
-    }
-
-    pub fn css_class_for_category(category_id: &CategoryId) -> askama::Result<String> {
-        Ok(format!("category-{}", category_id))
-    }
-
-    pub fn ellipsis(value: &str, length: usize) -> askama::Result<String> {
-        if value.chars().count() > length {
-            Ok(format!(
-                "{}…",
-                value.chars().take(length - 1).collect::<String>()
-            ))
-        } else {
-            Ok(value.to_owned())
-        }
-    }
 }

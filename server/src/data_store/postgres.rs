@@ -595,7 +595,7 @@ fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::ent
     let mut expression: BoxedBoolExpression<'a, schema::entries::table> =
         Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
     if let Some(after) = filter.after {
-        expression = Box::new(expression.as_expression().and(end.gt(after)));
+        expression = Box::new(expression.as_expression().and(end.ge(after)));
     }
     if let Some(before) = filter.before {
         expression = Box::new(expression.as_expression().and(begin.lt(before)));

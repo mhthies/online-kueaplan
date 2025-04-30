@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, Event, FullEntry, Room};
-use crate::data_store::{CategoryId, EntryFilter};
+use crate::data_store::models::{Category, Event, FullEntry, FullPreviousDate, Room};
+use crate::data_store::{CategoryId, EntryFilter, RoomId};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
@@ -145,6 +145,7 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
             .map(|dt| dt.to_utc())
             .unwrap_or(end.and_utc()),
     );
+    filter.include_previous_date_matches();
     filter.build()
 }
 
@@ -191,8 +192,13 @@ impl<'a> MainListEntry<'a> {
         self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
         self.includes_entry |= other.includes_entry;
         self.previous_dates.append(&mut other.previous_dates);
-        // TODO deduplicate additional_times (with existing and with entry's begin/end)
-        self.additional_times.append(&mut other.additional_times);
+        for times in std::mem::take(&mut other.additional_times) {
+            if !self.additional_times.contains(&times)
+                && times != (&self.entry.entry.begin, &self.entry.entry.end)
+            {
+                self.additional_times.push(times);
+            }
+        }
         for room in std::mem::take(&mut other.merged_rooms) {
             if !self.merged_rooms.contains(&room) {
                 self.merged_rooms.push(room);
@@ -201,14 +207,23 @@ impl<'a> MainListEntry<'a> {
     }
 }
 
-fn generate_list_entries(entries: &Vec<FullEntry>) -> Vec<MainListEntry> {
+fn generate_list_entries<'a>(
+    entries: &'a Vec<FullEntry>,
+    date: &chrono::NaiveDate,
+) -> Vec<MainListEntry<'a>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
-        // TODO filter by date
-        result.push(MainListEntry::form_entry(entry));
+        if effective_date_matches(&entry.entry.begin, &entry.entry.end, date) {
+            result.push(MainListEntry::form_entry(entry));
+        }
         for previous_date in entry.previous_dates.iter() {
-            // TODO filter by date
-            result.push(MainListEntry::from_previous_date(entry, previous_date))
+            if effective_date_matches(
+                &previous_date.previous_date.begin,
+                &previous_date.previous_date.end,
+                date,
+            ) {
+                result.push(MainListEntry::from_previous_date(entry, previous_date))
+            }
         }
     }
     result.sort_by_key(|e| e.sort_time);
@@ -221,6 +236,29 @@ fn generate_list_entries(entries: &Vec<FullEntry>) -> Vec<MainListEntry> {
         }
     });
     result
+}
+
+/// Check if the given time interval `(begin, end)` intersects with the given day, using the
+/// EFFECTIVE_BEGIN_OF_DAY.
+fn effective_date_matches(
+    begin: &chrono::DateTime<chrono::Utc>,
+    end: &chrono::DateTime<chrono::Utc>,
+    effective_date: &chrono::NaiveDate,
+) -> bool {
+    let after = effective_date.and_time(EFFECTIVE_BEGIN_OF_DAY);
+    let before = after + chrono::Duration::days(1);
+    let after = TIME_ZONE
+        .from_local_datetime(&after)
+        .earliest()
+        .map(|dt| dt.to_utc())
+        .unwrap_or(after.and_utc());
+    let before = TIME_ZONE
+        .from_local_datetime(&before)
+        .latest()
+        .map(|dt| dt.to_utc())
+        .unwrap_or(before.and_utc());
+
+    *end >= after && *begin < before
 }
 
 // entries must be sorted by begin timestamp
@@ -255,59 +293,151 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_store::models::Entry;
+    use crate::data_store::models::{Entry, PreviousDate};
     use uuid::uuid;
     #[test]
     fn test_generate_list_entries() {
-        let room_1 = uuid!("f6ad3e0b-4371-4a84-a485-45da7f1d8cb8");
+        let room_1 = uuid!("41d96e3c-17de-46ff-9331-690366a4a0a5");
         let room_2 = uuid!("a3820b53-e9a9-4840-b071-7fa3ba34010a");
-        let room_3 = uuid!("41d96e3c-17de-46ff-9331-690366a4a0a5");
-        let entries = vec![FullEntry {
-            entry: Entry {
-                id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
-                title: "A".to_string(),
-                description: "".to_string(),
-                responsible_person: "".to_string(),
-                is_room_reservation: false,
-                event_id: 1,
-                begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
-                end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
-                category: Default::default(),
-                last_updated: Default::default(),
-                comment: "".to_string(),
-                time_comment: "".to_string(),
-                room_comment: "".to_string(),
-                is_exclusive: false,
-                is_cancelled: false,
+        let room_3 = uuid!("f6ad3e0b-4371-4a84-a485-45da7f1d8cb8");
+        let entries = vec![
+            FullEntry {
+                entry: Entry {
+                    id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                    title: "A".to_string(),
+                    description: "".to_string(),
+                    responsible_person: "".to_string(),
+                    is_room_reservation: false,
+                    event_id: 1,
+                    begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
+                    end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
+                    category: Default::default(),
+                    last_updated: Default::default(),
+                    comment: "".to_string(),
+                    time_comment: "".to_string(),
+                    room_comment: "".to_string(),
+                    is_exclusive: false,
+                    is_cancelled: false,
+                },
+                room_ids: vec![room_1],
+                previous_dates: vec![
+                    FullPreviousDate {
+                        previous_date: PreviousDate {
+                            id: uuid!("6385b911-c641-47c8-8d50-26d2fe1ee764"),
+                            entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                            comment: "Wegen Kollision mit Anreise auf Nachmittag verschoben"
+                                .to_string(),
+                            begin: "2025-04-28 9:00:00+00:00".parse().unwrap(),
+                            end: "2025-04-28 10:00:00+00:00".parse().unwrap(),
+                        },
+                        room_ids: vec![room_2],
+                    },
+                    FullPreviousDate {
+                        previous_date: PreviousDate {
+                            id: uuid!("38023800-c9be-45a8-8d08-2f118ea6b15c"),
+                            entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                            comment: "Klavier steht jetzt in Raum 1".to_string(),
+                            begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
+                            end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
+                        },
+                        room_ids: vec![room_2],
+                    },
+                ],
             },
-            room_ids: vec![room_1],
-            previous_dates: vec![
-                FullPreviousDate {
-                    previous_date: PreviousDate {
-                        id: uuid!("6385b911-c641-47c8-8d50-26d2fe1ee764"),
-                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
-                        comment: "Wegen Kollision mit Anreise auf Nachmittag verschoben"
-                            .to_string(),
-                        begin: "2025-04-28 9:00:00+00:00".parse().unwrap(),
-                        end: "2025-04-28 10:00:00+00:00".parse().unwrap(),
-                    },
-                    room_ids: vec![room_2],
+            FullEntry {
+                entry: Entry {
+                    id: uuid!("01968846-8729-7e19-ae21-6d28e8abde31"),
+                    title: "B".to_string(),
+                    description: "".to_string(),
+                    responsible_person: "".to_string(),
+                    is_room_reservation: false,
+                    event_id: 1,
+                    begin: "2025-04-28 12:00:00+00:00".parse().unwrap(),
+                    end: "2025-04-28 13:30:00+00:00".parse().unwrap(),
+                    category: Default::default(),
+                    last_updated: Default::default(),
+                    comment: "".to_string(),
+                    time_comment: "".to_string(),
+                    room_comment: "".to_string(),
+                    is_exclusive: false,
+                    is_cancelled: false,
                 },
-                FullPreviousDate {
-                    previous_date: PreviousDate {
-                        id: uuid!("38023800-c9be-45a8-8d08-2f118ea6b15c"),
-                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
-                        comment: "Klavier steht jetzt in Raum 1".to_string(),
-                        begin: "2025-04-28 14:00:00+00:00".parse().unwrap(),
-                        end: "2025-04-28 16:00:00+00:00".parse().unwrap(),
+                room_ids: vec![room_3],
+                previous_dates: vec![
+                    FullPreviousDate {
+                        previous_date: PreviousDate {
+                            id: uuid!("9eb8121a-9e98-4a54-94da-ed32032a4a91"),
+                            entry_id: uuid!("01968846-8729-7e19-ae21-6d28e8abde31"),
+                            comment: "Jetzt doch etwas später".to_string(),
+                            begin: "2025-04-28 11:30:00+00:00".parse().unwrap(),
+                            end: "2025-04-28 13:00:00+00:00".parse().unwrap(),
+                        },
+                        room_ids: vec![room_3],
                     },
-                    room_ids: vec![room_2],
+                    FullPreviousDate {
+                        previous_date: PreviousDate {
+                            id: uuid!("9eb8121a-9e98-4a54-94da-ed32032a4a91"),
+                            entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                            comment: "".to_string(),
+                            begin: "2025-04-27 12:00:00+00:00".parse().unwrap(),
+                            end: "2025-04-27 13:30:00+00:00".parse().unwrap(),
+                        },
+                        room_ids: vec![room_3],
+                    },
+                ],
+            },
+            FullEntry {
+                entry: Entry {
+                    id: uuid!("8e17d6dc-1b10-4685-8689-dd998deb17c6"),
+                    title: "C".to_string(),
+                    description: "".to_string(),
+                    responsible_person: "".to_string(),
+                    is_room_reservation: false,
+                    event_id: 1,
+                    begin: "2025-04-27 15:00:00+00:00".parse().unwrap(),
+                    end: "2025-04-27 15:30:00+00:00".parse().unwrap(),
+                    category: Default::default(),
+                    last_updated: Default::default(),
+                    comment: "".to_string(),
+                    time_comment: "".to_string(),
+                    room_comment: "".to_string(),
+                    is_exclusive: false,
+                    is_cancelled: false,
                 },
-            ],
-        }];
-        // TODO two more entries: one with two previous dates (one on other date, one near event),
-        //   one on other day with previous date on current date.
-        let result = generate_list_entries(&entries);
-        // TODO check result
+                room_ids: vec![room_1],
+                previous_dates: vec![FullPreviousDate {
+                    previous_date: PreviousDate {
+                        id: uuid!("9eb8121a-9e98-4a54-94da-ed32032a4a91"),
+                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                        comment: "".to_string(),
+                        begin: "2025-04-28 11:00:00+00:00".parse().unwrap(),
+                        end: "2025-04-28 11:30:00+00:00".parse().unwrap(),
+                    },
+                    room_ids: vec![room_1],
+                }],
+            },
+        ];
+        let result = generate_list_entries(&entries, &"2025-04-28".parse().unwrap());
+        assert_eq!(
+            result
+                .iter()
+                .map(|e| {
+                    let mut sorted_rooms = e.merged_rooms.clone();
+                    sorted_rooms.sort();
+                    (
+                        e.entry.entry.title.as_str(),
+                        e.includes_entry,
+                        e.additional_times.len(),
+                        sorted_rooms,
+                    )
+                })
+                .collect::<Vec<_>>(),
+            vec![
+                ("A", false, 1, vec![&room_2]),
+                ("C", false, 1, vec![&room_1]),
+                ("B", true, 1, vec![&room_3]),
+                ("A", true, 0, vec![&room_1, &room_2]),
+            ]
+        );
     }
 }

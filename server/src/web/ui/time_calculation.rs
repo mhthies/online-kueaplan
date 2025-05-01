@@ -7,7 +7,8 @@ pub const EFFECTIVE_BEGIN_OF_DAY: chrono::NaiveTime =
     chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap();
 pub const TIME_ZONE: chrono_tz::Tz = chrono_tz::Europe::Berlin;
 // in local time
-pub const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 3] = [
+pub const TIME_BLOCKS: [(&str, Option<chrono::NaiveTime>); 4] = [
+    ("vom Vortag", Some(EFFECTIVE_BEGIN_OF_DAY)),
     (
         "Morgens",
         Some(chrono::NaiveTime::from_hms_opt(12, 0, 0).unwrap()),

@@ -4,7 +4,9 @@ use crate::data_store::{CategoryId, EntryFilter, RoomId};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
-use crate::web::ui::time_calculation::{EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE};
+use crate::web::ui::time_calculation::{
+    timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,
+};
 use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
@@ -37,13 +39,13 @@ async fn main_list(
     .await??;
 
     let title = date.format("%d.%m.").to_string();
-    let rows = generate_list_entries(&entries, &date);
+    let rows = generate_list_entries(&entries, date);
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
         },
-        entry_blocks: group_rows_into_blocks(&rows),
+        entry_blocks: group_rows_into_blocks(&rows, date),
         entries_with_descriptions: rows
             .iter()
             .filter(|row| {
@@ -243,7 +245,7 @@ impl<'a> MainListRow<'a> {
 /// current date, sorts them by `begin` and merges consecutive list rows
 fn generate_list_entries<'a>(
     entries: &'a Vec<FullEntry>,
-    date: &chrono::NaiveDate,
+    date: chrono::NaiveDate,
 ) -> Vec<MainListRow<'a>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
@@ -277,7 +279,7 @@ fn generate_list_entries<'a>(
 fn effective_date_matches(
     begin: &chrono::DateTime<chrono::Utc>,
     end: &chrono::DateTime<chrono::Utc>,
-    effective_date: &chrono::NaiveDate,
+    effective_date: chrono::NaiveDate,
 ) -> bool {
     let after = effective_date.and_time(EFFECTIVE_BEGIN_OF_DAY);
     let before = after + chrono::Duration::days(1);
@@ -295,9 +297,12 @@ fn effective_date_matches(
     *end >= after && *begin < before
 }
 
-/// Group
+/// Group the rows of the main list into predefined blocks by time
+///
+/// The list must be already be sorted by [MainListRow::sort_time].
 fn group_rows_into_blocks<'a>(
     entries: &'a Vec<MainListRow<'a>>,
+    date: chrono::NaiveDate,
 ) -> Vec<(String, Vec<&'a MainListRow<'a>>)> {
     let mut result = Vec::new();
     let mut block_entries = Vec::new();
@@ -307,7 +312,7 @@ fn group_rows_into_blocks<'a>(
         .expect("At least one time block should be defined.");
     for entry in entries {
         while time_block_time.is_some_and(|block_begin_time| {
-            entry.sort_time.with_timezone(&TIME_ZONE).time() >= block_begin_time
+            timestamp_from_effective_date_and_time(date, block_begin_time) <= *entry.sort_time
         }) {
             if !block_entries.is_empty() {
                 result.push((time_block_name.to_string(), block_entries));
@@ -452,7 +457,7 @@ mod tests {
                 }],
             },
         ];
-        let result = generate_list_entries(&entries, &"2025-04-28".parse().unwrap());
+        let result = generate_list_entries(&entries, "2025-04-28".parse().unwrap());
         assert_eq!(
             result
                 .iter()

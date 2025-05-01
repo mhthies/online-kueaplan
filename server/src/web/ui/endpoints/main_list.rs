@@ -37,15 +37,21 @@ async fn main_list(
     .await??;
 
     let title = date.format("%d.%m.").to_string();
+    let rows = generate_list_entries(&entries, &date);
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
         },
-        entry_blocks: sort_entries_into_blocks(&entries),
-        entries_with_descriptions: entries
+        entry_blocks: group_rows_into_blocks(&rows),
+        entries_with_descriptions: rows
             .iter()
-            .filter(|e| !e.entry.is_cancelled && !e.entry.description.is_empty())
+            .filter(|row| {
+                row.includes_entry
+                    && !row.entry.entry.is_cancelled
+                    && !row.entry.entry.description.is_empty()
+            })
+            .map(|row| row.entry)
             .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         categories: categories.iter().map(|r| (r.id, r)).collect(),
@@ -62,7 +68,7 @@ async fn main_list(
 #[template(path = "main_list.html")]
 struct MainListTemplate<'a> {
     base: BaseTemplateContext<'a>,
-    entry_blocks: Vec<(String, Vec<&'a FullEntry>)>,
+    entry_blocks: Vec<(String, Vec<&'a MainListRow<'a>>)>,
     entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     categories: BTreeMap<uuid::Uuid, &'a Category>,
@@ -154,7 +160,7 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
 /// This can either represent a KüA-Plan entry itself at its scheduled time or one or more
 /// previous_dates of one (!) entry or a combination of both. The struct does not hold the data
 /// itself but only contains references to the [FullEntry] struct and the relevant parts of it.
-struct MainListEntry<'a> {
+struct MainListRow<'a> {
     /// The KüA plan entry this row is about
     entry: &'a FullEntry,
     /// The relevant timestamp for sorting this row in the list. I.e. the `begin` of the entry or
@@ -177,7 +183,7 @@ struct MainListEntry<'a> {
     )>,
 }
 
-impl<'a> MainListEntry<'a> {
+impl<'a> MainListRow<'a> {
     /// Create a MainListEntry for given `entry` itself
     fn form_entry(entry: &'a FullEntry) -> Self {
         Self {
@@ -210,7 +216,7 @@ impl<'a> MainListEntry<'a> {
     ///
     /// This merges all information from `other` into `self`, such that `self` represents all the
     /// dates of the entry (current or previous) of `other` as well, afterward.
-    fn merge_from(&mut self, other: &MainListEntry<'a>) {
+    fn merge_from(&mut self, other: &MainListRow<'a>) {
         debug_assert_eq!(self.entry.entry.id, other.entry.entry.id);
         self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
         self.includes_entry |= other.includes_entry;
@@ -230,7 +236,7 @@ impl<'a> MainListEntry<'a> {
     }
 }
 
-/// Generate the list of [MainListEntry]s for the given `date` from the given list of KüA-Plan
+/// Generate the list of [MainListRow]s for the given `date` from the given list of KüA-Plan
 /// `entries`.
 ///
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry at the
@@ -238,11 +244,11 @@ impl<'a> MainListEntry<'a> {
 fn generate_list_entries<'a>(
     entries: &'a Vec<FullEntry>,
     date: &chrono::NaiveDate,
-) -> Vec<MainListEntry<'a>> {
+) -> Vec<MainListRow<'a>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
         if effective_date_matches(&entry.entry.begin, &entry.entry.end, date) {
-            result.push(MainListEntry::form_entry(entry));
+            result.push(MainListRow::form_entry(entry));
         }
         for previous_date in entry.previous_dates.iter() {
             if effective_date_matches(
@@ -250,7 +256,7 @@ fn generate_list_entries<'a>(
                 &previous_date.previous_date.end,
                 date,
             ) {
-                result.push(MainListEntry::from_previous_date(entry, previous_date))
+                result.push(MainListRow::from_previous_date(entry, previous_date))
             }
         }
     }
@@ -289,8 +295,10 @@ fn effective_date_matches(
     *end >= after && *begin < before
 }
 
-// entries must be sorted by begin timestamp
-fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullEntry>)> {
+/// Group
+fn group_rows_into_blocks<'a>(
+    entries: &'a Vec<MainListRow<'a>>,
+) -> Vec<(String, Vec<&'a MainListRow<'a>>)> {
     let mut result = Vec::new();
     let mut block_entries = Vec::new();
     let mut time_block_iter = TIME_BLOCKS.iter();
@@ -299,9 +307,8 @@ fn sort_entries_into_blocks(entries: &Vec<FullEntry>) -> Vec<(String, Vec<&FullE
         .expect("At least one time block should be defined.");
     for entry in entries {
         while time_block_time.is_some_and(|block_begin_time| {
-            entry.entry.begin.with_timezone(&TIME_ZONE).time() >= block_begin_time
+            entry.sort_time.with_timezone(&TIME_ZONE).time() >= block_begin_time
         }) {
-            // TODO convert to local timezone
             if !block_entries.is_empty() {
                 result.push((time_block_name.to_string(), block_entries));
             }

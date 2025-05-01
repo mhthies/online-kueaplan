@@ -30,7 +30,7 @@
     <h1>
         KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
     </h1>
-    {% for (block_name, entries) in entry_blocks %}
+    {% for (block_name, rows) in entry_blocks %}
         {% if entry_blocks.len() > 1 %}<h3>{{ block_name }}</h3>{% endif %}
         <table class="table table-striped kuealist">
             <thead>
@@ -42,7 +42,8 @@
             </tr>
             </thead>
             <tbody>
-                {% for entry in entries %}
+                {% for row in rows if row.includes_entry %}
+                    {% let entry = row.entry %}
                     <tr class="{{ Self::css_class_for_entry(entry) }}">
                         <td class="kuea-title aside-container" id="entry-{{ entry.entry.id.to_string() }}">
                             {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(entry.entry.begin) %}

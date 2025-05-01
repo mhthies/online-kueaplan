@@ -149,12 +149,28 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     filter.build()
 }
 
+/// A single row in the list view
+///
+/// This can either represent a KüA-Plan entry itself at its scheduled time or one or more
+/// previous_dates of one (!) entry or a combination of both. The struct does not hold the data
+/// itself but only contains references to the [FullEntry] struct and the relevant parts of it.
 struct MainListEntry<'a> {
+    /// The KüA plan entry this row is about
     entry: &'a FullEntry,
+    /// The relevant timestamp for sorting this row in the list. I.e. the `begin` of the entry or
+    /// the relevant previous_date or the minimum of all of those (when this row covers more than
+    /// one begin time)
     sort_time: &'a chrono::DateTime<chrono::Utc>,
+    /// `true` if this list row represents the entry itself (with its currently scheduled date),
+    /// maybe together with one or more previous dates. `false` if this list entry *only* represents
+    /// previous_dates of the KüA-Plan entry   
     includes_entry: bool,
+    /// The previous_dates represented by this list row (if any)
     previous_dates: Vec<&'a FullPreviousDate>,
+    /// The merged set of rooms of all dates represented by this list row
     merged_rooms: Vec<&'a RoomId>,
+    /// The set of unique `(begin, end)` times represented by this row that are not equal to the
+    /// entry's current scheduled time.
     additional_times: Vec<(
         &'a chrono::DateTime<chrono::Utc>,
         &'a chrono::DateTime<chrono::Utc>,
@@ -162,6 +178,7 @@ struct MainListEntry<'a> {
 }
 
 impl<'a> MainListEntry<'a> {
+    /// Create a MainListEntry for given `entry` itself
     fn form_entry(entry: &'a FullEntry) -> Self {
         Self {
             entry,
@@ -173,7 +190,9 @@ impl<'a> MainListEntry<'a> {
         }
     }
 
+    /// Create a MainListEntry for the given `previous_date` of the `entry`
     fn from_previous_date(entry: &'a FullEntry, previous_date: &'a FullPreviousDate) -> Self {
+        debug_assert_eq!(previous_date.previous_date.entry_id, entry.entry.id);
         Self {
             entry,
             sort_time: &previous_date.previous_date.begin,
@@ -187,19 +206,23 @@ impl<'a> MainListEntry<'a> {
         }
     }
 
-    fn merge_from(&mut self, other: &mut MainListEntry<'a>) {
-        assert_eq!(self.entry.entry.id, other.entry.entry.id);
+    /// Merge two MainListEntries of the same KüA-Plan `entry`.
+    ///
+    /// This merges all information from `other` into `self`, such that `self` represents all the
+    /// dates of the entry (current or previous) of `other` as well, afterward.
+    fn merge_from(&mut self, other: &MainListEntry<'a>) {
+        debug_assert_eq!(self.entry.entry.id, other.entry.entry.id);
         self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
         self.includes_entry |= other.includes_entry;
-        self.previous_dates.append(&mut other.previous_dates);
-        for times in std::mem::take(&mut other.additional_times) {
+        self.previous_dates.extend_from_slice(&other.previous_dates);
+        for times in other.additional_times.iter() {
             if !self.additional_times.contains(&times)
-                && times != (&self.entry.entry.begin, &self.entry.entry.end)
+                && *times != (&self.entry.entry.begin, &self.entry.entry.end)
             {
-                self.additional_times.push(times);
+                self.additional_times.push(*times);
             }
         }
-        for room in std::mem::take(&mut other.merged_rooms) {
+        for room in other.merged_rooms.iter() {
             if !self.merged_rooms.contains(&room) {
                 self.merged_rooms.push(room);
             }
@@ -207,6 +230,11 @@ impl<'a> MainListEntry<'a> {
     }
 }
 
+/// Generate the list of [MainListEntry]s for the given `date` from the given list of KüA-Plan
+/// `entries`.
+///
+/// This algorithm creates a MainListEntry for each entry and each previous_date of an entry at the
+/// current date, sorts them by `begin` and merges consecutive list rows
 fn generate_list_entries<'a>(
     entries: &'a Vec<FullEntry>,
     date: &chrono::NaiveDate,
@@ -377,7 +405,7 @@ mod tests {
                     FullPreviousDate {
                         previous_date: PreviousDate {
                             id: uuid!("9eb8121a-9e98-4a54-94da-ed32032a4a91"),
-                            entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                            entry_id: uuid!("01968846-8729-7e19-ae21-6d28e8abde31"),
                             comment: "".to_string(),
                             begin: "2025-04-27 12:00:00+00:00".parse().unwrap(),
                             end: "2025-04-27 13:30:00+00:00".parse().unwrap(),
@@ -408,7 +436,7 @@ mod tests {
                 previous_dates: vec![FullPreviousDate {
                     previous_date: PreviousDate {
                         id: uuid!("9eb8121a-9e98-4a54-94da-ed32032a4a91"),
-                        entry_id: uuid!("05c93b6e-29ad-4ace-8a32-244723973331"),
+                        entry_id: uuid!("8e17d6dc-1b10-4685-8689-dd998deb17c6"),
                         comment: "".to_string(),
                         begin: "2025-04-28 11:00:00+00:00".parse().unwrap(),
                         end: "2025-04-28 11:30:00+00:00".parse().unwrap(),

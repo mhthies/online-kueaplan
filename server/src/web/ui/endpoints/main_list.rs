@@ -115,13 +115,13 @@ impl<'a> MainListTemplate<'a> {
     }
 
     /// Generate the HTML 'class' attribute for the table row of the given `entry`
-    fn css_class_for_entry(entry: &'a FullEntry) -> String {
-        let mut result = Self::css_class_for_category(&entry.entry.category);
+    fn css_class_for_entry(row: &'a MainListRow<'a>) -> String {
+        let mut result = Self::css_class_for_category(&row.entry.entry.category);
         result.push_str(" kuea-with-category");
-        if entry.entry.is_cancelled {
+        if !row.includes_entry || row.entry.entry.is_cancelled {
             result.push_str(" kuea-cancelled");
         }
-        if entry.entry.is_room_reservation {
+        if row.entry.entry.is_room_reservation {
             result.push_str(" fst-italic");
         }
         result

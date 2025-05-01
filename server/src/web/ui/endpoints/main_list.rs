@@ -115,9 +115,17 @@ impl<'a> MainListTemplate<'a> {
     }
 
     /// Generate the HTML 'class' attribute for the table row of the given `entry`
-    fn css_class_for_entry(row: &'a MainListRow<'a>) -> String {
+    fn css_class_for_entry(&self, row: &'a MainListRow<'a>) -> String {
         let mut result = Self::css_class_for_category(&row.entry.entry.category);
         result.push_str(" kuea-with-category");
+        if self
+            .categories
+            .get(&row.entry.entry.category)
+            .map(|c| c.is_official)
+            .unwrap_or(false)
+        {
+            result.push_str(" fw-semibold");
+        }
         if !row.includes_entry || row.entry.entry.is_cancelled {
             result.push_str(" kuea-cancelled");
         }

@@ -44,7 +44,7 @@
             <tbody>
                 {% for row in rows %}
                     {% let entry = row.entry %}
-                    <tr class="{{ Self::css_class_for_entry(row) }}">
+                    <tr class="{{ css_class_for_entry(row) }}">
                         <td class="kuea-title aside-container" id="entry-{{ entry.entry.id.to_string() }}">
                             {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(row.sort_time) %}
                             {% if effective_begin_date < date %}

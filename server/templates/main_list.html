@@ -43,9 +43,9 @@
             </thead>
             <tbody>
                 {% for row in rows %}
-                    {% let entry = row.entry %}
+                    {% let entry = row.entry.entry %}
                     <tr class="{{ css_class_for_entry(row) }}">
-                        <td class="kuea-title aside-container" id="entry-{{ entry.entry.id.to_string() }}">
+                        <td class="kuea-title aside-container" id="entry-{{ entry.id.to_string() }}">
                             {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(row.sort_time) %}
                             {% if effective_begin_date < date %}
                                 <div class="small">
@@ -53,35 +53,35 @@
                                     Übertrag vom {% if effective_begin_date == date.checked_sub_days(chrono::Days::new(1)).unwrap() %}Vortag{% else %}{{ effective_begin_date.format("%d.%m.") }}{% endif %}
                                 </div>
                             {% endif %}
-                            {% if row.entry.entry.is_cancelled %}
+                            {% if entry.is_cancelled %}
                                 <span class="visually-hidden">Abgesagt: </span>
                             {% elif !row.includes_entry %}
                                 <span class="visually-hidden">Verschoben: </span>
                             {% endif %}
-                            <span class="content">{{ entry.entry.title }}</span>
+                            <span class="content">{{ entry.title }}</span>
                             {% if row.includes_entry && user_can_edit_entries %}
                             <div class="table-aside-buttons">
                                 <a href="{{ url_for_edit_entry(row.entry)? }}" aria-label="Eintrag bearbeiten"
-                                   title="Eintrag &quot;{{row.entry.entry.title|ellipsis(30)}}&quot; bearbeiten">
+                                   title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; bearbeiten">
                                     <i class="bi-pencil" aria-hidden="true"></i></a>
                             </div>
                             {% endif %}
-                            {% if row.includes_entry && !entry.entry.description.is_empty() %}
-                                <a href="#entry-desc-{{ entry.entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
+                            {% if row.includes_entry && !entry.description.is_empty() %}
+                                <a href="#entry-desc-{{ entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
                             {% endif %}
-                            {% if row.includes_entry && !entry.entry.comment.is_empty() %}
-                                <div class="comment mt-1">{{ entry.entry.comment }}</div>
+                            {% if row.includes_entry && !entry.comment.is_empty() %}
+                                <div class="comment mt-1">{{ entry.comment }}</div>
                             {% endif %}
 
-                            {% if !row.includes_entry && !row.entry.entry.is_cancelled %}
+                            {% if !row.includes_entry && !entry.is_cancelled %}
                                 <div class="comment text-info mt-1">
                                     <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben auf
-                                    {% if crate::web::ui::time_calculation::get_effective_date(row.entry.entry.begin) != date %}
-                                        {{ to_our_timezone(row.entry.entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
+                                    {% if crate::web::ui::time_calculation::get_effective_date(entry.begin) != date %}
+                                        {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
                                     {% else %}
-                                        {{ to_our_timezone(row.entry.entry.begin).format("%H:%M") }}&nbsp;Uhr
+                                        {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
                                     {% endif %}
-                                    <a href="{{ util::url_for_entry(base.request, *event.id, row.entry.entry.id, row.entry.entry.begin)? }}"
+                                    <a href="{{ util::url_for_entry(base.request, *event.id, entry.id, entry.begin)? }}"
                                        title="Link zum neuen Zeitpunkt"
                                        class="d-print-none">
                                         <i class="bi bi-link" aria-hidden="true"></i>
@@ -96,7 +96,7 @@
                         </td>
                         <td class="kuea-time">
                             {% if row.includes_entry %}
-                                {% call format_begin_end(row.entry.entry.begin, row.entry.entry.end) %}
+                                {% call format_begin_end(entry.begin, entry.end) %}
                             {% endif %}
                             {% if !row.additional_times.is_empty() %}
                                 <span class="visually-hidden">Zuvor geplante Zeiten:</span>
@@ -107,8 +107,8 @@
                                     </span>{% if !loop.last %},{% endif %}
                                 {% endfor %}
                             {% endif %}
-                            {% if row.includes_entry && !row.entry.entry.time_comment.is_empty() %}
-                                <div class="comment">{{ row.entry.entry.time_comment }}</div>
+                            {% if row.includes_entry && !entry.time_comment.is_empty() %}
+                                <div class="comment">{{ entry.time_comment }}</div>
                             {% endif %}
                         </td>
                         <td class="kuea-place">
@@ -119,13 +119,13 @@
                                 {%- if strike_through_room %}</span>{% endif %}
                                 {%- if !loop.last %}, {% endif -%}
                             {% endfor %}
-                            {% if row.includes_entry && !row.entry.entry.room_comment.is_empty() %}
-                                <div class="comment">{{ row.entry.entry.room_comment }}</div>
+                            {% if row.includes_entry && !entry.room_comment.is_empty() %}
+                                <div class="comment">{{ entry.room_comment }}</div>
                             {% endif %}
                         </td>
                         <td class="kuea-people">
-                            {% if !row.entry.entry.responsible_person.is_empty() %}
-                                <span class="d-inline d-sm-none">von</span> {{ row.entry.entry.responsible_person }}
+                            {% if !entry.responsible_person.is_empty() %}
+                                <span class="d-inline d-sm-none">von</span> {{ entry.responsible_person }}
                             {% endif %}
                         </td>
                     </tr>

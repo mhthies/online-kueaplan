@@ -8,14 +8,27 @@
     </div>
 </nav>
 <div class="container mt-3" id="main">
-    <h1>
-        Vorherige Termine<br>
-        <small><i class="bi bi-calendar-event" aria-hidden="true"></i><span class="visually-hidden">Eintrag:</span> {{entry.entry.title}}</small>
-    </h1>
-    <div class="mb-3">
-        <a href="{{ util::url_for_entry(base.request, *event.id, entry.entry.id, entry.entry.begin)? }}" class="btn btn-secondary"><i class="bi bi-list" aria-hidden="true"></i> Zurück zum KüA-Plan</a>
-        <a href="{{ util::url_for_edit_entry(base.request, entry)? }}" class="btn btn-secondary"><i class="bi bi-pencil" aria-hidden="true"></i> Zurück zum Bearbeiten</a>
-    </div>
+    <h1>Eintrag bearbeiten</h1>
+
+    <ul class="nav nav-underline m-3">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ util::url_for_entry(base.request, *event.id, entry.entry.id, entry.entry.begin)? }}">
+                <i class="bi bi-arrow-left" aria-label="Zurück"></i>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ util::url_for_edit_entry(base.request, entry)? }}">
+                <i class="bi-pencil-fill" aria-hidden="true"></i> Bearbeiten</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry.entry.id.to_string()])? }}">
+            <i class="bi bi-clock-history"></i> Vorherige Termine</a>
+        </li>
+    </ul>
+
+    <h2>
+        Vorherige Termine
+    </h2>
     {% if entry.previous_dates.is_empty() %}
         <div class="alert alert-info">
             <i class="bi bi-info-circle" aria-hidden="true"></i>

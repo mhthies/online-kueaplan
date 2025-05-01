@@ -10,14 +10,31 @@
         <a class="navbar-brand" href="#">{{ event.title }}</a>
     </div>
 </nav>
+
 <div class="container mt-3" id="main">
+    {# TODO deduplicate code #}
     <h1>
         Eintrag bearbeiten
     </h1>
-    <div class="mb-3">
-        <a href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry_id.to_string()])? }}" class="btn btn-outline-primary">
-            <i class="bi bi-clock-history"></i> Vorherige Termine</a>
-    </div>
+
+    <ul class="nav nav-underline m-3">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ abort_url()? }}">
+                <i class="bi bi-arrow-left" aria-label="Zurück"></i>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{{ base.request.url_for("edit_entry_form", [event.id.to_string(), entry_id.to_string()])? }}">
+                <i class="bi bi-pencil-fill" aria-hidden="true"></i> Bearbeiten
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry_id.to_string()])? }}">
+                <i class="bi bi-clock-history"></i> Vorherige Termine
+            </a>
+        </li>
+    </ul>
+
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
        the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
        To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}

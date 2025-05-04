@@ -15,7 +15,7 @@ use crate::web::ui::time_calculation::{
     get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
 use crate::web::ui::util::{event_days, url_for_entry};
-use crate::web::ui::{util, validation};
+use crate::web::ui::{time_calculation, util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
@@ -60,12 +60,13 @@ async fn edit_entry_form(
             current_date: Some(get_effective_date(&entry_begin)),
         },
         event: &event,
-        entry_id: &entry_id,
         form_data: &form_data,
         rooms: &rooms,
         categories: &categories,
-        entry_begin: &entry_begin,
+        entry_id: Some(&entry_id),
+        entry_begin: Some(&entry_begin),
         has_unsaved_changes: false,
+        is_new_entry: false,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -103,10 +104,10 @@ async fn edit_entry(
     let entry = data.validate(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
+        Some(entry_id),
     );
 
-    let result = if let Some((mut entry, privious_last_updated, create_previous_date)) = entry {
-        entry.entry.id = entry_id;
+    let result = if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
         entry.entry.event_id = event_id;
         let entry_begin = entry.entry.begin;
         if let Some(previous_date_comment) = create_previous_date {
@@ -128,7 +129,7 @@ async fn edit_entry(
         }
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
-            store.create_or_update_entry(&auth, entry, true, Some(privious_last_updated))?;
+            store.create_or_update_entry(&auth, entry, true, previous_last_updated)?;
             Ok(())
         })
         .await?;
@@ -153,12 +154,133 @@ async fn edit_entry(
             current_date: Some(get_effective_date(&old_entry.entry.begin)),
         },
         event: &event,
-        entry_id: &entry_id,
         form_data: &data,
         rooms: &rooms,
         categories: &categories,
-        entry_begin: &old_entry.entry.begin,
+        entry_id: Some(&entry_id),
+        entry_begin: Some(&old_entry.entry.begin),
         has_unsaved_changes: true,
+        is_new_entry: false,
+    };
+
+    create_edit_form_response(result, event_id, tmpl)
+}
+
+#[get("/{event_id}/new_entry")]
+async fn new_entry_form(
+    path: web::Path<i32>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let event_id = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
+    let store = state.store.clone();
+    let (event, rooms, categories) = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManageEntries)?;
+        Ok((
+            store.get_event(&auth, event_id)?,
+            store.get_rooms(&auth, event_id)?,
+            store.get_categories(&auth, event_id)?,
+        ))
+    })
+    .await??;
+
+    let entry_id = Uuid::now_v7();
+    let form_data = EntryFormData::for_new_entry(entry_id);
+
+    let tmpl = EditEntryFormTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: "Neuer Eintrag",
+            event: Some(&event),
+            current_date: None,
+        },
+        event: &event,
+        form_data: &form_data,
+        rooms: &rooms,
+        categories: &categories,
+        entry_id: Some(&entry_id),
+        entry_begin: None,
+        has_unsaved_changes: false,
+        is_new_entry: true,
+    };
+
+    Ok(Html::new(tmpl.render()?))
+}
+
+#[post("/{event_id}/new_entry")]
+async fn new_entry(
+    path: web::Path<i32>,
+    data: Form<EntryFormData>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let event_id = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
+    let store = state.store.clone();
+    let (event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManageEntries)?;
+        Ok((
+            store.get_event(&auth, event_id)?,
+            store.get_rooms(&auth, event_id)?,
+            store.get_categories(&auth, event_id)?,
+            auth,
+        ))
+    })
+    .await??;
+
+    let mut data = data.into_inner();
+    let entry = data.validate(
+        &rooms.iter().map(|r| r.id).collect(),
+        &categories.iter().map(|c| c.id).collect(),
+        None,
+    );
+
+    let mut entry_id = None;
+    let result = if let Some((mut entry, _, _)) = entry {
+        entry_id = Some(entry.entry.id);
+        entry.entry.event_id = event_id;
+        let entry_begin = entry.entry.begin;
+        let result = web::block(move || -> Result<_, StoreError> {
+            let mut store = state.store.get_facade()?;
+            // TODO detect and ignore double addition
+            store.create_or_update_entry(&auth, entry, false, None)?;
+            Ok(())
+        })
+        .await?;
+
+        match result {
+            Ok(()) => FormSubmitResult::Success { entry_begin },
+            Err(e) => match e {
+                StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
+                _ => FormSubmitResult::UnexpectedError(e.into()),
+            },
+        }
+    } else {
+        FormSubmitResult::ValidationError
+    };
+
+    let tmpl = EditEntryFormTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: "Neuer Eintrag",
+            event: Some(&event),
+            current_date: None,
+        },
+        event: &event,
+        form_data: &data,
+        rooms: &rooms,
+        categories: &categories,
+        entry_id: entry_id.as_ref(),
+        entry_begin: None,
+        has_unsaved_changes: true,
+        is_new_entry: true,
     };
 
     create_edit_form_response(result, event_id, tmpl)
@@ -191,13 +313,18 @@ fn create_edit_form_response(
         FormSubmitResult::Success { entry_begin } => {
             tmpl.base.request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Success,
-                message: "Änderung wurde gespeichert.".to_owned(),
+                message: if tmpl.is_new_entry {
+                    "Neuer Eintrag wurde gespeichert."
+                } else {
+                    "Änderung wurde gespeichert."
+                }
+                .to_owned(),
                 keep_open: false,
                 button: None,
             });
             Ok(Either::Left(
                 Redirect::to(
-                    url_for_entry(&tmpl.base.request, event_id, &tmpl.entry_id, &entry_begin)?
+                    url_for_entry(&tmpl.base.request, event_id, &tmpl.entry_id.expect("For successfully stored entries, the `entry_id` should always be known."), &entry_begin)?
                         .to_string(),
                 )
                 .see_other(),
@@ -216,15 +343,28 @@ fn create_edit_form_response(
             ))
         }
         FormSubmitResult::ConcurrentEditConflict => {
+            let reload_url = if tmpl.is_new_entry {
+                tmpl.base
+                    .request
+                    .url_for("new_entry_form", &[event_id.to_string()])?
+            } else {
+                tmpl.base.request.url_for(
+                    "edit_entry_form",
+                    &[
+                        event_id.to_string(),
+                        tmpl.entry_id
+                            .expect("For non-new entries, `entry_id` should always be known.")
+                            .to_string(),
+                    ],
+                )?
+            };
             tmpl.base.request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Error,
                 message: "Der Eintrag wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen."
                     .to_owned(),
                 keep_open: true,
                 button: Some(FlashMessageActionButton::ReloadCleanForm {
-                    form_url: tmpl.base.request.url_for("edit_entry_form",
-                                                        &[event_id.to_string(), tmpl.entry_id.to_string()])?
-                        .to_string()
+                    form_url: reload_url.to_string(),
                 }),
             });
             Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
@@ -250,28 +390,52 @@ fn create_edit_form_response(
 struct EditEntryFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     event: &'a Event,
-    entry_id: &'a EntryId,
     form_data: &'a EntryFormData,
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
-    entry_begin: &'a chrono::DateTime<chrono::Utc>,
+    entry_id: Option<&'a EntryId>,
+    entry_begin: Option<&'a chrono::DateTime<chrono::Utc>>,
     has_unsaved_changes: bool,
+    is_new_entry: bool,
 }
 
 impl<'a> EditEntryFormTemplate<'a> {
     fn post_url(&self) -> Result<url::Url, actix_web::error::UrlGenerationError> {
-        self.base.request.url_for(
-            "edit_entry",
-            &[self.event.id.to_string(), self.entry_id.to_string()],
-        )
+        if self.is_new_entry {
+            self.base
+                .request
+                .url_for("new_entry", &[self.event.id.to_string()])
+        } else {
+            self.base.request.url_for(
+                "edit_entry",
+                &[
+                    self.event.id.to_string(),
+                    self.entry_id
+                        .expect("For non-new entries, `entry_id` should always be known.")
+                        .to_string(),
+                ],
+            )
+        }
     }
     fn abort_url(&self) -> Result<url::Url, actix_web::error::UrlGenerationError> {
-        url_for_entry(
-            self.base.request,
-            self.event.id,
-            self.entry_id,
-            self.entry_begin,
-        )
+        if self.is_new_entry {
+            self.base.request.url_for(
+                "main_list",
+                &[
+                    self.event.id.to_string(),
+                    time_calculation::most_reasonable_date(self.event).to_string(),
+                ],
+            )
+        } else {
+            url_for_entry(
+                self.base.request,
+                self.event.id,
+                self.entry_id
+                    .expect("For non-new entries, `entry_id` should always be known."),
+                self.entry_begin
+                    .expect("For non-new entries, `entry_begin` should always be known."),
+            )
+        }
     }
     fn room_entries(&self) -> Vec<SelectEntry<'a>> {
         self.rooms
@@ -304,6 +468,9 @@ impl<'a> EditEntryFormTemplate<'a> {
 
 #[derive(Default, Deserialize, Debug)]
 struct EntryFormData {
+    /// Id of the entry, only used for creating new entries (for editing existing entries, the id is
+    /// taken from the URL and passed to [validate] as `known_entry_id` instead)
+    entry_id: FormValue<Uuid>,
     title: FormValue<validation::NonEmptyString>,
     comment: FormValue<String>,
     room_comment: FormValue<String>,
@@ -318,17 +485,32 @@ struct EntryFormData {
     is_cancelled: BoolFormValue,
     is_room_reservation: BoolFormValue,
     is_exclusive: BoolFormValue,
+    /// `last_updated` value of the (original) entry. Used for detecting editing conflicts.
+    /// Only used for editing existing entries; can be empty/missing when creating new entries.
     last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
     create_previous_date: BoolFormValue,
     previous_date_comment: FormValue<String>,
 }
 
 impl EntryFormData {
+    fn for_new_entry(entry_id: EntryId) -> Self {
+        Self {
+            entry_id: entry_id.into(),
+            ..Self::default()
+        }
+    }
+
     fn validate(
         &mut self,
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
-    ) -> Option<(FullNewEntry, chrono::DateTime<chrono::Utc>, Option<String>)> {
+        known_entry_id: Option<EntryId>,
+    ) -> Option<(
+        FullNewEntry,
+        Option<chrono::DateTime<chrono::Utc>>,
+        Option<String>,
+    )> {
+        let entry_id = known_entry_id.or_else(|| self.entry_id.validate());
         let title = self.title.validate();
         let comment = self.comment.validate();
         let time_comment = self.time_comment.validate();
@@ -351,7 +533,7 @@ impl EntryFormData {
         Some((
             FullNewEntry {
                 entry: NewEntry {
-                    id: Default::default(),
+                    id: entry_id?,
                     title: title?.into_inner(),
                     description: description?,
                     responsible_person: responsible_person?,
@@ -369,8 +551,12 @@ impl EntryFormData {
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],
             },
-            previous_last_updated?.0,
-            create_previous_date.then_some(previous_date_comment?),
+            previous_last_updated.map(|v| v.0),
+            if create_previous_date {
+                previous_date_comment
+            } else {
+                None
+            },
         ))
     }
 }
@@ -378,6 +564,7 @@ impl EntryFormData {
 impl From<FullEntry> for EntryFormData {
     fn from(value: FullEntry) -> Self {
         Self {
+            entry_id: FormValue::empty(),
             title: validation::NonEmptyString(value.entry.title).into(),
             comment: value.entry.comment.into(),
             room_comment: value.entry.room_comment.into(),

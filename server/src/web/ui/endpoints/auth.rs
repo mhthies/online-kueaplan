@@ -148,7 +148,7 @@ async fn login(
                         "main_list",
                         &[
                             event_id.to_string(),
-                            time_calculation::most_reasonable_date(event).to_string(),
+                            time_calculation::most_reasonable_date(&event).to_string(),
                         ],
                     )?
                     .to_string()

@@ -6,28 +6,30 @@
 
 {% block body %}
 <div class="container mt-3" id="main">
-    {# TODO deduplicate code #}
     <h1>
-        Eintrag bearbeiten
+        {{ base.page_title }}
     </h1>
 
-    <ul class="nav nav-underline m-3">
-        <li class="nav-item">
-            <a class="nav-link" href="{{ abort_url()? }}">
-                <i class="bi bi-arrow-left" aria-label="Zurück"></i>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{{ base.request.url_for("edit_entry_form", [event.id.to_string(), entry_id.to_string()])? }}">
-                <i class="bi bi-pencil-fill" aria-hidden="true"></i> Bearbeiten
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry_id.to_string()])? }}">
-                <i class="bi bi-clock-history"></i> Vorherige Termine
-            </a>
-        </li>
-    </ul>
+    {% if !is_new_entry %}
+    {# TODO deduplicate code #}
+        <ul class="nav nav-underline m-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ abort_url()? }}">
+                    <i class="bi bi-arrow-left" aria-label="Zurück"></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="{{ base.request.url_for("edit_entry_form", [event.id.to_string(), entry_id.expect("For non-new entries, `entry_id` should always be known.").to_string()])? }}">
+                    <i class="bi bi-pencil-fill" aria-hidden="true"></i> Bearbeiten
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry_id.expect("For non-new entries, `entry_id` should always be known.").to_string()])? }}">
+                    <i class="bi bi-clock-history"></i> Vorherige Termine
+                </a>
+            </li>
+        </ul>
+    {% endif %}
 
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
        the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
@@ -91,18 +93,22 @@
                 .info("Unterstützt Markdown")
                 .build())|safe }}
     </div>
-    <div class="card mb-3">
-        <div class="card-header">
-            {{ CheckboxTemplate::new(form_data.create_previous_date,
-            "create_previous_date",
-            "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen",
-            Some("Nur wirksam, wenn Zeit oder Orte geändert werden."))|safe }}
+    {% if !is_new_entry %}
+        <div class="card mb-3">
+            <div class="card-header">
+                {{ CheckboxTemplate::new(form_data.create_previous_date,
+                "create_previous_date",
+                "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen",
+                Some("Nur wirksam, wenn Zeit oder Orte geändert werden."))|safe }}
+            </div>
+            <div class="card-body">
+                {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
+            </div>
         </div>
-        <div class="card-body">
-            {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
-        </div>
-    </div>
-    {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")?|safe }}
+        {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")?|safe }}
+    {% else %}
+        {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")?|safe }}
+    {% endif %}
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
         <a href="{{ abort_url()? }}" class="btn btn-secondary allow-exit-with-changes">
             <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen

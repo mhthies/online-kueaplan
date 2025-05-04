@@ -71,6 +71,9 @@
 </nav>
 {% block body %}
 {% endblock %}
+<footer class="border-top text-center small text-secondary p-2 mt-3 mb-2">
+    online-kueaplan v{{ crate::get_version() }}
+</footer>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}
 <div class="toast-container top-0 end-0 p-3 position-fixed">

@@ -12,15 +12,15 @@ use crate::web::ui::form_inputs::{
 };
 use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
 use crate::web::ui::time_calculation::{
-    get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
+    get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
-use crate::web::ui::util::{event_days, url_for_entry};
+use crate::web::ui::util::{event_days, url_for_entry_details};
 use crate::web::ui::{time_calculation, util, validation};
 use crate::web::AppState;
-use actix_web::web::{Form, Html, Redirect};
+use actix_web::web::{Form, Html, Query, Redirect};
 use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
 use askama::Template;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use uuid::Uuid;
@@ -66,7 +66,6 @@ async fn edit_entry_form(
         rooms: &rooms,
         categories: &categories,
         entry_id: Some(&entry_id),
-        entry_begin: Some(&entry_begin),
         has_unsaved_changes: false,
         is_new_entry: false,
     };
@@ -162,7 +161,6 @@ async fn edit_entry(
         rooms: &rooms,
         categories: &categories,
         entry_id: Some(&entry_id),
-        entry_begin: Some(&old_entry.entry.begin),
         has_unsaved_changes: true,
         is_new_entry: false,
     };
@@ -173,10 +171,12 @@ async fn edit_entry(
 #[get("/{event_id}/new_entry")]
 async fn new_entry_form(
     path: web::Path<i32>,
+    query_data: Query<NewEntryQueryParams>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
+    let date = query_data.date;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
@@ -194,14 +194,16 @@ async fn new_entry_form(
     .await??;
 
     let entry_id = Uuid::now_v7();
-    let form_data = EntryFormData::for_new_entry(entry_id);
+    let entry_date = date.unwrap_or_else(|| most_reasonable_date(&event));
+    // TODO set default category
+    let form_data = EntryFormData::for_new_entry(entry_id, entry_date);
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Eintrag",
             event: Some(&event),
-            current_date: None,
+            current_date: date,
             auth_token: Some(&auth),
         },
         event: &event,
@@ -209,7 +211,6 @@ async fn new_entry_form(
         rooms: &rooms,
         categories: &categories,
         entry_id: Some(&entry_id),
-        entry_begin: None,
         has_unsaved_changes: false,
         is_new_entry: true,
     };
@@ -220,11 +221,13 @@ async fn new_entry_form(
 #[post("/{event_id}/new_entry")]
 async fn new_entry(
     path: web::Path<i32>,
+    query_data: Query<NewEntryQueryParams>,
     data: Form<EntryFormData>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
+    let date = query_data.date;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
@@ -278,7 +281,7 @@ async fn new_entry(
             request: &req,
             page_title: "Neuer Eintrag",
             event: Some(&event),
-            current_date: None,
+            current_date: date,
             auth_token: Some(&auth),
         },
         event: &event,
@@ -286,12 +289,19 @@ async fn new_entry(
         rooms: &rooms,
         categories: &categories,
         entry_id: entry_id.as_ref(),
-        entry_begin: None,
         has_unsaved_changes: true,
         is_new_entry: true,
     };
 
     create_edit_form_response(result, event_id, tmpl)
+}
+
+/// Query parameters for the new_entry form.
+#[derive(Deserialize, Serialize)]
+pub struct NewEntryQueryParams {
+    /// When given, used to pre-fill the date field of the new entry and to navigate back to this
+    /// date when aborting.
+    pub date: Option<chrono::NaiveDate>,
 }
 
 /// Helper type for representing the different possible outcomes of submitting the edit form.
@@ -332,8 +342,12 @@ fn create_edit_form_response(
             });
             Ok(Either::Left(
                 Redirect::to(
-                    url_for_entry(&tmpl.base.request, event_id, &tmpl.entry_id.expect("For successfully stored entries, the `entry_id` should always be known."), &entry_begin)?
-                        .to_string(),
+                    url_for_entry_details(
+                        &tmpl.base.request,
+                        event_id,
+                        &tmpl.entry_id.expect("For successfully stored entries, the `entry_id` should always be known."),
+                        &time_calculation::get_effective_date(&entry_begin))?
+                    .to_string(),
                 )
                 .see_other(),
             ))
@@ -402,19 +416,23 @@ struct EditEntryFormTemplate<'a> {
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
     entry_id: Option<&'a EntryId>,
-    entry_begin: Option<&'a chrono::DateTime<chrono::Utc>>,
     has_unsaved_changes: bool,
     is_new_entry: bool,
 }
 
 impl<'a> EditEntryFormTemplate<'a> {
-    fn post_url(&self) -> Result<url::Url, actix_web::error::UrlGenerationError> {
+    fn post_url(&self) -> Result<url::Url, AppError> {
         if self.is_new_entry {
-            self.base
+            let mut url = self
+                .base
                 .request
-                .url_for("new_entry", &[self.event.id.to_string()])
+                .url_for("new_entry", &[self.event.id.to_string()])?;
+            url.set_query(Some(&serde_urlencoded::to_string(NewEntryQueryParams {
+                date: self.base.current_date,
+            })?));
+            Ok(url)
         } else {
-            self.base.request.url_for(
+            Ok(self.base.request.url_for(
                 "edit_entry",
                 &[
                     self.event.id.to_string(),
@@ -422,7 +440,7 @@ impl<'a> EditEntryFormTemplate<'a> {
                         .expect("For non-new entries, `entry_id` should always be known.")
                         .to_string(),
                 ],
-            )
+            )?)
         }
     }
     fn abort_url(&self) -> Result<url::Url, actix_web::error::UrlGenerationError> {
@@ -431,17 +449,22 @@ impl<'a> EditEntryFormTemplate<'a> {
                 "main_list",
                 &[
                     self.event.id.to_string(),
-                    time_calculation::most_reasonable_date(self.event).to_string(),
+                    self.base
+                        .current_date
+                        .unwrap_or_else(|| time_calculation::most_reasonable_date(self.event))
+                        .to_string(),
                 ],
             )
         } else {
-            url_for_entry(
+            url_for_entry_details(
                 self.base.request,
                 self.event.id,
                 self.entry_id
                     .expect("For non-new entries, `entry_id` should always be known."),
-                self.entry_begin
-                    .expect("For non-new entries, `entry_begin` should always be known."),
+                &self
+                    .base
+                    .current_date
+                    .expect("For non-new entries, `date` should always be known."),
             )
         }
     }
@@ -501,9 +524,10 @@ struct EntryFormData {
 }
 
 impl EntryFormData {
-    fn for_new_entry(entry_id: EntryId) -> Self {
+    fn for_new_entry(entry_id: EntryId, date: chrono::NaiveDate) -> Self {
         Self {
             entry_id: entry_id.into(),
+            day: validation::IsoDate(date).into(),
             ..Self::default()
         }
     }

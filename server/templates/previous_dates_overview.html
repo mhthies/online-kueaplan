@@ -7,7 +7,7 @@
 
     <ul class="nav nav-underline m-3">
         <li class="nav-item">
-            <a class="nav-link" href="{{ util::url_for_entry(base.request, *event.id, entry.entry.id, entry.entry.begin)? }}">
+            <a class="nav-link" href="{{ util::url_for_entry(base.request, entry.entry)? }}">
                 <i class="bi bi-arrow-left" aria-label="Zurück"></i>
             </a>
         </li>

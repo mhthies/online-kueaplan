@@ -68,7 +68,7 @@
                                     {% else %}
                                         {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
                                     {% endif %}
-                                    <a href="{{ util::url_for_entry(base.request, *event.id, entry.id, entry.begin)? }}"
+                                    <a href="{{ util::url_for_entry(base.request, entry)? }}"
                                        title="Link zum neuen Zeitpunkt"
                                        class="d-print-none">
                                         <i class="bi bi-link" aria-hidden="true"></i>

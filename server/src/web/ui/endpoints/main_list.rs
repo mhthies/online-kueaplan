@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, Event, FullEntry, FullPreviousDate, Room};
+use crate::data_store::models::{Category, FullEntry, FullPreviousDate, Room};
 use crate::data_store::{CategoryId, EntryFilter, RoomId};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::colors::CategoryColors;
@@ -62,7 +62,6 @@ async fn main_list(
         categories: categories.iter().map(|r| (r.id, r)).collect(),
         timezone: TIME_ZONE,
         date,
-        event: &event,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -77,7 +76,6 @@ struct MainListTemplate<'a> {
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
-    event: &'a Event,
 }
 
 impl<'a> MainListTemplate<'a> {

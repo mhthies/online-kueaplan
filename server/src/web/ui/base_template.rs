@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::{AuthToken, Privilege};
 use crate::data_store::models::Event;
 use crate::web::ui;
+use crate::web::ui::error::AppError;
 use crate::web::ui::flash::FlashesInterface;
 use crate::web::ui::Resources;
 use actix_web::error::UrlGenerationError;
@@ -53,6 +54,28 @@ impl BaseTemplateContext<'_> {
         };
         self.auth_token
             .is_some_and(|t| t.has_privilege(event_id, Privilege::ManageEntries))
+    }
+
+    /// Generate the url for the 'add entry' button.
+    ///
+    /// Requires `event` to be Some.
+    pub fn new_entry_form_url(&self) -> Result<String, AppError> {
+        let mut url = self.request.url_for(
+            "new_entry_form",
+            &[self
+                .event
+                .ok_or(AppError::InternalError(
+                    "Cannot generate new_entry_form URL, because `event` is not present".to_owned(),
+                ))?
+                .id
+                .to_string()],
+        )?;
+        url.set_query(Some(&serde_urlencoded::to_string(
+            crate::web::ui::endpoints::edit_entry::NewEntryQueryParams {
+                date: self.current_date,
+            },
+        )?));
+        Ok(url.to_string())
     }
 }
 

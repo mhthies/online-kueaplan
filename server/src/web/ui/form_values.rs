@@ -5,6 +5,7 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
@@ -57,6 +58,17 @@ impl FormValueRepresentation for String {
 impl ValidateFromFormInput for String {
     fn from_form_value(value: &'_ str) -> Result<Self, String> {
         Ok(value.to_owned())
+    }
+}
+
+impl FormValueRepresentation for Uuid {
+    fn into_form_value_string(self) -> String {
+        self.to_string()
+    }
+}
+impl ValidateFromFormInput for Uuid {
+    fn from_form_value(value: &str) -> Result<Self, String> {
+        Ok(Uuid::parse_str(value).map_err(|e| e.to_string())?)
     }
 }
 

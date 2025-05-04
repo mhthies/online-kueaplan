@@ -78,6 +78,8 @@ fn generate_app_error_page(
         base: BaseTemplateContext {
             request: http_request,
             page_title: "Fehler",
+            event: None,
+            current_date: None,
         },
         error: app_error,
         url: &http_request.full_url(),
@@ -97,6 +99,8 @@ fn generate_generic_error_page(
         base: BaseTemplateContext {
             request: http_request,
             page_title: "Fehler",
+            event: None,
+            current_date: None,
         },
         error,
         url: &http_request.full_url(),

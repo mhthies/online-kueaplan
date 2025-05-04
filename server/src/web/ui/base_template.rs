@@ -1,3 +1,4 @@
+use crate::data_store::models::Event;
 use crate::web::ui;
 use crate::web::ui::flash::FlashesInterface;
 use crate::web::ui::Resources;
@@ -16,6 +17,12 @@ pub struct BaseTemplateContext<'a> {
     pub request: &'a HttpRequest,
     /// HTML title
     pub page_title: &'a str,
+    /// If the current page belongs to the context of an event, the information about the event.
+    /// This is used for rendering the navigation bar.
+    pub event: Option<&'a Event>,
+    /// If the current page belongs to the context of an event, and it is clearly associated to a
+    /// specific day of the event (e.g. main list for date or entry editing)
+    pub current_date: Option<chrono::NaiveDate>,
 }
 
 impl BaseTemplateContext<'_> {

@@ -56,6 +56,8 @@ async fn edit_entry_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
+            event: Some(&event),
+            current_date: Some(get_effective_date(&entry_begin)),
         },
         event: &event,
         entry_id: &entry_id,
@@ -147,6 +149,8 @@ async fn edit_entry(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
+            event: Some(&event),
+            current_date: Some(get_effective_date(&old_entry.entry.begin)),
         },
         event: &event,
         entry_id: &entry_id,

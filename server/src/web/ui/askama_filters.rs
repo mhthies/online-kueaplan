@@ -1,5 +1,3 @@
-use chrono::{Datelike, Weekday};
-
 /// Convert a Markdown string to HTML
 ///
 /// This filter is based on the comrak Markdown parser (https://docs.rs/comrak/latest/comrak/).
@@ -48,32 +46,6 @@ fn markdown_increase_heading_level<'a>(ast_root: &'a comrak::nodes::AstNode<'a>,
             heading.level = (heading.level + increase_by).clamp(1, 6);
         }
     }
-}
-
-/// Convert a date to the (german) name of its weekday
-pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
-    Ok(match date.weekday() {
-        Weekday::Mon => "Montag",
-        Weekday::Tue => "Dienstag",
-        Weekday::Wed => "Mittwoch",
-        Weekday::Thu => "Donnerstag",
-        Weekday::Fri => "Freitag",
-        Weekday::Sat => "Samstag",
-        Weekday::Sun => "Sonntag",
-    })
-}
-
-/// Convert a date to a short version of the (german) name of its weekday
-pub fn weekday_short(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
-    Ok(match date.weekday() {
-        Weekday::Mon => "Mo",
-        Weekday::Tue => "Di",
-        Weekday::Wed => "Mi",
-        Weekday::Thu => "Do",
-        Weekday::Fri => "Fr",
-        Weekday::Sat => "Sa",
-        Weekday::Sun => "So",
-    })
 }
 
 /// Shorten a text to the given `length` by replacing any additional characters with an ellipsis

@@ -36,6 +36,8 @@ async fn login_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Login",
+            event: None,
+            current_date: None,
         },
         login_url: form_submit_url,
         expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
@@ -108,6 +110,8 @@ async fn login(
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
+                event: None,
+                current_date: None,
             },
             login_url: form_submit_url,
             expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),

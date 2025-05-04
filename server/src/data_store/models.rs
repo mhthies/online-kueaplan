@@ -4,7 +4,7 @@ use diesel::associations::BelongsTo;
 use diesel::prelude::*;
 use uuid::Uuid;
 
-#[derive(Clone, Queryable)]
+#[derive(Clone, Debug, Queryable)]
 pub struct Event {
     pub id: i32,
     pub title: String,

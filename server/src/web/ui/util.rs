@@ -7,6 +7,8 @@ use crate::web::ui::time_calculation;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
+use chrono::Datelike;
+use chrono::Weekday;
 
 #[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
 pub const SESSION_COOKIE_MAX_AGE: std::time::Duration =
@@ -101,4 +103,30 @@ pub fn privilege_access_roles_names(privilege: &Privilege) -> Vec<&'static str> 
         .iter()
         .map(|r| r.name())
         .collect()
+}
+
+/// Convert a date to the (german) name of its weekday
+pub fn weekday(date: &chrono::NaiveDate) -> &'static str {
+    match date.weekday() {
+        Weekday::Mon => "Montag",
+        Weekday::Tue => "Dienstag",
+        Weekday::Wed => "Mittwoch",
+        Weekday::Thu => "Donnerstag",
+        Weekday::Fri => "Freitag",
+        Weekday::Sat => "Samstag",
+        Weekday::Sun => "Sonntag",
+    }
+}
+
+/// Convert a date to a short version of the (german) name of its weekday
+pub fn weekday_short(date: &chrono::NaiveDate) -> &'static str {
+    match date.weekday() {
+        Weekday::Mon => "Mo",
+        Weekday::Tue => "Di",
+        Weekday::Wed => "Mi",
+        Weekday::Thu => "Do",
+        Weekday::Fri => "Fr",
+        Weekday::Sat => "Sa",
+        Weekday::Sun => "So",
+    }
 }

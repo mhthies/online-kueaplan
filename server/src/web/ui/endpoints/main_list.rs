@@ -44,6 +44,8 @@ async fn main_list(
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
+            event: Some(&event),
+            current_date: Some(date),
         },
         entry_blocks: group_rows_into_blocks(&rows, date),
         entries_with_descriptions: rows
@@ -60,7 +62,6 @@ async fn main_list(
         timezone: TIME_ZONE,
         date,
         event: &event,
-        event_days: util::event_days(&event),
         user_can_edit_entries: auth.has_privilege(event_id, Privilege::ManageEntries),
     };
     Ok(Html::new(tmpl.render()?))
@@ -77,17 +78,12 @@ struct MainListTemplate<'a> {
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
     event: &'a Event,
-    event_days: Vec<chrono::NaiveDate>,
     user_can_edit_entries: bool,
 }
 
 impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&self.timezone).naive_local()
-    }
-
-    fn url_for_main_list(&self, date: &chrono::NaiveDate) -> Result<String, UrlGenerationError> {
-        util::url_for_main_list(self.base.request, self.event.id, date)
     }
 
     fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
@@ -138,7 +134,12 @@ impl<'a> MainListTemplate<'a> {
 
 /// Filters for the rinja template
 mod filters {
-    pub use crate::web::ui::askama_filters::{ellipsis, markdown, weekday, weekday_short};
+    pub use crate::web::ui::askama_filters::{ellipsis, markdown};
+    use crate::web::ui::util;
+
+    pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
+        Ok(util::weekday(date))
+    }
 }
 
 /// Generate an EntryFilter for retrieving only the entries on the given day (using the

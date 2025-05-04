@@ -1,3 +1,4 @@
+use crate::data_store::auth_token::{AuthToken, Privilege};
 use crate::data_store::models::Event;
 use crate::web::ui;
 use crate::web::ui::flash::FlashesInterface;
@@ -23,6 +24,9 @@ pub struct BaseTemplateContext<'a> {
     /// If the current page belongs to the context of an event, and it is clearly associated to a
     /// specific day of the event (e.g. main list for date or entry editing)
     pub current_date: Option<chrono::NaiveDate>,
+    /// If the current page belongs to the context of an event, the authentication info of the user
+    /// - if it is known. Used for generating the correct navigation buttons
+    pub auth_token: Option<&'a AuthToken>,
 }
 
 impl BaseTemplateContext<'_> {
@@ -39,6 +43,16 @@ impl BaseTemplateContext<'_> {
 
     pub fn get_flashes(&self) -> Vec<ui::flash::FlashMessage> {
         self.request.get_and_clear_flashes()
+    }
+
+    pub fn can_manage_entries(&self) -> bool {
+        let event_id = if let Some(event) = self.event {
+            event.id
+        } else {
+            return false;
+        };
+        self.auth_token
+            .is_some_and(|t| t.has_privilege(event_id, Privilege::ManageEntries))
     }
 }
 

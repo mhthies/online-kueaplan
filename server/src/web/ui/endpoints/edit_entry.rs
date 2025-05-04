@@ -35,7 +35,7 @@ async fn edit_entry_form(
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
-    let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
+    let (entry, event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
@@ -44,6 +44,7 @@ async fn edit_entry_form(
             store.get_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
+            auth,
         ))
     })
     .await??;
@@ -58,6 +59,7 @@ async fn edit_entry_form(
             page_title: "Eintrag bearbeiten", // TODO
             event: Some(&event),
             current_date: Some(get_effective_date(&entry_begin)),
+            auth_token: Some(&auth),
         },
         event: &event,
         form_data: &form_data,
@@ -127,9 +129,10 @@ async fn edit_entry(
                 });
             }
         }
+        let auth_clone = auth.clone();
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
-            store.create_or_update_entry(&auth, entry, true, previous_last_updated)?;
+            store.create_or_update_entry(&auth_clone, entry, true, previous_last_updated)?;
             Ok(())
         })
         .await?;
@@ -152,6 +155,7 @@ async fn edit_entry(
             page_title: "Eintrag bearbeiten", // TODO
             event: Some(&event),
             current_date: Some(get_effective_date(&old_entry.entry.begin)),
+            auth_token: Some(&auth),
         },
         event: &event,
         form_data: &data,
@@ -176,7 +180,7 @@ async fn new_entry_form(
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
-    let (event, rooms, categories) = web::block(move || -> Result<_, AppError> {
+    let (event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
@@ -184,6 +188,7 @@ async fn new_entry_form(
             store.get_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
+            auth,
         ))
     })
     .await??;
@@ -197,6 +202,7 @@ async fn new_entry_form(
             page_title: "Neuer Eintrag",
             event: Some(&event),
             current_date: None,
+            auth_token: Some(&auth),
         },
         event: &event,
         form_data: &form_data,
@@ -244,13 +250,14 @@ async fn new_entry(
 
     let mut entry_id = None;
     let result = if let Some((mut entry, _, _)) = entry {
+        let auth_clone = auth.clone();
         entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
         let entry_begin = entry.entry.begin;
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             // TODO detect and ignore double addition
-            store.create_or_update_entry(&auth, entry, false, None)?;
+            store.create_or_update_entry(&auth_clone, entry, false, None)?;
             Ok(())
         })
         .await?;
@@ -272,6 +279,7 @@ async fn new_entry(
             page_title: "Neuer Eintrag",
             event: Some(&event),
             current_date: None,
+            auth_token: Some(&auth),
         },
         event: &event,
         form_data: &data,

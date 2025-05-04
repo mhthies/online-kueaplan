@@ -23,7 +23,7 @@ async fn previous_dates_overview(
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
-    let (entry, event, rooms, categories) = web::block(move || -> Result<_, AppError> {
+    let (entry, event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
@@ -32,6 +32,7 @@ async fn previous_dates_overview(
             store.get_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?, // TODO only get relevant category?
+            auth,
         ))
     })
     .await??;
@@ -42,6 +43,7 @@ async fn previous_dates_overview(
             page_title: "Vorherige Termine",
             event: Some(&event),
             current_date: Some(get_effective_date(&entry.entry.begin)),
+            auth_token: Some(&auth),
         },
         event: &event,
         entry: &entry,

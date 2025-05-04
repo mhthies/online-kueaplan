@@ -46,7 +46,7 @@
                                 <div class="d-inline-block float-end ms-2" title="Kategorie {{category.title}}">{{ category.icon }}</div>
                             {% endif %}
                             <span class="content">{{ entry.title }}</span>
-                            {% if row.includes_entry && user_can_edit_entries %}
+                            {% if row.includes_entry && base.can_manage_entries() %}
                             <div class="table-aside-buttons">
                                 <a href="{{ url_for_edit_entry(row.entry)? }}" aria-label="Eintrag bearbeiten"
                                    title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; bearbeiten">

@@ -30,6 +30,7 @@ impl Display for EnumMemberNotExistingError {
 /// passphrases in a client's session, and by cli functions via [create_for_cli].
 ///
 /// For global, not event-specific authorization, a GlobalAuthToken is required instead.
+#[derive(Debug, Clone)]
 pub struct AuthToken {
     event_id: i32,
     roles: Vec<AccessRole>,
@@ -146,7 +147,7 @@ impl GlobalAuthToken {
 /// Possible roles, a client can authenticate for, using passphrases.
 ///
 /// Each role qualifies for a set of [Privileges]. See [Privilege::qualifying_roles].
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 #[repr(i32)]
 pub enum AccessRole {
     User = 1,

@@ -31,13 +31,14 @@ async fn login_form(
     let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
     form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
 
-    // TODO add event name; 404 if event does not exist
+    // TODO add event name and existing auth token; 404 if event does not exist
     let tmpl = LoginFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Login",
             event: None,
             current_date: None,
+            auth_token: None,
         },
         login_url: form_submit_url,
         expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
@@ -106,12 +107,14 @@ async fn login(
         });
         let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
         form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
+        // TODO add event name and existing auth token
         let tmpl = LoginFormTemplate {
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
                 event: None,
                 current_date: None,
+                auth_token: None,
             },
             login_url: form_submit_url,
             expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),

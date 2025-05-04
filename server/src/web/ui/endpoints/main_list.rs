@@ -46,6 +46,7 @@ async fn main_list(
             page_title: &title,
             event: Some(&event),
             current_date: Some(date),
+            auth_token: Some(&auth),
         },
         entry_blocks: group_rows_into_blocks(&rows, date),
         entries_with_descriptions: rows
@@ -62,7 +63,6 @@ async fn main_list(
         timezone: TIME_ZONE,
         date,
         event: &event,
-        user_can_edit_entries: auth.has_privilege(event_id, Privilege::ManageEntries),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -78,7 +78,6 @@ struct MainListTemplate<'a> {
     timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
     event: &'a Event,
-    user_can_edit_entries: bool,
 }
 
 impl<'a> MainListTemplate<'a> {

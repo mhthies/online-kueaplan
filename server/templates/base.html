@@ -24,7 +24,7 @@
             {% if let Some(event) = base.event %}{{ event.title }}{% else %}KüA-Plan{% endif %}
         </div>
         {% if let Some(event) = base.event %}
-            <ul class="navbar-nav me-auto">
+            <ul class="navbar-nav">
                 <li class="nav-item dropdown">
                     <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% if let Some(date) = base.current_date %}
@@ -42,30 +42,34 @@
                     </ul>
                 </li>
             </ul>
-            {#
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Navigation ausklappen">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarToggler">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarToggler">
+                {#
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-grid"></i> Kategorien</a></li>
                     <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-geo-alt-fill"></i> Räume</a></li>
                 </ul>
+                #}
 
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
-                        </a>
-                    </li>
-                </ul>
+                {% if base.can_manage_entries() %}
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ base.request.url_for("new_entry", [&base.event.expect("When privileges are known, the event must be known as well").id.to_string()])? }}" class="nav-link">
+                                <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
+                            </a>
+                        </li>
+                        {#
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
+                            </a>
+                        </li>
+                        #}
+                    </ul>
+                {% endif %}
             </div>
-            #}
         {% endif %}
     </div>
 </nav>

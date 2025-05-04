@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct FormValue<T: FormValueRepresentation> {
-    value: String,
+    value: Option<String>,
     #[serde(skip)]
     errors: Vec<String>,
     #[serde(skip)]
@@ -61,16 +61,31 @@ impl ValidateFromFormInput for String {
 }
 
 impl<T: FormValueRepresentation> FormValue<T> {
+    /// Create a FormValue without contained value. This will cause an error when trying to validate
+    /// it or call [string_value()].
+    pub fn empty() -> Self {
+        Self {
+            value: None,
+            errors: vec![],
+            _phantom: Default::default(),
+        }
+    }
+
     pub fn validate_with<'d, D: ValidationDataForFormValue<T> + 'd>(
         &'_ mut self,
         data: D,
     ) -> Option<T> {
-        match data.validate_form_value(&self.value) {
-            Ok(v) => Some(v),
-            Err(e) => {
-                self.errors.push(e);
-                None
+        if let Some(value) = &self.value {
+            match data.validate_form_value(value) {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    self.errors.push(e);
+                    None
+                }
             }
+        } else {
+            self.errors.push("Wert fehlt in Formular-Daten".to_owned());
+            None
         }
     }
 
@@ -102,7 +117,7 @@ impl<T: FormValueRepresentation> FormValue<T> {
     /// Get the current string representation of the form value to be used as the `value` attribute
     /// when rendering the form input.
     pub fn string_value(&self) -> &str {
-        &self.value
+        self.value.as_deref().unwrap_or("")
     }
 }
 
@@ -112,7 +127,7 @@ where
 {
     fn default() -> Self {
         FormValue {
-            value: T::default().into_form_value_string(),
+            value: Some(T::default().into_form_value_string()),
             errors: vec![],
             _phantom: Default::default(),
         }
@@ -122,7 +137,7 @@ where
 impl<T: FormValueRepresentation> From<T> for FormValue<T> {
     fn from(value: T) -> Self {
         FormValue {
-            value: value.into_form_value_string(),
+            value: Some(value.into_form_value_string()),
             errors: vec![],
             _phantom: Default::default(),
         }
@@ -138,12 +153,17 @@ pub trait _FormValidSimpleValidate<T> {
 
 impl<T: ValidateFromFormInput> _FormValidSimpleValidate<T> for FormValue<T> {
     fn validate(&mut self) -> Option<T> {
-        match T::from_form_value(&self.value) {
-            Ok(v) => Some(v),
-            Err(e) => {
-                self.errors.push(e);
-                None
+        if let Some(value) = &self.value {
+            match T::from_form_value(value) {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    self.errors.push(e);
+                    None
+                }
             }
+        } else {
+            self.errors.push("Wert fehlt in Formular-Daten".to_owned());
+            None
         }
     }
 }

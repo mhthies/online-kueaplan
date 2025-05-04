@@ -15,6 +15,7 @@ pub mod error_page;
 pub mod flash;
 mod form_inputs;
 mod form_values;
+mod helper_templates;
 mod time_calculation;
 mod util;
 pub mod validation;
@@ -39,6 +40,9 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::edit_entry::new_entry)
         .service(endpoints::previous_dates::previous_dates_overview)
         .service(endpoints::previous_dates::delete_previous_date)
+        .service(endpoints::delete_entry::delete_entry_form)
+        .service(endpoints::delete_entry::delete_entry)
+        .service(endpoints::delete_entry::mark_entry_cancelled)
         .default_service(web::to(not_found_handler))
 }
 

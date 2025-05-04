@@ -4,22 +4,12 @@
 {% block body %}
 <div class="container mt-3" id="main">
     <h1>Eintrag bearbeiten</h1>
-
-    <ul class="nav nav-underline m-3">
-        <li class="nav-item">
-            <a class="nav-link" href="{{ util::url_for_entry(base.request, entry.entry)? }}">
-                <i class="bi bi-arrow-left" aria-label="Zurück"></i>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ util::url_for_edit_entry(base.request, entry)? }}">
-                <i class="bi-pencil-fill" aria-hidden="true"></i> Bearbeiten</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry.entry.id.to_string()])? }}">
-            <i class="bi bi-clock-history"></i> Vorherige Termine</a>
-        </li>
-    </ul>
+    {{ helper_templates::EditEntryNavbar::new(base.request,
+                                              *base.event.expect("Event should always be known").id,
+                                              entry.entry.id,
+                                              base.current_date.expect("For non-new entries, `entry_id` should always be known."),
+                                              helper_templates::EditEntryNavbarActiveLink::PreviousDatesOverview,
+       )|safe }}
 
     <h2>
         Vorherige Termine
@@ -72,6 +62,7 @@
         </table>
     {% endif %}
     <h2>Aktueller Termin</h2>
+    {# TODO deduplicate code #}
     <table class="table table-striped kuealist">
         <thead>
         <tr>

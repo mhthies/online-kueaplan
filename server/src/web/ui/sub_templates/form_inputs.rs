@@ -73,7 +73,7 @@ impl<'a> InputConfigurationBuilder<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "forms/form_field.html")]
+#[template(path = "sub_templates/form_inputs/form_field.html")]
 pub struct FormFieldTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     label: &'a str,
@@ -102,7 +102,7 @@ impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
 }
 
 #[derive(Template)]
-#[template(path = "forms/hidden_input.html")]
+#[template(path = "sub_templates/form_inputs/hidden_input.html")]
 pub struct HiddenInputTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     data: &'a FormValue<T>,
@@ -129,7 +129,7 @@ pub struct SelectEntry<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "forms/select.html")]
+#[template(path = "sub_templates/form_inputs/select.html")]
 pub struct SelectTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     entries: &'a Vec<SelectEntry<'a>>,
@@ -160,7 +160,7 @@ impl<'a, T: FormValueRepresentation> SelectTemplate<'a, T> {
 }
 
 #[derive(Template)]
-#[template(path = "forms/checkbox.html")]
+#[template(path = "sub_templates/form_inputs/checkbox.html")]
 pub struct CheckboxTemplate<'a> {
     name: &'a str,
     label: &'a str,

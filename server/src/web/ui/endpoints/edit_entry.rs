@@ -6,12 +6,12 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
-use crate::web::ui::form_inputs::{
+use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
+use crate::web::ui::sub_templates;
+use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize,
     InputType, SelectEntry, SelectTemplate,
 };
-use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
-use crate::web::ui::helper_templates;
 use crate::web::ui::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };

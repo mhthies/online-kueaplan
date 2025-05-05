@@ -177,7 +177,7 @@ struct MainListRow<'a> {
     sort_time: &'a chrono::DateTime<chrono::Utc>,
     /// `true` if this list row represents the entry itself (with its currently scheduled date),
     /// maybe together with one or more previous dates. `false` if this list entry *only* represents
-    /// previous_dates of the KüA-Plan entry   
+    /// previous_dates of the KüA-Plan entry
     includes_entry: bool,
     /// The previous_dates represented by this list row (if any)
     previous_dates: Vec<&'a FullPreviousDate>,

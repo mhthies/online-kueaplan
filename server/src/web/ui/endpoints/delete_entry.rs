@@ -7,7 +7,7 @@ use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
 use crate::web::ui::util;
-use crate::web::ui::{helper_templates, time_calculation};
+use crate::web::ui::{sub_templates, time_calculation};
 use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
 use actix_web::{get, post, web, HttpRequest, Responder};

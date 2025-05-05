@@ -11,11 +11,12 @@
     </h1>
 
     {% if !is_new_entry %}
-        {{ helper_templates::EditEntryNavbar::new(base.request,
-                                                  *base.event.expect("Event should always be known").id,
-                                                  entry_id.expect("For non-new entries, `entry_id` should always be known."),
-                                                  base.current_date.expect("For non-new entries, `entry_id` should always be known."),
-                                                  helper_templates::EditEntryNavbarActiveLink::EditEntry,
+        {{ sub_templates::edit_entry_helpers::EditEntryNavbar::new(
+               base.request,
+               *base.event.expect("Event should always be known").id,
+               entry_id.expect("For non-new entries, `entry_id` should always be known."),
+               base.current_date.expect("For non-new entries, `entry_id` should always be known."),
+               sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::EditEntry,
            )|safe }}
     {% endif %}
 

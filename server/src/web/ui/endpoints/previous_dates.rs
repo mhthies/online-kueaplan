@@ -5,7 +5,7 @@ use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
-use crate::web::ui::helper_templates;
+use crate::web::ui::sub_templates;
 use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
 use crate::web::ui::util;
 use crate::web::AppState;

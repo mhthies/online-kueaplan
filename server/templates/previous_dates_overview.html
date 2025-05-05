@@ -4,11 +4,12 @@
 {% block body %}
 <div class="container mt-3" id="main">
     <h1>Eintrag bearbeiten</h1>
-    {{ helper_templates::EditEntryNavbar::new(base.request,
-                                              *base.event.expect("Event should always be known").id,
-                                              entry.entry.id,
-                                              base.current_date.expect("For non-new entries, `entry_id` should always be known."),
-                                              helper_templates::EditEntryNavbarActiveLink::PreviousDatesOverview,
+    {{ sub_templates::edit_entry_helpers::EditEntryNavbar::new(
+           base.request,
+           *base.event.expect("Event should always be known").id,
+           entry.entry.id,
+           base.current_date.expect("For non-new entries, `entry_id` should always be known."),
+           sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::PreviousDatesOverview,
        )|safe }}
 
     <h2>

@@ -1,11 +1,11 @@
-use super::util;
 use crate::data_store::{EntryId, EventId};
+use crate::web::ui::util;
 use actix_web::HttpRequest;
 use askama::Template;
 
 /// Common navigation bar of all entry editing pages
 #[derive(Template)]
-#[template(path = "_edit_entry_navbar.html")]
+#[template(path = "sub_templates/edit_entry_navbar.html")]
 pub struct EditEntryNavbar<'a> {
     request: &'a HttpRequest,
     event_id: EventId,

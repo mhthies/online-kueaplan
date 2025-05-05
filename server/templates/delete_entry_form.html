@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 
+{% block custom_header %}
+<style>
+    {{ self::styles_for_category(entry_category) }}
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container mt-3" id="main">
     <h1>Eintrag bearbeiten</h1>
-    {{ sub_templates::edit_entry_helpers::EditEntryNavbar::new(
+    {{ EditEntryNavbar::new(
            base.request,
            *base.event.expect("Event should always be known").id,
            entry.entry.id,
            base.current_date.expect("For non-new entries, `entry_id` should always be known."),
-           sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::DeleteEntry,
+           EditEntryNavbarActiveLink::DeleteEntry,
        )|safe }}
 
     <h2>Aktueller Eintrag</h2>
-    {# TODO deduplicate code #}
     <table class="table table-striped kuealist">
         <thead>
         <tr>
@@ -23,37 +28,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr style="{{ Self::css_for_category_color(entry_category) }}" class="kuea-with-category">
-            <td class="kuea-title" id="entry-{{ entry.entry.id.to_string() }}">
-                {% if entry.entry.is_cancelled %}
-                <span class="visually-hidden">Abgesagt: </span>
-                {% endif %}
-                <span class="content">{{ entry.entry.title }}</span>
-                {% if !entry.entry.comment.is_empty() %}
-                <div class="comment">{{ entry.entry.comment }}</div>
-                {% endif %}
-            </td>
-            <td class="kuea-time">
-                <small>{{ to_our_timezone(entry.entry.begin).format("%d.%m.") }}</small>
-                {{ to_our_timezone(entry.entry.begin).format("%H:%M") }}&nbsp;– {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
-                {% let duration = entry.entry.end.signed_duration_since(entry.entry.begin) %}
-                {% if duration >= chrono::TimeDelta::days(1) %}
-                    (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
-                {% endif %}
-                {% if !entry.entry.time_comment.is_empty() %}
-                    <div class="comment">{{ entry.entry.time_comment }}</div>
-                {% endif %}
-            </td>
-            <td class="kuea-place">
-                {% for room_id in entry.room_ids %}
-                {{ rooms[room_id].title }}{% if !loop.last %}, {% endif -%}
-                {% endfor %}
-                {% if !entry.entry.room_comment.is_empty() %}
-                <div class="comment">{{ entry.entry.room_comment }}</div>
-                {% endif %}
-            </td>
-            <td class="kuea-people">{{ entry.entry.responsible_person }}</td>
-        </tr>
+            {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), entry_category, rooms, false, None)|safe }}
         </tbody>
     </table>
     <div class="card border-danger mt-5">

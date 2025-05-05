@@ -2,12 +2,17 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::EntryId;
 use crate::web::ui::base_template::BaseTemplateContext;
-use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
-use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
+use crate::web::ui::sub_templates::edit_entry_helpers::{
+    EditEntryNavbar, EditEntryNavbarActiveLink,
+};
+use crate::web::ui::sub_templates::main_list_row::{
+    styles_for_category, MainListRow, MainListRowTemplate,
+};
+use crate::web::ui::time_calculation;
+use crate::web::ui::time_calculation::get_effective_date;
 use crate::web::ui::util;
-use crate::web::ui::{sub_templates, time_calculation};
 use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
 use actix_web::{get, post, web, HttpRequest, Responder};
@@ -57,7 +62,6 @@ async fn delete_entry_form(
                 "Entry's category {} does not exist.",
                 entry.entry.category
             )))?,
-        timezone: TIME_ZONE,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -204,18 +208,4 @@ struct DeleteEntryTemplate<'a> {
     entry: &'a FullEntry,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     entry_category: &'a Category,
-    timezone: chrono_tz::Tz,
-}
-
-impl DeleteEntryTemplate<'_> {
-    // TODO deduplicate
-    fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.timezone).naive_local()
-    }
-
-    fn css_for_category_color(category: &Category) -> String {
-        CategoryColors::from_base_color_hex(&category.color)
-            .expect("Category color should be a valid HTML hex color string.")
-            .as_css()
-    }
 }

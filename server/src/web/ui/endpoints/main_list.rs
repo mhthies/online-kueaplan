@@ -125,7 +125,7 @@ fn generate_list_entries<'a>(
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
         if effective_date_matches(&entry.entry.begin, &entry.entry.end, date) {
-            result.push(MainListRow::form_entry(entry));
+            result.push(MainListRow::from_entry(entry));
         }
         for previous_date in entry.previous_dates.iter() {
             if effective_date_matches(

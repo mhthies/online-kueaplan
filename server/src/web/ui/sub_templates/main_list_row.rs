@@ -8,6 +8,12 @@ use actix_web::HttpRequest;
 use askama::Template;
 use std::collections::BTreeMap;
 
+/// Sub-Template for rendering a single row in a main KüA-List, based on a [MainListRow] struct.
+///
+/// The output of this template must be used within a `<table class="table kuealist">` with four
+/// columns 'title', 'time', 'place', 'people'.
+///
+/// An instance of this template can be created with [new].
 #[derive(Template)]
 #[template(path = "sub_templates/main_list_row.html")]
 pub struct MainListRowTemplate<'a> {
@@ -94,7 +100,7 @@ pub struct MainListRow<'a> {
 
 impl<'a> MainListRow<'a> {
     /// Create a MainListEntry for given `entry` itself
-    pub fn form_entry(entry: &'a FullEntry) -> Self {
+    pub fn from_entry(entry: &'a FullEntry) -> Self {
         Self {
             entry,
             sort_time: &entry.entry.begin,

@@ -28,7 +28,7 @@
         </tr>
         </thead>
         <tbody>
-        {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), entry_category, rooms, false, None)|safe }}
+        {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), entry_category, rooms, false, false, None)|safe }}
         </tbody>
     </table>
 

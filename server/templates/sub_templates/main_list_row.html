@@ -52,7 +52,7 @@
                     <i class="bi-pencil" aria-hidden="true"></i></a>
             </div>
         {% endif %}
-        {% if row.includes_entry && !entry.description.is_empty() %}
+        {% if row.includes_entry && show_description_links && !entry.description.is_empty() %}
             <a href="#entry-desc-{{ entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
         {% endif %}
         {% if row.includes_entry && !entry.comment.is_empty() %}

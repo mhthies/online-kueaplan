@@ -22,6 +22,7 @@ pub struct MainListRowTemplate<'a> {
     category: &'a Category,
     rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
     show_edit_links: bool,
+    show_description_links: bool,
     date_context: Option<chrono::NaiveDate>,
 }
 
@@ -32,6 +33,7 @@ impl<'a> MainListRowTemplate<'a> {
         entry_category: &'a Category,
         rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
         show_edit_links: bool,
+        show_description_links: bool,
         date_context: Option<chrono::NaiveDate>,
     ) -> Self {
         assert_eq!(row.entry.entry.category, entry_category.id);
@@ -41,6 +43,7 @@ impl<'a> MainListRowTemplate<'a> {
             category: entry_category,
             rooms,
             show_edit_links,
+            show_description_links,
             date_context,
         }
     }

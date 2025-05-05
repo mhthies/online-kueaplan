@@ -1,0 +1,117 @@
+{#
+ # Template for rendering a single entry in a main entry list with the four columns title, time, place, people.
+ #}
+{%- macro format_begin_end(begin, end) %}
+    {% let duration = end.signed_duration_since(*begin) %}
+    {% let show_begin_date = date_context.is_none() || self.to_our_timezone(begin).date() < date_context.unwrap() %}
+    {% let show_end_date = duration >= chrono::TimeDelta::hours(12)
+           && to_our_timezone(end).date() != to_our_timezone(begin).date() %}
+    {% if !show_begin_date && !show_end_date %}<span class="text-nowrap">{% endif %}
+        {% if show_begin_date %}
+            <span class="text-nowrap">{{ to_our_timezone(begin).format("%d.%m. %H:%M") -}}</span>
+        {%- else -%}
+            {{ to_our_timezone(begin).format("%H:%M") -}}
+        {% endif -%}
+        {% if end != begin -%}
+            &nbsp;–
+        {% if show_end_date %}
+            <span class="text-nowrap">{{ to_our_timezone(end).format("%d.%m. %H:%M") }}</span>
+        {% else %}
+            {{ to_our_timezone(end).format("%H:%M") }}
+        {% endif %}
+    {% endif %}
+    {% if !show_begin_date && !show_end_date %}</span>{% endif %}
+{% endmacro -%}
+
+
+{% let entry = row.entry.entry %}
+<tr class="{{ css_class_for_tr(row) }}">
+    <td class="kuea-title aside-container" id="entry-{{ entry.id.to_string() }}">
+        {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(row.sort_time) %}
+        {% if let Some(date) = date_context %}
+            {% if effective_begin_date < *date %}
+                <div class="small">
+                    <i class="bi bi-arrow-return-right" aria-hidden="true"></i>
+                    Übertrag vom {% if effective_begin_date == date.checked_sub_days(chrono::Days::new(1)).unwrap() %}Vortag{% else %}{{ effective_begin_date.format("%d.%m.") }}{% endif %}
+                </div>
+            {% endif %}
+        {% endif %}
+        {% if entry.is_cancelled %}
+            <span class="visually-hidden">Abgesagt: </span>
+        {% elif !row.includes_entry %}
+            <span class="visually-hidden">Verschoben: </span>
+        {% endif %}
+        {% if !category.icon.is_empty() %}
+            <div class="d-inline-block float-end ms-2" title="Kategorie {{category.title}}">{{ category.icon }}</div>
+        {% endif %}
+        <span class="content">{{ entry.title }}</span>
+        {% if row.includes_entry && show_edit_links %}
+            <div class="table-aside-buttons">
+                <a href="{{ url_for_edit_entry(row.entry)? }}" aria-label="Eintrag bearbeiten"
+                   title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; bearbeiten">
+                    <i class="bi-pencil" aria-hidden="true"></i></a>
+            </div>
+        {% endif %}
+        {% if row.includes_entry && !entry.description.is_empty() %}
+            <a href="#entry-desc-{{ entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
+        {% endif %}
+        {% if row.includes_entry && !entry.comment.is_empty() %}
+            <div class="comment mt-1">{{ entry.comment }}</div>
+        {% endif %}
+
+        {% if !row.includes_entry && !entry.is_cancelled %}
+            <div class="comment text-info mt-1">
+                <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben auf
+                {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
+                    {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
+                {% else %}
+                    {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
+                {% endif %}
+                <a href="{{ util::url_for_entry(request, entry)? }}"
+                   title="Link zum neuen Zeitpunkt"
+                   class="d-print-none">
+                    <i class="bi bi-link" aria-hidden="true"></i>
+                </a>
+            </div>
+        {% endif %}
+        {% for previous_date in row.previous_dates if !previous_date.previous_date.comment.is_empty() %}
+            <div class="comment mt-1">
+                {{ previous_date.previous_date.comment }}
+            </div>
+        {% endfor %}
+    </td>
+    <td class="kuea-time">
+        {% if row.includes_entry %}
+            {% call format_begin_end(entry.begin, entry.end) %}
+        {% endif %}
+        {% if !row.additional_times.is_empty() %}
+            <span class="visually-hidden">Zuvor geplante Zeiten:</span>
+            {% for (begin, end) in row.additional_times %}
+                {% if row.includes_entry || !loop.first %}<br>{% endif %}
+                <span class="text-decoration-line-through">
+                    {% call format_begin_end(**begin, **end) %}
+                </span>{% if !loop.last %},{% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if row.includes_entry && !entry.time_comment.is_empty() %}
+            <div class="comment">{{ entry.time_comment }}</div>
+        {% endif %}
+    </td>
+    <td class="kuea-place">
+        {% for room_id in row.merged_rooms %}
+            {% let strike_through_room = row.includes_entry && !row.previous_dates.is_empty() && !row.entry.room_ids.contains(room_id) %}
+            {% if strike_through_room %}<span class="text-decoration-line-through">{% endif %}
+                {{ rooms[room_id].title }}
+            {%- if strike_through_room %}</span>{% endif %}
+            {%- if !loop.last %}, {% endif -%}
+        {% endfor %}
+        {% if row.includes_entry && !entry.room_comment.is_empty() %}
+            <div class="comment">{{ entry.room_comment }}</div>
+        {% endif %}
+    </td>
+    <td class="kuea-people">
+        {% if !entry.responsible_person.is_empty() %}
+            <span class="d-inline d-sm-none">von</span> {{ entry.responsible_person }}
+        {% endif %}
+    </td>
+</tr>

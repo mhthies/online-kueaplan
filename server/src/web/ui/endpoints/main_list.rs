@@ -1,15 +1,16 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullEntry, FullPreviousDate, Room};
-use crate::data_store::{CategoryId, EntryFilter, RoomId};
+use crate::data_store::models::{Category, FullEntry, Room};
+use crate::data_store::EntryFilter;
 use crate::web::ui::base_template::BaseTemplateContext;
-use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
+use crate::web::ui::sub_templates::main_list_row::{
+    styles_for_category, MainListRow, MainListRowTemplate,
+};
 use crate::web::ui::time_calculation::{
     timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,
 };
 use crate::web::ui::util;
 use crate::web::AppState;
-use actix_web::error::UrlGenerationError;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
@@ -60,7 +61,6 @@ async fn main_list(
             .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         categories: categories.iter().map(|r| (r.id, r)).collect(),
-        timezone: TIME_ZONE,
         date,
     };
     Ok(Html::new(tmpl.render()?))
@@ -74,64 +74,14 @@ struct MainListTemplate<'a> {
     entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     categories: BTreeMap<uuid::Uuid, &'a Category>,
-    timezone: chrono_tz::Tz,
     date: chrono::NaiveDate,
 }
 
-impl<'a> MainListTemplate<'a> {
-    fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.timezone).naive_local()
-    }
-
-    fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
-        util::url_for_edit_entry(self.base.request, entry)
-    }
-
-    /// Generate all required (inline) CSS stylesheet content for the given category.
-    ///
-    /// This function is called within the template once for every category.
-    /// It generates CSS rules for the category's CSS class (according to [css_class_for_category])
-    /// that can be used for rendering entries belonging to that category.
-    fn styles_for_category(category: &Category) -> String {
-        let colors = CategoryColors::from_base_color_hex(&category.color)
-            .expect("Category color should be a valid HTML hex color string.");
-        format!(
-            ".{0}{{ {1} }}",
-            Self::css_class_for_category(&category.id),
-            colors.as_css(),
-        )
-    }
-
-    /// Return the CSS class name representing the Category with id `category_id`
-    fn css_class_for_category(category_id: &CategoryId) -> String {
-        format!("category-{}", category_id)
-    }
-
-    /// Generate the HTML 'class' attribute for the table row of the given `entry`
-    fn css_class_for_entry(&self, row: &'a MainListRow<'a>) -> String {
-        let mut result = Self::css_class_for_category(&row.entry.entry.category);
-        result.push_str(" kuea-with-category");
-        if self
-            .categories
-            .get(&row.entry.entry.category)
-            .map(|c| c.is_official)
-            .unwrap_or(false)
-        {
-            result.push_str(" fw-semibold");
-        }
-        if !row.includes_entry || row.entry.entry.is_cancelled {
-            result.push_str(" kuea-cancelled");
-        }
-        if row.entry.entry.is_room_reservation {
-            result.push_str(" fst-italic");
-        }
-        result
-    }
-}
+impl<'a> MainListTemplate<'a> {}
 
 /// Filters for the rinja template
 mod filters {
-    pub use crate::web::ui::askama_filters::{ellipsis, markdown};
+    pub use crate::web::ui::askama_filters::markdown;
     use crate::web::ui::util;
 
     pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
@@ -161,87 +111,6 @@ fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     );
     filter.include_previous_date_matches();
     filter.build()
-}
-
-/// A single row in the list view
-///
-/// This can either represent a KüA-Plan entry itself at its scheduled time or one or more
-/// previous_dates of one (!) entry or a combination of both. The struct does not hold the data
-/// itself but only contains references to the [FullEntry] struct and the relevant parts of it.
-struct MainListRow<'a> {
-    /// The KüA plan entry this row is about
-    entry: &'a FullEntry,
-    /// The relevant timestamp for sorting this row in the list. I.e. the `begin` of the entry or
-    /// the relevant previous_date or the minimum of all of those (when this row covers more than
-    /// one begin time)
-    sort_time: &'a chrono::DateTime<chrono::Utc>,
-    /// `true` if this list row represents the entry itself (with its currently scheduled date),
-    /// maybe together with one or more previous dates. `false` if this list entry *only* represents
-    /// previous_dates of the KüA-Plan entry
-    includes_entry: bool,
-    /// The previous_dates represented by this list row (if any)
-    previous_dates: Vec<&'a FullPreviousDate>,
-    /// The merged set of rooms of all dates represented by this list row
-    merged_rooms: Vec<&'a RoomId>,
-    /// The set of unique `(begin, end)` times represented by this row that are not equal to the
-    /// entry's current scheduled time.
-    additional_times: Vec<(
-        &'a chrono::DateTime<chrono::Utc>,
-        &'a chrono::DateTime<chrono::Utc>,
-    )>,
-}
-
-impl<'a> MainListRow<'a> {
-    /// Create a MainListEntry for given `entry` itself
-    fn form_entry(entry: &'a FullEntry) -> Self {
-        Self {
-            entry,
-            sort_time: &entry.entry.begin,
-            includes_entry: true,
-            previous_dates: vec![],
-            merged_rooms: entry.room_ids.iter().collect(),
-            additional_times: vec![],
-        }
-    }
-
-    /// Create a MainListEntry for the given `previous_date` of the `entry`
-    fn from_previous_date(entry: &'a FullEntry, previous_date: &'a FullPreviousDate) -> Self {
-        debug_assert_eq!(previous_date.previous_date.entry_id, entry.entry.id);
-        Self {
-            entry,
-            sort_time: &previous_date.previous_date.begin,
-            includes_entry: false,
-            previous_dates: vec![previous_date],
-            merged_rooms: previous_date.room_ids.iter().collect(),
-            additional_times: vec![(
-                &previous_date.previous_date.begin,
-                &previous_date.previous_date.end,
-            )],
-        }
-    }
-
-    /// Merge two MainListEntries of the same KüA-Plan `entry`.
-    ///
-    /// This merges all information from `other` into `self`, such that `self` represents all the
-    /// dates of the entry (current or previous) of `other` as well, afterward.
-    fn merge_from(&mut self, other: &MainListRow<'a>) {
-        debug_assert_eq!(self.entry.entry.id, other.entry.entry.id);
-        self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
-        self.includes_entry |= other.includes_entry;
-        self.previous_dates.extend_from_slice(&other.previous_dates);
-        for times in other.additional_times.iter() {
-            if !self.additional_times.contains(&times)
-                && *times != (&self.entry.entry.begin, &self.entry.entry.end)
-            {
-                self.additional_times.push(*times);
-            }
-        }
-        for room in other.merged_rooms.iter() {
-            if !self.merged_rooms.contains(&room) {
-                self.merged_rooms.push(room);
-            }
-        }
-    }
 }
 
 /// Generate the list of [MainListRow]s for the given `date` from the given list of KüA-Plan
@@ -339,7 +208,7 @@ fn group_rows_into_blocks<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_store::models::{Entry, PreviousDate};
+    use crate::data_store::models::{Entry, FullPreviousDate, PreviousDate};
     use uuid::uuid;
     #[test]
     fn test_generate_list_entries() {

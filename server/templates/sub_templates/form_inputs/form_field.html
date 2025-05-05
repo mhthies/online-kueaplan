@@ -1,11 +1,17 @@
 <label for="{{name}}Input" class="form-label">{{label}}</label>
-{% match input_type %}
+{% match config.input_type %}
 {% when InputType::Textarea %}
     <textarea class="form-control" id="{{name}}Input" name="{{name}}" rows="8">{{data.string_value()}}</textarea>
 {% else %}
-    <input type="{{ input_type.as_html_type_attr() }}"
-           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
+    {% if config.suffix_text.is_some() %}<div class="input-group">{% endif %}
+    <input type="{{ config.input_type.as_html_type_attr() }}"
+           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
            id="{{name}}Input" name="{{name}}"
            value="{{data.string_value()}}">
+    {% if let Some(suffix) = config.suffix_text %}
+        <span class="input-group-text">{{ suffix }}</span>
+        </div>
+    {% endif %}
 {% endmatch %}
-{% include "_info_and_errors.html" %}
+{%- import "_utils.html" as utils %}
+{% call utils::info_and_errors(config.info, data.errors()) %}

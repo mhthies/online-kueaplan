@@ -41,13 +41,13 @@
             </div>
             <div class="row g-3">
                 <div class="col-sm-4">
-                    {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", None, InputSize::Normal)|safe }}
+                    {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
                 </div>
                 <div class="col-6 col-sm-4">
                     {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build())|safe }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::default())|safe }}
+                    {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build())|safe }}
                 </div>
                 <div class="mb-3">
                     {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
@@ -56,7 +56,7 @@
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", None, InputSize::Normal)|safe }}
+                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
             </div>
             <div class="mb-3">
                 {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))|safe }}

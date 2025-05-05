@@ -1,0 +1,12 @@
+{% macro info_and_errors(info, errors) %}
+    {% if let Some(info) = info %}
+        <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle"></i> {{info}}</div>
+    {% endif %}
+    {% if !errors.is_empty() %}
+        <div id="{{name}}Errors" class="invalid-feedback">
+            {% for error in errors %}
+                <div>{{error}}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}

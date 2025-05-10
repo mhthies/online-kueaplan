@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton,
+    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -33,6 +33,7 @@ async fn config_index(
             event: Some(&event),
             current_date: None,
             auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Overview,

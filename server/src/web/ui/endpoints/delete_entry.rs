@@ -50,6 +50,7 @@ async fn delete_entry_form(
             event: Some(&event),
             current_date: Some(get_effective_date(&entry.entry.begin)),
             auth_token: Some(&auth),
+            active_main_nav_button: None,
         },
         event: &event,
         entry: &entry,

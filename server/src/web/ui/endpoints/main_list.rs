@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, FullEntry, Room};
 use crate::data_store::EntryFilter;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainListRow, MainListRowTemplate,
@@ -48,6 +48,7 @@ async fn main_list(
             event: Some(&event),
             current_date: Some(date),
             auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::ByDate),
         },
         entry_blocks: group_rows_into_blocks(&rows, date),
         entries_with_descriptions: rows

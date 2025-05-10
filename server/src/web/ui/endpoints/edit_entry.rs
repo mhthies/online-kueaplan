@@ -3,7 +3,7 @@ use crate::data_store::models::{
     Category, Event, FullEntry, FullNewEntry, FullPreviousDate, NewEntry, PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
@@ -61,6 +61,7 @@ async fn edit_entry_form(
             event: Some(&event),
             current_date: Some(get_effective_date(&entry_begin)),
             auth_token: Some(&auth),
+            active_main_nav_button: None,
         },
         event: &event,
         form_data: &form_data,
@@ -156,6 +157,7 @@ async fn edit_entry(
             event: Some(&event),
             current_date: Some(get_effective_date(&old_entry.entry.begin)),
             auth_token: Some(&auth),
+            active_main_nav_button: None,
         },
         event: &event,
         form_data: &data,
@@ -206,6 +208,7 @@ async fn new_entry_form(
             event: Some(&event),
             current_date: date,
             auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::AddEntry),
         },
         event: &event,
         form_data: &form_data,
@@ -284,6 +287,7 @@ async fn new_entry(
             event: Some(&event),
             current_date: date,
             auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::AddEntry),
         },
         event: &event,
         form_data: &data,

@@ -28,6 +28,7 @@ pub struct BaseTemplateContext<'a> {
     /// If the current page belongs to the context of an event, the authentication info of the user
     /// - if it is known. Used for generating the correct navigation buttons
     pub auth_token: Option<&'a AuthToken>,
+    pub active_main_nav_button: Option<MainNavButton>,
 }
 
 impl BaseTemplateContext<'_> {
@@ -96,6 +97,13 @@ impl BaseTemplateContext<'_> {
             )?
             .to_string())
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum MainNavButton {
+    ByDate,
+    AddEntry,
+    Configuration,
 }
 
 fn bytes_to_hex(bytes: &[u8]) -> String {

@@ -9,7 +9,6 @@
     .kuealist tr {
         display: block;
         border-style: solid;
-        border-color: var(--category-border);
         border-width: 1px;
         border-radius: 3px;
         margin-bottom: .5rem;
@@ -19,7 +18,10 @@
         clear: both;
         content: "";
     }
-    [data-bs-theme="dark"] .kuealist tr {
+    .kuealist tr.kuea-with-category {
+        border-color: var(--category-border);
+    }
+    [data-bs-theme="dark"] .kuealist tr.kuea-with-category {
         border-color: var(--category-border-dark);
     }
     .kuealist td {

@@ -40,3 +40,22 @@
     border-left: 0.25rem solid var(--bs-secondary-border-subtle);
     border-radius: var(--bs-border-radius);
 }
+
+/* Extra components for category management */
+.color-demo {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    background: var(--demo-color);
+    margin-right: .5rem;
+    border: solid 1px var(--bs-border-color);
+    border-radius: .25rem;
+}
+tr.category-row>* {
+    background: var(--category-bg);
+    color: var(--category-text);
+}
+[data-bs-theme="dark"] tr.category-row>* {
+    background: var(--category-bg-dark);
+    color: var(--category-text-dark);
+}

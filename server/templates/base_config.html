@@ -27,7 +27,7 @@
                                     "Basis-Konfiguration",
                                     crate::data_store::auth_token::Privilege::EditEventDetails,
                                     crate::web::ui::base_template::ConfigNavButton::EventConfig) %}
-                    {% call navlink("#",
+                    {% call navlink(base.url_for_event_endpoint("manage_categories")?,
                                     "grid",
                                     "KüA-Kategorien",
                                     crate::data_store::auth_token::Privilege::ManageCategories,

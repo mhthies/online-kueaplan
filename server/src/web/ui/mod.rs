@@ -43,6 +43,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_entry::delete_entry)
         .service(endpoints::delete_entry::mark_entry_cancelled)
         .service(endpoints::config_index::config_index)
+        .service(endpoints::manage_categories::manage_categories)
         .default_service(web::to(not_found_handler))
 }
 

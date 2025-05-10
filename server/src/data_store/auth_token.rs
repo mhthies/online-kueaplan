@@ -197,6 +197,7 @@ impl AccessRole {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Privilege {
     ShowKueaPlan,
+    ShowConfigArea,
     ManageEntries,
     ManageCategories,
     ManageRooms,
@@ -215,6 +216,7 @@ impl Privilege {
     pub fn qualifying_roles(&self) -> &'static [AccessRole] {
         match self {
             Privilege::ShowKueaPlan => &[AccessRole::User, AccessRole::Orga, AccessRole::Admin],
+            Privilege::ShowConfigArea => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageEntries => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageCategories => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageRooms => &[AccessRole::Orga, AccessRole::Admin],

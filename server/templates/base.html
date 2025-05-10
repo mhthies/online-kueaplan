@@ -53,20 +53,23 @@
                 </ul>
                 #}
 
-                {% if base.can_manage_entries() %}
+                {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
+                      || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a href="{{ base.new_entry_form_url()? }}" class="nav-link">
-                                <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
-                            </a>
-                        </li>
-                        {#
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
-                            </a>
-                        </li>
-                        #}
+                        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries) %}
+                            <li class="nav-item">
+                                <a href="{{ base.new_entry_form_url()? }}" class="nav-link">
+                                    <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+                            <li class="nav-item">
+                                <a href="{{ base.url_for_event_endpoint("config_index")? }}" class="nav-link">
+                                    <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
+                                </a>
+                            </li>
+                        {% endif %}
                     </ul>
                 {% endif %}
             </div>
@@ -77,6 +80,9 @@
 {% endblock %}
 <footer class="border-top text-center small text-secondary p-2 mt-3 mb-2">
     online-kueaplan v{{ crate::get_version() }}
+    {% if base.event.is_some() && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+        | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a>
+    {% endif %}
 </footer>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}

@@ -1,0 +1,49 @@
+use crate::data_store::auth_token::Privilege;
+use crate::web::ui::base_template::{
+    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton,
+};
+use crate::web::ui::error::AppError;
+use crate::web::ui::util;
+use crate::web::AppState;
+use actix_web::web::Html;
+use actix_web::{get, web, HttpRequest, Responder};
+use askama::Template;
+
+#[get("/{event_id}/config")]
+async fn config_index(
+    path: web::Path<i32>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let event_id = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
+    let (event, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        Ok((store.get_event(&auth, event_id)?, auth))
+    })
+    .await??;
+    auth.check_privilege(event_id, Privilege::ShowConfigArea)?;
+
+    let tmpl = ConfigIndexTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: "Konfiguration",
+            event: Some(&event),
+            current_date: None,
+            auth_token: Some(&auth),
+        },
+        base_config: BaseConfigTemplateContext {
+            active_nav_button: ConfigNavButton::Overview,
+        },
+    };
+    Ok(Html::new(tmpl.render()?))
+}
+
+#[derive(Template)]
+#[template(path = "config_index.html")]
+struct ConfigIndexTemplate<'a> {
+    base: BaseTemplateContext<'a>,
+    base_config: BaseConfigTemplateContext,
+}

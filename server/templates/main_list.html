@@ -27,7 +27,7 @@
             <tbody>
                 {% for row in rows %}
                     {% let category = categories.get(row.entry.entry.category).ok_or("Category not found")? %}
-                    {{ MainListRowTemplate::new(base.request, **row, category, rooms, base.can_manage_entries(), true, Some(*date))|safe }}
+                    {{ MainListRowTemplate::new(base.request, **row, category, rooms, base.has_privilege(Privilege::ManageEntries), true, Some(*date))|safe }}
                 {% endfor %}
             </tbody>
         </table>

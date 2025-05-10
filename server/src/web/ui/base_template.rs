@@ -46,14 +46,14 @@ impl BaseTemplateContext<'_> {
         self.request.get_and_clear_flashes()
     }
 
-    pub fn can_manage_entries(&self) -> bool {
+    pub fn has_privilege(&self, privilege: Privilege) -> bool {
         let event_id = if let Some(event) = self.event {
             event.id
         } else {
             return false;
         };
         self.auth_token
-            .is_some_and(|t| t.has_privilege(event_id, Privilege::ManageEntries))
+            .is_some_and(|t| t.has_privilege(event_id, privilege))
     }
 
     /// Generate the url for the 'add entry' button.
@@ -77,6 +77,25 @@ impl BaseTemplateContext<'_> {
         )?));
         Ok(url.to_string())
     }
+
+    /// Get the URL for the given `endpoint_name`, assuming that this endpoint only requires a
+    /// single URL placeholder with the current event id.
+    pub fn url_for_event_endpoint(&self, endpoint_name: &str) -> Result<String, AppError> {
+        Ok(self
+            .request
+            .url_for(
+                endpoint_name,
+                &[self
+                    .event
+                    .ok_or(AppError::InternalError(format!(
+                        "Cannot generate URL for {}, because `event` is not present",
+                        endpoint_name
+                    )))?
+                    .id
+                    .to_string()],
+            )?
+            .to_string())
+    }
 }
 
 fn bytes_to_hex(bytes: &[u8]) -> String {
@@ -84,4 +103,24 @@ fn bytes_to_hex(bytes: &[u8]) -> String {
         let _ = write!(output, "{:02x}", b);
         output
     })
+}
+
+/// Common template data for all ui templates in the config area, extending the `base_config.html`
+/// template.
+///
+/// This struct must be a part of the template data structure, as the field `base_config`, in
+/// addition to the `base` field for the `base.html` template.
+#[derive(Debug)]
+pub struct BaseConfigTemplateContext {
+    pub active_nav_button: ConfigNavButton,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ConfigNavButton {
+    Overview,
+    EventConfig,
+    Categories,
+    Rooms,
+    Passphrases,
+    PrintTemplates,
 }

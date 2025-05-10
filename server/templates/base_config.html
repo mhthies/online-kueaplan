@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% macro navlink(url, icon, label, privilege, index) %}
+    {% if base.has_privilege(*privilege) %}
+        <li class="nav-item">
+            <a class="nav-link {% if base_config.active_nav_button == index%}active{% endif %}" {% if base_config.active_nav_button == index%}aria-current="page"{% endif %} href="{{ url }}">
+                <i class="bi bi-{{icon}}"></i> {{label}}
+            </a>
+        </li>
+    {% endif %}
+{% endmacro %}
+
+
+{% block body %}
+<div class="container mt-3" id="main">
+    <div class="row">
+        <div class="col-lg-3">
+            <nav>
+                <ul class="nav nav-pills flex-row flex-lg-column">
+                    {% call navlink(base.url_for_event_endpoint("config_index")?,
+                                    "gear",
+                                    "Übersicht",
+                                    crate::data_store::auth_token::Privilege::ShowConfigArea,
+                                    crate::web::ui::base_template::ConfigNavButton::Overview) %}
+                    {% call navlink("#",
+                                    "sliders",
+                                    "Basis-Konfiguration",
+                                    crate::data_store::auth_token::Privilege::EditEventDetails,
+                                    crate::web::ui::base_template::ConfigNavButton::EventConfig) %}
+                    {% call navlink("#",
+                                    "grid",
+                                    "KüA-Kategorien",
+                                    crate::data_store::auth_token::Privilege::ManageCategories,
+                                    crate::web::ui::base_template::ConfigNavButton::Categories) %}
+                    {% call navlink("#",
+                                    "geo-alt-fill",
+                                    "Orte",
+                                    crate::data_store::auth_token::Privilege::ManageRooms,
+                                    crate::web::ui::base_template::ConfigNavButton::Rooms) %}
+                    {% call navlink("#",
+                                    "key",
+                                    "Passphrasen",
+                                    crate::data_store::auth_token::Privilege::ManagePassphrases,
+                                    crate::web::ui::base_template::ConfigNavButton::Passphrases) %}
+                    {% call navlink("#",
+                                    "file-earmark-fill",
+                                    "Druckvorlagen",
+                                    crate::data_store::auth_token::Privilege::ShowConfigArea,
+                                    crate::web::ui::base_template::ConfigNavButton::PrintTemplates) %}
+                </ul>
+            </nav>
+        </div>
+        <div class="col-lg-9">
+            {% block config_content %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

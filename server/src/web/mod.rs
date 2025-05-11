@@ -1,6 +1,9 @@
 use crate::cli_error::CliError;
 use crate::data_store::get_store_from_env;
-use crate::setup::{get_listen_address_from_env, get_listen_port_from_env, get_secret_from_env};
+use crate::setup::{
+    get_admin_email_from_env, get_admin_name_from_env, get_listen_address_from_env,
+    get_listen_port_from_env, get_secret_from_env,
+};
 use actix_web::{middleware, web, App, HttpServer};
 use std::sync::Arc;
 
@@ -29,6 +32,7 @@ pub fn serve() -> Result<(), CliError> {
 pub struct AppState {
     store: Arc<dyn crate::data_store::KuaPlanStore>,
     secret: String,
+    admin: AdminInfo,
 }
 
 impl AppState {
@@ -36,6 +40,16 @@ impl AppState {
         Ok(Self {
             store: Arc::new(get_store_from_env()?),
             secret: get_secret_from_env()?,
+            admin: AdminInfo {
+                name: get_admin_name_from_env()?,
+                email: get_admin_email_from_env()?,
+            },
         })
     }
+}
+
+#[derive(Clone)]
+struct AdminInfo {
+    name: String,
+    email: String,
 }

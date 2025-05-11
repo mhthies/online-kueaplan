@@ -29,6 +29,14 @@ pub fn get_listen_address_from_env() -> Result<String, SetupError> {
     env::var("LISTEN_ADDRESS").map_err(|e| SetupError::from_env_error(e, "LISTEN_ADDRESS"))
 }
 
+pub fn get_admin_name_from_env() -> Result<String, SetupError> {
+    env::var("ADMIN_NAME").map_err(|e| SetupError::from_env_error(e, "ADMIN_NAME"))
+}
+
+pub fn get_admin_email_from_env() -> Result<String, SetupError> {
+    env::var("ADMIN_EMAIL").map_err(|e| SetupError::from_env_error(e, "ADMIN_EMAIL"))
+}
+
 #[derive(Debug)]
 pub enum SetupError {
     EnvVariableMissing {

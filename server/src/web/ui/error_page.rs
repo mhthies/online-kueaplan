@@ -9,9 +9,10 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::EventId;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
+use crate::web::{AdminInfo, AppState};
 use actix_web::body::EitherBody;
 use actix_web::web::Html;
-use actix_web::{HttpRequest, HttpResponse, Responder, ResponseError};
+use actix_web::{web, FromRequest, HttpRequest, HttpResponse, Responder, ResponseError};
 use askama::Template;
 
 /// An actix-web middleware for generating nice error pages
@@ -51,14 +52,15 @@ pub async fn error_page_middleware<B: actix_web::body::MessageBody>(
         let error = res
             .error()
             .expect("We checked that res has an error, above.");
+        let admin_info = &web::Data::<AppState>::extract(&req).into_inner()?.admin;
         if let Some(app_error) = error.as_error::<AppError>() {
-            let response = generate_app_error_page(app_error, &req);
+            let response = generate_app_error_page(app_error, &req, admin_info);
             Ok(actix_web::dev::ServiceResponse::new(
                 req,
                 response.map_body(|_, body| EitherBody::right(body)),
             ))
         } else {
-            let response = generate_generic_error_page(error.as_response_error(), &req);
+            let response = generate_generic_error_page(error.as_response_error(), &req, admin_info);
             Ok(actix_web::dev::ServiceResponse::new(
                 req,
                 response.map_body(|_, body| EitherBody::right(body)),
@@ -73,6 +75,7 @@ pub async fn error_page_middleware<B: actix_web::body::MessageBody>(
 fn generate_app_error_page(
     app_error: &AppError,
     http_request: &HttpRequest,
+    admin_info: &AdminInfo,
 ) -> HttpResponse<String> {
     let tmpl = AppErrorTemplate {
         base: BaseTemplateContext {
@@ -86,8 +89,8 @@ fn generate_app_error_page(
         error: app_error,
         url: &http_request.full_url(),
         timestamp: chrono::Local::now(),
-        admin_name: "TODO",
-        admin_email: "mail@example.com",
+        admin_name: &admin_info.name,
+        admin_email: &admin_info.email,
     };
     render_template_or_show_error_as_string(tmpl, app_error, http_request)
 }
@@ -96,6 +99,7 @@ fn generate_app_error_page(
 fn generate_generic_error_page(
     error: &dyn ResponseError,
     http_request: &HttpRequest,
+    admin_info: &AdminInfo,
 ) -> HttpResponse<String> {
     let tmpl = ErrorTemplate {
         base: BaseTemplateContext {
@@ -109,8 +113,8 @@ fn generate_generic_error_page(
         error,
         url: &http_request.full_url(),
         timestamp: chrono::Local::now(),
-        admin_name: "TODO",
-        admin_email: "mail@example.com",
+        admin_name: &admin_info.name,
+        admin_email: &admin_info.email,
     };
     render_template_or_show_error_as_string(tmpl, error, http_request)
 }

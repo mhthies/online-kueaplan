@@ -20,8 +20,8 @@
                     <td class="text-nowrap"><span class="color-demo" style="--demo-color: #{{category.color}};"></span> #{{category.color}}</td>
                     <td>{% if category.is_official %}<i class="bi bi-check-circle-fill" aria-label="ja"></i>{% else %}<i class="bi bi-x-circle" aria-label="nein"></i>{% endif %}</td>
                     <td class="text-nowrap">
-                        <a href="#"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
-                        <a href="#" class="ms-2"><i class="bi bi-trash" aria-label="Löschen"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
                     </td>
                 </tr>
             {% endfor %}

@@ -110,9 +110,10 @@ async fn edit_entry(
         Some(entry_id),
     );
 
+    let mut entry_begin = old_entry.entry.begin;
     let result = if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
         entry.entry.event_id = event_id;
-        let entry_begin = entry.entry.begin;
+        entry_begin = entry.entry.begin;
         if let Some(previous_date_comment) = create_previous_date {
             if entry.entry.begin != old_entry.entry.begin
                 || entry.entry.end != old_entry.entry.end
@@ -139,7 +140,7 @@ async fn edit_entry(
         .await?;
 
         match result {
-            Ok(()) => FormSubmitResult::Success { entry_begin },
+            Ok(()) => FormSubmitResult::Success,
             Err(e) => match e {
                 StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
                 StoreError::ConcurrentEditConflict => FormSubmitResult::ConcurrentEditConflict,
@@ -168,7 +169,24 @@ async fn edit_entry(
         is_new_entry: false,
     };
 
-    create_edit_form_response(result, event_id, tmpl)
+    create_edit_form_response(
+        result,
+        &tmpl,
+        "Der Eintrag",
+        req.url_for(
+            "edit_entry_form",
+            &[event_id.to_string(), entry_id.to_string()],
+        )?,
+        "edit_entry_form",
+        false,
+        url_for_entry_details(
+            &req,
+            event_id,
+            &entry_id,
+            &time_calculation::get_effective_date(&entry_begin),
+        )?,
+        &req,
+    )
 }
 
 #[get("/{event_id}/new_entry")]
@@ -256,11 +274,12 @@ async fn new_entry(
     );
 
     let mut entry_id = None;
+    let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
     let result = if let Some((mut entry, _, _)) = entry {
         let auth_clone = auth.clone();
         entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
-        let entry_begin = entry.entry.begin;
+        entry_begin = entry.entry.begin;
         let result = web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             // TODO detect and ignore double addition
@@ -270,7 +289,7 @@ async fn new_entry(
         .await?;
 
         match result {
-            Ok(()) => FormSubmitResult::Success { entry_begin },
+            Ok(()) => FormSubmitResult::Success,
             Err(e) => match e {
                 StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
                 _ => FormSubmitResult::UnexpectedError(e.into()),
@@ -298,7 +317,21 @@ async fn new_entry(
         is_new_entry: true,
     };
 
-    create_edit_form_response(result, event_id, tmpl)
+    create_edit_form_response(
+        result,
+        &tmpl,
+        "Der Eintrag",
+        req.url_for("new_entry_form", &[event_id.to_string()])?,
+        "edit_entry_form",
+        true,
+        url_for_entry_details(
+            &req,
+            event_id,
+            &entry_id.unwrap_or_default(),
+            &time_calculation::get_effective_date(&entry_begin),
+        )?,
+        &req,
+    )
 }
 
 /// Query parameters for the new_entry form.
@@ -313,9 +346,7 @@ pub struct NewEntryQueryParams {
 ///
 /// They are used to delegate creating appropriate response to [create_edit_form_response()].
 enum FormSubmitResult {
-    Success {
-        entry_begin: chrono::DateTime<chrono::Utc>,
-    },
+    Success,
     ValidationError,
     TransactionConflict,
     ConcurrentEditConflict,
@@ -329,36 +360,32 @@ enum FormSubmitResult {
 /// scattered all over the code.
 fn create_edit_form_response(
     result: FormSubmitResult,
-    event_id: EventId,
-    tmpl: EditEntryFormTemplate,
-) -> Result<impl Responder, AppError> {
+    tmpl: impl Template,
+    name_of_thing: &'static str,
+    form_url: url::Url,
+    form_name: &'static str,
+    is_new_entity: bool,
+    success_redirect: url::Url,
+    request: &HttpRequest,
+) -> Result<Either<Redirect, HttpResponse>, AppError> {
     match result {
-        FormSubmitResult::Success { entry_begin } => {
-            tmpl.base.request.add_flash_message(FlashMessage {
+        FormSubmitResult::Success => {
+            request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Success,
-                message: if tmpl.is_new_entry {
-                    "Neuer Eintrag wurde gespeichert."
+                message: if is_new_entity {
+                    format!("{} wurde gespeichert.", name_of_thing)
                 } else {
-                    "Änderung wurde gespeichert."
-                }
-                .to_owned(),
+                    "Änderung wurde gespeichert.".to_owned()
+                },
                 keep_open: false,
                 button: None,
             });
             Ok(Either::Left(
-                Redirect::to(
-                    url_for_entry_details(
-                        &tmpl.base.request,
-                        event_id,
-                        &tmpl.entry_id.expect("For successfully stored entries, the `entry_id` should always be known."),
-                        &time_calculation::get_effective_date(&entry_begin))?
-                    .to_string(),
-                )
-                .see_other(),
+                Redirect::to(success_redirect.to_string()).see_other(),
             ))
         }
         FormSubmitResult::ValidationError => {
-            tmpl.base.request.add_flash_message(FlashMessage {
+            request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Error,
                 message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
                     .to_owned(),
@@ -370,39 +397,23 @@ fn create_edit_form_response(
             ))
         }
         FormSubmitResult::ConcurrentEditConflict => {
-            let reload_url = if tmpl.is_new_entry {
-                tmpl.base
-                    .request
-                    .url_for("new_entry_form", &[event_id.to_string()])?
-            } else {
-                tmpl.base.request.url_for(
-                    "edit_entry_form",
-                    &[
-                        event_id.to_string(),
-                        tmpl.entry_id
-                            .expect("For non-new entries, `entry_id` should always be known.")
-                            .to_string(),
-                    ],
-                )?
-            };
-            tmpl.base.request.add_flash_message(FlashMessage {
+            request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Error,
-                message: "Der Eintrag wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen."
-                    .to_owned(),
+                message: format!("{} wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen.", name_of_thing),
                 keep_open: true,
                 button: Some(FlashMessageActionButton::ReloadCleanForm {
-                    form_url: reload_url.to_string(),
+                    form_url: form_url.to_string(),
                 }),
             });
             Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
         }
         FormSubmitResult::TransactionConflict => {
-            tmpl.base.request.add_flash_message(FlashMessage {
+            request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Warning,
                 message: "Konnte wegen parallelem Datenbank-Zugriff nicht speichern. Bitte Formular erneut absenden."
                     .to_owned(),
                 keep_open: true,
-                button: Some(FlashMessageActionButton::SubmitForm { form_id: "edit_entry_form".to_string() }),
+                button: Some(FlashMessageActionButton::SubmitForm { form_id: form_name.to_string() }),
             });
             Ok(Either::Right(
                 HttpResponse::ServiceUnavailable().body(tmpl.render()?),

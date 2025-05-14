@@ -1,0 +1,38 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+<h1>
+    {{ base.page_title }}
+</h1>
+
+<form method="post" action="{{post_url()?}}" id="edit_category_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+    <div class="mb-3">
+        {{ FormFieldTemplate::new(form_data.title, "title", "Name der Kategorie", InputConfiguration::builder().size(InputSize::Large).build())|safe }}
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.icon, "icon", "Icon", InputConfiguration::default())|safe }}
+        </div>
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.color, "color", "Farbe", InputConfiguration::builder().input_type(InputType::Color).build())|safe }}
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ CheckboxTemplate::new(form_data.is_official, "is_official", "ist offiziell", Some("KüAs aus dieser Kategorie werden fett dargestellt."))|safe }}
+    </div>
+    {% if is_new_category %}
+        {{ HiddenInputTemplate::new(form_data.category_id, "category_id")?|safe }}
+    {% endif %}
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+    <a href="{{ base.url_for_event_endpoint("manage_categories")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script>
+    protectChanges(document.getElementById("edit_category_form"));
+</script>
+{% endblock %}

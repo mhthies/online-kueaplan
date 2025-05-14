@@ -1,6 +1,7 @@
 use super::super::colors::CategoryColors;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::Category;
+use crate::data_store::EventId;
 use crate::web::ui::base_template::{
     BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -44,6 +45,7 @@ async fn manage_categories(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Categories,
         },
+        event_id,
         categories: &categories,
     };
     Ok(Html::new(tmpl.render()?))
@@ -54,5 +56,6 @@ async fn manage_categories(
 struct ManageCategoriesTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
+    event_id: EventId,
     categories: &'a Vec<Category>,
 }

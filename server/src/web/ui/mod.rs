@@ -44,6 +44,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_entry::mark_entry_cancelled)
         .service(endpoints::config_index::config_index)
         .service(endpoints::manage_categories::manage_categories)
+        .service(endpoints::edit_category::edit_category_form)
+        .service(endpoints::edit_category::edit_category)
         .default_service(web::to(not_found_handler))
 }
 

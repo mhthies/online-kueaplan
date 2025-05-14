@@ -1,12 +1,15 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Entry, Event, FullEntry};
-use crate::data_store::{EntryId, EventId};
+use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
+use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::time_calculation;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
-use actix_web::HttpRequest;
+use actix_web::web::Redirect;
+use actix_web::{Either, HttpRequest, HttpResponse};
+use askama::Template;
 use chrono::Datelike;
 use chrono::Weekday;
 
@@ -141,5 +144,99 @@ pub fn weekday_short(date: &chrono::NaiveDate) -> &'static str {
         Weekday::Fri => "Fr",
         Weekday::Sat => "Sa",
         Weekday::Sun => "So",
+    }
+}
+
+/// Helper type for representing the different possible outcomes of submitting the edit form.
+///
+/// They are used to delegate creating appropriate response to [create_edit_form_response()].
+pub enum FormSubmitResult {
+    Success,
+    ValidationError,
+    TransactionConflict,
+    ConcurrentEditConflict,
+    UnexpectedError(AppError),
+}
+
+impl From<Result<(), StoreError>> for FormSubmitResult {
+    fn from(value: Result<(), StoreError>) -> Self {
+        match value {
+            Ok(()) => FormSubmitResult::Success,
+            Err(e) => match e {
+                StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
+                StoreError::ConcurrentEditConflict => FormSubmitResult::ConcurrentEditConflict,
+                _ => FormSubmitResult::UnexpectedError(e.into()),
+            },
+        }
+    }
+}
+
+/// Helper function for generating the HTTP response in [edit_entry()].
+///
+/// Together with the [FormSubmitResult] helper type, this function helps keeping the code of
+/// edit_entry() more readable. Without these tricks we'd have error message creation functions
+/// scattered all over the code.
+pub fn create_edit_form_response(
+    result: FormSubmitResult,
+    tmpl: impl Template,
+    name_of_thing: &'static str,
+    form_url: url::Url,
+    form_name: &'static str,
+    is_new_entity: bool,
+    success_redirect: url::Url,
+    request: &HttpRequest,
+) -> Result<Either<Redirect, HttpResponse>, AppError> {
+    match result {
+        FormSubmitResult::Success => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Success,
+                message: if is_new_entity {
+                    format!("{} wurde gespeichert.", name_of_thing)
+                } else {
+                    "Änderung wurde gespeichert.".to_owned()
+                },
+                keep_open: false,
+                button: None,
+            });
+            Ok(Either::Left(
+                Redirect::to(success_redirect.to_string()).see_other(),
+            ))
+        }
+        FormSubmitResult::ValidationError => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
+                    .to_owned(),
+                keep_open: false,
+                button: None,
+            });
+            Ok(Either::Right(
+                HttpResponse::UnprocessableEntity().body(tmpl.render()?),
+            ))
+        }
+        FormSubmitResult::ConcurrentEditConflict => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: format!("{} wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen.", name_of_thing),
+                keep_open: true,
+                button: Some(FlashMessageActionButton::ReloadCleanForm {
+                    form_url: form_url.to_string(),
+                }),
+            });
+            Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
+        }
+        FormSubmitResult::TransactionConflict => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Warning,
+                message: "Konnte wegen parallelem Datenbank-Zugriff nicht speichern. Bitte Formular erneut absenden."
+                    .to_owned(),
+                keep_open: true,
+                button: Some(FlashMessageActionButton::SubmitForm { form_id: form_name.to_string() }),
+            });
+            Ok(Either::Right(
+                HttpResponse::ServiceUnavailable().body(tmpl.render()?),
+            ))
+        }
+        FormSubmitResult::UnexpectedError(e) => Err(e),
     }
 }

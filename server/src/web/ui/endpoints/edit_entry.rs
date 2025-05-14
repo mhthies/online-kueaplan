@@ -5,9 +5,7 @@ use crate::data_store::models::{
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
-use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
-use crate::web::ui::sub_templates;
 use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize,
     InputType, SelectEntry, SelectTemplate,
@@ -15,11 +13,11 @@ use crate::web::ui::sub_templates::form_inputs::{
 use crate::web::ui::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
-use crate::web::ui::util::{event_days, url_for_entry_details};
-use crate::web::ui::{time_calculation, util, validation};
+use crate::web::ui::util::{event_days, url_for_entry_details, FormSubmitResult};
+use crate::web::ui::{sub_templates, time_calculation, util, validation};
 use crate::web::AppState;
-use actix_web::web::{Form, Html, Query, Redirect};
-use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
+use actix_web::web::{Form, Html, Query};
+use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -28,7 +26,7 @@ use uuid::Uuid;
 
 #[get("/{event_id}/entry/{entry_id}/edit")]
 async fn edit_entry_form(
-    path: web::Path<(i32, EntryId)>,
+    path: web::Path<(EventId, EntryId)>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
@@ -77,7 +75,7 @@ async fn edit_entry_form(
 
 #[post("/{event_id}/entry/{entry_id}/edit")]
 async fn edit_entry(
-    path: web::Path<(i32, EntryId)>,
+    path: web::Path<(EventId, EntryId)>,
     data: Form<EntryFormData>,
     state: web::Data<AppState>,
     req: HttpRequest,
@@ -111,45 +109,38 @@ async fn edit_entry(
     );
 
     let mut entry_begin = old_entry.entry.begin;
-    let result = if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
-        entry.entry.event_id = event_id;
-        entry_begin = entry.entry.begin;
-        if let Some(previous_date_comment) = create_previous_date {
-            if entry.entry.begin != old_entry.entry.begin
-                || entry.entry.end != old_entry.entry.end
-                || !unordered_equality(&entry.room_ids, &old_entry.room_ids)
-            {
-                entry.previous_dates.push(FullPreviousDate {
-                    previous_date: PreviousDate {
-                        id: Uuid::now_v7(),
-                        entry_id,
-                        comment: previous_date_comment,
-                        begin: old_entry.entry.begin,
-                        end: old_entry.entry.end,
-                    },
-                    room_ids: old_entry.room_ids.clone(),
-                });
+    let result: FormSubmitResult =
+        if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
+            entry.entry.event_id = event_id;
+            entry_begin = entry.entry.begin;
+            if let Some(previous_date_comment) = create_previous_date {
+                if entry.entry.begin != old_entry.entry.begin
+                    || entry.entry.end != old_entry.entry.end
+                    || !unordered_equality(&entry.room_ids, &old_entry.room_ids)
+                {
+                    entry.previous_dates.push(FullPreviousDate {
+                        previous_date: PreviousDate {
+                            id: Uuid::now_v7(),
+                            entry_id,
+                            comment: previous_date_comment,
+                            begin: old_entry.entry.begin,
+                            end: old_entry.entry.end,
+                        },
+                        room_ids: old_entry.room_ids.clone(),
+                    });
+                }
             }
-        }
-        let auth_clone = auth.clone();
-        let result = web::block(move || -> Result<_, StoreError> {
-            let mut store = state.store.get_facade()?;
-            store.create_or_update_entry(&auth_clone, entry, true, previous_last_updated)?;
-            Ok(())
-        })
-        .await?;
-
-        match result {
-            Ok(()) => FormSubmitResult::Success,
-            Err(e) => match e {
-                StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
-                StoreError::ConcurrentEditConflict => FormSubmitResult::ConcurrentEditConflict,
-                _ => FormSubmitResult::UnexpectedError(e.into()),
-            },
-        }
-    } else {
-        FormSubmitResult::ValidationError
-    };
+            let auth_clone = auth.clone();
+            web::block(move || -> Result<_, StoreError> {
+                let mut store = state.store.get_facade()?;
+                store.create_or_update_entry(&auth_clone, entry, true, previous_last_updated)?;
+                Ok(())
+            })
+            .await?
+            .into()
+        } else {
+            FormSubmitResult::ValidationError
+        };
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
@@ -169,7 +160,7 @@ async fn edit_entry(
         is_new_entry: false,
     };
 
-    create_edit_form_response(
+    util::create_edit_form_response(
         result,
         &tmpl,
         "Der Eintrag",
@@ -191,7 +182,7 @@ async fn edit_entry(
 
 #[get("/{event_id}/new_entry")]
 async fn new_entry_form(
-    path: web::Path<i32>,
+    path: web::Path<EventId>,
     query_data: Query<NewEntryQueryParams>,
     state: web::Data<AppState>,
     req: HttpRequest,
@@ -242,7 +233,7 @@ async fn new_entry_form(
 
 #[post("/{event_id}/new_entry")]
 async fn new_entry(
-    path: web::Path<i32>,
+    path: web::Path<EventId>,
     query_data: Query<NewEntryQueryParams>,
     data: Form<EntryFormData>,
     state: web::Data<AppState>,
@@ -275,28 +266,21 @@ async fn new_entry(
 
     let mut entry_id = None;
     let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
-    let result = if let Some((mut entry, _, _)) = entry {
+    let result: util::FormSubmitResult = if let Some((mut entry, _, _)) = entry {
         let auth_clone = auth.clone();
         entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
         entry_begin = entry.entry.begin;
-        let result = web::block(move || -> Result<_, StoreError> {
+        web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             // TODO detect and ignore double addition
             store.create_or_update_entry(&auth_clone, entry, false, None)?;
             Ok(())
         })
-        .await?;
-
-        match result {
-            Ok(()) => FormSubmitResult::Success,
-            Err(e) => match e {
-                StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
-                _ => FormSubmitResult::UnexpectedError(e.into()),
-            },
-        }
+        .await?
+        .into()
     } else {
-        FormSubmitResult::ValidationError
+        util::FormSubmitResult::ValidationError
     };
 
     let tmpl = EditEntryFormTemplate {
@@ -317,7 +301,7 @@ async fn new_entry(
         is_new_entry: true,
     };
 
-    create_edit_form_response(
+    util::create_edit_form_response(
         result,
         &tmpl,
         "Der Eintrag",
@@ -340,87 +324,6 @@ pub struct NewEntryQueryParams {
     /// When given, used to pre-fill the date field of the new entry and to navigate back to this
     /// date when aborting.
     pub date: Option<chrono::NaiveDate>,
-}
-
-/// Helper type for representing the different possible outcomes of submitting the edit form.
-///
-/// They are used to delegate creating appropriate response to [create_edit_form_response()].
-enum FormSubmitResult {
-    Success,
-    ValidationError,
-    TransactionConflict,
-    ConcurrentEditConflict,
-    UnexpectedError(AppError),
-}
-
-/// Helper function for generating the HTTP response in [edit_entry()].
-///
-/// Together with the [FormSubmitResult] helper type, this function helps keeping the code of
-/// edit_entry() more readable. Without these tricks we'd have error message creation functions
-/// scattered all over the code.
-fn create_edit_form_response(
-    result: FormSubmitResult,
-    tmpl: impl Template,
-    name_of_thing: &'static str,
-    form_url: url::Url,
-    form_name: &'static str,
-    is_new_entity: bool,
-    success_redirect: url::Url,
-    request: &HttpRequest,
-) -> Result<Either<Redirect, HttpResponse>, AppError> {
-    match result {
-        FormSubmitResult::Success => {
-            request.add_flash_message(FlashMessage {
-                flash_type: FlashType::Success,
-                message: if is_new_entity {
-                    format!("{} wurde gespeichert.", name_of_thing)
-                } else {
-                    "Änderung wurde gespeichert.".to_owned()
-                },
-                keep_open: false,
-                button: None,
-            });
-            Ok(Either::Left(
-                Redirect::to(success_redirect.to_string()).see_other(),
-            ))
-        }
-        FormSubmitResult::ValidationError => {
-            request.add_flash_message(FlashMessage {
-                flash_type: FlashType::Error,
-                message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
-                    .to_owned(),
-                keep_open: false,
-                button: None,
-            });
-            Ok(Either::Right(
-                HttpResponse::UnprocessableEntity().body(tmpl.render()?),
-            ))
-        }
-        FormSubmitResult::ConcurrentEditConflict => {
-            request.add_flash_message(FlashMessage {
-                flash_type: FlashType::Error,
-                message: format!("{} wurde zwischenzeitlich bearbeitet. Bitte das Formular neu laden und die Änderung erneut durchführen.", name_of_thing),
-                keep_open: true,
-                button: Some(FlashMessageActionButton::ReloadCleanForm {
-                    form_url: form_url.to_string(),
-                }),
-            });
-            Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
-        }
-        FormSubmitResult::TransactionConflict => {
-            request.add_flash_message(FlashMessage {
-                flash_type: FlashType::Warning,
-                message: "Konnte wegen parallelem Datenbank-Zugriff nicht speichern. Bitte Formular erneut absenden."
-                    .to_owned(),
-                keep_open: true,
-                button: Some(FlashMessageActionButton::SubmitForm { form_id: form_name.to_string() }),
-            });
-            Ok(Either::Right(
-                HttpResponse::ServiceUnavailable().body(tmpl.render()?),
-            ))
-        }
-        FormSubmitResult::UnexpectedError(e) => Err(e),
-    }
 }
 
 #[derive(Template)]

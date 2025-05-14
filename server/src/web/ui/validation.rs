@@ -246,6 +246,38 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
     }
 }
 
+#[derive(Default, Debug, PartialEq)]
+pub struct ColorHexString(pub String);
+
+impl FormValueRepresentation for ColorHexString {
+    fn into_form_value_string(self) -> String {
+        format!("#{}", self.0)
+    }
+}
+
+impl ValidateFromFormInput for ColorHexString {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        lazy_static! {
+            static ref RE: regex::Regex =
+                regex::Regex::new(r"^#?[a-fA-F0-9]{3}(?:[a-fA-F0-9]{3})?$").unwrap();
+        }
+        if !RE.is_match(value) {
+            return Err("Kein gültiger hexadezimaler HTML-RGB-Farbwert".to_owned());
+        }
+
+        let value = value.strip_prefix('#').unwrap_or(value);
+        let value = if value.len() == 3 {
+            value
+                .chars()
+                .map(|c| c.to_lowercase().to_string().repeat(2))
+                .collect::<String>()
+        } else {
+            value.to_lowercase()
+        };
+        Ok(Self(value))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -419,5 +451,20 @@ mod tests {
         assert!(NiceDurationHours::from_form_value("d").is_err());
         assert!(NiceDurationHours::from_form_value("1a").is_err());
         assert!(NiceDurationHours::from_form_value("abc5:5").is_err());
+    }
+
+    #[test]
+    fn test_color_hex_string() {
+        assert_eq!(
+            ColorHexString::from_form_value("#01Fc02"),
+            Ok(ColorHexString("01fc02".to_owned()))
+        );
+        assert_eq!(
+            ColorHexString::from_form_value("01A"),
+            Ok(ColorHexString("0011aa".to_owned()))
+        );
+        assert!(ColorHexString::from_form_value("").is_err());
+        assert!(ColorHexString::from_form_value("1ff2").is_err());
+        assert!(ColorHexString::from_form_value("0011gg").is_err());
     }
 }

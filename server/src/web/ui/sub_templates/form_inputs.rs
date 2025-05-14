@@ -14,6 +14,7 @@ pub enum InputSize {
 pub enum InputType {
     Text,
     Time,
+    Color,
     Textarea,
 }
 
@@ -22,6 +23,7 @@ impl InputType {
         match self {
             InputType::Text => "text",
             InputType::Time => "time",
+            InputType::Color => "color",
             _ => panic!("Input type {:?} should be handled separately.", self),
         }
     }

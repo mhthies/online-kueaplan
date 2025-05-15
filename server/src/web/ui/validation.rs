@@ -246,12 +246,18 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
     }
 }
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct ColorHexString(pub String);
 
 impl FormValueRepresentation for ColorHexString {
     fn into_form_value_string(self) -> String {
         format!("#{}", self.0)
+    }
+}
+
+impl Default for ColorHexString {
+    fn default() -> Self {
+        Self("000000".to_owned())
     }
 }
 

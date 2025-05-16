@@ -73,7 +73,7 @@ async fn delete_category(
     web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        store.delete_category(&auth, event_id, category_id)?;
+        store.delete_category(&auth, event_id, category_id, None)?;
         Ok(())
     })
     .await??;

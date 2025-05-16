@@ -153,6 +153,7 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
         category_id: CategoryId,
+        replacement_category: Option<CategoryId>,
     ) -> Result<(), StoreError>;
 
     /// Try to authenticate a client as a new access role for the given event, using the given

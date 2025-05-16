@@ -1,5 +1,6 @@
 use super::{
-    models, schema, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
+    models, schema, CategoryId, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade,
+    StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
@@ -444,22 +445,49 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         the_event_id: EventId,
         category_id: uuid::Uuid,
+        replacement_category: Option<CategoryId>,
     ) -> Result<(), StoreError> {
         use schema::categories::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
         auth_token.check_privilege(the_event_id, Privilege::ManageCategories)?;
-
-        let count = diesel::update(categories)
-            .filter(id.eq(category_id))
-            .filter(event_id.eq(the_event_id))
-            .set(deleted.eq(true))
-            .execute(&mut self.connection)?;
-        if count == 0 {
-            return Err(StoreError::NotExisting);
+        if replacement_category.is_some() {
+            auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
         }
 
-        Ok(())
+        self.connection.transaction(|connection| {
+            // Move entries to different category if requested
+            if let Some(replacement_category) = replacement_category {
+                use schema::entries::dsl::*;
+
+                // Check that replacement actually exists in event
+                let count = categories
+                    .filter(schema::categories::id.eq(replacement_category))
+                    .filter(schema::categories::event_id.eq(the_event_id))
+                    .count()
+                    .execute(connection)?;
+                if count == 0 {
+                    return Err(StoreError::NotExisting);
+                };
+
+                diesel::update(entries)
+                    .filter(category.eq(category_id))
+                    .filter(event_id.eq(the_event_id))
+                    .set(category.eq(replacement_category))
+                    .execute(connection)?;
+            }
+
+            let count = diesel::update(categories)
+                .filter(id.eq(category_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            };
+
+            Ok(())
+        })
     }
 
     fn authenticate_with_passphrase(

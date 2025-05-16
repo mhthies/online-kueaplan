@@ -10,7 +10,7 @@ pub enum InputSize {
     Large,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum InputType {
     Text,
     Time,

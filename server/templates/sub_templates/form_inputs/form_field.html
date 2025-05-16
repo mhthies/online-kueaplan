@@ -5,7 +5,7 @@
 {% else %}
     {% if config.suffix_text.is_some() %}<div class="input-group">{% endif %}
     <input type="{{ config.input_type.as_html_type_attr() }}"
-           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
+           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%} {% if config.input_type == InputType::Color %}form-control-color{% endif %}"
            id="{{name}}Input" name="{{name}}"
            value="{{data.string_value()}}">
     {% if let Some(suffix) = config.suffix_text %}

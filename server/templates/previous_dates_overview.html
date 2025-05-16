@@ -54,7 +54,7 @@
                 {% for previous_date in entry.previous_dates %}
                     <tr>
                         <td>
-                            <small>{{ to_our_timezone(entry.entry.begin).format("%d.%m.") }}</small>
+                            <small>{{ to_our_timezone(previous_date.previous_date.begin).format("%d.%m.") }}</small>
                             {{ to_our_timezone(previous_date.previous_date.begin).format("%H:%M") }}&nbsp;–
                             {{ to_our_timezone(previous_date.previous_date.end).format("%H:%M") }}
                             {% let duration = previous_date.previous_date.end.signed_duration_since(previous_date.previous_date.begin) %}

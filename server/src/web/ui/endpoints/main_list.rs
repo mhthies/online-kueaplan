@@ -95,23 +95,23 @@ mod filters {
 fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
     let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
     let end = begin + chrono::Duration::days(1);
-    let mut filter = EntryFilter::builder();
-    filter.after(
-        TIME_ZONE
-            .from_local_datetime(&begin)
-            .earliest()
-            .map(|dt| dt.to_utc())
-            .unwrap_or(begin.and_utc()),
-    );
-    filter.before(
-        TIME_ZONE
-            .from_local_datetime(&end)
-            .latest()
-            .map(|dt| dt.to_utc())
-            .unwrap_or(end.and_utc()),
-    );
-    filter.include_previous_date_matches();
-    filter.build()
+    EntryFilter::builder()
+        .after(
+            TIME_ZONE
+                .from_local_datetime(&begin)
+                .earliest()
+                .map(|dt| dt.to_utc())
+                .unwrap_or(begin.and_utc()),
+        )
+        .before(
+            TIME_ZONE
+                .from_local_datetime(&end)
+                .latest()
+                .map(|dt| dt.to_utc())
+                .unwrap_or(end.and_utc()),
+        )
+        .include_previous_date_matches()
+        .build()
 }
 
 /// Generate the list of [MainListRow]s for the given `date` from the given list of KüA-Plan

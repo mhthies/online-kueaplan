@@ -260,36 +260,36 @@ pub struct EntryFilterBuilder {
 impl EntryFilterBuilder {
     /// Add filter, to only include entries that end after the given point in time (this includes
     /// entries that span over this point in time)
-    pub fn after(&mut self, after: chrono::DateTime<chrono::Utc>) -> &mut Self {
+    pub fn after(mut self, after: chrono::DateTime<chrono::Utc>) -> Self {
         self.result.after = Some(after);
         self
     }
     /// Add filter, to only include entries that begin before the given point in time (this includes
     /// entries that span over this point in time)
-    pub fn before(&mut self, before: chrono::DateTime<chrono::Utc>) -> &mut Self {
+    pub fn before(mut self, before: chrono::DateTime<chrono::Utc>) -> Self {
         self.result.before = Some(before);
         self
     }
     /// Change after/before filters to include entries which do not cover the specified time
     /// interval but have a previous_date that does.
-    pub fn include_previous_date_matches(&mut self) -> &mut Self {
+    pub fn include_previous_date_matches(mut self) -> Self {
         self.result.include_previous_date_matches = true;
         self
     }
     /// Add filter to only include entries that belong to one of the given categories
-    pub fn category_is_one_of(&mut self, categories: Vec<uuid::Uuid>) -> &mut Self {
+    pub fn category_is_one_of(mut self, categories: Vec<uuid::Uuid>) -> Self {
         self.result.categories = Some(categories);
         self
     }
 
     /// Add filter to only include entries that take place (at least) in one of the given rooms
-    pub fn in_one_of_these_rooms(&mut self, rooms: Vec<uuid::Uuid>) -> &mut Self {
+    pub fn in_one_of_these_rooms(mut self, rooms: Vec<uuid::Uuid>) -> Self {
         self.result.rooms = Some(rooms);
         self
     }
 
     /// Add filter to only include entries that don't have a room assigned
-    pub fn without_room(&mut self) -> &mut Self {
+    pub fn without_room(mut self) -> Self {
         self.result.no_room = true;
         self
     }

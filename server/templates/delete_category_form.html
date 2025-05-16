@@ -1,0 +1,90 @@
+{% extends "base_config.html" %}
+
+{% macro entry_preview_row(entry) %}
+    <li class="list-group-item {% if entry.entry.is_cancelled %}text-decoration-line-through{% endif %} {% if entry.entry.is_room_reservation %}fst-italic{% endif %}">
+        {{ entry.entry.title }}<br>
+        {% if !entry.entry.responsible_person.is_empty() %}
+        <small class="float-end">
+            {{ entry.entry.responsible_person }}
+        </small>
+        {% endif %}
+        <small>
+            {{ to_our_timezone(entry.entry.begin).format("%d.%m. %H:%M") }}&nbsp;–
+            {{ to_our_timezone(entry.entry.end).format("%H:%M") }}
+            {% let duration = entry.entry.end.signed_duration_since(entry.entry.begin) %}
+            {% if duration >= chrono::TimeDelta::days(1) %}
+            (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
+            {% endif %}
+        </small>
+    </li>
+{% endmacro %}
+
+{% block config_content %}
+<h1>
+    {{ base.page_title }}
+</h1>
+
+<form method="post" action="{{post_url()?}}" id="delete_category_form">
+
+    <div class="row mb-3">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card mb-3">
+                <div class="card-header">Zu löschende Kategorie</div>
+                <div class="card-body">
+                    <strong>{{category.title}}</strong>
+                    {% if !category.icon.is_empty() %}
+                        ({{ category.icon }})
+                    {% endif %}
+                </div>
+            </div>
+            {{ SelectTemplate::new(form_data.replace_category, "category", &other_category_entries(), "Einträge in folgende Kategorie verschieben", InputConfiguration::default())|safe }}
+        </div>
+        <div class="col-md-6">
+            <div class="card border-primary">
+                <div class="card-header border-primary">
+                    Betroffene Einträge <span class="badge text-bg-primary">{{ category_entries.len() }}</span>
+                </div>
+                <div class="card-body">
+                    {% if category_entries.len() == 0 %}
+                        <div class="text-info">
+                            <i class="bi bi-info-circle" aria-hidden="true"></i> Zu dieser Kategorie gehört kein Eintrag.
+                        </div>
+                    {% else %}
+                        <ul class="list-group list-group-flush">
+                            {% if category_entries.len() > 5 %}
+                                {% call entry_preview_row(category_entries[0]) %}
+                                {% call entry_preview_row(category_entries[1]) %}
+                                <li class="list-group-item">…</li>
+                                {% call entry_preview_row(category_entries[category_entries.len()-2]) %}
+                                {% call entry_preview_row(category_entries[category_entries.len()-1]) %}
+                            {% else %}
+                                {% for entry in category_entries %}
+                                    {% call entry_preview_row(entry) %}
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card border-danger mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-auto mb-2 mb-md-0">
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Kategorie löschen</button>&ensp;
+                </div>
+                <div class="col-md text-secondary">
+                    Die Kategorie <span class="text-body-emphasis">{{category.title}}</span> wird dauerhaft gelöscht.
+                    Aktuelle Einträge dieser Kategorie werden in die oben ausgewählte Kategorie verschoben.
+                    Die Kategorie bleibt zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, kann aber nicht ohne Eingriff eines Admins wiederhergestellt werden.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ base.url_for_event_endpoint("manage_categories")? }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</form>
+{% endblock %}

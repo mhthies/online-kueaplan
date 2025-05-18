@@ -4,6 +4,8 @@ pub mod delete_category;
 pub mod delete_entry;
 pub mod edit_category;
 pub mod edit_entry;
+pub mod edit_room;
 pub mod main_list;
 pub mod manage_categories;
+pub mod manage_rooms;
 pub mod previous_dates;

@@ -1,0 +1,27 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+    <h1>Orte</h1>
+    <div class="mb-3">
+        <a href="{{ base.url_for_event_endpoint("new_room_form")? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ort hinzufügen</a>
+    </div>
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+                <tr>
+                    <td>{{room.title}}</td>
+                    <td class="text-nowrap">
+                        <a href="{{ base.request.url_for("edit_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -50,6 +50,11 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::edit_category::new_category)
         .service(endpoints::delete_category::delete_category_form)
         .service(endpoints::delete_category::delete_category)
+        .service(endpoints::manage_rooms::manage_rooms)
+        .service(endpoints::edit_room::edit_room_form)
+        .service(endpoints::edit_room::edit_room)
+        .service(endpoints::edit_room::new_room_form)
+        .service(endpoints::edit_room::new_room)
         .default_service(web::to(not_found_handler))
 }
 

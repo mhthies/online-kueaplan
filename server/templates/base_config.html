@@ -32,7 +32,7 @@
                                     "KüA-Kategorien",
                                     crate::data_store::auth_token::Privilege::ManageCategories,
                                     crate::web::ui::base_template::ConfigNavButton::Categories) %}
-                    {% call navlink("#",
+                    {% call navlink(base.url_for_event_endpoint("manage_rooms")?,
                                     "geo-alt-fill",
                                     "Orte",
                                     crate::data_store::auth_token::Privilege::ManageRooms,

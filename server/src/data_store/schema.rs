@@ -11,6 +11,7 @@ diesel::table! {
         deleted -> Bool,
         last_updated -> Timestamptz,
         is_official -> Bool,
+        sort_key -> Int4,
     }
 }
 

@@ -284,6 +284,25 @@ impl ValidateFromFormInput for ColorHexString {
     }
 }
 
+#[derive(Debug, PartialEq, Default)]
+pub struct Int32(pub i32);
+
+impl FormValueRepresentation for Int32 {
+    fn into_form_value_string(self) -> String {
+        self.0.to_string()
+    }
+}
+
+impl ValidateFromFormInput for Int32 {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        Ok(Self(
+            value
+                .parse::<i32>()
+                .map_err(|e| format!("Keine Zahl: {}", e))?,
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

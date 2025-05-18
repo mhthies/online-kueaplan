@@ -269,6 +269,7 @@ struct CategoryFormData {
     icon: FormValue<String>,
     color: FormValue<validation::ColorHexString>,
     is_official: BoolFormValue,
+    sort_key: FormValue<validation::Int32>,
 }
 
 impl CategoryFormData {
@@ -286,6 +287,7 @@ impl CategoryFormData {
         let icon = self.icon.validate();
         let color = self.color.validate();
         let is_official = self.is_official.get_value();
+        let sort_key = self.sort_key.validate();
 
         Some(NewCategory {
             id: category_id?,
@@ -294,6 +296,7 @@ impl CategoryFormData {
             color: color?.0,
             event_id: 0,
             is_official,
+            sort_key: sort_key?.0,
         })
     }
 }
@@ -306,6 +309,7 @@ impl From<Category> for CategoryFormData {
             icon: value.icon.into(),
             color: validation::ColorHexString(value.color).into(),
             is_official: value.is_official.into(),
+            sort_key: validation::Int32(value.sort_key).into(),
         }
     }
 }

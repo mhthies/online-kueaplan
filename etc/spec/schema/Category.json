@@ -24,6 +24,10 @@
             "type": "string",
             "format": "hexcolor",
             "pattern": "^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
+        },
+        "sort_key": {
+            "description": "Key for sorting the categories in the UI. The category with lowest sort_key is shown first and is the default category for new entries.",
+            "type": "integer"
         }
     },
     "required": ["id", "title", "icon", "color"]

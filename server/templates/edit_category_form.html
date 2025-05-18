@@ -16,6 +16,9 @@
         <div class="col-sm-6">
             {{ FormFieldTemplate::new(form_data.color, "color", "Farbe", InputConfiguration::builder().input_type(InputType::Color).build())|safe }}
         </div>
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel", InputConfiguration::builder().input_type(InputType::Integer).build())|safe }}
+        </div>
     </div>
     <div class="mb-3">
         {{ CheckboxTemplate::new(form_data.is_official, "is_official", "ist offiziell", Some("KüAs aus dieser Kategorie werden fett dargestellt."))|safe }}

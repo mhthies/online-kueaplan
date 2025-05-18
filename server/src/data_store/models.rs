@@ -151,6 +151,7 @@ pub struct Category {
     pub event_id: i32,
     pub is_official: bool,
     pub last_updated: DateTime<Utc>,
+    pub sort_key: i32,
 }
 
 #[derive(Insertable, AsChangeset)]
@@ -162,6 +163,7 @@ pub struct NewCategory {
     pub color: String,
     pub event_id: i32,
     pub is_official: bool,
+    pub sort_key: i32,
 }
 
 impl From<kueaplan_api_types::Event> for NewEvent {
@@ -322,6 +324,7 @@ impl NewCategory {
             color: category.color,
             event_id,
             is_official: category.is_official,
+            sort_key: category.sort_key,
         }
     }
 }
@@ -334,6 +337,7 @@ impl From<Category> for kueaplan_api_types::Category {
             icon: value.icon,
             color: value.color,
             is_official: value.is_official,
+            sort_key: value.sort_key,
         }
     }
 }

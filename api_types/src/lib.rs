@@ -67,6 +67,7 @@ pub struct Category {
     pub color: String,
     #[serde(default, skip_serializing_if = "not", rename = "isOfficial")]
     pub is_official: bool,
+    pub sort_key: i32,
 }
 
 #[derive(Serialize, Deserialize)]

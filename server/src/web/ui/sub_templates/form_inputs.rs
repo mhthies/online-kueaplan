@@ -16,6 +16,7 @@ pub enum InputType {
     Time,
     Color,
     Textarea,
+    Integer,
 }
 
 impl InputType {
@@ -24,6 +25,7 @@ impl InputType {
             InputType::Text => "text",
             InputType::Time => "time",
             InputType::Color => "color",
+            InputType::Integer => "number",
             _ => panic!("Input type {:?} should be handled separately.", self),
         }
     }

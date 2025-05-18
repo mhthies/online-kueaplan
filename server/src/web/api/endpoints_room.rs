@@ -69,10 +69,11 @@ async fn delete_room(
         .ok_or(APIError::NoSessionToken)?
         .into_inner()
         .session_token(&state.secret)?;
+    // TODO allow replacing room
     web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        store.delete_room(&auth, event_id, room_id)?;
+        store.delete_room(&auth, event_id, room_id, &[], "")?;
         Ok(())
     })
     .await??;

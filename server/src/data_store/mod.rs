@@ -128,6 +128,8 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
         room_id: RoomId,
+        replace_with_rooms: &[RoomId],
+        replace_with_room_comment: &str,
     ) -> Result<(), StoreError>;
 
     fn get_categories(

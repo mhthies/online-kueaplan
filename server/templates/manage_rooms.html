@@ -18,7 +18,7 @@
                     <td>{{room.title}}</td>
                     <td class="text-nowrap">
                         <a href="{{ base.request.url_for("edit_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
-                        <a href="#" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
+                        <a href="{{ base.request.url_for("delete_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
                     </td>
                 </tr>
             {% endfor %}

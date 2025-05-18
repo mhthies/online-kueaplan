@@ -1,11 +1,12 @@
 use super::{
     models, schema, CategoryId, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade,
-    StoreError,
+    RoomId, StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
     AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken, Privilege,
 };
+use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -370,22 +371,58 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         auth_token: &AuthToken,
         the_event_id: EventId,
         room_id: uuid::Uuid,
+        replace_with_rooms: &[RoomId],
+        replace_with_room_comment: &str,
     ) -> Result<(), StoreError> {
         use schema::rooms::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
         auth_token.check_privilege(the_event_id, Privilege::ManageRooms)?;
-
-        let count = diesel::update(rooms)
-            .filter(id.eq(room_id))
-            .filter(event_id.eq(the_event_id))
-            .set(deleted.eq(true))
-            .execute(&mut self.connection)?;
-        if count == 0 {
-            return Err(StoreError::NotExisting);
+        if !replace_with_rooms.is_empty() || !replace_with_room_comment.is_empty() {
+            auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
         }
 
-        Ok(())
+        self.connection.transaction(|connection| {
+            if !replace_with_room_comment.is_empty() {
+                use schema::entries::dsl::*;
+
+                diesel::update(entries)
+                    .filter(exists(
+                        schema::entry_rooms::table
+                            .select(0.as_sql::<diesel::sql_types::Integer>())
+                            .filter(schema::entry_rooms::entry_id.eq(id))
+                            .filter(schema::entry_rooms::room_id.eq(room_id)),
+                    ))
+                    .set(
+                        room_comment.eq(diesel::dsl::case_when(
+                            room_comment.ne(""),
+                            room_comment.concat("; "),
+                        )
+                        .otherwise("")
+                        .concat(replace_with_room_comment)),
+                    )
+                    .execute(connection)?;
+            }
+            if !replace_with_rooms.is_empty() {
+                replace_room_with_other_rooms(
+                    the_event_id,
+                    room_id,
+                    replace_with_rooms,
+                    connection,
+                )?;
+            }
+
+            let count = diesel::update(rooms)
+                .filter(id.eq(room_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            }
+
+            Ok(())
+        })
     }
 
     fn get_categories(
@@ -617,6 +654,57 @@ fn update_previous_date_rooms(
         )
         .execute(connection)
         .map(|_| ())
+}
+
+fn replace_room_with_other_rooms(
+    the_event_id: EventId,
+    room_id: uuid::Uuid,
+    replace_with_rooms: &[RoomId],
+    connection: &mut PgConnection,
+) -> Result<(), StoreError> {
+    use diesel::dsl::not;
+    use schema::entries;
+    use schema::entry_rooms;
+    use schema::rooms::dsl::*;
+
+    // Check that replacements actually exists in event
+    let count = rooms
+        .filter(id.eq_any(replace_with_rooms))
+        .filter(event_id.eq(the_event_id))
+        .filter(not(deleted))
+        .count()
+        .execute(connection)?;
+    if count != replace_with_rooms.len() {
+        return Err(StoreError::InvalidInputData(
+            "one of the replacement rooms does not exist in event".to_owned(),
+        ));
+    };
+
+    let entry_ids: Vec<EntryId> = entry_rooms::table
+        .filter(entry_rooms::room_id.eq(room_id))
+        .select(entry_rooms::entry_id)
+        .get_results(connection)?;
+    diesel::delete(entry_rooms::table.filter(entry_rooms::room_id.eq(room_id)))
+        .execute(connection)?;
+    diesel::insert_into(entry_rooms::table)
+        .values(
+            entry_ids
+                .iter()
+                .flat_map(|entry_id| {
+                    replace_with_rooms.iter().map(|room_id| {
+                        (
+                            entry_rooms::entry_id.eq(entry_id.clone()),
+                            entry_rooms::room_id.eq(room_id.clone()),
+                        )
+                    })
+                })
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)?;
+    diesel::update(entries::table)
+        .set(entries::last_updated.eq(diesel::dsl::now))
+        .execute(connection)?;
+    Ok(())
 }
 
 type BoxedBoolExpression<'a, Table> =

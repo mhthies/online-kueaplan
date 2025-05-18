@@ -460,16 +460,20 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         self.connection.transaction(|connection| {
             // Move entries to different category if requested
             if let Some(replacement_category) = replacement_category {
+                use diesel::dsl::not;
                 use schema::entries::dsl::*;
 
                 // Check that replacement actually exists in event
                 let count = categories
                     .filter(schema::categories::id.eq(replacement_category))
                     .filter(schema::categories::event_id.eq(the_event_id))
+                    .filter(not(schema::rooms::deleted))
                     .count()
                     .execute(connection)?;
                 if count == 0 {
-                    return Err(StoreError::NotExisting);
+                    return Err(StoreError::InvalidInputData(
+                        "replacement category does not exist in event".into(),
+                    ));
                 };
 
                 diesel::update(entries)

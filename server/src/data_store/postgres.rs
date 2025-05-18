@@ -322,6 +322,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .select(models::Room::as_select())
             .filter(event_id.eq(the_event_id))
             .filter(not(deleted))
+            .order_by(title)
             .load::<models::Room>(&mut self.connection)?)
     }
 
@@ -400,6 +401,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .select(models::Category::as_select())
             .filter(event_id.eq(the_event_id))
             .filter(not(deleted))
+            .order_by(title)
             .load::<models::Category>(&mut self.connection)?)
     }
 

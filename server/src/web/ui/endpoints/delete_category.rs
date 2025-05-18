@@ -29,27 +29,24 @@ pub async fn delete_category_form(
     let entry_filter = EntryFilter::builder()
         .category_is_one_of(vec![category_id])
         .build();
-    let (event, categories, mut category_entries, auth) =
-        web::block(move || -> Result<_, AppError> {
-            let mut store = state.store.get_facade()?;
-            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-            auth.check_privilege(event_id, Privilege::ManageCategories)?;
-            Ok((
-                store.get_event(&auth, event_id)?,
-                store.get_categories(&auth, event_id)?,
-                store.get_entries_filtered(&auth, event_id, entry_filter)?,
-                auth,
-            ))
-        })
-        .await??;
+    let (event, categories, category_entries, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManageCategories)?;
+        Ok((
+            store.get_event(&auth, event_id)?,
+            store.get_categories(&auth, event_id)?,
+            store.get_entries_filtered(&auth, event_id, entry_filter)?,
+            auth,
+        ))
+    })
+    .await??;
 
     let category = categories
         .iter()
         .filter(|c| c.id == category_id)
         .next()
         .ok_or(AppError::EntityNotFound)?;
-    // TODO allow sorting by database
-    category_entries.sort_by_key(|e| e.entry.begin);
 
     let form_data = DeleteCategoryFormData::default();
 

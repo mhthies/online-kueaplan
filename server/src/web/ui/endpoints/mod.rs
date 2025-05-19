@@ -6,6 +6,7 @@ pub mod delete_room;
 pub mod edit_category;
 pub mod edit_entry;
 pub mod edit_room;
+pub mod index;
 pub mod main_list;
 pub mod manage_categories;
 pub mod manage_rooms;

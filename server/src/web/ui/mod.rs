@@ -30,6 +30,7 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
+        .service(endpoints::index::index)
         .service(endpoints::main_list::main_list)
         .service(endpoints::auth::login_form)
         .service(endpoints::auth::login)

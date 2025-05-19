@@ -1,10 +1,11 @@
-use crate::auth_session::{SessionError, SessionToken};
+use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
+use crate::data_store::StoreError;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
-use crate::web::ui::time_calculation;
 use crate::web::ui::util::{SESSION_COOKIE_MAX_AGE, SESSION_COOKIE_NAME};
+use crate::web::ui::{time_calculation, util};
 use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
@@ -23,26 +24,37 @@ pub struct LoginQueryData {
 async fn login_form(
     path: web::Path<i32>,
     req: HttpRequest,
+    state: web::Data<AppState>,
     query_data: Query<LoginQueryData>,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
-    let expected_privilege = query_data.privilege;
+    let query_data = query_data.into_inner();
+
+    let session_token =
+        util::extract_session_token_if_present(&state, &req, Privilege::ShowKueaPlan, event_id)?;
+    let (event, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = session_token
+            .map(|token| store.get_auth_token_for_session(&token, event_id))
+            .transpose()?;
+        Ok((store.get_event(event_id)?, auth))
+    })
+    .await??;
 
     let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
-    form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
+    form_submit_url.set_query(Some(&serde_urlencoded::to_string(&query_data)?));
 
-    // TODO add event name and existing auth token; 404 if event does not exist
     let tmpl = LoginFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Login",
-            event: None,
+            event: Some(&event),
             current_date: None,
-            auth_token: None,
+            auth_token: auth.as_ref(),
             active_main_nav_button: None,
         },
         login_url: form_submit_url,
-        expected_privilege: expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
+        expected_privilege: query_data.privilege.unwrap_or(Privilege::ShowKueaPlan),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -56,49 +68,45 @@ async fn login(
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
+    let mut session_token =
+        util::extract_session_token_if_present(&state, &req, Privilege::ShowKueaPlan, event_id)?
+            .unwrap_or(SessionToken::new());
 
-    let mut session_token = req
-        .cookie(SESSION_COOKIE_NAME)
-        .map(|cookie| {
-            SessionToken::from_string(cookie.value(), &state.secret, SESSION_COOKIE_MAX_AGE)
-        })
-        .unwrap_or(Err(SessionError::InvalidTokenStructure))
-        .unwrap_or(SessionToken::new());
-
-    let store = state.store.clone();
-    let event = web::block(move || -> Result<_, AppError> {
-        let mut store = store.get_facade()?;
-        let event = store.get_event(event_id)?;
-        Ok(event)
-    })
-    .await??;
     let store = state.store.clone();
     let expected_privilege = query_data.privilege;
-    let result = web::block(move || -> Result<_, AppError> {
-        let mut store = store.get_facade()?;
-        store.authenticate_with_passphrase(event_id, &data.passphrase, &mut session_token)?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((
-            session_token,
-            auth.has_privilege(
+    let (event, login_success, privilege_unlocked, session_token, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = store.get_facade()?;
+            let event = store.get_event(event_id)?;
+            let login_result = match store.authenticate_with_passphrase(
                 event_id,
-                expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
-            ),
-        ))
-    })
-    .await?;
+                &data.passphrase,
+                &mut session_token,
+            ) {
+                Ok(()) => true,
+                Err(StoreError::NotExisting) => false,
+                Err(e) => return Err(e.into()),
+            };
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((
+                event,
+                login_result,
+                auth.has_privilege(
+                    event_id,
+                    expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
+                ),
+                session_token,
+                auth,
+            ))
+        })
+        .await??;
 
-    let (session_token, error) = match result {
-        Ok((session_token, true)) => (Some(session_token), None),
-        Ok((session_token, false)) => (
-            Some(session_token),
-            Some("Diese Passphrase schaltet nicht den gewünschten Zugriff frei."),
-        ),
-        Err(AppError::EntityNotFound) => (None, Some("Ungültige Passphrase.")),
-        Err(e) => return Err(e),
-    };
-
-    if let Some(error) = error {
+    if !login_success || !privilege_unlocked {
+        let error = if !login_success {
+            "Ungültige Passphrase."
+        } else {
+            "Diese Passphrase schaltet nicht den gewünschten Zugriff frei."
+        };
         req.add_flash_message(FlashMessage {
             flash_type: FlashType::Error,
             message: error.to_string(),
@@ -107,14 +115,13 @@ async fn login(
         });
         let mut form_submit_url = req.url_for("login", &[event_id.to_string()])?;
         form_submit_url.set_query(Some(&serde_urlencoded::to_string(query_data.into_inner())?));
-        // TODO add event name and existing auth token
         let tmpl = LoginFormTemplate {
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
-                event: None,
+                event: Some(&event),
                 current_date: None,
-                auth_token: None,
+                auth_token: Some(&auth),
                 active_main_nav_button: None,
             },
             login_url: form_submit_url,
@@ -122,9 +129,7 @@ async fn login(
         };
 
         let mut response = HttpResponse::UnprocessableEntity();
-        if let Some(session_token) = session_token {
-            response.cookie(create_session_cookie(session_token, &state.secret));
-        }
+        response.cookie(create_session_cookie(session_token, &state.secret));
         Ok(response
             .append_header((
                 header::CONTENT_TYPE,
@@ -133,9 +138,7 @@ async fn login(
             .body(tmpl.render()?))
     } else {
         let mut response = HttpResponse::SeeOther();
-        if let Some(session_token) = session_token {
-            response.cookie(create_session_cookie(session_token, &state.secret));
-        }
+        response.cookie(create_session_cookie(session_token, &state.secret));
         req.add_flash_message(FlashMessage {
             flash_type: FlashType::Success,
             message: "Login erfolgreich".to_owned(),

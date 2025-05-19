@@ -113,6 +113,27 @@ pub fn extract_session_token(
     })
 }
 
+/// Extract the session token from the session token cookie and validate it, if it exists
+///
+/// In contrast to [extract_session_token], this function does not produce an `Err` result, when no
+/// session token is present, but an `Ok(None)` value. However, other error conditions (like invalid
+/// or timed-out session tokens) are still reported as an error.
+pub fn extract_session_token_if_present(
+    app_state: &AppState,
+    request: &HttpRequest,
+    for_privilege: Privilege,
+    for_event_id: EventId,
+) -> Result<Option<SessionToken>, AppError> {
+    match extract_session_token(app_state, request, for_privilege, for_event_id) {
+        Ok(token) => Ok(Some(token)),
+        Err(AppError::PermissionDenied {
+            session_error: None,
+            ..
+        }) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
 pub fn privilege_access_roles_names(privilege: &Privilege) -> Vec<&'static str> {
     privilege
         .qualifying_roles()

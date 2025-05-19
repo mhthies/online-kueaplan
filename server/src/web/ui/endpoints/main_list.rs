@@ -78,7 +78,11 @@ struct MainListTemplate<'a> {
     date: chrono::NaiveDate,
 }
 
-impl<'a> MainListTemplate<'a> {}
+impl<'a> MainListTemplate<'a> {
+    fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
+        timestamp.with_timezone(&TIME_ZONE).naive_local()
+    }
+}
 
 /// Filters for the rinja template
 mod filters {

@@ -15,15 +15,23 @@ use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
 use chrono::TimeZone;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+#[derive(Deserialize, Serialize)]
+pub struct MainListQueryData {
+    pub after: Option<chrono::NaiveTime>,
+}
 
 #[get("/{event_id}/list/{date}")]
 async fn main_list(
     path: web::Path<(i32, chrono::NaiveDate)>,
     state: web::Data<AppState>,
     req: HttpRequest,
+    query_data: web::Query<MainListQueryData>,
 ) -> Result<impl Responder, AppError> {
     let (event_id, date) = path.into_inner();
+    let time_after = query_data.after;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
@@ -31,7 +39,7 @@ async fn main_list(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_event(event_id)?,
-            store.get_entries_filtered(&auth, event_id, date_to_filter(date))?,
+            store.get_entries_filtered(&auth, event_id, date_to_filter(date, time_after))?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -63,6 +71,12 @@ async fn main_list(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         categories: categories.iter().map(|r| (r.id, r)).collect(),
         date,
+        time_after,
+        footer_constrained_link_times: TIME_BLOCKS
+            .iter()
+            .filter_map(|b| b.1)
+            .filter(|t| *t != EFFECTIVE_BEGIN_OF_DAY)
+            .collect(),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -76,11 +90,34 @@ struct MainListTemplate<'a> {
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     date: chrono::NaiveDate,
+    time_after: Option<chrono::NaiveTime>,
+    footer_constrained_link_times: Vec<chrono::NaiveTime>,
 }
 
 impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&TIME_ZONE).naive_local()
+    }
+
+    fn link_to_time_constrained_list(
+        &self,
+        after_time: &chrono::NaiveTime,
+    ) -> Result<url::Url, AppError> {
+        let mut result = self.base.request.url_for(
+            "main_list",
+            &[
+                self.base
+                    .event
+                    .expect("Event should always be filled")
+                    .id
+                    .to_string(),
+                self.date.to_string(),
+            ],
+        )?;
+        result.set_query(Some(&serde_urlencoded::to_string(MainListQueryData {
+            after: Some(after_time.clone()),
+        })?));
+        Ok(result)
     }
 }
 
@@ -96,17 +133,12 @@ mod filters {
 
 /// Generate an EntryFilter for retrieving only the entries on the given day (using the
 /// EFFECTIVE_BEGIN_OF_DAY)
-fn date_to_filter(date: chrono::NaiveDate) -> EntryFilter {
-    let begin = date.and_time(EFFECTIVE_BEGIN_OF_DAY);
-    let end = begin + chrono::Duration::days(1);
+fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>) -> EntryFilter {
+    let begin =
+        timestamp_from_effective_date_and_time(date, begin_time.unwrap_or(EFFECTIVE_BEGIN_OF_DAY));
+    let end = date.and_time(EFFECTIVE_BEGIN_OF_DAY) + chrono::Duration::days(1);
     EntryFilter::builder()
-        .after(
-            TIME_ZONE
-                .from_local_datetime(&begin)
-                .earliest()
-                .map(|dt| dt.to_utc())
-                .unwrap_or(begin.and_utc()),
-        )
+        .after(begin)
         .before(
             TIME_ZONE
                 .from_local_datetime(&end)

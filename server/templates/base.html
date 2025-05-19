@@ -89,6 +89,7 @@
 {% block body %}
 {% endblock %}
 <footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
+    {% block footer_extra_text %}{% endblock %}
     online-kueaplan v{{ crate::get_version() }}
     {% if base.event.is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)

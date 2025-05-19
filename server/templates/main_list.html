@@ -12,6 +12,9 @@
 <div class="container mt-3" id="main">
     <h1>
         KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
+        {% if let Some(time_after) = time_after %}
+            <br><small>ab {{ time_after.format("%H:%M") }} Uhr</small>
+        {% endif %}
     </h1>
     {% for (block_name, rows) in entry_blocks %}
         {% if entry_blocks.len() > 1 %}<h3>{{ block_name }}</h3>{% endif %}
@@ -48,4 +51,12 @@
         {% endfor %}
     {% endif %}
 </div>
+{% endblock %}
+
+{% block footer_extra_text %}
+{% for after_time in footer_constrained_link_times %}
+    <a href="{{link_to_time_constrained_list(after_time)?}}">nur ab {{ after_time.format("%H:%M") }}</a>
+    {% if !loop.last %} | {% endif %}
+{% endfor %}
+<br>
 {% endblock %}

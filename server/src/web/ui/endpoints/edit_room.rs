@@ -33,7 +33,7 @@ pub async fn edit_room_form(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required room
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -86,7 +86,7 @@ pub async fn edit_room(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required room
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -163,7 +163,7 @@ pub async fn new_room_form(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(&auth, event_id)?, auth))
+        Ok((store.get_event(event_id)?, auth))
     })
     .await??;
 
@@ -207,7 +207,7 @@ pub async fn new_room(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(&auth, event_id)?, auth))
+        Ok((store.get_event(event_id)?, auth))
     })
     .await??;
 

@@ -44,11 +44,12 @@ pub type CategoryId = uuid::Uuid;
 pub type PassphraseId = i32;
 
 pub trait KueaPlanStoreFacade {
-    fn get_event(
+    fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError>;
+    fn get_extended_event(
         &mut self,
         auth_token: &AuthToken,
         event_id: EventId,
-    ) -> Result<models::Event, StoreError>;
+    ) -> Result<models::ExtendedEvent, StoreError>;
     fn create_event(
         &mut self,
         auth_token: &GlobalAuthToken,

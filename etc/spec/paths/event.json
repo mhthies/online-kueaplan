@@ -3,8 +3,7 @@
     "operationId": "getEventInfo",
     "summary": "Get information about a single event.",
     "parameters": [
-      {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/sessionToken.json"}
+      {"$ref": "../components/eventId.json"}
     ],
     "responses": {
       "200": {
@@ -15,7 +14,6 @@
           }
         }
       },
-      "403": {"$ref": "../components/authorizationError.json"},
       "404": {
         "description": "The requested event does not exist.",
         "content": {

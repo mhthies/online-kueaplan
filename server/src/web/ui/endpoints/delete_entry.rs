@@ -35,7 +35,7 @@ async fn delete_entry_form(
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?, // TODO only get relevant category?
             auth,

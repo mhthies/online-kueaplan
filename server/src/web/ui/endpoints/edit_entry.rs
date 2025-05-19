@@ -40,7 +40,7 @@ async fn edit_entry_form(
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -89,7 +89,7 @@ async fn edit_entry(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_entry(&auth, entry_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
@@ -197,7 +197,7 @@ async fn new_entry_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -249,7 +249,7 @@ async fn new_entry(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,

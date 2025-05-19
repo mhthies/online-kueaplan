@@ -4,12 +4,20 @@ use diesel::associations::BelongsTo;
 use diesel::prelude::*;
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Queryable)]
+#[derive(Clone, Debug, Queryable, Selectable)]
+#[diesel(table_name=super::schema::events)]
 pub struct Event {
     pub id: i32,
     pub title: String,
     pub begin_date: NaiveDate,
     pub end_date: NaiveDate,
+}
+
+#[derive(Clone, Debug, Queryable, Selectable)]
+#[diesel(table_name=super::schema::events)]
+pub struct ExtendedEvent {
+    #[diesel(embed)]
+    pub basic_data: Event,
 }
 
 #[derive(Insertable)]

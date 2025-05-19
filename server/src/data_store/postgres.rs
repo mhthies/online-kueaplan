@@ -55,16 +55,27 @@ fn sql_upsert_is_updated() -> diesel::expression::SqlLiteral<diesel::sql_types::
 }
 
 impl KueaPlanStoreFacade for PgDataStoreFacade {
-    fn get_event(
-        &mut self,
-        _auth_token: &AuthToken,
-        event_id: i32,
-    ) -> Result<models::Event, StoreError> {
+    fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
         use schema::events::dsl::*;
 
         events
             .filter(id.eq(event_id))
+            .select(models::Event::as_select())
             .first::<models::Event>(&mut self.connection)
+            .map_err(|e| e.into())
+    }
+
+    fn get_extended_event(
+        &mut self,
+        _auth_token: &AuthToken,
+        event_id: i32,
+    ) -> Result<models::ExtendedEvent, StoreError> {
+        use schema::events::dsl::*;
+
+        events
+            .filter(id.eq(event_id))
+            .select(models::ExtendedEvent::as_select())
+            .first::<models::ExtendedEvent>(&mut self.connection)
             .map_err(|e| e.into())
     }
 

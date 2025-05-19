@@ -68,8 +68,7 @@ async fn login(
     let store = state.store.clone();
     let event = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&SessionToken::new(), event_id)?;
-        let event = store.get_event(&auth, event_id)?;
+        let event = store.get_event(event_id)?;
         Ok(event)
     })
     .await??;

@@ -34,7 +34,7 @@ pub async fn delete_category_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_categories(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, entry_filter)?,
             auth,
@@ -88,7 +88,7 @@ pub async fn delete_category(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))

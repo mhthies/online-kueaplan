@@ -21,7 +21,7 @@ async fn config_index(
     let (event, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((store.get_event(&auth, event_id)?, auth))
+        Ok((store.get_event(event_id)?, auth))
     })
     .await??;
     auth.check_privilege(event_id, Privilege::ShowConfigArea)?;

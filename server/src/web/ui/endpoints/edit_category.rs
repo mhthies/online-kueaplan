@@ -34,7 +34,7 @@ pub async fn edit_category_form(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required category
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -87,7 +87,7 @@ pub async fn edit_category(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required category
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -164,7 +164,7 @@ pub async fn new_category_form(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(&auth, event_id)?, auth))
+        Ok((store.get_event(event_id)?, auth))
     })
     .await??;
 
@@ -208,7 +208,7 @@ pub async fn new_category(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(&auth, event_id)?, auth))
+        Ok((store.get_event(event_id)?, auth))
     })
     .await??;
 

@@ -25,7 +25,7 @@ async fn manage_rooms(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((
-            store.get_event(&auth, event_id)?,
+            store.get_event(event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))

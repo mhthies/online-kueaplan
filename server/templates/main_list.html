@@ -34,6 +34,7 @@
     {% endfor %}
 
     {% if !entries_with_descriptions.is_empty() %}
+        <hr class="mb-5 mt-5 d-print-none"/>
         <h2 style="page-break-before: always;">Beschreibungen</h2>
         {% for entry in entries_with_descriptions %}
             <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>

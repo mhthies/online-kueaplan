@@ -24,59 +24,65 @@
             {% if let Some(event) = base.event %}{{ event.title }}{% else %}KüA-Plan{% endif %}
         </div>
         {% if let Some(event) = base.event %}
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
-                    <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
-                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if let Some(date) = base.current_date %}
-                            {{ crate::web::ui::util::weekday_short(date) }} {{ date.format("%d.%m.") }}
-                        {% else %}
-                            <i class="bi bi-calendar" aria-hidden="true"></i> Datum
-                        {% endif %}
-                    </a>
-                    <ul class="dropdown-menu position-absolute">
-                        {% for day in crate::web::ui::util::event_days(event) %}
-                            <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
-                                {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}
-                            </a></li>
-                        {% endfor %}
-                    </ul>
-                </li>
-            </ul>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Navigation ausklappen">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarToggler">
-                {#
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-grid"></i> Kategorien</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-geo-alt-fill"></i> Räume</a></li>
+            {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
+                        <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
+                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if let Some(date) = base.current_date %}
+                                {{ crate::web::ui::util::weekday_short(date) }} {{ date.format("%d.%m.") }}
+                            {% else %}
+                                <i class="bi bi-calendar" aria-hidden="true"></i> Datum
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu position-absolute">
+                            {% for day in crate::web::ui::util::event_days(event) %}
+                                <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
+                                    {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}
+                                </a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                 </ul>
-                #}
-
-                {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
-                      || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
-                    <ul class="navbar-nav">
-                        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries) %}
-                            {% let add_entry_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::AddEntry) %}
-                            <li class="nav-item">
-                                <a href="{{ base.new_entry_form_url()? }}" class="nav-link {% if add_entry_active %}active{% endif %}" {% if add_entry_active %}aria-current="page"{% endif %}>
-                                    <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
-                                </a>
-                            </li>
-                        {% endif %}
-                        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
-                            {% let config_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::Configuration) %}
-                            <li class="nav-item">
-                                <a href="{{ base.url_for_event_endpoint("config_index")? }}" class="nav-link {% if config_active %}active{% endif %}" {% if config_active %}aria-current="page"{% endif %}>
-                                    <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
-                                </a>
-                            </li>
-                        {% endif %}
+            {% endif %}
+            {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
+                || base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
+                || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Navigation ausklappen">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarToggler">
+                    {#
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-grid"></i> Kategorien</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-geo-alt-fill"></i> Räume</a></li>
                     </ul>
-                {% endif %}
-            </div>
+                    #}
+
+                    {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
+                          || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+                        <ul class="navbar-nav">
+                            {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries) %}
+                                {% let add_entry_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::AddEntry) %}
+                                <li class="nav-item">
+                                    <a href="{{ base.new_entry_form_url()? }}" class="nav-link {% if add_entry_active %}active{% endif %}" {% if add_entry_active %}aria-current="page"{% endif %}>
+                                        <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+                                {% let config_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::Configuration) %}
+                                <li class="nav-item">
+                                    <a href="{{ base.url_for_event_endpoint("config_index")? }}" class="nav-link {% if config_active %}active{% endif %}" {% if config_active %}aria-current="page"{% endif %}>
+                                        <i class="bi bi-gear" aria-hidden="true"></i> Konfiguration
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endif %}
         {% endif %}
     </div>
 </nav>

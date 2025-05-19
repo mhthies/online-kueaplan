@@ -88,7 +88,7 @@
 </nav>
 {% block body %}
 {% endblock %}
-<footer class="border-top text-center small text-secondary p-2 mt-3 mb-2">
+<footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
     online-kueaplan v{{ crate::get_version() }}
     {% if base.event.is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
@@ -98,7 +98,7 @@
 </footer>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}
-<div class="toast-container top-0 end-0 p-3 position-fixed">
+<div class="toast-container top-0 end-0 p-3 position-fixed d-print-none">
     {% for flash in flashes.iter() %}
     <div class="toast {% match flash.flash_type %}
                       {%- when crate::web::ui::flash::FlashType::Info%}text-bg-info

@@ -1,10 +1,9 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Entry, Event, FullEntry};
+use crate::data_store::models::{Event, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
-use crate::web::ui::time_calculation;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
@@ -45,19 +44,6 @@ pub fn url_for_entry_details(
     )?;
     url.set_fragment(Some(&format!("entry-{}", entry_id)));
     Ok(url)
-}
-
-/// Generate a URL that takes the user directly to a specific kueaplan entry in the main list.
-///
-/// The URL for the main_list endpoint with the correct date, according to the entry's begin is
-/// used, augmented with the anchor link of the entry,
-pub fn url_for_entry(req: &HttpRequest, entry: &Entry) -> Result<url::Url, UrlGenerationError> {
-    url_for_entry_details(
-        req,
-        entry.event_id,
-        &entry.id,
-        &time_calculation::get_effective_date(&entry.begin),
-    )
 }
 
 /// Generate a URL that takes the user to the main list for the given event day.

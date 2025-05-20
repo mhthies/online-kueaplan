@@ -4,7 +4,7 @@ use crate::data_store::EntryFilter;
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainListRow, MainListRowTemplate,
+    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
 use crate::web::ui::time_calculation::{
     timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,

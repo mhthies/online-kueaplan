@@ -2,30 +2,25 @@
 
 {% block custom_header %}
 <style>
-    {% for category in categories.values() %}
-        {{ self::styles_for_category(category) }}
-    {% endfor %}
+    {{ self::styles_for_category(category) }}
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-3" id="main">
     <h1>
-        KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
-        {% if let Some(time_after) = time_after %}
-            <br><small>ab {{ time_after.format("%H:%M") }} Uhr</small>
-        {% endif %}
+        KüA-Plan, Kategorie {{ category.title }}
     </h1>
 
     {% if entry_blocks.is_empty() %}
         <div class="alert alert-info mb-5">
             <i class="bi bi-info-circle" aria-hidden="true"></i>
-            Aktuell sind am {{ date.format("%d.%m.") }} keine KüAs geplant.
+            Aktuell sind keine KüAs in der Kategorie {{ category.title }} geplant.
         </div>
     {% endif %}
 
-    {% for (block_name, rows) in entry_blocks %}
-        {% if entry_blocks.len() > 1 %}<h3>{{ block_name }}</h3>{% endif %}
+    {% for (date, rows) in entry_blocks %}
+        {% if entry_blocks.len() > 1 %}<h3>{{ date|weekday }}, {{ date.format("%d.%m.%Y") }}</h3>{% endif %}
         <table class="table table-striped kuealist">
             <thead>
             <tr>
@@ -37,15 +32,14 @@
             </thead>
             <tbody>
                 {% for row in rows %}
-                    {% let category = categories.get(row.entry.entry.category).ok_or("Category not found")? %}
-                    {{ MainListRowTemplate::new(base.request,
-                                                **row,
-                                                category,
-                                                rooms,
-                                                base.has_privilege(Privilege::ManageEntries),
-                                                true,
-                                                Some(*date),
-                                                MainEntryLinkMode::ByDate)|safe }}
+                {{ MainListRowTemplate::new(base.request,
+                                            **row,
+                                            category,
+                                            rooms,
+                                            base.has_privilege(Privilege::ManageEntries),
+                                            true,
+                                            Some(**date),
+                                            MainEntryLinkMode::ByCategory)|safe }}
                 {% endfor %}
             </tbody>
         </table>
@@ -68,10 +62,3 @@
 </div>
 {% endblock %}
 
-{% block footer_extra_text %}
-{% for after_time in footer_constrained_link_times %}
-    <a href="{{link_to_time_constrained_list(after_time)?}}">nur ab {{ after_time.format("%H:%M") }}</a>
-    {% if !loop.last %} | {% endif %}
-{% endfor %}
-<br>
-{% endblock %}

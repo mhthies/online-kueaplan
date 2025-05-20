@@ -67,11 +67,13 @@
                 {% else %}
                     {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
                 {% endif %}
-                <a href="{{ util::url_for_entry(request, entry)? }}"
-                   title="Link zum neuen Zeitpunkt"
-                   class="d-print-none">
-                    <i class="bi bi-link" aria-hidden="true"></i>
-                </a>
+                {% if main_entry_link_mode != crate::web::ui::sub_templates::main_list_row::MainEntryLinkMode::None %}
+                    <a href="{{ url_for_entry(entry, *main_entry_link_mode)? }}"
+                       title="Link zum neuen Zeitpunkt"
+                       class="d-print-none">
+                        <i class="bi bi-link" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
         {% for previous_date in row.previous_dates if !previous_date.previous_date.comment.is_empty() %}

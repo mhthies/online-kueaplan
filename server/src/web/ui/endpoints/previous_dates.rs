@@ -8,7 +8,7 @@ use crate::web::ui::sub_templates::edit_entry_helpers::{
     EditEntryNavbar, EditEntryNavbarActiveLink,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainListRow, MainListRowTemplate,
+    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
 use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
 use crate::web::ui::util;

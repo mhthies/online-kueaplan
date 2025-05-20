@@ -53,12 +53,13 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarToggler">
-                    {#
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-grid"></i> Kategorien</a></li>
+                        {% let categories_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByCategory) %}
+                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("categories_list")? }}" class="nav-link {% if categories_active %}active{% endif %}" {% if categories_active %}aria-current="page"{% endif %}><i class="bi bi-grid"></i> Kategorien</a></li>
+                        {#
                         <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-geo-alt-fill"></i> Räume</a></li>
+                        #}
                     </ul>
-                    #}
 
                     {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
                           || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}

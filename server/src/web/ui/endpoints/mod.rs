@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod categories_list;
 pub mod config_index;
 pub mod delete_category;
 pub mod delete_entry;
@@ -8,6 +9,7 @@ pub mod edit_entry;
 pub mod edit_room;
 pub mod index;
 pub mod main_list;
+pub mod main_list_by_category;
 pub mod manage_categories;
 pub mod manage_rooms;
 pub mod previous_dates;

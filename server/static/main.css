@@ -60,3 +60,21 @@ tr.category-row>* {
     background: var(--category-bg-dark);
     color: var(--category-text-dark);
 }
+.list-group-item.category-row {
+    --bs-list-group-color: var(--category-text);
+    --bs-list-group-bg: var(--category-bg);
+    --bs-list-group-action-hover-color: var(--bs-emphasis-color);
+    --bs-list-group-action-hover-bg: var(--category-border);
+    --bs-list-group-action-active-color: var(--bs-emphasis-color);
+    --bs-list-group-action-active-bg: var(--category-border);
+    --bs-list-group-active-color: var(--category-bg);
+    --bs-list-group-active-bg: var(--category-text);
+}
+[data-bs-theme="dark"]  .list-group-item.category-row {
+    --bs-list-group-color: var(--category-text-dark);
+    --bs-list-group-bg: var(--category-bg-dark);
+    --bs-list-group-action-hover-bg: var(--category-border-dark);
+    --bs-list-group-action-active-bg: var(--category-border-dark);
+    --bs-list-group-active-color: var(--category-bg-dark);
+    --bs-list-group-active-bg: var(--category-text-dark);
+}

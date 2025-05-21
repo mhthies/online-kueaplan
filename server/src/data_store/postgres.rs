@@ -733,28 +733,7 @@ fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::ent
     if let Some(before) = filter.before {
         expression = Box::new(expression.as_expression().and(begin.lt(before)));
     }
-    if filter.include_previous_date_matches && (filter.after.is_some() || filter.before.is_some()) {
-        use schema::previous_dates::dsl::*;
-        let mut sub_query_filter: BoxedBoolExpression<'_, _> =
-            Box::new(entry_id.eq(schema::entries::dsl::id));
-        if let Some(after) = filter.after {
-            sub_query_filter = Box::new(sub_query_filter.and(end.gt(after)));
-        }
-        if let Some(before) = filter.before {
-            sub_query_filter = Box::new(sub_query_filter.and(begin.lt(before)));
-        }
-        expression = Box::new(
-            expression.as_expression().or(exists(
-                schema::previous_dates::table
-                    .select(0.as_sql::<diesel::sql_types::Integer>())
-                    .filter(sub_query_filter),
-            )),
-        );
-    }
-    if let Some(categories) = filter.categories {
-        expression = Box::new(expression.as_expression().and(category.eq_any(categories)));
-    }
-    if let Some(rooms) = filter.rooms {
+    if let Some(rooms) = filter.rooms.clone() {
         expression = Box::new(
             expression.as_expression().and(exists(
                 schema::entry_rooms::dsl::entry_rooms
@@ -767,6 +746,46 @@ fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::ent
         expression = Box::new(expression.as_expression().and(not(exists(
             schema::entry_rooms::dsl::entry_rooms.filter(schema::entry_rooms::entry_id.eq(id)),
         ))));
+    }
+    if filter.include_previous_date_matches
+        && (filter.after.is_some() || filter.before.is_some() || filter.rooms.is_some())
+    {
+        use schema::previous_dates::dsl::*;
+        let mut sub_query_filter: BoxedBoolExpression<'_, _> =
+            Box::new(entry_id.eq(schema::entries::dsl::id));
+        if let Some(after) = filter.after {
+            sub_query_filter = Box::new(sub_query_filter.and(end.gt(after)));
+        }
+        if let Some(before) = filter.before {
+            sub_query_filter = Box::new(sub_query_filter.and(begin.lt(before)));
+        }
+        if let Some(rooms) = filter.rooms {
+            sub_query_filter = Box::new(
+                sub_query_filter.as_expression().and(exists(
+                    schema::previous_date_rooms::dsl::previous_date_rooms
+                        .filter(schema::previous_date_rooms::previous_date_id.eq(id))
+                        .filter(schema::previous_date_rooms::room_id.eq_any(rooms)),
+                )),
+            );
+        }
+        if filter.no_room {
+            sub_query_filter = Box::new(
+                sub_query_filter.as_expression().and(not(exists(
+                    schema::previous_date_rooms::dsl::previous_date_rooms
+                        .filter(schema::previous_date_rooms::previous_date_id.eq(id)),
+                ))),
+            );
+        }
+        expression = Box::new(
+            expression.as_expression().or(exists(
+                schema::previous_dates::table
+                    .select(0.as_sql::<diesel::sql_types::Integer>())
+                    .filter(sub_query_filter),
+            )),
+        );
+    }
+    if let Some(categories) = filter.categories {
+        expression = Box::new(expression.as_expression().and(category.eq_any(categories)));
     }
     expression
 }

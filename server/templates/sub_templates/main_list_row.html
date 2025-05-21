@@ -26,7 +26,7 @@
 
 {% let entry = row.entry.entry %}
 <tr class="{{ css_class_for_tr(row) }}">
-    <td class="kuea-title aside-container" id="entry-{{ entry.id.to_string() }}">
+    <td class="kuea-title aside-container" {% if row.entry_takes_place_now() %}id="entry-{{ entry.id.to_string() }}"{% endif %}>
         {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(row.sort_time) %}
         {% if let Some(date) = date_context %}
             {% if effective_begin_date < *date %}

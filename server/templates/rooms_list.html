@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h1>Orte</h1>
+            {% if base.auth_token.expect("auth_token should be provided").has_privilege(*event_id, Privilege::ManageRooms) %}
+                <div class="mb-3">
+                    <a href="{{ base.url_for_event_endpoint("manage_rooms")? }}" class="btn btn-outline-primary"><i class="bi bi-gear" aria-hidden="true"></i> Räume verwalten</a>
+                </div>
+            {% endif %}
+
+            <div class="list-group">
+                {% for room in rooms %}
+                    <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="list-group-item list-group-item-action">
+                        <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                        {{room.title}}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

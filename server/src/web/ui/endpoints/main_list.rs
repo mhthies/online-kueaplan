@@ -48,7 +48,7 @@ async fn main_list(
     .await??;
 
     let title = date.format("%d.%m.").to_string();
-    let rows = generate_list_entries(&entries, date);
+    let rows = generate_filtered_merged_list_entries(&entries, date);
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
@@ -155,7 +155,7 @@ fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>
 ///
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry at the
 /// current date, sorts them by `begin` and merges consecutive list rows
-fn generate_list_entries<'a>(
+fn generate_filtered_merged_list_entries<'a>(
     entries: &'a Vec<FullEntry>,
     date: chrono::NaiveDate,
 ) -> Vec<MainListRow<'a>> {
@@ -369,7 +369,7 @@ mod tests {
                 }],
             },
         ];
-        let result = generate_list_entries(&entries, "2025-04-28".parse().unwrap());
+        let result = generate_filtered_merged_list_entries(&entries, "2025-04-28".parse().unwrap());
         assert_eq!(
             result
                 .iter()

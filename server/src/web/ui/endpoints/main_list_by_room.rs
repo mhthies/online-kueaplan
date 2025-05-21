@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, FullEntry, Room};
-use crate::data_store::{CategoryId, EntryFilter, EventId};
+use crate::data_store::{EntryFilter, EventId, RoomId};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::main_list_row::{
@@ -8,19 +8,20 @@ use crate::web::ui::sub_templates::main_list_row::{
 };
 use crate::web::ui::time_calculation::TIME_ZONE;
 use crate::web::ui::util;
+use crate::web::ui::util::group_rows_by_date;
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
 use std::collections::BTreeMap;
 
-#[get("/{event_id}/categories/{category_id}")]
-async fn main_list_by_category(
-    path: web::Path<(EventId, CategoryId)>,
+#[get("/{event_id}/rooms/{room_id}")]
+async fn main_list_by_room(
+    path: web::Path<(EventId, RoomId)>,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
-    let (event_id, category_id) = path.into_inner();
+    let (event_id, room_id) = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
@@ -32,7 +33,8 @@ async fn main_list_by_category(
                 &auth,
                 event_id,
                 EntryFilter::builder()
-                    .category_is_one_of(vec![category_id])
+                    .in_one_of_these_rooms(vec![room_id])
+                    .include_previous_date_matches()
                     .build(),
             )?,
             store.get_rooms(&auth, event_id)?,
@@ -42,23 +44,23 @@ async fn main_list_by_category(
     })
     .await??;
 
-    let category = categories
+    let room = rooms
         .iter()
-        .filter(|c| c.id == category_id)
+        .filter(|c| c.id == room_id)
         .next()
         .ok_or(AppError::EntityNotFound)?;
-    let title = format!("Kategorie {}", category.title);
-    let rows = util::generate_merged_list_rows_per_date(&entries);
-    let tmpl = MainListByCategoryTemplate {
+    let title = format!("Kategorie {}", room.title);
+    let rows = generate_filtered_merged_list_entries(&entries, &room.id);
+    let tmpl = MainListByRoomTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
             event: Some(&event),
             current_date: None,
             auth_token: Some(&auth),
-            active_main_nav_button: Some(MainNavButton::ByCategory),
+            active_main_nav_button: Some(MainNavButton::ByRoom),
         },
-        entry_blocks: util::group_rows_by_date(&rows),
+        entry_blocks: group_rows_by_date(&rows),
         entries_with_descriptions: rows
             .iter()
             .filter(|row| {
@@ -69,22 +71,24 @@ async fn main_list_by_category(
             .map(|row| row.entry)
             .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
-        category,
+        categories: categories.iter().map(|c| (c.id, c)).collect(),
+        room,
     };
     Ok(Html::new(tmpl.render()?))
 }
 
 #[derive(Template)]
-#[template(path = "main_list_by_category.html")]
-struct MainListByCategoryTemplate<'a> {
+#[template(path = "main_list_by_room.html")]
+struct MainListByRoomTemplate<'a> {
     base: BaseTemplateContext<'a>,
     entry_blocks: Vec<(chrono::NaiveDate, Vec<&'a MainListRow<'a>>)>,
     entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
-    category: &'a Category,
+    categories: BTreeMap<uuid::Uuid, &'a Category>,
+    room: &'a Room,
 }
 
-impl<'a> MainListByCategoryTemplate<'a> {
+impl<'a> MainListByRoomTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&TIME_ZONE).naive_local()
     }
@@ -98,4 +102,36 @@ mod filters {
     pub fn weekday(date: &chrono::NaiveDate) -> askama::Result<&'static str> {
         Ok(util::weekday(date))
     }
+}
+
+/// Generate the list of [MainListRow]s for the given `room_id` from the given list of KüA-Plan
+/// `entries`.
+///
+/// This algorithm creates a MainListEntry for each entry and each previous_date of an entry in the
+/// current room, sorts them by `begin` and merges consecutive list rows
+fn generate_filtered_merged_list_entries<'a>(
+    entries: &'a Vec<FullEntry>,
+    room_id: &RoomId,
+) -> Vec<MainListRow<'a>> {
+    let mut result = Vec::with_capacity(entries.len());
+    for entry in entries.iter() {
+        if entry.room_ids.contains(room_id) {
+            result.push(MainListRow::from_entry(entry));
+        }
+        for previous_date in entry.previous_dates.iter() {
+            if previous_date.room_ids.contains(room_id) {
+                result.push(MainListRow::from_previous_date(entry, previous_date))
+            }
+        }
+    }
+    result.sort_by_key(|e| e.sort_time);
+    result.dedup_by(|a, b| {
+        if a.entry.entry.id == b.entry.entry.id {
+            b.merge_from(a);
+            true
+        } else {
+            false
+        }
+    });
+    result
 }

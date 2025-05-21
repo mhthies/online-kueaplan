@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block custom_header %}
+<style>
+    {% for category in categories.values() %}
+        {{ self::styles_for_category(category) }}
+    {% endfor %}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-3" id="main">
+    <h1>
+        KüA-Plan, Ort {{ room.title }}
+    </h1>
+
+    {% if entry_blocks.is_empty() %}
+        <div class="alert alert-info mb-5">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            Aktuell sind keine KüAs in {{ room.title }} geplant.
+        </div>
+    {% endif %}
+
+    {% for (date, rows) in entry_blocks %}
+        {% if entry_blocks.len() > 1 %}<h3>{{ date|weekday }}, {{ date.format("%d.%m.%Y") }}</h3>{% endif %}
+        <table class="table table-striped kuealist">
+            <thead>
+            <tr>
+                <th>Was?</th>
+                <th>Wann?</th>
+                <th>Wo?</th>
+                <th>Von wem?</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                {% let category = categories.get(row.entry.entry.category).ok_or("Category not found")? %}
+                {{ MainListRowTemplate::new(base.request,
+                                            **row,
+                                            category,
+                                            rooms,
+                                            base.has_privilege(Privilege::ManageEntries),
+                                            true,
+                                            Some(**date),
+                                            MainEntryLinkMode::None)|safe }}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+    {% if !entries_with_descriptions.is_empty() %}
+        <hr class="mb-5 mt-5 d-print-none"/>
+        <h2 style="page-break-before: always;">Beschreibungen</h2>
+        {% for entry in entries_with_descriptions %}
+            <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>
+            <p>
+                {{ to_our_timezone(entry.entry.begin).format("%d.%m. %H:%M") -}}
+                {% if !entry.room_ids.is_empty() %} • {% endif -%}
+                {% for room_id in entry.room_ids %}{{ rooms[room_id].title }}{% if !loop.last %}, {% endif %}{% endfor -%}
+                {% if !entry.entry.responsible_person.is_empty() %} • von {{ entry.entry.responsible_person }}{% endif %}
+            </p>
+            {{ entry.entry.description|markdown }}
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+

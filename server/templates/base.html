@@ -56,9 +56,8 @@
                     <ul class="navbar-nav me-auto">
                         {% let categories_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByCategory) %}
                         <li class="nav-item"><a href="{{ base.url_for_event_endpoint("categories_list")? }}" class="nav-link {% if categories_active %}active{% endif %}" {% if categories_active %}aria-current="page"{% endif %}><i class="bi bi-grid"></i> Kategorien</a></li>
-                        {#
-                        <li class="nav-item"><a href="#" class="nav-link"><i class="bi bi-geo-alt-fill"></i> Räume</a></li>
-                        #}
+                        {% let rooms_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByRoom) %}
+                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("rooms_list")? }}" class="nav-link {% if rooms_active %}active{% endif %}" {% if rooms_active %}aria-current="page"{% endif %}><i class="bi bi-geo-alt-fill"></i> Orte</a></li>
                     </ul>
 
                     {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)

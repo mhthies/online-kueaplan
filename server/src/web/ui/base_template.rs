@@ -103,6 +103,7 @@ impl BaseTemplateContext<'_> {
 pub enum MainNavButton {
     ByDate,
     ByCategory,
+    ByRoom,
     AddEntry,
     Configuration,
 }

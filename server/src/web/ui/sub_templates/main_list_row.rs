@@ -197,6 +197,17 @@ impl<'a> MainListRow<'a> {
     pub fn entry_takes_place_now(&self) -> bool {
         self.includes_entry && !self.entry.entry.is_cancelled
     }
+
+    /// Get a list of room_ids, where the entry is now scheduled, but has not been scheduled in the
+    /// dates represented by this row
+    fn new_rooms_since_this_row(&self) -> Vec<RoomId> {
+        self.entry
+            .room_ids
+            .iter()
+            .filter(|r| !self.merged_rooms.contains(r))
+            .cloned()
+            .collect()
+    }
 }
 
 /// Generate all required (inline) CSS stylesheet content for the given category.

@@ -4,6 +4,8 @@ use crate::data_store::models::{Event, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
+use crate::web::ui::sub_templates::main_list_row::MainListRow;
+use crate::web::ui::time_calculation::get_effective_date;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
@@ -246,4 +248,59 @@ pub fn create_edit_form_response(
         }
         FormSubmitResult::UnexpectedError(e) => Err(e),
     }
+}
+
+/// Generate the list of [MainListRow]s from the given list of KüA-Plan `entries`.
+///
+/// This algorithm creates a MainListEntry for each entry and each previous_date of an entry,
+/// sorts them by `begin` and merges consecutive list rows.
+/// This is a simplified version of [main_list::generate_filtered_merged_list_entries].
+pub fn generate_merged_list_rows_per_date<'a>(entries: &'a Vec<FullEntry>) -> Vec<MainListRow<'a>> {
+    let mut result = Vec::with_capacity(entries.len());
+    for entry in entries.iter() {
+        result.push(MainListRow::from_entry(entry));
+        for previous_date in entry.previous_dates.iter() {
+            result.push(MainListRow::from_previous_date(entry, previous_date))
+        }
+    }
+    result.sort_by_key(|e| e.sort_time);
+    result.dedup_by(|a, b| {
+        if a.entry.entry.id == b.entry.entry.id
+            && get_effective_date(a.sort_time) == get_effective_date(b.sort_time)
+        {
+            b.merge_from(a);
+            true
+        } else {
+            false
+        }
+    });
+    result
+}
+
+/// Group the rows of the main list into blocks by effective date.
+///
+/// The list must be already be sorted by [MainListRow::sort_time].
+pub fn group_rows_by_date<'a>(
+    entries: &'a Vec<MainListRow<'a>>,
+) -> Vec<(chrono::NaiveDate, Vec<&'a MainListRow<'a>>)> {
+    let mut result = Vec::new();
+    let mut block_entries = Vec::new();
+    if entries.is_empty() {
+        return result;
+    }
+    let mut current_date = get_effective_date(&entries[0].sort_time);
+    for entry in entries {
+        if get_effective_date(&entry.sort_time) != current_date {
+            if !block_entries.is_empty() {
+                result.push((current_date, block_entries));
+            }
+            block_entries = Vec::new();
+            current_date = get_effective_date(&entry.sort_time);
+        }
+        block_entries.push(entry);
+    }
+    if !block_entries.is_empty() {
+        result.push((current_date, block_entries));
+    }
+    result
 }

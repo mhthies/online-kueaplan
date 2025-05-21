@@ -61,11 +61,21 @@
 
         {% if !row.includes_entry && !entry.is_cancelled %}
             <div class="comment text-info mt-1">
-                <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben auf
-                {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
-                    {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
-                {% else %}
-                    {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
+                <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben
+                {% if entry.begin != *row.sort_time %}
+                    auf
+                    {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
+                        {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
+                    {% else %}
+                        {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
+                    {% endif %}
+                {% endif %}
+                {% let new_rooms = row.new_rooms_since_this_row() %}
+                {% if !new_rooms.is_empty() %}
+                    nach
+                    {% for room_id in row.entry.room_ids %}
+                        {{ rooms[room_id].title }}{%- if !loop.last %}, {% endif -%}
+                    {% endfor %}
                 {% endif %}
                 {% if main_entry_link_mode != crate::web::ui::sub_templates::main_list_row::MainEntryLinkMode::None %}
                     <a href="{{ url_for_entry(entry, *main_entry_link_mode)? }}"

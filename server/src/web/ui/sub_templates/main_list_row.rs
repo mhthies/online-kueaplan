@@ -132,9 +132,8 @@ pub struct MainListRow<'a> {
     pub previous_dates: Vec<&'a FullPreviousDate>,
     /// The merged set of rooms of all dates represented by this list row
     pub merged_rooms: Vec<&'a RoomId>,
-    /// The set of unique `(begin, end)` times represented by this row that are not equal to the
-    /// entry's current scheduled time.
-    pub additional_times: Vec<(
+    /// The set of unique `(begin, end)` times represented by this row
+    pub merged_times: Vec<(
         &'a chrono::DateTime<chrono::Utc>,
         &'a chrono::DateTime<chrono::Utc>,
     )>,
@@ -149,7 +148,7 @@ impl<'a> MainListRow<'a> {
             includes_entry: true,
             previous_dates: vec![],
             merged_rooms: entry.room_ids.iter().collect(),
-            additional_times: vec![],
+            merged_times: vec![(&entry.entry.begin, &entry.entry.end)],
         }
     }
 
@@ -162,7 +161,7 @@ impl<'a> MainListRow<'a> {
             includes_entry: false,
             previous_dates: vec![previous_date],
             merged_rooms: previous_date.room_ids.iter().collect(),
-            additional_times: vec![(
+            merged_times: vec![(
                 &previous_date.previous_date.begin,
                 &previous_date.previous_date.end,
             )],
@@ -178,11 +177,9 @@ impl<'a> MainListRow<'a> {
         self.sort_time = std::cmp::min(self.sort_time, other.sort_time);
         self.includes_entry |= other.includes_entry;
         self.previous_dates.extend_from_slice(&other.previous_dates);
-        for times in other.additional_times.iter() {
-            if !self.additional_times.contains(&times)
-                && *times != (&self.entry.entry.begin, &self.entry.entry.end)
-            {
-                self.additional_times.push(*times);
+        for times in other.merged_times.iter() {
+            if !self.merged_times.contains(&times) {
+                self.merged_times.push(*times);
             }
         }
         for room in other.merged_rooms.iter() {

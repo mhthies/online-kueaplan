@@ -62,7 +62,7 @@
         {% if !row.includes_entry && !entry.is_cancelled %}
             <div class="comment text-info mt-1">
                 <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben
-                {% if entry.begin != *row.sort_time %}
+                {% if !row.merged_times.contains((&entry.begin, &entry.end)) %}
                     auf
                     {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
                         {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
@@ -98,28 +98,42 @@
     <td class="kuea-time">
         {% if row.includes_entry %}
             {% call format_begin_end(entry.begin, entry.end) %}
-        {% endif %}
-        {% if !row.additional_times.is_empty() %}
-            <span class="visually-hidden">Zuvor geplante Zeiten:</span>
-            {% for (begin, end) in row.additional_times %}
-                {% if row.includes_entry || !loop.first %}<br>{% endif %}
+            {% if row.merged_times.len() > 1 %}
+                <span class="visually-hidden">Zuvor geplante Zeiten:</span>
                 <span class="text-decoration-line-through">
-                    {% call format_begin_end(**begin, **end) %}
-                </span>{% if !loop.last %},{% endif %}
-            {% endfor %}
+            {% endif %}
+        {% endif %}
+        {% for (begin, end) in row.merged_times if (**begin, **end) != (entry.begin, entry.end) || !row.includes_entry %}
+            {% if row.includes_entry || !loop.first %}<br>{% endif %}
+            {% call format_begin_end(**begin, **end) %}
+            {% if !loop.last %},{% endif %}
+        {% endfor %}
+        {% if row.includes_entry && row.merged_times.len() > 1 %}
+            </span>
         {% endif %}
         {% if row.includes_entry && !entry.time_comment.is_empty() %}
             <div class="comment">{{ entry.time_comment }}</div>
         {% endif %}
     </td>
     <td class="kuea-place">
-        {% for room_id in row.merged_rooms %}
-            {% let strike_through_room = row.includes_entry && !row.previous_dates.is_empty() && !row.entry.room_ids.contains(room_id) %}
-            {% if strike_through_room %}<span class="text-decoration-line-through">{% endif %}
+        {% if row.includes_entry %}
+            {% for room_id in row.entry.room_ids %}
                 {{ rooms[room_id].title }}
-            {%- if strike_through_room %}</span>{% endif %}
+                {%- if !loop.last %}, {% endif -%}
+            {% endfor -%}
+            {% if row.merged_rooms.len() > row.entry.room_ids.len() -%}
+                ,
+                <span class="visually-hidden">Zuvor geplante Orte:</span>
+                <span class="text-decoration-line-through">
+            {% endif %}
+        {% endif %}
+        {% for room_id in row.merged_rooms if !row.includes_entry || !row.entry.room_ids.contains(room_id) %}
+                {{ rooms[room_id].title }}
             {%- if !loop.last %}, {% endif -%}
         {% endfor %}
+        {% if row.includes_entry && row.merged_rooms.len() > row.entry.room_ids.len() %}
+            </span>
+        {% endif %}
         {% if row.includes_entry && !entry.room_comment.is_empty() %}
             <div class="comment">{{ entry.room_comment }}</div>
         {% endif %}

@@ -379,7 +379,7 @@ mod tests {
                     (
                         e.entry.entry.title.as_str(),
                         e.includes_entry,
-                        e.additional_times.len(),
+                        e.merged_times.len(),
                         sorted_rooms,
                     )
                 })
@@ -387,8 +387,8 @@ mod tests {
             vec![
                 ("A", false, 1, vec![&room_2]),
                 ("C", false, 1, vec![&room_1]),
-                ("B", true, 1, vec![&room_3]),
-                ("A", true, 0, vec![&room_1, &room_2]),
+                ("B", true, 2, vec![&room_3]),
+                ("A", true, 1, vec![&room_1, &room_2]),
             ]
         );
     }

@@ -198,15 +198,18 @@ impl<'a> MainListRow<'a> {
         self.includes_entry && !self.entry.entry.is_cancelled
     }
 
-    /// Get a list of room_ids, where the entry is now scheduled, but has not been scheduled in the
-    /// dates represented by this row
-    fn new_rooms_since_this_row(&self) -> Vec<RoomId> {
-        self.entry
+    fn rooms_differ_from_entry(&self) -> bool {
+        // According to https://stackoverflow.com/a/64227550/10315508 this is faster than building
+        // a Set for small vectors – as expected.
+        !(self
+            .entry
             .room_ids
             .iter()
-            .filter(|r| !self.merged_rooms.contains(r))
-            .cloned()
-            .collect()
+            .all(|r| self.merged_rooms.contains(&r))
+            && self
+                .merged_rooms
+                .iter()
+                .all(|r| self.entry.room_ids.contains(*r)))
     }
 }
 

@@ -70,12 +70,15 @@
                         {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
                     {% endif %}
                 {% endif %}
-                {% let new_rooms = row.new_rooms_since_this_row() %}
-                {% if !new_rooms.is_empty() %}
-                    nach
-                    {% for room_id in row.entry.room_ids %}
-                        {{ rooms[room_id].title }}{%- if !loop.last %}, {% endif -%}
-                    {% endfor %}
+                {% if row.rooms_differ_from_entry() %}
+                    {% if !row.entry.room_ids.is_empty() %}
+                        nach
+                        {% for room_id in row.entry.room_ids %}
+                            {{ rooms[room_id].title }}{%- if !loop.last %}, {% endif -%}
+                        {% endfor %}
+                    {% else %}
+                        zu undefiniertem Ort
+                    {% endif %}
                 {% endif %}
                 {% if main_entry_link_mode != crate::web::ui::sub_templates::main_list_row::MainEntryLinkMode::None %}
                     <a href="{{ url_for_entry(entry, *main_entry_link_mode)? }}"

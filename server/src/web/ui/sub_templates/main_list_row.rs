@@ -1,4 +1,4 @@
-use crate::data_store::models::{Category, Entry, FullEntry, FullPreviousDate, Room};
+use crate::data_store::models::{Category, FullEntry, FullPreviousDate, Room};
 use crate::data_store::{CategoryId, RoomId};
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::time_calculation::TIME_ZONE;
@@ -25,6 +25,7 @@ pub struct MainListRowTemplate<'a> {
     show_edit_links: bool,
     show_description_links: bool,
     date_context: Option<chrono::NaiveDate>,
+    room_context: Option<uuid::Uuid>,
     main_entry_link_mode: MainEntryLinkMode,
 }
 
@@ -37,6 +38,7 @@ impl<'a> MainListRowTemplate<'a> {
         show_edit_links: bool,
         show_description_links: bool,
         date_context: Option<chrono::NaiveDate>,
+        room_context: Option<uuid::Uuid>,
         main_entry_link_mode: MainEntryLinkMode,
     ) -> Self {
         assert_eq!(row.entry.entry.category, entry_category.id);
@@ -48,6 +50,7 @@ impl<'a> MainListRowTemplate<'a> {
             show_edit_links,
             show_description_links,
             date_context,
+            room_context,
             main_entry_link_mode,
         }
     }
@@ -76,30 +79,42 @@ impl<'a> MainListRowTemplate<'a> {
         result
     }
 
-    /// Generate a URL that takes the user directly to a specific kueaplan entry.
-    ///
-    /// The URL for the main_list endpoint with the correct date, according to the entry's begin or
-    /// category is used, augmented with the anchor link of the entry,
-    pub fn url_for_entry(
-        &self,
-        entry: &Entry,
-        mode: MainEntryLinkMode,
-    ) -> Result<url::Url, UrlGenerationError> {
-        match mode {
-            MainEntryLinkMode::None => panic!("Cannot create link in MainEntryLinkMode::None"),
-            MainEntryLinkMode::ByDate => url_for_entry_details(
+    /// Generate a URL that takes the user directly to the current kueaplan entry date in the
+    /// relevant list, according to main_entry_link_mode, if possible.
+    pub fn url_for_current_entry(&self) -> Result<Option<url::Url>, UrlGenerationError> {
+        let entry = &self.row.entry.entry;
+        match self.main_entry_link_mode {
+            MainEntryLinkMode::None => Ok(None),
+            MainEntryLinkMode::ByDate => Some(url_for_entry_details(
                 self.request,
                 entry.event_id,
                 &entry.id,
                 &time_calculation::get_effective_date(&entry.begin),
-            ),
+            ))
+            .transpose(),
             MainEntryLinkMode::ByCategory => {
                 let mut url = self.request.url_for(
                     "main_list_by_category",
                     [&entry.event_id.to_string(), &entry.category.to_string()],
                 )?;
                 url.set_fragment(Some(&format!("entry-{}", entry.id)));
-                Ok(url)
+                Ok(Some(url))
+            }
+            MainEntryLinkMode::ByRoomContext => {
+                if let Some(room_id) = self.room_context {
+                    if self.row.entry.room_ids.contains(&room_id) {
+                        let mut url = self.request.url_for(
+                            "main_list_by_room",
+                            [&entry.event_id.to_string(), &room_id.to_string()],
+                        )?;
+                        url.set_fragment(Some(&format!("entry-{}", entry.id)));
+                        Ok(Some(url))
+                    } else {
+                        Ok(None)
+                    }
+                } else {
+                    Ok(None)
+                }
             }
         }
     }
@@ -110,6 +125,7 @@ pub enum MainEntryLinkMode {
     None,
     ByDate,
     ByCategory,
+    ByRoomContext,
 }
 
 /// A single row in the list view

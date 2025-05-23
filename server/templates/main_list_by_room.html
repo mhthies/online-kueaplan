@@ -42,7 +42,8 @@
                                             base.has_privilege(Privilege::ManageEntries),
                                             true,
                                             Some(**date),
-                                            MainEntryLinkMode::None)|safe }}
+                                            Some(*room.id),
+                                            MainEntryLinkMode::ByRoomContext)|safe }}
                 {% endfor %}
             </tbody>
         </table>

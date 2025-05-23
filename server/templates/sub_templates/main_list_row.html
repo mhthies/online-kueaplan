@@ -64,11 +64,16 @@
                 <i class="bi bi-clock-fill" aria-hidden="true"></i> Verschoben
                 {% if !row.merged_times.contains((&entry.begin, &entry.end)) %}
                     auf
+                    {% let link = url_for_current_entry()? %}
+                    {% if let Some(link_url) = link %}
+                        <a href="{{ link_url }}" class="moved-entry-link">
+                    {% endif %}
                     {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
                         {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
                     {% else %}
                         {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
                     {% endif %}
+                    {% if link.is_some() %}</a>{% endif %}
                 {% endif %}
                 {% if row.rooms_differ_from_entry() %}
                     {% if !row.entry.room_ids.is_empty() %}
@@ -79,13 +84,6 @@
                     {% else %}
                         zu undefiniertem Ort
                     {% endif %}
-                {% endif %}
-                {% if main_entry_link_mode != crate::web::ui::sub_templates::main_list_row::MainEntryLinkMode::None %}
-                    <a href="{{ url_for_entry(entry, *main_entry_link_mode)? }}"
-                       title="Link zum neuen Zeitpunkt"
-                       class="d-print-none">
-                        <i class="bi bi-link" aria-hidden="true"></i>
-                    </a>
                 {% endif %}
             </div>
         {% endif %}

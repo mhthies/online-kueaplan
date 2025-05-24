@@ -22,11 +22,13 @@
                                     "Übersicht",
                                     crate::data_store::auth_token::Privilege::ShowConfigArea,
                                     crate::web::ui::base_template::ConfigNavButton::Overview) %}
+                    {#
                     {% call navlink("#",
                                     "sliders",
                                     "Basis-Konfiguration",
                                     crate::data_store::auth_token::Privilege::EditEventDetails,
                                     crate::web::ui::base_template::ConfigNavButton::EventConfig) %}
+                    #}
                     {% call navlink(base.url_for_event_endpoint("manage_categories")?,
                                     "grid",
                                     "KüA-Kategorien",
@@ -37,6 +39,7 @@
                                     "Orte",
                                     crate::data_store::auth_token::Privilege::ManageRooms,
                                     crate::web::ui::base_template::ConfigNavButton::Rooms) %}
+                    {#
                     {% call navlink("#",
                                     "key",
                                     "Passphrasen",
@@ -47,6 +50,7 @@
                                     "Druckvorlagen",
                                     crate::data_store::auth_token::Privilege::ShowConfigArea,
                                     crate::web::ui::base_template::ConfigNavButton::PrintTemplates) %}
+                    #}
                 </ul>
             </nav>
         </div>

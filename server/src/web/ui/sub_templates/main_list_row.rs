@@ -153,6 +153,7 @@ pub struct MainListRow<'a> {
         &'a chrono::DateTime<chrono::Utc>,
         &'a chrono::DateTime<chrono::Utc>,
     )>,
+    pub is_first_row_of_next_calendar_date: bool,
 }
 
 impl<'a> MainListRow<'a> {
@@ -165,6 +166,7 @@ impl<'a> MainListRow<'a> {
             previous_dates: vec![],
             merged_rooms: entry.room_ids.iter().collect(),
             merged_times: vec![(&entry.entry.begin, &entry.entry.end)],
+            is_first_row_of_next_calendar_date: false,
         }
     }
 
@@ -181,6 +183,7 @@ impl<'a> MainListRow<'a> {
                 &previous_date.previous_date.begin,
                 &previous_date.previous_date.end,
             )],
+            is_first_row_of_next_calendar_date: false,
         }
     }
 
@@ -203,6 +206,7 @@ impl<'a> MainListRow<'a> {
                 self.merged_rooms.push(room);
             }
         }
+        self.is_first_row_of_next_calendar_date |= other.is_first_row_of_next_calendar_date;
     }
 
     /// Check if this row represents an entry taking place.

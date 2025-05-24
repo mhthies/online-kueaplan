@@ -5,7 +5,7 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::main_list_row::MainListRow;
-use crate::web::ui::time_calculation::get_effective_date;
+use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
@@ -303,4 +303,39 @@ pub fn group_rows_by_date<'a>(
         result.push((current_date, block_entries));
     }
     result
+}
+
+/// Set the `is_first_row_of_next_calendar_date` flag on the first row in the list which starts
+/// after the given context date (in calendar days)
+pub fn mark_first_row_of_next_calendar_date(
+    rows: &mut Vec<MainListRow>,
+    date_context: chrono::NaiveDate,
+) {
+    for row in rows.iter_mut() {
+        if row.sort_time.date_naive() > date_context {
+            row.is_first_row_of_next_calendar_date = true;
+            break;
+        }
+    }
+}
+
+/// Set the `is_first_row_of_next_calendar_date` flag on the first rows which starts
+/// on the calendar day after its effective date, for each effective date.
+///
+/// The list must be already be sorted by [MainListRow::sort_time].
+pub fn mark_first_row_of_next_calendar_date_per_effective_date(rows: &mut Vec<MainListRow>) {
+    let mut current_effective_date = None;
+    let mut found_first_row_of_current_date = false;
+    for row in rows.iter_mut() {
+        if Some(get_effective_date(&row.sort_time)) != current_effective_date {
+            found_first_row_of_current_date = false;
+            current_effective_date = Some(get_effective_date(&row.sort_time));
+        }
+        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > get_effective_date(&row.sort_time)
+            && !found_first_row_of_current_date
+        {
+            row.is_first_row_of_next_calendar_date = true;
+            found_first_row_of_current_date = true;
+        }
+    }
 }

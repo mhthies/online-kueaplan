@@ -8,7 +8,9 @@ use crate::web::ui::sub_templates::main_list_row::{
 };
 use crate::web::ui::time_calculation::TIME_ZONE;
 use crate::web::ui::util;
-use crate::web::ui::util::group_rows_by_date;
+use crate::web::ui::util::{
+    group_rows_by_date, mark_first_row_of_next_calendar_date_per_effective_date,
+};
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
@@ -50,7 +52,8 @@ async fn main_list_by_room(
         .next()
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", room.title);
-    let rows = generate_filtered_merged_list_entries(&entries, &room.id);
+    let mut rows = generate_filtered_merged_list_entries(&entries, &room.id);
+    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows);
     let tmpl = MainListByRoomTemplate {
         base: BaseTemplateContext {
             request: &req,

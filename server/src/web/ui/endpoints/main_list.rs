@@ -10,6 +10,7 @@ use crate::web::ui::time_calculation::{
     timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY, TIME_BLOCKS, TIME_ZONE,
 };
 use crate::web::ui::util;
+use crate::web::ui::util::mark_first_row_of_next_calendar_date;
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
@@ -48,7 +49,8 @@ async fn main_list(
     .await??;
 
     let title = date.format("%d.%m.").to_string();
-    let rows = generate_filtered_merged_list_entries(&entries, date);
+    let mut rows = generate_filtered_merged_list_entries(&entries, date);
+    mark_first_row_of_next_calendar_date(&mut rows, date);
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,

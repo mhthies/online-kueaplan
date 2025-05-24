@@ -53,7 +53,19 @@
     .kuealist td.kuea-time .comment {
         font-size: inherit;
     }
-
+    .kuealist tr.next-calendar-date-marker {
+        box-shadow: none;
+        border-style: none;
+        border-top-style: solid;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .kuealist tr.next-calendar-date-marker td {
+        background: var(--bs-body-bg);
+        width: auto;
+        display: inline-block;
+        margin-top: -1.25em;
+    }
 }
 
 /* KüA list aside buttons */

@@ -8,6 +8,7 @@ use crate::web::ui::sub_templates::main_list_row::{
 };
 use crate::web::ui::time_calculation::TIME_ZONE;
 use crate::web::ui::util;
+use crate::web::ui::util::mark_first_row_of_next_calendar_date_per_effective_date;
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
@@ -48,7 +49,8 @@ async fn main_list_by_category(
         .next()
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", category.title);
-    let rows = util::generate_merged_list_rows_per_date(&entries);
+    let mut rows = util::generate_merged_list_rows_per_date(&entries);
+    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows);
     let tmpl = MainListByCategoryTemplate {
         base: BaseTemplateContext {
             request: &req,

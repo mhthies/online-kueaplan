@@ -23,6 +23,16 @@
     {% if !show_begin_date && !show_end_date %}</span>{% endif %}
 {% endmacro -%}
 
+{% if row.is_first_row_of_next_calendar_date %}
+    <tr class="next-calendar-date-marker">
+        <td></td>
+        <td class="text-secondary text-nowrap">
+            <i class="bi bi-calendar-event-fill" aria-hidden="true" title="Kalenderdatum"></i>
+            {{ row.entry.entry.begin.format("%d.%m.") }} 0:00
+        </td>
+        <td colspan="2"></td>
+    </tr>
+{% endif %}
 
 {% let entry = row.entry.entry %}
 <tr class="{{ css_class_for_tr(row) }}">

@@ -107,11 +107,13 @@
 {% endblock %}
 {% block scripts %}
 <script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script src="{{ base.url_for_static("edit_entry_form.js")? }}"></script>
 <script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script>
     new TomSelect("#roomsInput", {
         options: {{ room_entries()|json|safe }}
     });
     protectChanges(document.getElementById("edit_entry_form"));
+    initializeEditEntryForm({{ Self::effective_begin_of_day_milliseconds() }});
 </script>
 {% endblock %}

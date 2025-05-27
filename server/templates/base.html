@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>KüA-Plan – {{base.page_title}}</title>
+    <script src="{{ base.url_for_static("theme-switch.js")? }}"></script>
     <link rel="stylesheet" href="{{ base.url_for_static("bootstrap/css/bootstrap.min.css")? }}">
     <link rel="stylesheet" href="{{ base.url_for_static("bootstrap-icons/bootstrap-icons.min.css")? }}">
     {% block stylesheets %}
@@ -148,6 +149,5 @@
 {% endif %}
 {% block scripts %}
 {% endblock %}
-<script src="{{ base.url_for_static("main.js")? }}"></script>
 </body>
 </html>

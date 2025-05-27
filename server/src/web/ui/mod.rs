@@ -1,5 +1,6 @@
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::middleware::from_fn;
+use actix_web::web::PathConfig;
 use actix_web::{get, web, HttpResponse, Responder};
 use error::AppError;
 use error_page::error_page_middleware;
@@ -63,6 +64,14 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_room::delete_room_form)
         .service(endpoints::delete_room::delete_room)
         .default_service(web::to(not_found_handler))
+        .app_data(
+            web::QueryConfig::default()
+                .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),
+        )
+        .app_data(
+            PathConfig::default()
+                .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),
+        )
 }
 
 #[derive(Embed)]

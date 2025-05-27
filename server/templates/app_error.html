@@ -6,6 +6,8 @@
         Diese Seite existiert nicht.
     {% when AppError::EntityNotFound %}
         Die Entität existiert nicht.
+    {% when AppError::InvalidData(_) %}
+        Die in der Anfrage übertragenen Daten sind ungültig.
     {% when AppError::PermissionDenied { required_privilege, .. } %}
         Zugriff verweigert: Für diese Seite ist eine Authentifizierung als
         {{ super::util::privilege_access_roles_names(required_privilege) | join(" oder ")}}
@@ -37,6 +39,16 @@
         <p>
             Wenn du das für einen Programmfehler hältst, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
             ({{admin_name}} &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
+        </p>
+    {% when AppError::InvalidData(message) %}
+        <p>
+            Vielleicht hilft dir die folgende Fehlerbeschreibung, um die URL oder die Daten zu korrigieren und es erneut zu versuchen:
+            <i>{{message}}</i>
+        </p>
+        <p>
+            Wenn du über einen internen Link innerhalb des Online-KüA-Plans hierher gelangt bist, melde dich bitte mit den folgenden Informationen beim Admin dieser Seite
+            ({{admin_name}}
+            &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
         </p>
     {% when AppError::PermissionDenied { required_privilege, event_id, session_error } %}
         {% if *required_privilege == Privilege::ShowKueaPlan %}

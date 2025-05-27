@@ -18,6 +18,7 @@ use std::fmt::{Display, Formatter};
 pub enum AppError {
     PageNotFound,
     EntityNotFound,
+    InvalidData(String),
     PermissionDenied {
         required_privilege: Privilege,
         event_id: EventId,
@@ -120,6 +121,7 @@ impl Display for AppError {
                 write!(f, "Concurrent database transaction conflict. Please retry.")
             }
             AppError::EntityNotFound => write!(f, "Entity not found"),
+            AppError::InvalidData(e) => write!(f, "Invalid request data: {}", e),
             AppError::PermissionDenied {
                 required_privilege,
                 event_id: _,
@@ -159,6 +161,7 @@ impl ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match self {
             AppError::PageNotFound | AppError::EntityNotFound => StatusCode::NOT_FOUND,
+            AppError::InvalidData(_) => StatusCode::UNPROCESSABLE_ENTITY,
             AppError::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             AppError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
             AppError::ConcurrentEditConflict => StatusCode::CONFLICT,

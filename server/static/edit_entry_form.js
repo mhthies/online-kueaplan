@@ -1,7 +1,14 @@
-function initializeEditEntryForm(effectiveBeginOfDayMilliseconds) {
+function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurrentEntriesApiEndpoint, entryId) {
     const daySelect = document.getElementById("daySelect");
     const beginInput = document.getElementById("beginInput");
     const durationInput = document.getElementById("durationInput");
+    const roomsInput = document.getElementById("roomsInput");
+
+    const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
+        rooms,
+        concurrentEntriesApiEndpoint,
+        entryId
+    );
 
     daySelect.addEventListener("input", () => {
         const naiveBeginDate = getNaiveSelectedDate();
@@ -9,6 +16,7 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds) {
         const durationMilliseconds = getDurationMilliseconds();
         updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
         updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        concurrentEntriesFetcher.scheduleFetching();
     });
     beginInput.addEventListener("input", () => {
         const naiveBeginDate = getNaiveSelectedDate();
@@ -16,12 +24,17 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds) {
         const durationMilliseconds = getDurationMilliseconds();
         updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
         updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        concurrentEntriesFetcher.scheduleFetching();
     });
     durationInput.addEventListener("input", () => {
         const naiveBeginDate = getNaiveSelectedDate();
         const naiveBeginTime = getNaiveBeginTime();
         const durationMilliseconds = getDurationMilliseconds();
         updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        concurrentEntriesFetcher.scheduleFetching();
+    });
+    roomsInput.addEventListener("input", () => {
+        concurrentEntriesFetcher.scheduleFetching();
     });
 
     const naiveBeginDate = getNaiveSelectedDate();
@@ -29,6 +42,7 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds) {
     const durationMilliseconds = getDurationMilliseconds();
     updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
     updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+    concurrentEntriesFetcher.doFetch();
 }
 
 function updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime) {
@@ -165,4 +179,159 @@ function formatTime(date) {
     return date.getUTCHours().toString().padStart(2, "0")
         + ":" + (date.getUTCMinutes()).toString().padStart(2, "0")
         + (date.getUTCSeconds() ? ":" + (date.getUTCSeconds()).toString().padStart(2, "0") : "");
+}
+
+function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId) {
+    const SCHEDULE_TIMEOUT_MILLISECONDS = 300;
+    const overlay = document.getElementById("concurrentEntriesOverlay");
+    const spinner = document.getElementById("concurrentEntriesSpinner");
+    const errorBox = document.getElementById("concurrentEntriesError");
+    const resultsList = document.getElementById("concurrentEntriesList");
+    const daySelect = document.getElementById("daySelect");
+    const beginInput = document.getElementById("beginInput");
+    const durationInput = document.getElementById("durationInput");
+    const roomsInput = document.getElementById("roomsInput");
+    const roomsMap = new Map(rooms.map((r) => [r.value, r.text]));
+
+    let timeoutId = null;
+    let abortController = null;
+
+    this.doFetch = function() {
+        activateSpinner();
+        getConcurrentEntriesFromApi()
+            .then((data) => {
+                if (data === undefined) {
+                    return;
+                }
+                console.debug("Retrieved concurrent entries: ", data);
+                displayResult(data);
+            });
+    }
+
+    async function getConcurrentEntriesFromApi() {
+        const queryParameters = new URLSearchParams({
+            effective_day: daySelect.value,
+            begin_time: beginInput.value,
+            duration: durationInput.value,
+            rooms: roomsInput.value,
+        });
+        if (entryId !== null) {
+            queryParameters.append("current_entry_id", entryId);
+        }
+        if (abortController !== null) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+        return window.fetch(apiEndpoint + "?" + queryParameters.toString(),
+            {
+                "signal": abortController.signal
+            })
+            .catch((err) => {
+                if (e instanceof DOMException && e.name === "AbortError") {
+                    console.log("Running fetch has been aborted");
+                    return;
+                }
+                displayError(err.message);
+                console.error("Failed to fetch concurrent entries: ", err);
+            })
+            .then(async (response) => {
+                if (response.status === 422) {
+                    displayError("Ungültige Eingabedaten");
+                    console.warn("Failed to fetch concurrent entries: HTTP 422: " + await response.text());
+                    return;
+                } else if (!response.ok) {
+                    displayError("Server-seitiger Fehler (HTTP " + response.status + ")");
+                    console.warn("Failed to fetch concurrent entries: HTTP " + response.status + ": " + await response.text());
+                    return;
+                }
+                return response.json();
+            });
+    }
+
+    function activateSpinner() {
+        errorBox.classList.add("d-none");
+        spinner.classList.remove("d-none");
+        overlay.classList.remove("d-none");
+    }
+
+    function displayResult(sortedEntries) {
+        const selectedRooms = roomsInput.value.split(",");
+        while(resultsList.firstChild) {
+            resultsList.removeChild(resultsList.lastChild);
+        }
+        if (sortedEntries.length > 0) {
+            for (const entry of sortedEntries) {
+                resultsList.appendChild(generateResultRow(entry, selectedRooms));
+            }
+        } else {
+            let infoRow = document.createElement("li");
+            infoRow.classList.add("list-group-item", "text-info", "text-center");
+            infoRow.innerText = "— Keine parallelen Einträge —";
+            resultsList.appendChild(infoRow);
+        }
+        overlay.classList.add("d-none");
+    }
+
+    function generateResultRow(entry, selectedRooms) {
+        let row = document.createElement("li");
+        row.classList.add("list-group-item");
+        let title = document.createElement("div");
+        if (entry.is_exclusive) {
+            let icon = document.createElement("i");
+            icon.classList.add("bi", "bi-exclamation-diamond", "text-danger");
+            icon.title = "Achtung: exklusiv";
+            title.appendChild(icon);
+            title.appendChild(document.createTextNode(" "));
+        } else if (entry.has_room_conflict) {
+            let icon = document.createElement("i");
+            icon.classList.add("bi", "bi-exclamation-diamond", "text-warning");
+            icon.title = "Achtung: Raum-Konflikt";
+            title.appendChild(icon);
+            title.appendChild(document.createTextNode(" "));
+        }
+        title.appendChild(document.createTextNode(entry.title));
+        if (entry.is_exclusive) {
+            title.appendChild(document.createTextNode(" "));
+            let marker = document.createElement("span");
+            marker.classList.add("text-danger", "fw-semibold");
+            marker.innerText = "(exklusiv)";
+            title.appendChild(marker);
+        }
+        row.appendChild(title);
+        let roomInfo = document.createElement("small");
+        roomInfo.classList.add("float-end");
+        let firstRoom = true;
+        for (const room of entry.rooms) {
+            const isConflict = selectedRooms.includes(room);
+            if (!firstRoom) {
+                roomInfo.appendChild(document.createTextNode(", "));
+            }
+            let roomName = roomsMap.has(room) ? roomsMap.get(room) : "???";
+            let roomSpan = document.createElement("span");
+            if (isConflict) {
+                roomSpan.classList.add("text-warning", "fw-semibold");
+            }
+            roomSpan.innerText = roomName;
+            roomInfo.appendChild(roomSpan);
+            firstRoom = false;
+        }
+        row.appendChild(roomInfo);
+        let timeInfo = document.createElement("small");
+        timeInfo.innerText = entry.begin + " – " + entry.end;
+        row.appendChild(timeInfo);
+        return row;
+    }
+
+    function displayError(error) {
+        spinner.classList.add("d-none");
+        errorBox.getElementsByClassName("error-message")[0].innerText = error;
+        errorBox.classList.remove("d-none");
+    }
+
+    this.scheduleFetching = function () {
+        if (!timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(this.doFetch, SCHEDULE_TIMEOUT_MILLISECONDS);
+    }
 }

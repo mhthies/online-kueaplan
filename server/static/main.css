@@ -78,3 +78,25 @@ tr.category-row>* {
     --bs-list-group-active-color: var(--category-bg-dark);
     --bs-list-group-active-bg: var(--category-text-dark);
 }
+
+/* loader-overlay component */
+.loader-overlay {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(var(--bs-body-bg-rgb),.8);
+    backdrop-filter: blur(4px);
+}
+.card>:last-child>.loader-overlay {
+    border-radius: 0 0 var(--bs-card-border-radius) var(--bs-card-border-radius);
+}
+
+/* Fix for border-radius of .overflow-y-auto in card */
+.card>:last-child>.overflow-y-auto, .card>:last-child.overflow-y-auto {
+    border-radius: 0 0 var(--bs-card-border-radius) var(--bs-card-border-radius);
+}

@@ -34,11 +34,26 @@
     <div class="mb-3">
         {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus", None)|safe }}
     </div>
-    <div class="row g-3 mb-3">
+    <div class="row g-3">
         <div class="col-md-6">
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem?", InputConfiguration::default())|safe }}
             </div>
+            <div class="mb-3">
+                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))|safe }}
+            </div>
+            <div class="mb-3">
+                {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))|safe }}
+            </div>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
             <div class="row g-3">
                 <div class="col-sm-4">
                     {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
@@ -49,26 +64,35 @@
                 <div class="col-6 col-sm-4">
                     {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build())|safe }}
                 </div>
-                <div class="mb-3">
-                    {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
             </div>
             <div class="mb-3">
-                {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))|safe }}
-            </div>
-            <div class="mb-3">
-                {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))|safe }}
+                {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
             </div>
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
             </div>
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-info mb-3">
+                <div class="card-header border-info">Parallele Einträge</div>
+                <div class="position-relative">
+                    <div class="overflow-y-auto" style="height: 280px; max-height: 65vh;">
+                        <ul class="list-group list-group-flush" id="concurrentEntriesList">
+                        </ul>
+                    </div>
+                    <div class="loader-overlay" id="concurrentEntriesOverlay">
+                        <div class="spinner-border" role="status" id="concurrentEntriesSpinner">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="text-danger text-center d-none" id="concurrentEntriesError">
+                            <strong>Konnte parallele Einträge nicht laden</strong><br>
+                            <span class="error-message"></span>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -110,10 +134,17 @@
 <script src="{{ base.url_for_static("edit_entry_form.js")? }}"></script>
 <script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script>
+    const rooms = {{ room_entries()|json|safe }};
+    const entryId = {% if let Some(entry_id) = entry_id %}{{entry_id.to_string()|json|safe}}{% else %}null{%endif%};
     new TomSelect("#roomsInput", {
-        options: {{ room_entries()|json|safe }}
+        options: rooms
     });
     protectChanges(document.getElementById("edit_entry_form"));
-    initializeEditEntryForm({{ Self::effective_begin_of_day_milliseconds() }});
+    initializeEditEntryForm(
+        {{ Self::effective_begin_of_day_milliseconds() }},
+        rooms,
+        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
+        entryId
+    );
 </script>
 {% endblock %}

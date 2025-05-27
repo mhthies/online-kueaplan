@@ -15,3 +15,4 @@ pub mod manage_categories;
 pub mod manage_rooms;
 pub mod previous_dates;
 pub mod rooms_list;
+pub mod ui_api;

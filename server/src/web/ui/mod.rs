@@ -26,6 +26,7 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
             .wrap(from_fn(flash_middleware))
             .wrap(from_fn(error_page_middleware)),
     );
+    cfg.service(get_ui_api_service());
 }
 
 fn get_ui_service() -> actix_web::Scope {
@@ -64,6 +65,19 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_room::delete_room_form)
         .service(endpoints::delete_room::delete_room)
         .default_service(web::to(not_found_handler))
+        .app_data(
+            web::QueryConfig::default()
+                .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),
+        )
+        .app_data(
+            PathConfig::default()
+                .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),
+        )
+}
+
+fn get_ui_api_service() -> actix_web::Scope {
+    web::scope("/ui-api")
+        .service(endpoints::ui_api::concurrent_entries)
         .app_data(
             web::QueryConfig::default()
                 .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),

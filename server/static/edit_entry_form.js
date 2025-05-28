@@ -275,6 +275,9 @@ function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId) {
     function generateResultRow(entry, selectedRooms) {
         let row = document.createElement("li");
         row.classList.add("list-group-item");
+        if (entry.is_room_reservation) {
+            row.classList.add("fst-italic");
+        }
         let title = document.createElement("div");
         if (entry.is_exclusive) {
             let icon = document.createElement("i");

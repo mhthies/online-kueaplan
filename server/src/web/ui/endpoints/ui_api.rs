@@ -33,12 +33,22 @@ async fn concurrent_entries(
     })
     .await??;
 
-    let result: Vec<_> = entries
+    let mut entries_and_room_conflict_flag: Vec<_> = entries
         .into_iter()
-        .filter(|e| !e.entry.is_cancelled)
-        .filter(|e| Some(e.entry.id) != query.current_entry_id)
         .map(|e| {
             let has_room_conflict = e.room_ids.iter().any(|r| query.rooms.contains(r));
+            (e, has_room_conflict)
+        })
+        .collect();
+
+    entries_and_room_conflict_flag
+        .sort_by_key(|(e, room_conflict)| (!e.entry.is_exclusive, !room_conflict));
+
+    let result: Vec<_> = entries_and_room_conflict_flag
+        .into_iter()
+        .filter(|(e, _)| !e.entry.is_cancelled)
+        .filter(|(e, _)| Some(e.entry.id) != query.current_entry_id)
+        .map(|(e, has_room_conflict)| {
             let begin = e.entry.begin.with_timezone(&TIME_ZONE).naive_local();
             let end = e.entry.end.with_timezone(&TIME_ZONE).naive_local();
             let show_begin_date = begin.date() < query.effective_day;
@@ -50,6 +60,7 @@ async fn concurrent_entries(
                 "end": if show_end_date {end.format("%d.%m. %H:%M").to_string()} else {end.format("%H:%M").to_string()},
                 "rooms": e.room_ids,
                 "has_room_conflict": has_room_conflict,
+                "is_room_reservation": e.entry.is_room_reservation,
                 "is_exclusive": e.entry.is_exclusive,
             })
         })

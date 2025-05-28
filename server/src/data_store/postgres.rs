@@ -1,6 +1,6 @@
 use super::{
-    models, schema, CategoryId, EntryFilter, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade,
-    RoomId, StoreError,
+    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId, EventId,
+    KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
@@ -107,7 +107,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
                 .filter(not(deleted))
-                .filter(filter_to_sql(filter))
+                .filter(entry_filter_to_sql(filter))
                 .order_by((begin.asc(), end.asc()))
                 .select(models::Entry::as_select())
                 .load::<models::Entry>(connection)?;
@@ -544,6 +544,82 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
+    fn get_announcements(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+        filter: Option<AnnouncementFilter>,
+    ) -> Result<Vec<models::FullAnnouncement>, StoreError> {
+        use diesel::dsl::not;
+        use schema::announcements::dsl::*;
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
+
+        self.connection.transaction(|connection| {
+            let the_announcements = announcements
+                .filter(event_id.eq(the_event_id))
+                .filter(not(deleted))
+                .filter(if let Some(filter) = filter {
+                    announcement_filter_to_sql(filter)
+                } else {
+                    Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"))
+                })
+                .order_by(sort_key)
+                .select(models::Announcement::as_select())
+                .load::<models::Announcement>(connection)?;
+
+            let the_announcement_categories =
+                models::AnnouncementCategoryMapping::belonging_to(&the_announcements)
+                    .inner_join(schema::categories::table)
+                    .filter(not(schema::categories::deleted))
+                    .select(models::AnnouncementCategoryMapping::as_select())
+                    .load::<models::AnnouncementCategoryMapping>(connection)?
+                    .grouped_by(&the_announcements);
+
+            let the_announcement_rooms =
+                models::AnnouncementRoomMapping::belonging_to(&the_announcements)
+                    .inner_join(schema::rooms::table)
+                    .filter(not(schema::rooms::deleted))
+                    .select(models::AnnouncementRoomMapping::as_select())
+                    .load::<models::AnnouncementRoomMapping>(connection)?
+                    .grouped_by(&the_announcements);
+
+            Ok(the_announcements
+                .into_iter()
+                .zip(the_announcement_categories)
+                .zip(the_announcement_rooms)
+                .map(
+                    |((announcement, announcement_categories), announcement_rooms)| {
+                        models::FullAnnouncement {
+                            announcement,
+                            category_ids: announcement_categories
+                                .into_iter()
+                                .map(|e| e.category_id)
+                                .collect(),
+                            room_ids: announcement_rooms.into_iter().map(|e| e.room_id).collect(),
+                        }
+                    },
+                )
+                .collect())
+        })
+    }
+
+    fn create_or_update_announcement(
+        &mut self,
+        auth_token: &AuthToken,
+        announcement: models::NewAnnouncement,
+    ) -> Result<bool, StoreError> {
+        todo!()
+    }
+
+    fn delete_announcement(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        announcement_id: AnnouncementId,
+    ) -> Result<(), StoreError> {
+        todo!()
+    }
+
     fn authenticate_with_passphrase(
         &mut self,
         the_event_id: i32,
@@ -721,7 +797,7 @@ fn replace_room_with_other_rooms(
 type BoxedBoolExpression<'a, Table> =
     Box<dyn BoxableExpression<Table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool> + 'a>;
 
-fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::entries::table> {
+fn entry_filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::entries::table> {
     use diesel::dsl::{exists, not};
     use schema::entries::dsl::*;
 
@@ -788,4 +864,40 @@ fn filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::ent
         expression = Box::new(expression.as_expression().and(category.eq_any(categories)));
     }
     expression
+}
+
+fn announcement_filter_to_sql<'a>(
+    filter: AnnouncementFilter,
+) -> BoxedBoolExpression<'a, schema::announcements::table> {
+    use diesel::dsl::exists;
+    use schema::announcements::dsl::*;
+
+    match filter {
+        AnnouncementFilter::ForDate(date) => Box::new(
+            show_with_days.and(
+                begin_date
+                    .is_null()
+                    .or(begin_date.le(date).assume_not_null())
+                    .and(end_date.is_null().or(end_date.ge(date).assume_not_null())),
+            ),
+        ),
+        AnnouncementFilter::ForCategory(category_id) => Box::new(
+            show_with_categories.and(
+                show_with_all_categories.or(exists(
+                    schema::announcement_categories::dsl::announcement_categories
+                        .filter(schema::announcement_categories::announcement_id.eq(id))
+                        .filter(schema::announcement_categories::category_id.eq(category_id)),
+                )),
+            ),
+        ),
+        AnnouncementFilter::ForRoom(room_id) => Box::new(
+            show_with_categories.and(
+                show_with_all_categories.or(exists(
+                    schema::announcement_rooms::dsl::announcement_rooms
+                        .filter(schema::announcement_rooms::announcement_id.eq(id))
+                        .filter(schema::announcement_rooms::room_id.eq(room_id)),
+                )),
+            ),
+        ),
+    }
 }

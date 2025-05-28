@@ -1,6 +1,39 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    announcement_categories (announcement_id, category_id) {
+        announcement_id -> Uuid,
+        category_id -> Uuid,
+    }
+}
+
+diesel::table! {
+    announcement_rooms (announcement_id, room_id) {
+        announcement_id -> Uuid,
+        room_id -> Uuid,
+    }
+}
+
+diesel::table! {
+    announcements (id) {
+        id -> Uuid,
+        event_id -> Int4,
+        announcement_type -> Int4,
+        text -> Varchar,
+        show_with_days -> Bool,
+        begin_date -> Nullable<Date>,
+        end_date -> Nullable<Date>,
+        show_with_categories -> Bool,
+        show_with_all_categories -> Bool,
+        show_with_rooms -> Bool,
+        show_with_all_rooms -> Bool,
+        sort_key -> Int4,
+        deleted -> Bool,
+        last_updated -> Timestamptz,
+    }
+}
+
+diesel::table! {
     categories (id) {
         id -> Uuid,
         title -> Varchar,
@@ -90,6 +123,11 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(announcement_categories -> announcements (announcement_id));
+diesel::joinable!(announcement_categories -> categories (category_id));
+diesel::joinable!(announcement_rooms -> announcements (announcement_id));
+diesel::joinable!(announcement_rooms -> rooms (room_id));
+diesel::joinable!(announcements -> events (event_id));
 diesel::joinable!(categories -> events (event_id));
 diesel::joinable!(entries -> categories (category));
 diesel::joinable!(entries -> events (event_id));
@@ -102,6 +140,9 @@ diesel::joinable!(previous_dates -> entries (entry_id));
 diesel::joinable!(rooms -> events (event_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    announcement_categories,
+    announcement_rooms,
+    announcements,
     categories,
     entries,
     entry_rooms,

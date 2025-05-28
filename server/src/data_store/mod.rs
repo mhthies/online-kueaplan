@@ -41,6 +41,7 @@ pub type EventId = i32;
 pub type EntryId = uuid::Uuid;
 pub type RoomId = uuid::Uuid;
 pub type CategoryId = uuid::Uuid;
+pub type AnnouncementId = uuid::Uuid;
 pub type PassphraseId = i32;
 
 pub trait KueaPlanStoreFacade {
@@ -157,6 +158,32 @@ pub trait KueaPlanStoreFacade {
         event_id: EventId,
         category_id: CategoryId,
         replacement_category: Option<CategoryId>,
+    ) -> Result<(), StoreError>;
+
+    fn get_announcements(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        filter: Option<AnnouncementFilter>,
+    ) -> Result<Vec<models::FullAnnouncement>, StoreError>;
+    /// Create a new announcement or update the existing announcement with the same id.
+    ///
+    /// # return value
+    /// - `Ok(true)` if the announcement has been created, successfully
+    /// - `Ok(false)` if an existing announcement has been updated, successfully
+    /// - `Err(StoreError::ConflictEntityExists)` if the announcement exists but could not be
+    ///   updated (assigned to another event or deleted already)
+    /// - `Err(_)` if something different went wrong, as usual
+    fn create_or_update_announcement(
+        &mut self,
+        auth_token: &AuthToken,
+        announcement: models::NewAnnouncement,
+    ) -> Result<bool, StoreError>;
+    fn delete_announcement(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        announcement_id: AnnouncementId,
     ) -> Result<(), StoreError>;
 
     /// Try to authenticate a client as a new access role for the given event, using the given
@@ -302,6 +329,12 @@ impl EntryFilterBuilder {
     pub fn build(self) -> EntryFilter {
         self.result
     }
+}
+
+pub enum AnnouncementFilter {
+    ForDate(chrono::NaiveDate),
+    ForCategory(CategoryId),
+    ForRoom(RoomId),
 }
 
 pub trait KuaPlanStore: Send + Sync {

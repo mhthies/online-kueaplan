@@ -1,7 +1,9 @@
 use crate::data_store::EntryId;
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
+use diesel::deserialize::FromSql;
 use diesel::prelude::*;
+use diesel::{AsExpression, FromSqlRow};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Queryable, Selectable)]
@@ -172,6 +174,96 @@ pub struct NewCategory {
     pub event_id: i32,
     pub is_official: bool,
     pub sort_key: i32,
+}
+
+#[derive(Clone, Queryable, Identifiable, Selectable)]
+#[diesel(table_name=super::schema::announcements)]
+pub struct Announcement {
+    pub id: Uuid,
+    pub event_id: i32,
+    pub announcement_type: AnnouncementType,
+    pub text: String,
+    pub show_with_days: bool,
+    pub begin_date: Option<NaiveDate>,
+    pub end_date: Option<NaiveDate>,
+    pub show_with_categories: bool,
+    pub show_with_all_categories: bool,
+    pub show_with_rooms: bool,
+    pub show_with_all_rooms: bool,
+    pub last_updated: DateTime<Utc>,
+}
+
+#[derive(Clone)]
+pub struct FullAnnouncement {
+    pub announcement: Announcement,
+    pub category_ids: Vec<Uuid>,
+    pub room_ids: Vec<Uuid>,
+}
+
+#[derive(Clone, Insertable, AsChangeset, Identifiable)]
+#[diesel(table_name=super::schema::announcements)]
+pub struct NewAnnouncement {
+    pub id: Uuid,
+    pub event_id: i32,
+    pub announcement_type: AnnouncementType,
+    pub text: String,
+    pub show_with_days: bool,
+    pub begin_date: NaiveDate,
+    pub end_date: NaiveDate,
+    pub show_with_categories: bool,
+    pub show_with_all_categories: bool,
+    pub show_with_rooms: bool,
+    pub show_with_all_rooms: bool,
+}
+
+#[derive(Clone)]
+pub struct FullNewAnnouncement {
+    pub announcement: NewAnnouncement,
+    pub category_ids: Vec<Uuid>,
+    pub room_ids: Vec<Uuid>,
+}
+
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+#[repr(i32)]
+pub enum AnnouncementType {
+    INFO = 0,
+    WARNING = 1,
+}
+
+impl<DB> FromSql<diesel::sql_types::Integer, DB> for AnnouncementType
+where
+    DB: diesel::backend::Backend,
+    i32: FromSql<diesel::sql_types::Integer, DB>,
+{
+    fn from_sql(
+        bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        match i32::from_sql(bytes)? {
+            0 => Ok(AnnouncementType::INFO),
+            1 => Ok(AnnouncementType::WARNING),
+            x => Err(format!("Unrecognized AnnouncementType {}", x).into()),
+        }
+    }
+}
+
+// Introduce type for Announcement-Category and Announcement-Room associations, to simplify grouped
+// retrieval of category_ids/room_ids of an Announcement, using Diesel's .grouped_by() method.
+#[derive(Queryable, Associations, Identifiable, Selectable)]
+#[diesel(table_name=super::schema::announcement_categories)]
+#[diesel(primary_key(announcement_id, category_id))]
+#[diesel(belongs_to(Announcement))]
+pub struct AnnouncementCategoryMapping {
+    pub announcement_id: Uuid,
+    pub category_id: Uuid,
+}
+#[derive(Queryable, Associations, Identifiable, Selectable)]
+#[diesel(table_name=super::schema::announcement_rooms)]
+#[diesel(primary_key(announcement_id, room_id))]
+#[diesel(belongs_to(Announcement))]
+pub struct AnnouncementRoomMapping {
+    pub announcement_id: Uuid,
+    pub room_id: Uuid,
 }
 
 impl From<kueaplan_api_types::Event> for NewEvent {

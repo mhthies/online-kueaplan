@@ -659,7 +659,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
             let is_updated = upsert_result[0];
 
-            // rooms
+            update_announcement_categories(
+                announcement.announcement.id,
+                &announcement.category_ids,
+                connection,
+            )?;
             update_announcement_rooms(
                 announcement.announcement.id,
                 &announcement.room_ids,
@@ -810,6 +814,32 @@ fn update_previous_date_rooms(
                     (
                         previous_date_id.eq(the_previous_date_id),
                         room_id.eq(the_room_id),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)
+        .map(|_| ())
+}
+
+fn update_announcement_categories(
+    the_announcement_id: Uuid,
+    category_ids: &Vec<Uuid>,
+    connection: &mut PooledConnection<ConnectionManager<PgConnection>>,
+) -> Result<(), diesel::result::Error> {
+    use schema::announcement_categories::dsl::*;
+
+    diesel::delete(announcement_categories.filter(announcement_id.eq(the_announcement_id)))
+        .execute(connection)?;
+
+    diesel::insert_into(announcement_categories)
+        .values(
+            category_ids
+                .iter()
+                .map(|the_room_id| {
+                    (
+                        announcement_id.eq(the_announcement_id),
+                        category_id.eq(the_room_id),
                     )
                 })
                 .collect::<Vec<_>>(),

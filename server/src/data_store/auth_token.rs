@@ -204,6 +204,7 @@ pub enum Privilege {
     EditEventDetails,
     ManagePassphrases,
     CreateEvents,
+    ManageAnnouncements,
 }
 
 impl Privilege {
@@ -223,6 +224,7 @@ impl Privilege {
             Privilege::EditEventDetails => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManagePassphrases => &[AccessRole::Admin],
             Privilege::CreateEvents => &[AccessRole::Admin],
+            Privilege::ManageAnnouncements => &[AccessRole::Orga, AccessRole::Admin],
         }
     }
 }

@@ -616,7 +616,10 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         // The event_id of the existing entry is ensured to be the same (see below), so the
         // privilege level check holds for the existing and the new entry.
-        auth_token.check_privilege(announcement.announcement.event_id, Privilege::ManageEntries)?;
+        auth_token.check_privilege(
+            announcement.announcement.event_id,
+            Privilege::ManageAnnouncements,
+        )?;
 
         self.connection.transaction(|connection| {
             if let Some(expected_last_update) = expected_last_update {
@@ -676,7 +679,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::announcements::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
-        auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
+        auth_token.check_privilege(the_event_id, Privilege::ManageAnnouncements)?;
 
         self.connection.transaction(|connection| {
             let count = diesel::update(announcements)

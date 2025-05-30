@@ -10,6 +10,9 @@ use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::r2d2::ConnectionManager;
+use r2d2::PooledConnection;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct PgDataStore {
@@ -435,7 +438,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             Ok(())
         })
     }
-
     fn get_categories(
         &mut self,
         auth_token: &AuthToken,
@@ -606,18 +608,88 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     fn create_or_update_announcement(
         &mut self,
         auth_token: &AuthToken,
-        announcement: models::NewAnnouncement,
+        announcement: models::FullNewAnnouncement,
+        expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError> {
-        todo!()
+        use diesel::dsl::not;
+        use schema::announcements::dsl::*;
+
+        // The event_id of the existing entry is ensured to be the same (see below), so the
+        // privilege level check holds for the existing and the new entry.
+        auth_token.check_privilege(announcement.announcement.event_id, Privilege::ManageEntries)?;
+
+        self.connection.transaction(|connection| {
+            if let Some(expected_last_update) = expected_last_update {
+                let actual_last_update = announcements
+                    .filter(id.eq(announcement.announcement.id))
+                    .filter(not(deleted))
+                    .select(last_updated)
+                    .first::<chrono::DateTime<chrono::Utc>>(connection)?;
+                if expected_last_update != actual_last_update {
+                    return Err(StoreError::ConcurrentEditConflict);
+                }
+            }
+
+            // announcement
+            let upsert_result = {
+                // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
+                // `.on_onflict().do_update()`, does not implement the QueryDsl trait for
+                // `.filter()`, but only the `FilterDsl` trait directly. We import it locally here,
+                // to not make the .filter() method in the following query ambiguous.
+                use diesel::query_dsl::methods::FilterDsl;
+
+                diesel::insert_into(announcements)
+                    .values(&announcement.announcement)
+                    .on_conflict(id)
+                    .do_update()
+                    // By limiting the search of existing entries to the same event, we prevent
+                    // changes of the event id (i.e. "moving" entries between events), which would
+                    // be a security loophole
+                    .set(&announcement.announcement)
+                    .filter(event_id.eq(announcement.announcement.event_id))
+                    .filter(not(deleted))
+                    .returning(sql_upsert_is_updated())
+                    .load::<bool>(connection)?
+            };
+            if upsert_result.is_empty() {
+                return Err(StoreError::ConflictEntityExists);
+            }
+            let is_updated = upsert_result[0];
+
+            // rooms
+            update_announcement_rooms(
+                announcement.announcement.id,
+                &announcement.room_ids,
+                connection,
+            )?;
+
+            Ok(!is_updated)
+        })
     }
 
     fn delete_announcement(
         &mut self,
         auth_token: &AuthToken,
-        event_id: EventId,
+        the_event_id: EventId,
         announcement_id: AnnouncementId,
     ) -> Result<(), StoreError> {
-        todo!()
+        use schema::announcements::dsl::*;
+
+        // The correctness of the given event_id is checked in the DELETE statement below
+        auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
+
+        self.connection.transaction(|connection| {
+            let count = diesel::update(announcements)
+                .filter(id.eq(announcement_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            }
+
+            Ok(())
+        })
     }
 
     fn authenticate_with_passphrase(
@@ -734,6 +806,32 @@ fn update_previous_date_rooms(
                 .map(|the_room_id| {
                     (
                         previous_date_id.eq(the_previous_date_id),
+                        room_id.eq(the_room_id),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)
+        .map(|_| ())
+}
+
+fn update_announcement_rooms(
+    the_announcement_id: Uuid,
+    room_ids: &Vec<Uuid>,
+    connection: &mut PooledConnection<ConnectionManager<PgConnection>>,
+) -> Result<(), diesel::result::Error> {
+    use schema::announcement_rooms::dsl::*;
+
+    diesel::delete(announcement_rooms.filter(announcement_id.eq(the_announcement_id)))
+        .execute(connection)?;
+
+    diesel::insert_into(announcement_rooms)
+        .values(
+            room_ids
+                .iter()
+                .map(|the_room_id| {
+                    (
+                        announcement_id.eq(the_announcement_id),
                         room_id.eq(the_room_id),
                     )
                 })

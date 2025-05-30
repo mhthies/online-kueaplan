@@ -1,8 +1,11 @@
 use crate::data_store::EntryId;
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
+use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::prelude::*;
+use diesel::query_builder::bind_collector::RawBytesBindCollector;
+use diesel::serialize::ToSql;
 use diesel::{AsExpression, FromSqlRow};
 use uuid::Uuid;
 
@@ -229,6 +232,20 @@ pub struct FullNewAnnouncement {
 pub enum AnnouncementType {
     INFO = 0,
     WARNING = 1,
+}
+
+impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
+where
+    DB: Backend,
+    i32: ToSql<diesel::sql_types::Integer, DB>,
+    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        (*self as i32).to_sql(&mut out.reborrow())
+    }
 }
 
 impl<DB> FromSql<diesel::sql_types::Integer, DB> for AnnouncementType

@@ -177,7 +177,8 @@ pub trait KueaPlanStoreFacade {
     fn create_or_update_announcement(
         &mut self,
         auth_token: &AuthToken,
-        announcement: models::NewAnnouncement,
+        announcement: models::FullNewAnnouncement,
+        expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError>;
     fn delete_announcement(
         &mut self,

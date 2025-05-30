@@ -1,6 +1,6 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, FullEntry};
+use crate::data_store::models::{AnnouncementType, Event, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
@@ -153,6 +153,29 @@ pub fn weekday_short(date: &chrono::NaiveDate) -> &'static str {
         Weekday::Fri => "Fr",
         Weekday::Sat => "Sa",
         Weekday::Sun => "So",
+    }
+}
+
+/// Selects the Bootstrap Icons icon name for the given [AnnouncementType]
+pub fn announcement_type_icon(announcement_type: AnnouncementType) -> &'static str {
+    match announcement_type {
+        AnnouncementType::INFO => "info-circle-fill",
+        AnnouncementType::WARNING => "exclamation-triangle",
+    }
+}
+
+/// Returns the name of the given [AnnouncementType]
+pub fn announcement_type_name(announcement_type: AnnouncementType) -> &'static str {
+    match announcement_type {
+        AnnouncementType::INFO => "Information",
+        AnnouncementType::WARNING => "Warnung",
+    }
+}
+/// Returns the Bootstrap color name for the given [AnnouncementType]
+pub fn announcement_type_color(announcement_type: AnnouncementType) -> &'static str {
+    match announcement_type {
+        AnnouncementType::INFO => "info",
+        AnnouncementType::WARNING => "warning",
     }
 }
 

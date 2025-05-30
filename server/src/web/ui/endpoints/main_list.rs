@@ -123,7 +123,7 @@ impl<'a> MainListTemplate<'a> {
     }
 }
 
-/// Filters for the rinja template
+/// Filters for the askama template
 mod filters {
     pub use crate::web::ui::askama_filters::markdown;
     use crate::web::ui::util;

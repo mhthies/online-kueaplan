@@ -133,4 +133,5 @@ pub enum ConfigNavButton {
     Rooms,
     Passphrases,
     PrintTemplates,
+    Announcements,
 }

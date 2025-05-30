@@ -100,3 +100,8 @@ tr.category-row>* {
 .card>:last-child>.overflow-y-auto, .card>:last-child.overflow-y-auto {
     border-radius: 0 0 var(--bs-card-border-radius) var(--bs-card-border-radius);
 }
+
+/* Helper classes */
+.inner-margin-fix>:last-child{
+    margin-bottom: 0;
+}

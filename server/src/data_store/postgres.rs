@@ -1022,8 +1022,8 @@ fn announcement_filter_to_sql<'a>(
             ),
         ),
         AnnouncementFilter::ForRoom(room_id) => Box::new(
-            show_with_categories.and(
-                show_with_all_categories.or(exists(
+            show_with_rooms.and(
+                show_with_all_rooms.or(exists(
                     schema::announcement_rooms::dsl::announcement_rooms
                         .filter(schema::announcement_rooms::announcement_id.eq(id))
                         .filter(schema::announcement_rooms::room_id.eq(room_id)),

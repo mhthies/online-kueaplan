@@ -193,6 +193,7 @@ pub struct Announcement {
     pub show_with_all_categories: bool,
     pub show_with_rooms: bool,
     pub show_with_all_rooms: bool,
+    pub sort_key: i32,
     pub last_updated: DateTime<Utc>,
 }
 
@@ -211,12 +212,13 @@ pub struct NewAnnouncement {
     pub announcement_type: AnnouncementType,
     pub text: String,
     pub show_with_days: bool,
-    pub begin_date: NaiveDate,
-    pub end_date: NaiveDate,
+    pub begin_date: Option<NaiveDate>,
+    pub end_date: Option<NaiveDate>,
     pub show_with_categories: bool,
     pub show_with_all_categories: bool,
     pub show_with_rooms: bool,
     pub show_with_all_rooms: bool,
+    pub sort_key: i32,
 }
 
 #[derive(Clone)]
@@ -234,6 +236,20 @@ pub enum AnnouncementType {
     WARNING = 1,
 }
 
+impl AnnouncementType {
+    pub fn as_int(&self) -> i32 {
+        *self as i32
+    }
+
+    pub fn from_int(value: i32) -> Result<Self, ()> {
+        match value {
+            0 => Ok(AnnouncementType::INFO),
+            1 => Ok(AnnouncementType::WARNING),
+            _ => Err(()),
+        }
+    }
+}
+
 impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
 where
     DB: Backend,
@@ -244,7 +260,7 @@ where
         &'b self,
         out: &mut diesel::serialize::Output<'b, '_, DB>,
     ) -> diesel::serialize::Result {
-        (*self as i32).to_sql(&mut out.reborrow())
+        self.as_int().to_sql(&mut out.reborrow())
     }
 }
 
@@ -256,11 +272,8 @@ where
     fn from_sql(
         bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
-        match i32::from_sql(bytes)? {
-            0 => Ok(AnnouncementType::INFO),
-            1 => Ok(AnnouncementType::WARNING),
-            x => Err(format!("Unrecognized AnnouncementType {}", x).into()),
-        }
+        let x = i32::from_sql(bytes)?;
+        Self::from_int(x).map_err(|_| format!("Unrecognized AnnouncementType {}", x).into())
     }
 }
 

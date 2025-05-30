@@ -409,7 +409,7 @@ impl<'a> EditEntryFormTemplate<'a> {
     }
     fn day_entries(&self) -> Vec<SelectEntry<'static>> {
         event_days(self.event)
-            .iter()
+            .into_iter()
             .map(|date| SelectEntry {
                 value: Cow::Owned(date.to_string()),
                 text: Cow::Owned(date.format("%d.%m.").to_string()),

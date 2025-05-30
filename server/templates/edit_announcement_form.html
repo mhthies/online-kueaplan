@@ -1,0 +1,104 @@
+{% extends "base_config.html" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ base.url_for_static("tom-select.bootstrap5.min.css")? }}">
+{% endblock %}
+
+{% block config_content %}
+<h1>
+    {{ base.page_title }}
+</h1>
+
+{# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
+   the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
+   To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}
+<form method="post" action="{{post_url()?}}" autocomplete="off"  id="edit_announcement_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+    <div class="row mb-3">
+        <div class="col-sm-6">
+            {{ SelectTemplate::new(form_data.announcement_type, "announcement_type", &Self::announcement_type_entries(), "Typ", InputConfiguration::default())|safe }}
+        </div>
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel", InputConfiguration::builder().input_type(InputType::Integer).build())|safe }}
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ FormFieldTemplate::new(
+            form_data.text,
+            "text",
+            "Text",
+            InputConfiguration::builder()
+                .input_type(InputType::Textarea)
+                .info("Unterstützt Markdown")
+                .build())|safe }}
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    {{ CheckboxTemplate::new(form_data.show_with_days,
+                    "show_with_days",
+                    "Anzeigen im KüA-Plan nach Datum",
+                    None)|safe }}
+                </div>
+                <div class="card-body row">
+                    <div class="col-sm-6">
+                        {{ SelectTemplate::new(form_data.begin_date, "begin_date", &begin_date_entries(), "ab Datum", InputConfiguration::default())|safe }}
+                    </div>
+                    <div class="col-sm-6">
+                        {{ SelectTemplate::new(form_data.end_date, "end_date", &end_date_entries(), "bis Datum", InputConfiguration::default())|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    {{ CheckboxTemplate::new(form_data.show_with_categories,
+                    "show_with_categories",
+                    "Anzeigen im KüA-Plan nach Kategorie",
+                    None)|safe }}
+                </div>
+                <div class="card-body">
+                    {{ FormFieldTemplate::new(form_data.categories, "categories", "Kategorien", InputConfiguration::builder().info("leer = alle Kategorien").build())|safe }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    {{ CheckboxTemplate::new(form_data.show_with_rooms,
+                    "show_with_rooms",
+                    "Anzeigen im KüA-Plan nach Raum",
+                    None)|safe }}
+                </div>
+                <div class="card-body">
+                    {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Räume", InputConfiguration::builder().info("leer = alle Räume").build())|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if is_new_announcement %}
+        {{ HiddenInputTemplate::new(form_data.announcement_id, "announcement_id")?|safe }}
+    {% endif %}
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+    <a href="{{ base.url_for_event_endpoint("manage_announcements")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
+<script>
+    const rooms = {{ room_entries()|json|safe }};
+    const categories = {{ category_entries()|json|safe }};
+    protectChanges(document.getElementById("edit_announcement_form"));
+    new TomSelect("#roomsInput", {
+        options: rooms
+    });
+    new TomSelect("#categoriesInput", {
+        options: categories
+    });
+</script>
+{% endblock %}

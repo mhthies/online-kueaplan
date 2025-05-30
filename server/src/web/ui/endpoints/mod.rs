@@ -4,6 +4,7 @@ pub mod config_index;
 pub mod delete_category;
 pub mod delete_entry;
 pub mod delete_room;
+pub mod edit_announcement;
 pub mod edit_category;
 pub mod edit_entry;
 pub mod edit_room;

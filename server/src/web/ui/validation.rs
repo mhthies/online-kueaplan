@@ -3,6 +3,7 @@ use crate::web::ui::form_values::{
 };
 use chrono::Timelike;
 use lazy_static::lazy_static;
+use std::fmt::Debug;
 use uuid::Uuid;
 
 #[derive(Default, Debug)]
@@ -120,7 +121,7 @@ impl ValidateFromFormInput for TimeOfDay {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct IsoDate(pub chrono::NaiveDate);
 
 impl IsoDate {
@@ -300,6 +301,28 @@ impl ValidateFromFormInput for Int32 {
                 .parse::<i32>()
                 .map_err(|e| format!("Keine Zahl: {}", e))?,
         ))
+    }
+}
+
+#[derive(Debug, PartialEq, Default)]
+pub struct MaybeEmpty<T>(pub Option<T>);
+
+impl<T: FormValueRepresentation + PartialEq> FormValueRepresentation for MaybeEmpty<T> {
+    fn into_form_value_string(self) -> String {
+        match self.0 {
+            None => "".to_owned(),
+            Some(t) => t.into_form_value_string(),
+        }
+    }
+}
+
+impl<T: ValidateFromFormInput + PartialEq> ValidateFromFormInput for MaybeEmpty<T> {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        if value.is_empty() {
+            Ok(Self(None))
+        } else {
+            Ok(Self(Some(T::from_form_value(value)?)))
+        }
     }
 }
 

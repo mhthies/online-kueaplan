@@ -3,7 +3,7 @@
 {% block config_content %}
     <h1>Bekanntmachungen</h1>
     <div class="mb-3">
-        <a href="#" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Bekanntmachung hinzufügen</a>
+        <a href="{{ base.url_for_event_endpoint("new_announcement_form")? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Bekanntmachung hinzufügen</a>
     </div>
     <table class="table align-middle">
         <thead>
@@ -64,7 +64,7 @@
                         {% endif %}
                     </td>
                     <td class="text-nowrap">
-                        <a href="#"
+                        <a href="{{ base.request.url_for("edit_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil" aria-label="Bearbeiten"></i>
                         </a>

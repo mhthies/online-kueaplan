@@ -68,7 +68,7 @@ impl FormValueRepresentation for Uuid {
 }
 impl ValidateFromFormInput for Uuid {
     fn from_form_value(value: &str) -> Result<Self, String> {
-        Ok(Uuid::parse_str(value).map_err(|e| e.to_string())?)
+        Uuid::parse_str(value).map_err(|e| e.to_string())
     }
 }
 

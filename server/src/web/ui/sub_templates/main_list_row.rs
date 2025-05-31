@@ -197,12 +197,12 @@ impl<'a> MainListRow<'a> {
         self.includes_entry |= other.includes_entry;
         self.previous_dates.extend_from_slice(&other.previous_dates);
         for times in other.merged_times.iter() {
-            if !self.merged_times.contains(&times) {
+            if !self.merged_times.contains(times) {
                 self.merged_times.push(*times);
             }
         }
         for room in other.merged_rooms.iter() {
-            if !self.merged_rooms.contains(&room) {
+            if !self.merged_rooms.contains(room) {
                 self.merged_rooms.push(room);
             }
         }

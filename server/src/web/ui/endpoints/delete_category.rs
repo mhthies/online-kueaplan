@@ -44,8 +44,7 @@ pub async fn delete_category_form(
 
     let category = categories
         .iter()
-        .filter(|c| c.id == category_id)
-        .next()
+        .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
     if categories.len() == 1 {
         return Err(AppError::InvalidData(
@@ -140,7 +139,7 @@ pub async fn delete_category(
             req.add_flash_message(notification);
             return Ok(Either::Left(
                 Redirect::to(
-                    req.url_for("manage_categories", &[&event_id.to_string()])?
+                    req.url_for("manage_categories", [&event_id.to_string()])?
                         .to_string(),
                 )
                 .see_other(),
@@ -167,7 +166,7 @@ pub async fn delete_category(
                 req.add_flash_message(notification);
             }
             _ => {
-                return Err(e.into());
+                return Err(e);
             }
         },
     };
@@ -189,8 +188,7 @@ pub async fn delete_category(
 
     let category = categories
         .iter()
-        .filter(|c| c.id == category_id)
-        .next()
+        .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
     category_entries.sort_by_key(|e| e.entry.begin);
 
@@ -233,13 +231,13 @@ struct DeleteCategoryFormTemplate<'a> {
     form_data: &'a DeleteCategoryFormData,
 }
 
-impl<'a> DeleteCategoryFormTemplate<'a> {
+impl DeleteCategoryFormTemplate<'_> {
     fn other_category_entries(&self) -> Vec<SelectEntry> {
         self.all_categories
             .iter()
             .filter(|c| c.id != self.category.id)
             .map(|c| SelectEntry {
-                value: Cow::Owned(c.id.to_string().into()),
+                value: Cow::Owned(c.id.to_string()),
                 text: Cow::Borrowed(c.title.as_str()),
             })
             .collect()
@@ -248,7 +246,7 @@ impl<'a> DeleteCategoryFormTemplate<'a> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         Ok(self.base.request.url_for(
             "delete_category",
-            &[&self.event_id.to_string(), &self.category.id.to_string()],
+            [&self.event_id.to_string(), &self.category.id.to_string()],
         )?)
     }
 

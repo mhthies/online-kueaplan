@@ -42,8 +42,7 @@ pub async fn edit_room_form(
 
     let room = rooms
         .into_iter()
-        .filter(|c| c.id == room_id)
-        .next()
+        .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
     let form_data: RoomFormData = room.into();
 
@@ -94,8 +93,7 @@ pub async fn edit_room(
     .await??;
     let _old_room = rooms
         .into_iter()
-        .filter(|c| c.id == room_id)
-        .next()
+        .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
 
     let mut form_data = data.into_inner();
@@ -312,7 +310,7 @@ struct EditRoomFormTemplate<'a> {
     is_new_room: bool,
 }
 
-impl<'a> EditRoomFormTemplate<'a> {
+impl EditRoomFormTemplate<'_> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         if self.is_new_room {
             Ok(self

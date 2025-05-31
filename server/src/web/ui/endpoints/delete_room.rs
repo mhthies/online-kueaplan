@@ -46,8 +46,7 @@ pub async fn delete_room_form(
 
     let room = rooms
         .iter()
-        .filter(|c| c.id == room_id)
-        .next()
+        .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
 
     let form_data = DeleteRoomFormData::default();
@@ -138,7 +137,7 @@ pub async fn delete_room(
             req.add_flash_message(notification);
             return Ok(Either::Left(
                 Redirect::to(
-                    req.url_for("manage_rooms", &[&event_id.to_string()])?
+                    req.url_for("manage_rooms", [&event_id.to_string()])?
                         .to_string(),
                 )
                 .see_other(),
@@ -165,7 +164,7 @@ pub async fn delete_room(
                 req.add_flash_message(notification);
             }
             _ => {
-                return Err(e.into());
+                return Err(e);
             }
         },
     };
@@ -187,8 +186,7 @@ pub async fn delete_room(
 
     let room = rooms
         .iter()
-        .filter(|c| c.id == room_id)
-        .next()
+        .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
     room_entries.sort_by_key(|e| e.entry.begin);
 
@@ -249,13 +247,13 @@ struct DeleteRoomFormTemplate<'a> {
     form_data: &'a DeleteRoomFormData,
 }
 
-impl<'a> DeleteRoomFormTemplate<'a> {
+impl DeleteRoomFormTemplate<'_> {
     fn other_room_entries(&self) -> Vec<SelectEntry> {
         self.all_rooms
             .iter()
             .filter(|c| c.id != self.room.id)
             .map(|c| SelectEntry {
-                value: Cow::Owned(c.id.to_string().into()),
+                value: Cow::Owned(c.id.to_string()),
                 text: Cow::Borrowed(c.title.as_str()),
             })
             .collect()
@@ -264,7 +262,7 @@ impl<'a> DeleteRoomFormTemplate<'a> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         Ok(self.base.request.url_for(
             "delete_room",
-            &[&self.event_id.to_string(), &self.room.id.to_string()],
+            [&self.event_id.to_string(), &self.room.id.to_string()],
         )?)
     }
 

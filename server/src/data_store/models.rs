@@ -255,8 +255,8 @@ impl From<FullAnnouncement> for FullNewAnnouncement {
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]
 pub enum AnnouncementType {
-    INFO = 0,
-    WARNING = 1,
+    Info = 0,
+    Warning = 1,
 }
 
 impl TryFrom<i32> for AnnouncementType {
@@ -264,8 +264,8 @@ impl TryFrom<i32> for AnnouncementType {
 
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(AnnouncementType::INFO),
-            1 => Ok(AnnouncementType::WARNING),
+            0 => Ok(AnnouncementType::Info),
+            1 => Ok(AnnouncementType::Warning),
             _ => Err(()),
         }
     }
@@ -286,7 +286,7 @@ where
         &'b self,
         out: &mut diesel::serialize::Output<'b, '_, DB>,
     ) -> diesel::serialize::Result {
-        let value: i32 = self.clone().into();
+        let value: i32 = (*self).into();
         value.to_sql(&mut out.reborrow())
     }
 }

@@ -56,8 +56,7 @@ async fn previous_dates_overview(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         entry_category: categories
             .iter()
-            .filter(|c| c.id == entry.entry.category)
-            .next()
+            .find(|c| c.id == entry.entry.category)
             .ok_or(AppError::InternalError(format!(
                 "Entry's category {} does not exist.",
                 entry.entry.category
@@ -116,7 +115,7 @@ async fn delete_previous_date(
                 keep_open: true,
                 button: None,
             },
-            _ => return Err(e.into()),
+            _ => return Err(e),
         },
     };
     req.add_flash_message(notification);

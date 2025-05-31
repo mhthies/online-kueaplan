@@ -87,17 +87,17 @@ where
     D: Deserializer<'de>,
 {
     let str_sequence = String::deserialize(deserializer)?;
-    Ok(str_sequence
+    str_sequence
         .split(',')
         .filter(|s| !s.is_empty())
-        .map(|item| uuid::Uuid::parse_str(item))
+        .map(uuid::Uuid::parse_str)
         .collect::<Result<Vec<uuid::Uuid>, uuid::Error>>()
         .map_err(|_| {
             D::Error::invalid_value(
                 Unexpected::Str(&str_sequence),
                 &"A comma-separated list of uuids",
             )
-        })?)
+        })
 }
 
 fn deserialize_nice_duration_hours<'de, D>(deserializer: D) -> Result<chrono::Duration, D::Error>

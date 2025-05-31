@@ -52,8 +52,7 @@ async fn main_list_by_category(
 
     let category = categories
         .iter()
-        .filter(|c| c.id == category_id)
-        .next()
+        .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", category.title);
     let mut rows = util::generate_merged_list_rows_per_date(&entries);
@@ -95,7 +94,7 @@ struct MainListByCategoryTemplate<'a> {
     announcements: &'a Vec<FullAnnouncement>,
 }
 
-impl<'a> MainListByCategoryTemplate<'a> {
+impl MainListByCategoryTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&TIME_ZONE).naive_local()
     }

@@ -240,7 +240,7 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
     fn from_form_value(value: &str) -> Result<Self, String> {
         Ok(SimpleTimestampMicroseconds(
             chrono::DateTime::from_timestamp_micros(
-                i64::from_str_radix(value, 10).map_err(|e| e.to_string())?,
+                value.parse::<i64>().map_err(|e| e.to_string())?,
             )
             .ok_or("Value out of range for chrono::DateTime".to_string())?,
         ))

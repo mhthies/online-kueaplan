@@ -55,8 +55,7 @@ async fn main_list_by_room(
 
     let room = rooms
         .iter()
-        .filter(|c| c.id == room_id)
-        .next()
+        .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", room.title);
     let mut rows = generate_filtered_merged_list_entries(&entries, &room.id);
@@ -100,7 +99,7 @@ struct MainListByRoomTemplate<'a> {
     announcements: &'a Vec<FullAnnouncement>,
 }
 
-impl<'a> MainListByRoomTemplate<'a> {
+impl MainListByRoomTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&TIME_ZONE).naive_local()
     }
@@ -122,7 +121,7 @@ mod filters {
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry in the
 /// current room, sorts them by `begin` and merges consecutive list rows
 fn generate_filtered_merged_list_entries<'a>(
-    entries: &'a Vec<FullEntry>,
+    entries: &'a [FullEntry],
     room_id: &RoomId,
 ) -> Vec<MainListRow<'a>> {
     let mut result = Vec::with_capacity(entries.len());

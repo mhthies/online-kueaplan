@@ -105,7 +105,7 @@ struct MainListTemplate<'a> {
     announcements: &'a Vec<FullAnnouncement>,
 }
 
-impl<'a> MainListTemplate<'a> {
+impl MainListTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp.with_timezone(&TIME_ZONE).naive_local()
     }
@@ -126,7 +126,7 @@ impl<'a> MainListTemplate<'a> {
             ],
         )?;
         result.set_query(Some(&serde_urlencoded::to_string(MainListQueryData {
-            after: Some(after_time.clone()),
+            after: Some(*after_time),
         })?));
         Ok(result)
     }
@@ -166,10 +166,10 @@ fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>
 ///
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry at the
 /// current date, sorts them by `begin` and merges consecutive list rows
-fn generate_filtered_merged_list_entries<'a>(
-    entries: &'a Vec<FullEntry>,
+fn generate_filtered_merged_list_entries(
+    entries: &[FullEntry],
     date: chrono::NaiveDate,
-) -> Vec<MainListRow<'a>> {
+) -> Vec<MainListRow<'_>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
         if effective_date_matches(&entry.entry.begin, &entry.entry.end, date) {

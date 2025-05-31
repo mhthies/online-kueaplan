@@ -43,8 +43,7 @@ pub async fn edit_category_form(
 
     let category = categories
         .into_iter()
-        .filter(|c| c.id == category_id)
-        .next()
+        .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
     let form_data: CategoryFormData = category.into();
 
@@ -95,8 +94,7 @@ pub async fn edit_category(
     .await??;
     let _old_category = categories
         .into_iter()
-        .filter(|c| c.id == category_id)
-        .next()
+        .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
 
     let mut form_data = data.into_inner();
@@ -326,7 +324,7 @@ struct EditCategoryFormTemplate<'a> {
     is_new_category: bool,
 }
 
-impl<'a> EditCategoryFormTemplate<'a> {
+impl EditCategoryFormTemplate<'_> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         if self.is_new_category {
             Ok(self

@@ -57,8 +57,7 @@ async fn delete_entry_form(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         entry_category: categories
             .iter()
-            .filter(|c| c.id == entry.entry.category)
-            .next()
+            .find(|c| c.id == entry.entry.category)
             .ok_or(AppError::InternalError(format!(
                 "Entry's category {} does not exist.",
                 entry.entry.category
@@ -121,7 +120,7 @@ async fn delete_entry(
                 )
                 .see_other())
             }
-            _ => Err(e.into()),
+            _ => Err(e),
         },
     }
 }
@@ -143,7 +142,7 @@ async fn mark_entry_cancelled(
         //   reading + updating entry
         let mut entry = store.get_entry(&auth, entry_id)?;
         let last_updated = entry.entry.last_updated;
-        let entry_begin = entry.entry.begin.clone();
+        let entry_begin = entry.entry.begin;
         entry.entry.is_cancelled = true;
         store.create_or_update_entry(&auth, entry.into(), false, Some(last_updated))?;
         Ok(entry_begin)
@@ -185,7 +184,7 @@ async fn mark_entry_cancelled(
                     keep_open: true,
                     button: None,
                 },
-                _ => return Err(e.into()),
+                _ => return Err(e),
             };
 
             req.add_flash_message(notification);

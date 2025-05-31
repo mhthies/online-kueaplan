@@ -159,23 +159,23 @@ pub fn weekday_short(date: &chrono::NaiveDate) -> &'static str {
 /// Selects the Bootstrap Icons icon name for the given [AnnouncementType]
 pub fn announcement_type_icon(announcement_type: AnnouncementType) -> &'static str {
     match announcement_type {
-        AnnouncementType::INFO => "info-circle-fill",
-        AnnouncementType::WARNING => "exclamation-triangle",
+        AnnouncementType::Info => "info-circle-fill",
+        AnnouncementType::Warning => "exclamation-triangle",
     }
 }
 
 /// Returns the name of the given [AnnouncementType]
 pub fn announcement_type_name(announcement_type: AnnouncementType) -> &'static str {
     match announcement_type {
-        AnnouncementType::INFO => "Information",
-        AnnouncementType::WARNING => "Warnung",
+        AnnouncementType::Info => "Information",
+        AnnouncementType::Warning => "Warnung",
     }
 }
 /// Returns the Bootstrap color name for the given [AnnouncementType]
 pub fn announcement_type_color(announcement_type: AnnouncementType) -> &'static str {
     match announcement_type {
-        AnnouncementType::INFO => "info",
-        AnnouncementType::WARNING => "warning",
+        AnnouncementType::Info => "info",
+        AnnouncementType::Warning => "warning",
     }
 }
 
@@ -278,7 +278,7 @@ pub fn create_edit_form_response(
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry,
 /// sorts them by `begin` and merges consecutive list rows.
 /// This is a simplified version of [main_list::generate_filtered_merged_list_entries].
-pub fn generate_merged_list_rows_per_date<'a>(entries: &'a Vec<FullEntry>) -> Vec<MainListRow<'a>> {
+pub fn generate_merged_list_rows_per_date(entries: &[FullEntry]) -> Vec<MainListRow<'_>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
         result.push(MainListRow::from_entry(entry));
@@ -311,14 +311,14 @@ pub fn group_rows_by_date<'a>(
     if entries.is_empty() {
         return result;
     }
-    let mut current_date = get_effective_date(&entries[0].sort_time);
+    let mut current_date = get_effective_date(entries[0].sort_time);
     for entry in entries {
-        if get_effective_date(&entry.sort_time) != current_date {
+        if get_effective_date(entry.sort_time) != current_date {
             if !block_entries.is_empty() {
                 result.push((current_date, block_entries));
             }
             block_entries = Vec::new();
-            current_date = get_effective_date(&entry.sort_time);
+            current_date = get_effective_date(entry.sort_time);
         }
         block_entries.push(entry);
     }
@@ -350,11 +350,11 @@ pub fn mark_first_row_of_next_calendar_date_per_effective_date(rows: &mut Vec<Ma
     let mut current_effective_date = None;
     let mut found_first_row_of_current_date = false;
     for row in rows.iter_mut() {
-        if Some(get_effective_date(&row.sort_time)) != current_effective_date {
+        if Some(get_effective_date(row.sort_time)) != current_effective_date {
             found_first_row_of_current_date = false;
-            current_effective_date = Some(get_effective_date(&row.sort_time));
+            current_effective_date = Some(get_effective_date(row.sort_time));
         }
-        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > get_effective_date(&row.sort_time)
+        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > get_effective_date(row.sort_time)
             && !found_first_row_of_current_date
         {
             row.is_first_row_of_next_calendar_date = true;

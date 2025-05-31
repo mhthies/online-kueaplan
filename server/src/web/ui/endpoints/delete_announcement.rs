@@ -37,8 +37,7 @@ async fn delete_announcement_form(
 
     let announcement = announcements
         .into_iter()
-        .filter(|a| a.announcement.id == announcement_id)
-        .next()
+        .find(|a| a.announcement.id == announcement_id)
         .ok_or(AppError::EntityNotFound)?;
 
     let tmpl = DeleteAnnouncementTemplate {
@@ -88,7 +87,7 @@ async fn delete_announcement(
             };
             req.add_flash_message(notification);
             Ok(Redirect::to(
-                req.url_for("manage_announcements", &[&event_id.to_string()])?
+                req.url_for("manage_announcements", [&event_id.to_string()])?
                     .to_string(),
             )
             .see_other())
@@ -111,7 +110,7 @@ async fn delete_announcement(
                 )
                 .see_other())
             }
-            _ => Err(e.into()),
+            _ => Err(e),
         },
     }
 }
@@ -134,8 +133,7 @@ async fn disable_announcement(
         let announcements = store.get_announcements(&auth, event_id, None)?;
         let mut announcement = announcements
             .into_iter()
-            .filter(|a| a.announcement.id == announcement_id)
-            .next()
+            .find(|a| a.announcement.id == announcement_id)
             .ok_or(AppError::EntityNotFound)?;
         let last_updated = announcement.announcement.last_updated;
         announcement.announcement.show_with_days = false;
@@ -157,7 +155,7 @@ async fn disable_announcement(
             req.add_flash_message(notification);
 
             Ok(Redirect::to(
-                req.url_for("manage_announcements", &[&event_id.to_string()])?
+                req.url_for("manage_announcements", [&event_id.to_string()])?
                     .to_string(),
             )
             .see_other())
@@ -176,7 +174,7 @@ async fn disable_announcement(
                     keep_open: true,
                     button: None,
                 },
-                _ => return Err(e.into()),
+                _ => return Err(e),
             };
 
             req.add_flash_message(notification);

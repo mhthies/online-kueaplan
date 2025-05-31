@@ -836,7 +836,7 @@ fn update_previous_date_rooms(
 
 fn update_announcement_categories(
     the_announcement_id: Uuid,
-    category_ids: &Vec<Uuid>,
+    category_ids: &[Uuid],
     connection: &mut PooledConnection<ConnectionManager<PgConnection>>,
 ) -> Result<(), diesel::result::Error> {
     use schema::announcement_categories::dsl::*;
@@ -862,7 +862,7 @@ fn update_announcement_categories(
 
 fn update_announcement_rooms(
     the_announcement_id: Uuid,
-    room_ids: &Vec<Uuid>,
+    room_ids: &[Uuid],
     connection: &mut PooledConnection<ConnectionManager<PgConnection>>,
 ) -> Result<(), diesel::result::Error> {
     use schema::announcement_rooms::dsl::*;
@@ -923,8 +923,8 @@ fn replace_room_with_other_rooms(
                 .flat_map(|entry_id| {
                     replace_with_rooms.iter().map(|room_id| {
                         (
-                            entry_rooms::entry_id.eq(entry_id.clone()),
-                            entry_rooms::room_id.eq(room_id.clone()),
+                            entry_rooms::entry_id.eq(*entry_id),
+                            entry_rooms::room_id.eq(*room_id),
                         )
                     })
                 })

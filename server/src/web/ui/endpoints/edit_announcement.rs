@@ -53,8 +53,7 @@ pub async fn edit_announcement_form(
 
     let announcement = announcements
         .into_iter()
-        .filter(|a| a.announcement.id == announcement_id)
-        .next()
+        .find(|a| a.announcement.id == announcement_id)
         .ok_or(AppError::EntityNotFound)?;
     let form_data: AnnouncementFormData = announcement.into();
 
@@ -111,8 +110,7 @@ pub async fn edit_announcement(
         .await??;
     let _old_announcement = announcements
         .into_iter()
-        .filter(|a| a.announcement.id == announcement_id)
-        .next()
+        .find(|a| a.announcement.id == announcement_id)
         .ok_or(AppError::EntityNotFound)?;
 
     let mut form_data = data.into_inner();
@@ -315,7 +313,7 @@ struct AnnouncementTypeValue(AnnouncementType);
 
 impl Default for AnnouncementTypeValue {
     fn default() -> Self {
-        Self(AnnouncementType::INFO)
+        Self(AnnouncementType::Info)
     }
 }
 
@@ -427,16 +425,11 @@ impl From<FullAnnouncement> for AnnouncementFormData {
             text: value.announcement.text.into(),
             show_with_days: value.announcement.show_with_days.into(),
             begin_date: validation::MaybeEmpty(
-                value
-                    .announcement
-                    .begin_date
-                    .map(|v| validation::IsoDate(v)),
+                value.announcement.begin_date.map(validation::IsoDate),
             )
             .into(),
-            end_date: validation::MaybeEmpty(
-                value.announcement.end_date.map(|v| validation::IsoDate(v)),
-            )
-            .into(),
+            end_date: validation::MaybeEmpty(value.announcement.end_date.map(validation::IsoDate))
+                .into(),
             show_with_categories: value.announcement.show_with_categories.into(),
             categories: validation::CommaSeparatedUuidsFromList(value.category_ids).into(),
             show_with_rooms: value.announcement.show_with_rooms.into(),
@@ -486,10 +479,10 @@ impl<'a> EditAnnouncementFormTemplate<'a> {
     }
 
     fn announcement_type_entries() -> Vec<SelectEntry<'static>> {
-        [AnnouncementType::INFO, AnnouncementType::WARNING]
+        [AnnouncementType::Info, AnnouncementType::Warning]
             .iter()
             .map(|t| SelectEntry {
-                value: Cow::Owned(i32::from(t.clone()).to_string()),
+                value: Cow::Owned(i32::from(*t).to_string()),
                 text: Cow::Borrowed(announcement_type_name(*t)),
             })
             .collect()

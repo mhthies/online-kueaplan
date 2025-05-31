@@ -517,7 +517,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 let count = categories
                     .filter(schema::categories::id.eq(replacement_category))
                     .filter(schema::categories::event_id.eq(the_event_id))
-                    .filter(not(schema::rooms::deleted))
+                    .filter(not(schema::categories::deleted))
                     .count()
                     .execute(connection)?;
                 if count == 0 {

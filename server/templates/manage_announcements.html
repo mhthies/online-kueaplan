@@ -68,7 +68,7 @@
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil" aria-label="Bearbeiten"></i>
                         </a>
-                        <a href="#"
+                        <a href="{{ base.request.url_for("delete_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
                            class="btn btn-sm btn-outline-danger">
                             <i class="bi bi-trash" aria-label="Löschen"></i>
                         </a>

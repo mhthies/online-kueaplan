@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod categories_list;
 pub mod config_index;
+pub mod delete_announcement;
 pub mod delete_category;
 pub mod delete_entry;
 pub mod delete_room;

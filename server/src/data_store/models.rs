@@ -228,6 +228,29 @@ pub struct FullNewAnnouncement {
     pub room_ids: Vec<Uuid>,
 }
 
+impl From<FullAnnouncement> for FullNewAnnouncement {
+    fn from(value: FullAnnouncement) -> Self {
+        Self {
+            announcement: NewAnnouncement {
+                id: value.announcement.id,
+                event_id: value.announcement.event_id,
+                announcement_type: value.announcement.announcement_type,
+                text: value.announcement.text,
+                show_with_days: value.announcement.show_with_days,
+                begin_date: value.announcement.begin_date,
+                end_date: value.announcement.end_date,
+                show_with_categories: value.announcement.show_with_categories,
+                show_with_all_categories: value.announcement.show_with_all_categories,
+                show_with_rooms: value.announcement.show_with_rooms,
+                show_with_all_rooms: value.announcement.show_with_all_rooms,
+                sort_key: value.announcement.sort_key,
+            },
+            category_ids: value.category_ids,
+            room_ids: value.room_ids,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]

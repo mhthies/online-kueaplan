@@ -68,7 +68,7 @@ pub async fn edit_announcement_form(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Announcements,
         },
         event_id,
         form_data: &form_data,
@@ -151,7 +151,7 @@ pub async fn edit_announcement(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Announcements,
         },
         event_id,
         form_data: &form_data,
@@ -215,7 +215,7 @@ pub async fn new_announcement_form(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Announcements,
         },
         event_id,
         form_data: &form_data,
@@ -286,7 +286,7 @@ pub async fn new_announcement(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Announcements,
         },
         event_id,
         form_data: &form_data,

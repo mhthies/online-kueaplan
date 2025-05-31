@@ -1,0 +1,43 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+<h1>{{base.page_title}}</h1>
+<div class="card">
+    <h3 class="card-header">Vorschau der Bekanntmachung</h3>
+    <div class="card-body inner-margin-fix">
+        {{ AnnouncementTemplate::new(announcement.announcement)|safe }}
+    </div>
+</div>
+
+<div class="card border-danger mt-3">
+    <div class="card-body">
+        <form class="row align-items-center mb-3" method="post" action="{{ base.request.url_for("delete_announcement", [event.id.to_string(), announcement.announcement.id.to_string()])? }}">
+            <div class="col-md-auto mb-2 mb-md-0">
+                <button type="submit" class="btn btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Löschen</button>
+            </div>
+            <div class="col-md text-secondary">
+                Diese Bekanntmachung vollständig aus dem KüA-Plan löschen.
+                Der Daten bleiben zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, können aber nicht ohne Eingriff eines Admins wiederhergestellt werden.
+            </div>
+        </form>
+        <form class="row align-items-center" method="post" action="{{ base.request.url_for("disable_announcement", [event.id.to_string(), announcement.announcement.id.to_string()])? }}">
+            {% let is_hidden = !announcement.announcement.show_with_days && !announcement.announcement.show_with_categories && !announcement.announcement.show_with_rooms %}
+            <div class="col-md-auto mb-2 mb-md-0">
+                <button type="submit" class="btn btn-primary" {% if is_hidden %}disabled{% endif %}>
+                    <i class="bi bi-eye-slash" aria-hidden="true"></i> Ausblenden
+                </button>
+            </div>
+            <div class="col-md text-secondary">
+                Diese Bekanntmachung auf allen Seiten des KüA-Plans ausblenden.
+                Die Bekanntmachung kann später über das "Bearbeiten"-Formular einfach wieder eingeblendet werden.
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{{ base.url_for_event_endpoint("manage_announcements")? }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</div>
+{% endblock %}

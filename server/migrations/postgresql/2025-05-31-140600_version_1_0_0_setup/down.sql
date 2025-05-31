@@ -1,0 +1,12 @@
+DROP TABLE announcement_rooms;
+DROP TABLE announcement_categories;
+DROP TABLE announcements;
+DROP TABLE event_passphrases;
+DROP TABLE previous_date_rooms;
+DROP TABLE previous_dates;
+DROP TABLE entry_rooms;
+DROP TABLE entries;
+DROP TABLE rooms;
+DROP TABLE categories;
+DROP TABLE events;
+DROP FUNCTION sync_lastmod;

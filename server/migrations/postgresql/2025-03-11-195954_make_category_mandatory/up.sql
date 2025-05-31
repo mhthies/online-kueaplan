@@ -1,2 +1,0 @@
-ALTER TABLE entries
-    ALTER COLUMN category SET NOT NULL;

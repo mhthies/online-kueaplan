@@ -18,13 +18,6 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         response.request().uri()
                     );
                 }
-                AppError::EntityNotFound => {
-                    warn!(
-                        "HTTP {} entity not found at <{}>",
-                        response.response().status(),
-                        response.request().uri()
-                    );
-                }
                 AppError::InvalidData(e) => {
                     warn!(
                         "HTTP {} invalid data at <{}>: {}",
@@ -59,7 +52,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         );
                     }
                 }
-                AppError::ConcurrentEditConflict | AppError::TransactionConflict => {}
+                AppError::EntityNotFound
+                | AppError::ConcurrentEditConflict
+                | AppError::TransactionConflict => {}
                 AppError::DatabaseConnectionError(e) => {
                     error!(
                         "HTTP {} database connection error: {}",
@@ -69,8 +64,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                 }
                 AppError::InternalError(e) => {
                     error!(
-                        "HTTP {} internal server error: {}",
+                        "HTTP {} internal server error at <{}>: {}",
                         response.response().status(),
+                        response.request().uri(),
                         e
                     );
                 }
@@ -133,8 +129,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                 | APIError::ConcurrentEditConflict => {}
                 APIError::InternalError(e) => {
                     error!(
-                        "HTTP {} internal server error: {}",
+                        "HTTP {} internal server error at <{}>: {}",
                         response.response().status(),
+                        response.request().uri(),
                         e
                     );
                 }

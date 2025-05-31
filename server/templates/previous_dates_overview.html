@@ -17,7 +17,7 @@
            EditEntryNavbarActiveLink::PreviousDatesOverview,
        )|safe }}
 
-    <h2>Aktueller Eintrag</h2>
+    <h2 class="fs-4">Aktueller Eintrag</h2>
     <table class="table table-striped kuealist">
         <thead>
         <tr>
@@ -42,13 +42,12 @@
         </tbody>
     </table>
 
-    <h2>
+    <h2 class="fs-4">
         Vorherige Termine
     </h2>
     {% if entry.previous_dates.is_empty() %}
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle" aria-hidden="true"></i>
-            Dieser Eintrag wurde bisher nicht verschoben bzw. die vorherigen Termine wurden nicht gespeichert.
+        <div class="text-info">
+            – Dieser Eintrag wurde bisher nicht verschoben bzw. die vorherigen Termine wurden nicht gespeichert. –
         </div>
     {% else %}
         <table class="table table-striped align-middle">

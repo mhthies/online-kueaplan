@@ -34,12 +34,12 @@
     <div class="mb-3">
         {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus", None)|safe }}
     </div>
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem?", InputConfiguration::default())|safe }}
             </div>
-            <div class="mb-3">
+            <div>
                 {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
             </div>
         </div>
@@ -47,14 +47,14 @@
             <div class="mb-3">
                 {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA"))|safe }}
             </div>
-            <div class="mb-3">
+            <div>
                 {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben."))|safe }}
             </div>
         </div>
     </div>
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
         <div class="col-md-6">
-            <div class="row g-3">
+            <div class="row g-3 mb-3">
                 <div class="col-sm-4">
                     {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
                 </div>
@@ -71,12 +71,12 @@
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
             </div>
-            <div class="mb-3">
+            <div>
                 {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card border-info mb-3">
+            <div class="card border-info">
                 <div class="card-header border-info">Parallele Einträge</div>
                 <div class="position-relative">
                     <div class="overflow-y-auto" style="height: 280px; max-height: 65vh;">

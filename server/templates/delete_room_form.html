@@ -30,8 +30,8 @@
 
 <form method="post" action="{{post_url()?}}" id="delete_room_form">
 
-    <div class="row mb-3">
-        <div class="col-md-6 mb-3 mb-md-0">
+    <div class="row mb-3 g-3">
+        <div class="col-md-6">
             <div class="card mb-3">
                 <div class="card-header">Zu löschender Ort</div>
                 <div class="card-body">
@@ -41,7 +41,7 @@
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.replace_rooms, "replace_rooms", "Einträge in folgende Orte verschieben", InputConfiguration::default())|safe }}
             </div>
-            <div class="mb-3">
+            <div>
                 {{ FormFieldTemplate::new(form_data.add_room_comment, "add_room_comment", "Ergänzender Kommentar zum Ort bei den betroffenen Einträgen", InputConfiguration::default())|safe }}
             </div>
         </div>

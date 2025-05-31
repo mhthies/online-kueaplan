@@ -13,10 +13,10 @@
         <div class="col-sm-6">
             {{ FormFieldTemplate::new(form_data.icon, "icon", "Icon", InputConfiguration::default())|safe }}
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3 col-6">
             {{ FormFieldTemplate::new(form_data.color, "color", "Farbe", InputConfiguration::builder().input_type(InputType::Color).build())|safe }}
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3 col-6">
             {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel", InputConfiguration::builder().input_type(InputType::Integer).build())|safe }}
         </div>
     </div>

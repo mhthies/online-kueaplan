@@ -26,7 +26,7 @@
     {% endif %}
 
     {% for (date, rows) in entry_blocks %}
-        {% if entry_blocks.len() > 1 %}<h3>{{ date|weekday }}, {{ date.format("%d.%m.%Y") }}</h3>{% endif %}
+        <h3 class="mt-4">{{ date|weekday }}, {{ date.format("%d.%m.%Y") }}</h3>
         <table class="table table-striped kuealist">
             <thead>
             <tr>

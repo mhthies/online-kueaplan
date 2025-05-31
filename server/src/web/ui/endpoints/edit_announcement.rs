@@ -321,7 +321,8 @@ impl Default for AnnouncementTypeValue {
 
 impl FormValueRepresentation for AnnouncementTypeValue {
     fn into_form_value_string(self) -> String {
-        self.0.as_int().to_string()
+        let value: i32 = self.0.into();
+        value.to_string()
     }
 }
 impl ValidateFromFormInput for AnnouncementTypeValue {
@@ -329,7 +330,7 @@ impl ValidateFromFormInput for AnnouncementTypeValue {
         let v = value
             .parse::<i32>()
             .map_err(|e| format!("Keine Zahl: {}", e))?;
-        Ok(Self(AnnouncementType::from_int(v).map_err(|_| {
+        Ok(Self(v.try_into().map_err(|_| {
             "Kein gültiger Bekanntmachungs-Typ".to_string()
         })?))
     }
@@ -488,7 +489,7 @@ impl<'a> EditAnnouncementFormTemplate<'a> {
         [AnnouncementType::INFO, AnnouncementType::WARNING]
             .iter()
             .map(|t| SelectEntry {
-                value: Cow::Owned(t.as_int().to_string()),
+                value: Cow::Owned(i32::from(t.clone()).to_string()),
                 text: Cow::Borrowed(announcement_type_name(*t)),
             })
             .collect()

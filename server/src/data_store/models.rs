@@ -236,17 +236,20 @@ pub enum AnnouncementType {
     WARNING = 1,
 }
 
-impl AnnouncementType {
-    pub fn as_int(&self) -> i32 {
-        *self as i32
-    }
+impl TryFrom<i32> for AnnouncementType {
+    type Error = ();
 
-    pub fn from_int(value: i32) -> Result<Self, ()> {
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(AnnouncementType::INFO),
             1 => Ok(AnnouncementType::WARNING),
             _ => Err(()),
         }
+    }
+}
+impl From<AnnouncementType> for i32 {
+    fn from(value: AnnouncementType) -> Self {
+        value as i32
     }
 }
 
@@ -260,7 +263,8 @@ where
         &'b self,
         out: &mut diesel::serialize::Output<'b, '_, DB>,
     ) -> diesel::serialize::Result {
-        self.as_int().to_sql(&mut out.reborrow())
+        let value: i32 = self.clone().into();
+        value.to_sql(&mut out.reborrow())
     }
 }
 
@@ -273,7 +277,8 @@ where
         bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
         let x = i32::from_sql(bytes)?;
-        Self::from_int(x).map_err(|_| format!("Unrecognized AnnouncementType {}", x).into())
+        x.try_into()
+            .map_err(|_| format!("Unrecognized AnnouncementType {}", x).into())
     }
 }
 

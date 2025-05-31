@@ -1,8 +1,9 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullEntry, Room};
-use crate::data_store::EntryFilter;
+use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
+use crate::data_store::{AnnouncementFilter, EntryFilter};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
+use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
@@ -35,18 +36,24 @@ async fn main_list(
     let time_after = query_data.after;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = state.store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((
-            store.get_event(event_id)?,
-            store.get_entries_filtered(&auth, event_id, date_to_filter(date, time_after))?,
-            store.get_rooms(&auth, event_id)?,
-            store.get_categories(&auth, event_id)?,
-            auth,
-        ))
-    })
-    .await??;
+    let (event, entries, rooms, categories, announcements, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((
+                store.get_event(event_id)?,
+                store.get_entries_filtered(&auth, event_id, date_to_filter(date, time_after))?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_categories(&auth, event_id)?,
+                store.get_announcements(
+                    &auth,
+                    event_id,
+                    Some(AnnouncementFilter::ForDate(date)),
+                )?,
+                auth,
+            ))
+        })
+        .await??;
 
     let title = date.format("%d.%m.").to_string();
     let mut rows = generate_filtered_merged_list_entries(&entries, date);
@@ -79,6 +86,7 @@ async fn main_list(
             .filter_map(|b| b.1)
             .filter(|t| *t != EFFECTIVE_BEGIN_OF_DAY)
             .collect(),
+        announcements: &announcements,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -94,6 +102,7 @@ struct MainListTemplate<'a> {
     date: chrono::NaiveDate,
     time_after: Option<chrono::NaiveTime>,
     footer_constrained_link_times: Vec<chrono::NaiveTime>,
+    announcements: &'a Vec<FullAnnouncement>,
 }
 
 impl<'a> MainListTemplate<'a> {

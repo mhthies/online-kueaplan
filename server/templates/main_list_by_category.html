@@ -8,6 +8,10 @@
 
 {% block body %}
 <div class="container mt-3" id="main">
+    {% for announcement in announcements %}
+        {{ AnnouncementTemplate::new(announcement.announcement)|safe }}
+    {% endfor %}
+
     <h1>
         KüA-Plan, Kategorie {{ category.title }}
     </h1>

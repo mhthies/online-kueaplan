@@ -1,8 +1,9 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullEntry, Room};
-use crate::data_store::{EntryFilter, EventId, RoomId};
+use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
+use crate::data_store::{AnnouncementFilter, EntryFilter, EventId, RoomId};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
+use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
@@ -26,25 +27,31 @@ async fn main_list_by_room(
     let (event_id, room_id) = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = state.store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((
-            store.get_event(event_id)?,
-            store.get_entries_filtered(
-                &auth,
-                event_id,
-                EntryFilter::builder()
-                    .in_one_of_these_rooms(vec![room_id])
-                    .include_previous_date_matches()
-                    .build(),
-            )?,
-            store.get_rooms(&auth, event_id)?,
-            store.get_categories(&auth, event_id)?,
-            auth,
-        ))
-    })
-    .await??;
+    let (event, entries, rooms, categories, announcements, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((
+                store.get_event(event_id)?,
+                store.get_entries_filtered(
+                    &auth,
+                    event_id,
+                    EntryFilter::builder()
+                        .in_one_of_these_rooms(vec![room_id])
+                        .include_previous_date_matches()
+                        .build(),
+                )?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_categories(&auth, event_id)?,
+                store.get_announcements(
+                    &auth,
+                    event_id,
+                    Some(AnnouncementFilter::ForRoom(room_id)),
+                )?,
+                auth,
+            ))
+        })
+        .await??;
 
     let room = rooms
         .iter()
@@ -76,6 +83,7 @@ async fn main_list_by_room(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         categories: categories.iter().map(|c| (c.id, c)).collect(),
         room,
+        announcements: &announcements,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -89,6 +97,7 @@ struct MainListByRoomTemplate<'a> {
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     room: &'a Room,
+    announcements: &'a Vec<FullAnnouncement>,
 }
 
 impl<'a> MainListByRoomTemplate<'a> {

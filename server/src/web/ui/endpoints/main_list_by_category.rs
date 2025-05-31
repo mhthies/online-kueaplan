@@ -1,8 +1,9 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullEntry, Room};
-use crate::data_store::{CategoryId, EntryFilter, EventId};
+use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
+use crate::data_store::{AnnouncementFilter, CategoryId, EntryFilter, EventId};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
+use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
@@ -24,24 +25,30 @@ async fn main_list_by_category(
     let (event_id, category_id) = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (event, entries, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = state.store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((
-            store.get_event(event_id)?,
-            store.get_entries_filtered(
-                &auth,
-                event_id,
-                EntryFilter::builder()
-                    .category_is_one_of(vec![category_id])
-                    .build(),
-            )?,
-            store.get_rooms(&auth, event_id)?,
-            store.get_categories(&auth, event_id)?,
-            auth,
-        ))
-    })
-    .await??;
+    let (event, entries, rooms, categories, announcements, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((
+                store.get_event(event_id)?,
+                store.get_entries_filtered(
+                    &auth,
+                    event_id,
+                    EntryFilter::builder()
+                        .category_is_one_of(vec![category_id])
+                        .build(),
+                )?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_categories(&auth, event_id)?,
+                store.get_announcements(
+                    &auth,
+                    event_id,
+                    Some(AnnouncementFilter::ForCategory(category_id)),
+                )?,
+                auth,
+            ))
+        })
+        .await??;
 
     let category = categories
         .iter()
@@ -72,6 +79,7 @@ async fn main_list_by_category(
             .collect(),
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         category,
+        announcements: &announcements,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -84,6 +92,7 @@ struct MainListByCategoryTemplate<'a> {
     entries_with_descriptions: Vec<&'a FullEntry>,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     category: &'a Category,
+    announcements: &'a Vec<FullAnnouncement>,
 }
 
 impl<'a> MainListByCategoryTemplate<'a> {

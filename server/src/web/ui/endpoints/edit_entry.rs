@@ -209,8 +209,10 @@ async fn new_entry_form(
 
     let entry_id = Uuid::now_v7();
     let entry_date = date.unwrap_or_else(|| most_reasonable_date(&event));
-    // TODO set default category
-    let form_data = EntryFormData::for_new_entry(entry_id, entry_date);
+    let category_id = categories.iter().next().ok_or(AppError::InternalError(
+        "Event does not have a single category".to_owned(),
+    ))?;
+    let form_data = EntryFormData::for_new_entry(entry_id, entry_date, category_id.id);
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
@@ -450,10 +452,11 @@ struct EntryFormData {
 }
 
 impl EntryFormData {
-    fn for_new_entry(entry_id: EntryId, date: chrono::NaiveDate) -> Self {
+    fn for_new_entry(entry_id: EntryId, date: chrono::NaiveDate, category_id: Uuid) -> Self {
         Self {
             entry_id: entry_id.into(),
             day: validation::IsoDate(date).into(),
+            category: validation::UuidFromList(category_id).into(),
             ..Self::default()
         }
     }

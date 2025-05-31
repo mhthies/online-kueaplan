@@ -190,7 +190,6 @@ pub async fn delete_room(
         .filter(|c| c.id == room_id)
         .next()
         .ok_or(AppError::EntityNotFound)?;
-    // TODO allow sorting by database
     room_entries.sort_by_key(|e| e.entry.begin);
 
     let tmpl = DeleteRoomFormTemplate {

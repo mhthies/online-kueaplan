@@ -192,7 +192,6 @@ pub async fn delete_category(
         .filter(|c| c.id == category_id)
         .next()
         .ok_or(AppError::EntityNotFound)?;
-    // TODO allow sorting by database
     category_entries.sort_by_key(|e| e.entry.begin);
 
     let tmpl = DeleteCategoryFormTemplate {

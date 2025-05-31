@@ -1,7 +1,8 @@
 use clap::ArgAction;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
-use log::warn;
+use kueaplan_server::cli_error::CliError;
+use log::{error, warn};
 use std::path::PathBuf;
 
 fn main() {
@@ -22,19 +23,27 @@ fn main() {
         warn!("Could not read .env file: {}", dotenv_result.unwrap_err());
     }
 
-    // TODO exit with return code according to error type
-    match args.command {
+    let result = run_main_command(args.command);
+    if let Err(err) = result {
+        error!("{}", err);
+        std::process::exit(err.exit_code());
+    }
+}
+
+fn run_main_command(command: Command) -> Result<(), CliError> {
+    match command {
         Command::LoadData { path } => {
-            kueaplan_server::cli::file_io::load_event_from_file(&path).unwrap()
+            kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
         Command::Serve => {
-            kueaplan_server::cli::database_migration::check_migration_state().unwrap();
-            kueaplan_server::web::serve().unwrap()
+            kueaplan_server::cli::database_migration::check_migration_state()?;
+            kueaplan_server::web::serve()?;
         }
         Command::MigrateDatabase => {
-            kueaplan_server::cli::database_migration::run_migrations().unwrap();
+            kueaplan_server::cli::database_migration::run_migrations()?;
         }
     }
+    Ok(())
 }
 
 /// Here's my app!

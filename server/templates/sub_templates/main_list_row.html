@@ -77,13 +77,13 @@
                     {% let link = url_for_current_entry()? %}
                     {% if let Some(link_url) = link %}
                         <a href="{{ link_url }}" class="moved-entry-link">
-                    {% endif %}
-                    {% if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
-                        {{ to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
-                    {% else %}
-                        {{ to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
-                    {% endif %}
-                    {% if link.is_some() %}</a>{% endif %}
+                    {%- endif %}
+                    {%- if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
+                        {{- to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
+                    {%- else %}
+                        {{- to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr
+                    {%- endif %}
+                    {%- if link.is_some() %}</a>{% endif %}
                 {% endif %}
                 {% if row.rooms_differ_from_entry() %}
                     {% if !row.entry.room_ids.is_empty() %}

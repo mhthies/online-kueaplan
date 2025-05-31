@@ -4,7 +4,10 @@
 /// Most of the comrak GFM extensions are enabled.
 /// In addition, we increase the heading level of all Markdown headings by 3, i.e. h1 becomes h4,
 /// h2 becomes h5 and all additional headings become h6.  
-pub fn markdown(input: &str) -> askama::Result<askama::filters::Safe<String>> {
+pub fn markdown(
+    input: &str,
+    _: &dyn askama::Values,
+) -> askama::Result<askama::filters::Safe<String>> {
     let arena = comrak::Arena::new();
     let options = comrak::ComrakOptions {
         extension: comrak::ExtensionOptions::builder()
@@ -50,7 +53,7 @@ fn markdown_increase_heading_level<'a>(ast_root: &'a comrak::nodes::AstNode<'a>,
 
 /// Shorten a text to the given `length` by replacing any additional characters with an ellipsis
 /// character ("…").
-pub fn ellipsis(value: &str, length: usize) -> askama::Result<String> {
+pub fn ellipsis(value: &str, _: &dyn askama::Values, length: usize) -> askama::Result<String> {
     if value.chars().count() > length {
         Ok(format!(
             "{}…",

@@ -11,7 +11,7 @@ mod askama_filters;
 pub mod base_template;
 mod colors;
 mod endpoints;
-mod error;
+pub mod error;
 pub mod error_page;
 pub mod flash;
 mod form_values;

@@ -12,6 +12,7 @@ use actix_web::http::header::{ContentType, TryIntoHeaderValue};
 use actix_web::web::{Html, Query};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use askama::Template;
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
@@ -100,6 +101,14 @@ async fn login(
             ))
         })
         .await??;
+    if !login_success {
+        warn!(
+            "HTTP 422 authentication failed. Client: <{}>",
+            req.peer_addr()
+                .map(|a| a.to_string())
+                .unwrap_or("unknown".to_owned()),
+        );
+    }
 
     if !login_success || !privilege_unlocked {
         let error = if !login_success {

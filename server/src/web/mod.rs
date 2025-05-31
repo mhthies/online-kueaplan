@@ -4,10 +4,12 @@ use crate::setup::{
     get_admin_email_from_env, get_admin_name_from_env, get_listen_address_from_env,
     get_listen_port_from_env, get_secret_from_env,
 };
+use crate::web::http_error_logging::error_logging_middleware;
 use actix_web::{middleware, web, App, HttpServer};
 use std::sync::Arc;
 
 mod api;
+mod http_error_logging;
 mod ui;
 
 pub fn serve() -> Result<(), CliError> {
@@ -19,6 +21,7 @@ pub fn serve() -> Result<(), CliError> {
                     .configure(api::configure_app)
                     .configure(ui::configure_app)
                     .app_data(web::Data::new(state.clone()))
+                    .wrap(actix_web::middleware::from_fn(error_logging_middleware))
                     .wrap(middleware::Compress::default())
             })
             .bind((get_listen_address_from_env()?, get_listen_port_from_env()?))

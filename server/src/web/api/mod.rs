@@ -41,7 +41,7 @@ fn get_api_service() -> actix_web::Scope {
 }
 
 #[derive(Debug)]
-enum APIError {
+pub enum APIError {
     NotExisting,
     AlreadyExisting,
     PermissionDenied { required_privilege: Privilege },

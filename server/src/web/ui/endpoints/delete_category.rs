@@ -47,6 +47,11 @@ pub async fn delete_category_form(
         .filter(|c| c.id == category_id)
         .next()
         .ok_or(AppError::EntityNotFound)?;
+    if categories.len() == 1 {
+        return Err(AppError::InvalidData(
+            "Die letzte Kategorie darf nicht gelöscht werden.".to_owned(),
+        ));
+    }
 
     let form_data = DeleteCategoryFormData::default();
 

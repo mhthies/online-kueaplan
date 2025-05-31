@@ -499,6 +499,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         category_id: uuid::Uuid,
         replacement_category: Option<CategoryId>,
     ) -> Result<(), StoreError> {
+        use diesel::dsl::not;
         use schema::categories::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below
@@ -508,9 +509,20 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         }
 
         self.connection.transaction(|connection| {
+            let count_remaining_categories = categories
+                .filter(event_id.eq(the_event_id))
+                .filter(not(deleted))
+                .filter(id.ne(category_id))
+                .count()
+                .execute(connection)?;
+            if count_remaining_categories == 0 {
+                return Err(StoreError::InvalidInputData(
+                    "Cannot delete last category of the event.".to_owned(),
+                ));
+            };
+
             // Move entries to different category if requested
             if let Some(replacement_category) = replacement_category {
-                use diesel::dsl::not;
                 use schema::entries::dsl::*;
 
                 // Check that replacement actually exists in event

@@ -25,7 +25,11 @@
                         <td>{% if category.is_official %}<i class="bi bi-check-circle-fill" aria-label="ja"></i>{% else %}<i class="bi bi-x-circle" aria-label="nein"></i>{% endif %}</td>
                         <td class="text-nowrap">
                             <a href="{{ base.request.url_for("edit_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                            <a href="{{ base.request.url_for("delete_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                            {% if categories.len() > 1 %}
+                                <a href="{{ base.request.url_for("delete_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                            {% else %}
+                                <span class="btn btn-sm btn-outline-danger disabled" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></span>
+                            {% endif %}
                             <a href="{{ base.request.url_for("main_list_by_category", [event_id.to_string(), category.id.to_string()])? }}" class="ms-1" title="Einträge dieser Kategorie"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
                         </td>
                     </tr>

@@ -5,24 +5,26 @@
     <div class="mb-3">
         <a href="{{ base.url_for_event_endpoint("new_room_form")? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Ort hinzufügen</a>
     </div>
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for room in rooms %}
+    <div class="table-responsive-lg">
+        <table class="table align-middle">
+            <thead>
                 <tr>
-                    <td>{{room.title}}</td>
-                    <td class="text-nowrap">
-                        <a href="{{ base.request.url_for("edit_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
-                        <a href="{{ base.request.url_for("delete_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
-                        <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="ms-1" title="Einträge an diesem Ort"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
-                    </td>
+                    <th>Name</th>
+                    <th></th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                    <tr>
+                        <td>{{room.title}}</td>
+                        <td class="text-nowrap">
+                            <a href="{{ base.request.url_for("edit_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
+                            <a href="{{ base.request.url_for("delete_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
+                            <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="ms-1" title="Einträge an diesem Ort"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

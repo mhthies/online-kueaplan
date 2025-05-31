@@ -5,76 +5,78 @@
     <div class="mb-3">
         <a href="{{ base.url_for_event_endpoint("new_announcement_form")? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Bekanntmachung hinzufügen</a>
     </div>
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Typ</th>
-                <th>Inhalt</th>
-                <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Datum</th>
-                <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Kategorie</th>
-                <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Ort</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for announcement in announcements %}
-                {% let a_type = announcement.announcement.announcement_type %}
-                {% let hidden = !announcement.announcement.show_with_days && !announcement.announcement.show_with_categories && !announcement.announcement.show_with_rooms %}
-                <tr class="{% if hidden %}text-decoration-line-through{% endif %}">
-                    <td><i class="bi bi-{{self::announcement_type_icon(**a_type)}} text-{{self::announcement_type_color(**a_type)}}" title="{{self::announcement_type_name(**a_type)}}"></i></td>
-                    <td class="inner-margin-fix">{{announcement.announcement.text|markdown}}</td>
-                    <td>
-                        {% if !announcement.announcement.show_with_days %}
-                            —
-                        {% else if announcement.announcement.begin_date.is_none() && announcement.announcement.end_date.is_none() %}
-                            <strong>alle</strong>
-                        {% else if announcement.announcement.begin_date.is_none()  %}
-                            <strong>Anfang</strong>&nbsp;– {{ announcement.announcement.end_date.unwrap().format("%d.%m.") }}
-                        {% else if announcement.announcement.end_date.is_none()  %}
-                            {{ announcement.announcement.begin_date.unwrap().format("%d.%m.") }}&nbsp;– <strong>Ende</strong>
-                        {% else %}
-                            {{ announcement.announcement.begin_date.unwrap().format("%d.%m.") }}&nbsp;–
-                            {{ announcement.announcement.end_date.unwrap().format("%d.%m.") }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if !announcement.announcement.show_with_categories %}
-                            —
-                        {% else if announcement.announcement.show_with_all_categories %}
-                            <strong>alle</strong>
-                        {% else %}
-                            {% for category_id in announcement.category_ids %}
-                                {% let category = categories.get(category_id).ok_or("Category not found")? %}
-                                {{ category.title }}
-                                {%- if !loop.last %},{% endif %}
-                            {% endfor %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if !announcement.announcement.show_with_rooms %}
-                            —
-                        {% else if announcement.announcement.show_with_all_rooms %}
-                            <strong>alle</strong>
-                        {% else %}
-                            {% for room_id in announcement.room_ids %}
-                                {% let room = rooms.get(room_id).ok_or("Room not found")? %}
-                                {{ room.title }}
-                                {%- if !loop.last %},{% endif %}
-                            {% endfor %}
-                        {% endif %}
-                    </td>
-                    <td class="text-nowrap">
-                        <a href="{{ base.request.url_for("edit_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
-                           class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil" aria-label="Bearbeiten"></i>
-                        </a>
-                        <a href="{{ base.request.url_for("delete_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
-                           class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash" aria-label="Löschen"></i>
-                        </a>
-                    </td>
+    <div class="table-responsive-xl">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Typ</th>
+                    <th>Inhalt</th>
+                    <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Datum</th>
+                    <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Kategorie</th>
+                    <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Ort</th>
+                    <th></th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for announcement in announcements %}
+                    {% let a_type = announcement.announcement.announcement_type %}
+                    {% let hidden = !announcement.announcement.show_with_days && !announcement.announcement.show_with_categories && !announcement.announcement.show_with_rooms %}
+                    <tr class="{% if hidden %}text-decoration-line-through{% endif %}">
+                        <td><i class="bi bi-{{self::announcement_type_icon(**a_type)}} text-{{self::announcement_type_color(**a_type)}}" title="{{self::announcement_type_name(**a_type)}}"></i></td>
+                        <td class="inner-margin-fix">{{announcement.announcement.text|markdown}}</td>
+                        <td>
+                            {% if !announcement.announcement.show_with_days %}
+                                —
+                            {% else if announcement.announcement.begin_date.is_none() && announcement.announcement.end_date.is_none() %}
+                                <strong>alle</strong>
+                            {% else if announcement.announcement.begin_date.is_none()  %}
+                                <strong>Anfang</strong>&nbsp;– {{ announcement.announcement.end_date.unwrap().format("%d.%m.") }}
+                            {% else if announcement.announcement.end_date.is_none()  %}
+                                {{ announcement.announcement.begin_date.unwrap().format("%d.%m.") }}&nbsp;– <strong>Ende</strong>
+                            {% else %}
+                                {{ announcement.announcement.begin_date.unwrap().format("%d.%m.") }}&nbsp;–
+                                {{ announcement.announcement.end_date.unwrap().format("%d.%m.") }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if !announcement.announcement.show_with_categories %}
+                                —
+                            {% else if announcement.announcement.show_with_all_categories %}
+                                <strong>alle</strong>
+                            {% else %}
+                                {% for category_id in announcement.category_ids %}
+                                    {% let category = categories.get(category_id).ok_or("Category not found")? %}
+                                    {{ category.title }}
+                                    {%- if !loop.last %},{% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if !announcement.announcement.show_with_rooms %}
+                                —
+                            {% else if announcement.announcement.show_with_all_rooms %}
+                                <strong>alle</strong>
+                            {% else %}
+                                {% for room_id in announcement.room_ids %}
+                                    {% let room = rooms.get(room_id).ok_or("Room not found")? %}
+                                    {{ room.title }}
+                                    {%- if !loop.last %},{% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <a href="{{ base.request.url_for("edit_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil" aria-label="Bearbeiten"></i>
+                            </a>
+                            <a href="{{ base.request.url_for("delete_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash" aria-label="Löschen"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

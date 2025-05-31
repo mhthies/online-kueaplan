@@ -5,30 +5,32 @@
     <div class="mb-3">
         <a href="{{ base.url_for_event_endpoint("new_category_form")? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Kategorie hinzufügen</a>
     </div>
-    <table class="table align-middle">
-        <thead>
-            <tr>
-                <th>Icon</th>
-                <th>Name</th>
-                <th>Farbe</th>
-                <th>offiziell</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-                <tr class="category-row" style="{{ CategoryColors::from_base_color_hex(category.color)?.as_css() }}">
-                    <td>{{category.icon}}</td>
-                    <td>{{category.title}}</td>
-                    <td class="text-nowrap"><span class="color-demo" style="--demo-color: #{{category.color}};"></span> #{{category.color}}</td>
-                    <td>{% if category.is_official %}<i class="bi bi-check-circle-fill" aria-label="ja"></i>{% else %}<i class="bi bi-x-circle" aria-label="nein"></i>{% endif %}</td>
-                    <td class="text-nowrap">
-                        <a href="{{ base.request.url_for("edit_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                        <a href="{{ base.request.url_for("delete_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></a>
-                        <a href="{{ base.request.url_for("main_list_by_category", [event_id.to_string(), category.id.to_string()])? }}" class="ms-1" title="Einträge dieser Kategorie"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
-                    </td>
+    <div class="table-responsive-lg">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Icon</th>
+                    <th>Name</th>
+                    <th>Farbe</th>
+                    <th>offiziell</th>
+                    <th></th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <tr class="category-row" style="{{ CategoryColors::from_base_color_hex(category.color)?.as_css() }}">
+                        <td>{{category.icon}}</td>
+                        <td>{{category.title}}</td>
+                        <td class="text-nowrap"><span class="color-demo" style="--demo-color: #{{category.color}};"></span> #{{category.color}}</td>
+                        <td>{% if category.is_official %}<i class="bi bi-check-circle-fill" aria-label="ja"></i>{% else %}<i class="bi bi-x-circle" aria-label="nein"></i>{% endif %}</td>
+                        <td class="text-nowrap">
+                            <a href="{{ base.request.url_for("edit_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                            <a href="{{ base.request.url_for("delete_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                            <a href="{{ base.request.url_for("main_list_by_category", [event_id.to_string(), category.id.to_string()])? }}" class="ms-1" title="Einträge dieser Kategorie"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

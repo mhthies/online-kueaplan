@@ -11,6 +11,7 @@ use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
 use crate::web::{AdminInfo, AppState};
 use actix_web::body::EitherBody;
+use actix_web::http::header::CONTENT_TYPE;
 use actix_web::web::Html;
 use actix_web::{web, FromRequest, HttpRequest, HttpResponse, Responder, ResponseError};
 use askama::Template;
@@ -54,21 +55,41 @@ pub async fn error_page_middleware<B: actix_web::body::MessageBody>(
             .expect("We checked that res has an error, above.");
         let admin_info = &web::Data::<AppState>::extract(&req).into_inner()?.admin;
         if let Some(app_error) = error.as_error::<AppError>() {
-            let response = generate_app_error_page(app_error, &req, admin_info);
+            let error_page_response = generate_app_error_page(app_error, &req, admin_info);
             Ok(actix_web::dev::ServiceResponse::new(
                 req,
-                response.map_body(|_, body| EitherBody::right(body)),
+                update_response_with_error_page(res, error_page_response)
+                    .map_body(|_, body| EitherBody::right(body)),
             ))
         } else {
-            let response = generate_generic_error_page(error.as_response_error(), &req, admin_info);
+            let error_page_response =
+                generate_generic_error_page(error.as_response_error(), &req, admin_info);
             Ok(actix_web::dev::ServiceResponse::new(
                 req,
-                response.map_body(|_, body| EitherBody::right(body)),
+                update_response_with_error_page(res, error_page_response)
+                    .map_body(|_, body| EitherBody::right(body)),
             ))
         }
     } else {
         Ok(response.map_body(|_, body| EitherBody::left(body)))
     }
+}
+
+fn update_response_with_error_page<B1, B2>(
+    target: HttpResponse<B1>,
+    error_page_response: HttpResponse<B2>,
+) -> HttpResponse<B2> {
+    let (error_page_response, error_page_body) = error_page_response.into_parts();
+    let mut response = target.set_body(error_page_body);
+    response.headers_mut().insert(
+        CONTENT_TYPE,
+        error_page_response
+            .headers()
+            .get(CONTENT_TYPE)
+            .expect("ContentType should be set")
+            .clone(),
+    );
+    response
 }
 
 /// Generate a nice error page with additional information and help for the given [AppError].

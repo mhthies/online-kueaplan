@@ -2,7 +2,7 @@ use clap::ArgAction;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
 use kueaplan_server::cli_error::CliError;
-use log::{error, warn};
+use log::{error, info, warn};
 use std::path::PathBuf;
 
 fn main() {
@@ -23,6 +23,10 @@ fn main() {
         warn!("Could not read .env file: {}", dotenv_result.unwrap_err());
     }
 
+    info!(
+        "This is the online kueaplan server v{}",
+        kueaplan_server::get_version()
+    );
     let result = run_main_command(args.command);
     if let Err(err) = result {
         error!("{}", err);

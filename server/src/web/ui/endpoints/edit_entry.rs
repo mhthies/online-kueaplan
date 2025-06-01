@@ -14,7 +14,7 @@ use crate::web::ui::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time,
     EFFECTIVE_BEGIN_OF_DAY, TIME_ZONE,
 };
-use crate::web::ui::util::{event_days, url_for_entry_details, FormSubmitResult};
+use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short, FormSubmitResult};
 use crate::web::ui::{sub_templates, time_calculation, util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Query};
@@ -414,7 +414,11 @@ impl<'a> EditEntryFormTemplate<'a> {
             .into_iter()
             .map(|date| SelectEntry {
                 value: Cow::Owned(date.to_string()),
-                text: Cow::Owned(date.format("%d.%m.").to_string()),
+                text: Cow::Owned(format!(
+                    "{} ({})",
+                    date.format("%d.%m."),
+                    weekday_short(&date)
+                )),
             })
             .collect()
     }

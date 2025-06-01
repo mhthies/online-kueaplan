@@ -7,7 +7,7 @@
             <h1>Orte</h1>
             {% if base.auth_token.expect("auth_token should be provided").has_privilege(*event_id, Privilege::ManageRooms) %}
                 <div class="mb-3">
-                    <a href="{{ base.url_for_event_endpoint("manage_rooms")? }}" class="btn btn-outline-primary"><i class="bi bi-gear" aria-hidden="true"></i> Räume verwalten</a>
+                    <a href="{{ base.url_for_event_endpoint("manage_rooms")? }}" class="btn btn-outline-primary"><i class="bi bi-gear" aria-hidden="true"></i> Orte verwalten</a>
                 </div>
             {% endif %}
 

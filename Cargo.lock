@@ -1275,7 +1275,7 @@ dependencies = [
 
 [[package]]
 name = "kueaplan_api_types"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "serde",
@@ -1284,7 +1284,7 @@ dependencies = [
 
 [[package]]
 name = "kueaplan_server"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "actix-web",
  "askama",

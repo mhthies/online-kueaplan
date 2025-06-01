@@ -25,6 +25,7 @@ impl PgDataStore {
         Ok(Self {
             pool: diesel::r2d2::Pool::builder()
                 .test_on_check_out(true)
+                .min_idle(Some(2))
                 .build(connection_manager)?,
         })
     }

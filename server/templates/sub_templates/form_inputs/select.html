@@ -1,5 +1,5 @@
 <label for="{{name}}Select" class="form-label">{{label}}</label>
-{% if config.suffix_text.is_some() %}<div class="input-group">{% endif %}
+{% if config.suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
 <select class="form-select {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
         id="{{name}}Select" name="{{name}}">
 {% for entry in entries %}

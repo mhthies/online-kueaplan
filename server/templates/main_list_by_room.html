@@ -18,6 +18,17 @@
         KüA-Plan, Ort {{ room.title }}
     </h1>
 
+    {% if !room.description.is_empty() %}
+        <div class="alert alert-secondary d-flex flex-row">
+            <div>
+                <i class="bi bi-info-square-fill" title="Information"></i>
+            </div>
+            <div class="flex-grow-1 inner-margin-fix ms-3">
+                {{room.description|markdown}}
+            </div>
+        </div>
+    {% endif %}
+
     {% if entry_blocks.is_empty() %}
         <div class="alert alert-info mt-4">
             <i class="bi bi-info-circle" aria-hidden="true"></i>

@@ -90,5 +90,8 @@
             </tbody>
         </table>
     </div>
+    <div class="mt-3">
+        <a href="{{ base.request.url_for("new_previous_date_form", [event.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Vorherigen Termin hinzufügen</a>
+    </div>
 </div>
 {% endblock %}

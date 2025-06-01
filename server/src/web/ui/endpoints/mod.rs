@@ -16,6 +16,7 @@ pub mod main_list_by_room;
 pub mod manage_announcements;
 pub mod manage_categories;
 pub mod manage_rooms;
+pub mod new_previous_date;
 pub mod previous_dates;
 pub mod rooms_list;
 pub mod ui_api;

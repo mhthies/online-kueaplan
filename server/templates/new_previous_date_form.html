@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ base.url_for_static("tom-select.bootstrap5.min.css")? }}">
+{% endblock %}
+
+{% block custom_header %}
+<style>
+    {{ self::styles_for_category(entry_category) }}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-3" id="main">
+    <h1>Eintrag bearbeiten</h1>
+    {{ EditEntryNavbar::new(
+           base.request,
+           *base.event.expect("Event should always be known").id,
+           entry.entry.id,
+           base.current_date.expect("For non-new entries, `entry_id` should always be known."),
+           EditEntryNavbarActiveLink::PreviousDatesOverview,
+       )|safe }}
+
+    <h2 class="fs-4">Aktueller Eintrag</h2>
+    <table class="table table-striped kuealist">
+        <thead>
+        <tr>
+            <th>Was?</th>
+            <th>Wann?</th>
+            <th>Wo?</th>
+            <th>Von wem?</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{ MainListRowTemplate::new(
+               base.request,
+               &MainListRow::from_entry(entry),
+               entry_category,
+               rooms_by_id,
+               false,
+               false,
+               None,
+               None,
+               MainEntryLinkMode::None
+           )|safe }}
+        </tbody>
+    </table>
+
+    <h2 class="mt-5">
+        Neuer Vorheriger Termin
+    </h2>
+
+    {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for
+    the hidden input. Thus, our concurrent-modification protection breaks when navigating back.
+    To prevent this, we disable 'autocomplete' in the form, which also disables the auto-fill. #}
+    <form method="post" action="{{post_url()?}}" autocomplete="off" id="new_previous_date_form"
+          {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4 col-md-2">
+                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build())|safe }}
+            </div>
+            <div class="col-6 col-sm-4 col-md-2">
+                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build())|safe }}
+            </div>
+            <div class="col-md-6">
+                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
+            </div>
+        </div>
+        <div class="mb-3">
+            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar zur Verschiebung", InputConfiguration::default())|safe }}
+        </div>
+        {{ HiddenInputTemplate::new(form_data.previous_date_id, "previous_date_id")?|safe }}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+        <a href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+            <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+        </a>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
+<script>
+    const rooms = {{ room_entries()|json|safe }};
+    new TomSelect("#roomsInput", {
+        options: rooms
+    });
+    protectChanges(document.getElementById("new_previous_date_form"));
+</script>
+{% endblock %}

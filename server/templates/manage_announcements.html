@@ -18,6 +18,9 @@
                 </tr>
             </thead>
             <tbody>
+                {% if announcements.is_empty() %}
+                    <tr><td colspan="6" class="text-info">– Aktuell gibt es keine Bekanntmachungen. –</td></tr>
+                {% endif %}
                 {% for announcement in announcements %}
                     {% let a_type = announcement.announcement.announcement_type %}
                     {% let hidden = !announcement.announcement.show_with_days && !announcement.announcement.show_with_categories && !announcement.announcement.show_with_rooms %}

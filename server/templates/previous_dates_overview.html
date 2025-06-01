@@ -45,53 +45,50 @@
     <h2 class="fs-4">
         Vorherige Termine
     </h2>
-    {% if entry.previous_dates.is_empty() %}
-        <div class="text-info">
-            – Dieser Eintrag wurde bisher nicht verschoben bzw. die vorherigen Termine wurden nicht gespeichert. –
-        </div>
-    {% else %}
-        <div class="table-responsive-lg">
-            <table class="tab<le table-striped align-middle">
-                <thead>
+    <div class="table-responsive-lg">
+        <table class="tab<le table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Wann?</th>
+                    <th>Wo?</th>
+                    <th>Kommentar zur Verschiebung</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if entry.previous_dates.is_empty() %}
+                    <tr><td colspan="6" class="text-info">– Für diesen Eintrag wurden keine vorherigen Termine gespeichert. –</td></tr>
+                {% endif %}
+                {% for previous_date in entry.previous_dates %}
                     <tr>
-                        <th>Wann?</th>
-                        <th>Wo?</th>
-                        <th>Kommentar zur Verschiebung</th>
-                        <th></th>
+                        <td>
+                            <small>{{ to_our_timezone(previous_date.previous_date.begin).format("%d.%m.") }}</small>
+                            {{ to_our_timezone(previous_date.previous_date.begin).format("%H:%M") }}&nbsp;–
+                            {{ to_our_timezone(previous_date.previous_date.end).format("%H:%M") }}
+                            {% let duration = previous_date.previous_date.end.signed_duration_since(previous_date.previous_date.begin) %}
+                            {% if duration >= chrono::TimeDelta::days(1) %}
+                                (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for room_id in previous_date.room_ids %}
+                                {{ rooms[room_id].title }}{% if !loop.last %}, {% endif -%}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {{ previous_date.previous_date.comment }}
+                        </td>
+                        <td class="text-end">
+                            <form class="d-inline-block" method="post"
+                                  action="{{ base.request.url_for("delete_previous_date", [event.id.to_string(), entry.entry.id.to_string(), previous_date.previous_date.id.to_string()])? }}">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Diesen vorherigen Termin aus dem KüA-Plan löschen">
+                                    <i class="bi bi-trash" aria-hidden="true"></i></button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for previous_date in entry.previous_dates %}
-                        <tr>
-                            <td>
-                                <small>{{ to_our_timezone(previous_date.previous_date.begin).format("%d.%m.") }}</small>
-                                {{ to_our_timezone(previous_date.previous_date.begin).format("%H:%M") }}&nbsp;–
-                                {{ to_our_timezone(previous_date.previous_date.end).format("%H:%M") }}
-                                {% let duration = previous_date.previous_date.end.signed_duration_since(previous_date.previous_date.begin) %}
-                                {% if duration >= chrono::TimeDelta::days(1) %}
-                                    (+{{ duration.num_days() }}&nbsp;Tag{{ duration.num_days()|pluralize("", "e") }})
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% for room_id in previous_date.room_ids %}
-                                    {{ rooms[room_id].title }}{% if !loop.last %}, {% endif -%}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {{ previous_date.previous_date.comment }}
-                            </td>
-                            <td class="text-end">
-                                <form class="d-inline-block" method="post"
-                                      action="{{ base.request.url_for("delete_previous_date", [event.id.to_string(), entry.entry.id.to_string(), previous_date.previous_date.id.to_string()])? }}">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Diesen vorherigen Termin aus dem KüA-Plan löschen">
-                                        <i class="bi bi-trash" aria-hidden="true"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

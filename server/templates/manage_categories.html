@@ -17,6 +17,9 @@
                 </tr>
             </thead>
             <tbody>
+                {% if categories.is_empty() %}
+                    <tr><td colspan="6" class="text-info">– Aktuell gibt es keine Kategorien. –</td></tr>
+                {% endif %}
                 {% for category in categories %}
                     <tr class="category-row" style="{{ CategoryColors::from_base_color_hex(category.color)?.as_css() }}">
                         <td>{{category.icon}}</td>

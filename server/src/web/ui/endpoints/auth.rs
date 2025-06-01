@@ -104,9 +104,9 @@ async fn login(
     if !login_success {
         warn!(
             "HTTP 422 authentication failed. Client: <{}>",
-            req.peer_addr()
-                .map(|a| a.to_string())
-                .unwrap_or("unknown".to_owned()),
+            req.connection_info()
+                .realip_remote_addr()
+                .unwrap_or("unknown"),
         );
     }
 

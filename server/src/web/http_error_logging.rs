@@ -37,9 +37,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                             response.response().status(),
                             response
                                 .request()
-                                .peer_addr()
-                                .map(|a| a.to_string())
-                                .unwrap_or("unknown".to_owned()),
+                                .connection_info()
+                                .realip_remote_addr()
+                                .unwrap_or("unknown"),
                             session_error
                         );
                     } else {
@@ -47,7 +47,11 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                             "HTTP {} permission denied at <{}>. Client: <{}> Requires privilege: {:?}",
                             response.response().status(),
                             response.request().uri(),
-                            response.request().peer_addr().map(|a| a.to_string()).unwrap_or("unknown".to_owned()),
+                            response
+                                .request()
+                                .connection_info()
+                                .realip_remote_addr()
+                                .unwrap_or("unknown"),
                             required_privilege
                         );
                     }
@@ -80,9 +84,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         response.request().uri(),
                         response
                             .request()
-                            .peer_addr()
-                            .map(|a| a.to_string())
-                            .unwrap_or("unknown".to_owned()),
+                            .connection_info()
+                            .realip_remote_addr()
+                            .unwrap_or("unknown"),
                         required_privilege
                     );
                 }
@@ -93,9 +97,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         response.request().uri(),
                         response
                             .request()
-                            .peer_addr()
-                            .map(|a| a.to_string())
-                            .unwrap_or("unknown".to_owned()),
+                            .connection_info()
+                            .realip_remote_addr()
+                            .unwrap_or("unknown"),
                     );
                 }
                 APIError::InvalidSessionToken => {
@@ -104,9 +108,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         response.response().status(),
                         response
                             .request()
-                            .peer_addr()
-                            .map(|a| a.to_string())
-                            .unwrap_or("unknown".to_owned()),
+                            .connection_info()
+                            .realip_remote_addr()
+                            .unwrap_or("unknown"),
                     );
                 }
                 APIError::AuthenticationFailed => {
@@ -115,9 +119,9 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         response.response().status(),
                         response
                             .request()
-                            .peer_addr()
-                            .map(|a| a.to_string())
-                            .unwrap_or("unknown".to_owned()),
+                            .connection_info()
+                            .realip_remote_addr()
+                            .unwrap_or("unknown"),
                     );
                 }
                 APIError::NotExisting

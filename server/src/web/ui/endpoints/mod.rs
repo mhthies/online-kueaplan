@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod calendar_link_overview;
 pub mod categories_list;
 pub mod config_index;
 pub mod delete_announcement;

@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 mod api;
 mod http_error_logging;
+mod ical;
 mod ui;
 
 pub fn serve() -> Result<(), CliError> {
@@ -20,6 +21,7 @@ pub fn serve() -> Result<(), CliError> {
                 App::new()
                     .configure(api::configure_app)
                     .configure(ui::configure_app)
+                    .service(ical::ical)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(actix_web::middleware::from_fn(error_logging_middleware))
                     .wrap(middleware::Compress::default())

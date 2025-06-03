@@ -74,6 +74,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_announcement::delete_announcement_form)
         .service(endpoints::delete_announcement::delete_announcement)
         .service(endpoints::delete_announcement::disable_announcement)
+        .service(endpoints::calendar_link_overview::calendar_link_overview)
         .default_service(web::to(not_found_handler))
         .app_data(
             web::QueryConfig::default()

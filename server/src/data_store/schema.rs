@@ -81,7 +81,8 @@ diesel::table! {
         id -> Int4,
         event_id -> Int4,
         privilege -> Int4,
-        passphrase -> Varchar,
+        passphrase -> Nullable<Varchar>,
+        derivable_from_passphrase -> Nullable<Int4>,
     }
 }
 

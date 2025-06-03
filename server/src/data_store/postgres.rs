@@ -755,6 +755,39 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         Ok(AuthToken::create_for_session(the_event_id, roles))
     }
+
+    fn create_reduced_session_token(
+        &mut self,
+        client_session_token: &SessionToken,
+        the_event_id: EventId,
+        expected_privilege: Privilege,
+    ) -> Result<SessionToken, StoreError> {
+        use schema::event_passphrases::dsl::*;
+
+        let eligible_passphrase_ids =
+            event_passphrases
+                .select(id)
+                .filter(event_id.eq(the_event_id))
+                .filter(id.eq_any(client_session_token.get_passphrase_ids()).or(
+                    derivable_from_passphrase.eq_any(client_session_token.get_passphrase_ids()),
+                ))
+                .filter(
+                    privilege.eq_any(
+                        expected_privilege
+                            .qualifying_roles()
+                            .iter()
+                            .map(|r| *r as i32),
+                    ),
+                )
+                .load::<i32>(&mut self.connection)?;
+        if eligible_passphrase_ids.is_empty() {
+            return Err(StoreError::NotExisting);
+        }
+
+        let mut result = SessionToken::new();
+        result.add_authorization(eligible_passphrase_ids[0]);
+        Ok(result)
+    }
 }
 
 fn update_entry_rooms(

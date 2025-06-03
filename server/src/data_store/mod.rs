@@ -204,6 +204,17 @@ pub trait KueaPlanStoreFacade {
         session_token: &SessionToken,
         event_id: EventId,
     ) -> Result<AuthToken, StoreError>;
+
+    /// Generate a new [SessionToken], derived form the client's existing SessionToken, that is only
+    /// authenticated for a single passphrase, which qualifies for the given `expected_privilege`.
+    /// The passphrase in the returned SessionToken may be one of the ones from the original
+    /// SessionToken or one that can be derived from them.
+    fn create_reduced_session_token(
+        &mut self,
+        client_session_token: &SessionToken,
+        event_id: EventId,
+        expected_privilege: Privilege,
+    ) -> Result<SessionToken, StoreError>;
 }
 
 /// Filter options for retrieving entries from the store via KueaPlanStoreFacade::get_entries_filtered()

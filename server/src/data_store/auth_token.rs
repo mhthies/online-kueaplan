@@ -153,6 +153,7 @@ pub enum AccessRole {
     User = 1,
     Orga = 2,
     Admin = 3,
+    SharableViewLink = 4,
 }
 
 impl TryFrom<i32> for AccessRole {
@@ -163,6 +164,7 @@ impl TryFrom<i32> for AccessRole {
             1 => Ok(AccessRole::User),
             2 => Ok(AccessRole::Orga),
             3 => Ok(AccessRole::Admin),
+            4 => Ok(AccessRole::SharableViewLink),
             value => Err(EnumMemberNotExistingError {
                 member_value: value,
                 enum_name: "AccessRole",
@@ -177,6 +179,7 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
             AccessRole::Admin => unimplemented!(),
+            AccessRole::SharableViewLink => unimplemented!(),
         }
     }
 }
@@ -187,6 +190,7 @@ impl AccessRole {
             AccessRole::User => "User",
             AccessRole::Orga => "Orga",
             AccessRole::Admin => "Admin",
+            AccessRole::SharableViewLink => "Teilbarer Link",
         }
     }
 }
@@ -205,6 +209,7 @@ pub enum Privilege {
     ManagePassphrases,
     CreateEvents,
     ManageAnnouncements,
+    ShowKueaPlanViaLink,
 }
 
 impl Privilege {
@@ -216,7 +221,12 @@ impl Privilege {
     /// for, in order to unlock a specific action.
     pub fn qualifying_roles(&self) -> &'static [AccessRole] {
         match self {
-            Privilege::ShowKueaPlan => &[AccessRole::User, AccessRole::Orga, AccessRole::Admin],
+            Privilege::ShowKueaPlan => &[
+                AccessRole::User,
+                AccessRole::Orga,
+                AccessRole::Admin,
+                AccessRole::SharableViewLink,
+            ],
             Privilege::ShowConfigArea => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageEntries => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageCategories => &[AccessRole::Orga, AccessRole::Admin],
@@ -225,6 +235,7 @@ impl Privilege {
             Privilege::ManagePassphrases => &[AccessRole::Admin],
             Privilege::CreateEvents => &[AccessRole::Admin],
             Privilege::ManageAnnouncements => &[AccessRole::Orga, AccessRole::Admin],
+            Privilege::ShowKueaPlanViaLink => &[AccessRole::SharableViewLink],
         }
     }
 }

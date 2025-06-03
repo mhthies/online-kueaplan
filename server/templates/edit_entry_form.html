@@ -29,7 +29,7 @@
         {{ FormFieldTemplate::new(form_data.title, "title", "Titel", InputConfiguration::builder().size(InputSize::Large).build())|safe }}
     </div>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar", InputConfiguration::builder().size(InputSize::Small).info("wird unter dem Titel angezeigt").build())|safe }}
+        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar / Kurze Beschreibung", InputConfiguration::builder().size(InputSize::Small).info("wird unter dem Titel angezeigt").build())|safe }}
     </div>
     <div class="mb-3">
         {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus", None)|safe }}
@@ -37,7 +37,7 @@
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="mb-3">
-                {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem?", InputConfiguration::default())|safe }}
+                {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem? / Ansprechpersonen", InputConfiguration::default())|safe }}
             </div>
             <div>
                 {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
@@ -100,7 +100,7 @@
         {{ FormFieldTemplate::new(
             form_data.description,
             "description",
-            "Beschreibung",
+            "Ausführliche Beschreibung",
             InputConfiguration::builder()
                 .input_type(InputType::Textarea)
                 .info("Unterstützt Markdown")

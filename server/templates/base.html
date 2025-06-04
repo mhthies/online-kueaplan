@@ -93,10 +93,6 @@
     {% block footer_extra_text %}{% endblock %}
     online-kueaplan v{{ crate::get_version() }}
     {% if base.event.is_some()
-       && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
-        | <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a>
-    {% endif %}
-    {% if base.event.is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
         | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich …</a>

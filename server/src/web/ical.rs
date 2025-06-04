@@ -4,6 +4,7 @@ use crate::data_store::models::{Category, Event, FullEntry, Room};
 use crate::data_store::{CategoryId, EntryFilter, RoomId};
 use crate::web::ui::error::AppError;
 use crate::web::AppState;
+use actix_web::http::header::DispositionParam;
 use actix_web::http::StatusCode;
 use actix_web::{get, web, HttpResponseBuilder, Responder};
 use icalendar::{Component, EventLike};
@@ -44,6 +45,10 @@ async fn ical(
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
         .content_type("text/calendar; charset=utf-8")
+        .append_header(actix_web::http::header::ContentDisposition {
+            disposition: actix_web::http::header::DispositionType::Inline,
+            parameters: vec![DispositionParam::Filename(String::from("kueaplan.ics"))],
+        })
         .body(generate_ical(event, entries, rooms, categories)))
 }
 

@@ -77,6 +77,7 @@ fn generate_ical(
         }
 
         let mut event = icalendar::Event::new()
+            .uid(&entry.entry.id.to_string())
             .summary(&entry.entry.title)
             .starts(entry.entry.begin)
             .ends(entry.entry.end)

@@ -20,7 +20,18 @@
                     </div>
                 </div>
             {% else %}
-                TODO
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Konnte keinen Authentifizierungs-Token für Link-Freigabe erzeugen.
+                </div>
+                <p>
+                    Keine der Passphrasen, mit denen Du authentifiziert bist, erlaubt das Erzeugen von Kalender-Links.
+                    Bitte wende Dich an die Admins des KüA-Plans und authentifiziere Dich mit einer passenden Passphrase.
+                </p>
+                <p>
+                    <a class="btn btn-outline-primary" href="{{ login_url()? }}">
+                        <i class="bi-arrow-up-right-circle" aria-hidden="true"></i> Zum Login-Formular…
+                    </a>
+                </p>
             {% endif %}
         </div>
     </div>

@@ -88,4 +88,25 @@ impl CalendarLinkOverviewTemplate<'_> {
         )?));
         Ok(url.to_string())
     }
+
+    fn login_url(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let mut url = self.base.request.url_for(
+            "login_form",
+            [&self
+                .base
+                .event
+                .ok_or(AppError::InternalError(
+                    "event is not set in CalendarLinkOverviewTemplate.base".to_owned(),
+                ))?
+                .id
+                .to_string()],
+        )?;
+        url.set_query(Some(&serde_urlencoded::to_string(
+            super::auth::LoginQueryData {
+                privilege: None,
+                redirect_to: Some(self.base.request.full_url().to_string()),
+            },
+        )?));
+        Ok(url.to_string())
+    }
 }

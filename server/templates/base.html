@@ -95,7 +95,7 @@
     {% if base.event.is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
-        | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich …</a>
+        | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a>
     {% endif %}
 </footer>
 {% let flashes = base.get_flashes() %}

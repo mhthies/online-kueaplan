@@ -5,7 +5,7 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::main_list_row::MainListRow;
-use crate::web::ui::time_calculation::{get_effective_date, TIME_ZONE};
+use crate::web::time_calculation::{get_effective_date, TIME_ZONE};
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;

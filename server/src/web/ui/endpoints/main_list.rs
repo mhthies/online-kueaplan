@@ -7,7 +7,7 @@ use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
-use crate::web::ui::time_calculation::{
+use crate::web::time_calculation::{
     current_effective_date, timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY,
     TIME_BLOCKS, TIME_ZONE,
 };

@@ -37,7 +37,7 @@
 {% let entry = row.entry.entry %}
 <tr class="{{ css_class_for_tr(row) }}">
     <td class="kuea-title aside-container" {% if row.entry_takes_place_now() %}id="entry-{{ entry.id.to_string() }}"{% endif %}>
-        {% let effective_begin_date = crate::web::ui::time_calculation::get_effective_date(row.sort_time) %}
+        {% let effective_begin_date = crate::web::time_calculation::get_effective_date(row.sort_time) %}
         {% if let Some(date) = date_context %}
             {% if effective_begin_date < *date %}
                 <div class="small">
@@ -78,7 +78,7 @@
                     {% if let Some(link_url) = link %}
                         <a href="{{ link_url }}" class="moved-entry-link">
                     {%- endif %}
-                    {%- if Some(crate::web::ui::time_calculation::get_effective_date(entry.begin)) != date_context %}
+                    {%- if Some(crate::web::time_calculation::get_effective_date(entry.begin)) != date_context %}
                         {{- to_our_timezone(entry.begin).format("%d.%m. %H:%M") }}&nbsp;Uhr
                     {%- else %}
                         {{- to_our_timezone(entry.begin).format("%H:%M") }}&nbsp;Uhr

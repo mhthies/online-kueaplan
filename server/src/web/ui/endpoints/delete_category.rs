@@ -8,7 +8,7 @@ use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::FormValue;
 use crate::web::ui::sub_templates::form_inputs::{InputConfiguration, SelectEntry, SelectTemplate};
-use crate::web::ui::time_calculation::TIME_ZONE;
+use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};

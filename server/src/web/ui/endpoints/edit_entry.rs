@@ -10,13 +10,13 @@ use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize,
     InputType, SelectEntry, SelectTemplate,
 };
-use crate::web::ui::time_calculation::{
+use crate::web::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time,
     EFFECTIVE_BEGIN_OF_DAY, TIME_ZONE,
 };
 use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short, FormSubmitResult};
-use crate::web::ui::{sub_templates, time_calculation, util, validation};
-use crate::web::AppState;
+use crate::web::ui::{sub_templates, util, validation};
+use crate::web::{time_calculation, AppState};
 use actix_web::web::{Form, Html, Query};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;

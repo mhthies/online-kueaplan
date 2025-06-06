@@ -16,7 +16,7 @@ use crate::web::ui::sub_templates::form_inputs::{
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
-use crate::web::ui::time_calculation::{
+use crate::web::time_calculation::{
     get_effective_date, timestamp_from_effective_date_and_time, TIME_ZONE,
 };
 use crate::web::ui::util::{event_days, weekday_short};

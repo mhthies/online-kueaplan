@@ -11,10 +11,11 @@ use actix_web::{get, middleware, web, App, HttpRequest, HttpServer, Responder};
 use std::sync::Arc;
 
 mod api;
+mod frab_xml;
 mod http_error_logging;
 mod ical;
-mod ui;
 mod time_calculation;
+mod ui;
 
 pub fn serve() -> Result<(), CliError> {
     let state = AppState::new()?;

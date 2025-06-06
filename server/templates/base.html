@@ -97,6 +97,7 @@
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
         | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a>
     {% endif %}
+    | Style: <a href="#" id="themeSwitch"><i class="bi bi-circle-half"></i></a>
 </footer>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}
@@ -140,6 +141,14 @@
 </div>
 {% endif %}
 <script src="{{ base.url_for_static("bootstrap/js/bootstrap.bundle.min.js")? }}"></script>
+<script>
+    const themeSwitch = document.getElementById("themeSwitch");
+    themeSwitch.addEventListener("click", (e) => {
+        onThemeButtonClick(e.currentTarget);
+        e.preventDefault();
+    });
+    updateThemeButtonIcon(themeSwitch);
+</script>
 {% if !flashes.is_empty() %}
 <script>
     const toastElList = document.querySelectorAll('.toast');

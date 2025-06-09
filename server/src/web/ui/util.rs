@@ -335,7 +335,7 @@ pub fn mark_first_row_of_next_calendar_date(
     date_context: chrono::NaiveDate,
 ) {
     for row in rows.iter_mut() {
-        if row.sort_time.date_naive() > date_context {
+        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > date_context {
             row.is_first_row_of_next_calendar_date = true;
             break;
         }

@@ -54,7 +54,7 @@ def load_dotenv():
 def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
     database_dump = request.node.get_closest_marker("database_dump")
     if database_dump is None:
-        database_dump = "empty.sql"
+        database_dump = "minimal.sql"
     database_file = Path(__file__).parent / "database_dumps" / database_dump
     assert isinstance(database_dump, str)
     result = subprocess.run([shutil.which("psql"), "-f", str(database_file), os.environ["DATABASE_URL"]],

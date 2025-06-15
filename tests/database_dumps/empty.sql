@@ -22,22 +22,28 @@ ALTER TABLE ONLY public.previous_dates DROP CONSTRAINT previous_dates_entry_id_f
 ALTER TABLE ONLY public.previous_date_rooms DROP CONSTRAINT previous_date_rooms_room_id_fkey;
 ALTER TABLE ONLY public.previous_date_rooms DROP CONSTRAINT previous_date_rooms_previous_date_id_fkey;
 ALTER TABLE ONLY public.event_passphrases DROP CONSTRAINT event_passphrases_event_id_fkey;
+ALTER TABLE ONLY public.event_passphrases DROP CONSTRAINT event_passphrases_derivable_from_passphrase_fkey;
 ALTER TABLE ONLY public.entry_rooms DROP CONSTRAINT entry_rooms_room_id_fkey;
 ALTER TABLE ONLY public.entry_rooms DROP CONSTRAINT entry_rooms_entry_id_fkey;
 ALTER TABLE ONLY public.entries DROP CONSTRAINT entries_event_id_fkey;
 ALTER TABLE ONLY public.entries DROP CONSTRAINT entries_category_fkey;
 ALTER TABLE ONLY public.categories DROP CONSTRAINT categories_event_id_fkey;
+ALTER TABLE ONLY public.announcements DROP CONSTRAINT announcements_event_id_fkey;
+ALTER TABLE ONLY public.announcement_rooms DROP CONSTRAINT announcement_rooms_room_id_fkey;
+ALTER TABLE ONLY public.announcement_rooms DROP CONSTRAINT announcement_rooms_announcement_id_fkey;
+ALTER TABLE ONLY public.announcement_categories DROP CONSTRAINT announcement_categories_category_id_fkey;
+ALTER TABLE ONLY public.announcement_categories DROP CONSTRAINT announcement_categories_announcement_id_fkey;
 DROP TRIGGER sync_lastmod ON public.rooms;
 DROP TRIGGER sync_lastmod ON public.previous_dates;
 DROP TRIGGER sync_lastmod ON public.entries;
 DROP TRIGGER sync_lastmod ON public.categories;
-DROP INDEX public.rooms_event_id_idx;
+DROP TRIGGER sync_lastmod ON public.announcements;
+DROP INDEX public.rooms_event_id_title_idx;
 DROP INDEX public.previous_dates_entry_id_idx;
-DROP INDEX public.previous_date_rooms_previous_date_id_idx;
 DROP INDEX public.event_passphrases_event_id_passphrase_idx;
-DROP INDEX public.entry_rooms_entry_id_idx;
-DROP INDEX public.entries_event_id_idx;
-DROP INDEX public.categories_event_id_idx;
+DROP INDEX public.entries_event_id_begin_idx;
+DROP INDEX public.categories_event_id_sort_key_idx;
+DROP INDEX public.announcements_event_id_sort_key_idx;
 ALTER TABLE ONLY public.rooms DROP CONSTRAINT rooms_pkey;
 ALTER TABLE ONLY public.previous_dates DROP CONSTRAINT previous_dates_pkey;
 ALTER TABLE ONLY public.previous_date_rooms DROP CONSTRAINT previous_date_rooms_pkey;
@@ -46,6 +52,9 @@ ALTER TABLE ONLY public.event_passphrases DROP CONSTRAINT event_passphrases_pkey
 ALTER TABLE ONLY public.entry_rooms DROP CONSTRAINT entry_rooms_pkey;
 ALTER TABLE ONLY public.entries DROP CONSTRAINT entries_pkey;
 ALTER TABLE ONLY public.categories DROP CONSTRAINT categories_pkey;
+ALTER TABLE ONLY public.announcements DROP CONSTRAINT announcements_pkey;
+ALTER TABLE ONLY public.announcement_rooms DROP CONSTRAINT announcement_rooms_pkey;
+ALTER TABLE ONLY public.announcement_categories DROP CONSTRAINT announcement_categories_pkey;
 ALTER TABLE ONLY public.__diesel_schema_migrations DROP CONSTRAINT __diesel_schema_migrations_pkey;
 ALTER TABLE public.rooms ALTER COLUMN event_id DROP DEFAULT;
 ALTER TABLE public.events ALTER COLUMN id DROP DEFAULT;
@@ -53,6 +62,7 @@ ALTER TABLE public.event_passphrases ALTER COLUMN event_id DROP DEFAULT;
 ALTER TABLE public.event_passphrases ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.entries ALTER COLUMN event_id DROP DEFAULT;
 ALTER TABLE public.categories ALTER COLUMN event_id DROP DEFAULT;
+ALTER TABLE public.announcements ALTER COLUMN event_id DROP DEFAULT;
 DROP SEQUENCE public.rooms_event_id_seq;
 DROP TABLE public.rooms;
 DROP TABLE public.previous_dates;
@@ -67,49 +77,18 @@ DROP SEQUENCE public.entries_event_id_seq;
 DROP TABLE public.entries;
 DROP SEQUENCE public.categories_event_id_seq;
 DROP TABLE public.categories;
+DROP SEQUENCE public.announcements_event_id_seq;
+DROP TABLE public.announcements;
+DROP TABLE public.announcement_rooms;
+DROP TABLE public.announcement_categories;
 DROP TABLE public.__diesel_schema_migrations;
 DROP FUNCTION public.sync_lastmod();
-DROP FUNCTION public.diesel_set_updated_at();
-DROP FUNCTION public.diesel_manage_updated_at(_tbl regclass);
 -- *not* dropping schema, since initdb creates it
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
 -- *not* creating schema, since initdb creates it
-
-
---
--- Name: diesel_manage_updated_at(regclass); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.diesel_manage_updated_at(_tbl regclass) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    EXECUTE format('CREATE TRIGGER set_updated_at BEFORE UPDATE ON %s
-                    FOR EACH ROW EXECUTE PROCEDURE diesel_set_updated_at()', _tbl);
-END;
-$$;
-
-
---
--- Name: diesel_set_updated_at(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.diesel_set_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    IF (
-        NEW IS DISTINCT FROM OLD AND
-        NEW.updated_at IS NOT DISTINCT FROM OLD.updated_at
-    ) THEN
-        NEW.updated_at := current_timestamp;
-    END IF;
-    RETURN NEW;
-END;
-$$;
 
 
 --
@@ -120,9 +99,9 @@ CREATE FUNCTION public.sync_lastmod() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  NEW.last_updated := NOW();
+    NEW.last_updated := NOW();
 
-  RETURN NEW;
+    RETURN NEW;
 END;
 $$;
 
@@ -142,6 +121,68 @@ CREATE TABLE public.__diesel_schema_migrations (
 
 
 --
+-- Name: announcement_categories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.announcement_categories (
+    announcement_id uuid NOT NULL,
+    category_id uuid NOT NULL
+);
+
+
+--
+-- Name: announcement_rooms; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.announcement_rooms (
+    announcement_id uuid NOT NULL,
+    room_id uuid NOT NULL
+);
+
+
+--
+-- Name: announcements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.announcements (
+    id uuid NOT NULL,
+    event_id integer NOT NULL,
+    announcement_type integer NOT NULL,
+    text character varying NOT NULL,
+    show_with_days boolean NOT NULL,
+    begin_date date,
+    end_date date,
+    show_with_categories boolean NOT NULL,
+    show_with_all_categories boolean NOT NULL,
+    show_with_rooms boolean NOT NULL,
+    show_with_all_rooms boolean NOT NULL,
+    sort_key integer DEFAULT 0 NOT NULL,
+    deleted boolean DEFAULT false NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: announcements_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.announcements_event_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: announcements_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.announcements_event_id_seq OWNED BY public.announcements.event_id;
+
+
+--
 -- Name: categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -153,7 +194,8 @@ CREATE TABLE public.categories (
     event_id integer NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL,
-    is_official boolean DEFAULT false NOT NULL
+    is_official boolean DEFAULT false NOT NULL,
+    sort_key integer DEFAULT 0 NOT NULL
 );
 
 
@@ -239,8 +281,16 @@ CREATE TABLE public.event_passphrases (
     id integer NOT NULL,
     event_id integer NOT NULL,
     privilege integer NOT NULL,
-    passphrase character varying NOT NULL
+    passphrase character varying,
+    derivable_from_passphrase integer
 );
+
+
+--
+-- Name: COLUMN event_passphrases.passphrase; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.event_passphrases.passphrase IS 'if NULL, this passphrase can only derived from another one';
 
 
 --
@@ -374,6 +424,13 @@ ALTER SEQUENCE public.rooms_event_id_seq OWNED BY public.rooms.event_id;
 
 
 --
+-- Name: announcements event_id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcements ALTER COLUMN event_id SET DEFAULT nextval('public.announcements_event_id_seq'::regclass);
+
+
+--
 -- Name: categories event_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -420,13 +477,32 @@ ALTER TABLE ONLY public.rooms ALTER COLUMN event_id SET DEFAULT nextval('public.
 --
 
 COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
-00000000000000	2025-04-10 20:33:02.670301
-20220925130147	2025-04-10 20:33:02.672257
-20231230160951	2025-04-10 20:33:02.680111
-20240602083810	2025-04-10 20:33:02.683794
-20250202164157	2025-04-10 20:33:02.686166
-20250311195954	2025-04-10 20:33:02.687421
-20250315112501	2025-04-10 20:33:02.688083
+20250531140600	2025-06-15 14:20:26.968825
+20250602173009	2025-06-15 14:20:26.986616
+\.
+
+
+--
+-- Data for Name: announcement_categories; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.announcement_categories (announcement_id, category_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: announcement_rooms; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.announcement_rooms (announcement_id, room_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: announcements; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.announcements (id, event_id, announcement_type, text, show_with_days, begin_date, end_date, show_with_categories, show_with_all_categories, show_with_rooms, show_with_all_rooms, sort_key, deleted, last_updated) FROM stdin;
 \.
 
 
@@ -434,7 +510,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 -- Data for Name: categories; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.categories (id, title, icon, color, event_id, deleted, last_updated, is_official) FROM stdin;
+COPY public.categories (id, title, icon, color, event_id, deleted, last_updated, is_official, sort_key) FROM stdin;
 \.
 
 
@@ -458,7 +534,7 @@ COPY public.entry_rooms (entry_id, room_id) FROM stdin;
 -- Data for Name: event_passphrases; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.event_passphrases (id, event_id, privilege, passphrase) FROM stdin;
+COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_from_passphrase) FROM stdin;
 \.
 
 
@@ -492,6 +568,13 @@ COPY public.previous_dates (id, entry_id, comment, begin, "end", last_updated) F
 
 COPY public.rooms (id, title, description, event_id, deleted, last_updated) FROM stdin;
 \.
+
+
+--
+-- Name: announcements_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.announcements_event_id_seq', 1, false);
 
 
 --
@@ -542,6 +625,30 @@ SELECT pg_catalog.setval('public.rooms_event_id_seq', 1, false);
 
 ALTER TABLE ONLY public.__diesel_schema_migrations
     ADD CONSTRAINT __diesel_schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: announcement_categories announcement_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_categories
+    ADD CONSTRAINT announcement_categories_pkey PRIMARY KEY (announcement_id, category_id);
+
+
+--
+-- Name: announcement_rooms announcement_rooms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_rooms
+    ADD CONSTRAINT announcement_rooms_pkey PRIMARY KEY (announcement_id, room_id);
+
+
+--
+-- Name: announcements announcements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcements
+    ADD CONSTRAINT announcements_pkey PRIMARY KEY (id);
 
 
 --
@@ -609,24 +716,24 @@ ALTER TABLE ONLY public.rooms
 
 
 --
--- Name: categories_event_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: announcements_event_id_sort_key_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX categories_event_id_idx ON public.categories USING btree (event_id);
-
-
---
--- Name: entries_event_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX entries_event_id_idx ON public.entries USING btree (event_id);
+CREATE INDEX announcements_event_id_sort_key_idx ON public.announcements USING btree (event_id, sort_key);
 
 
 --
--- Name: entry_rooms_entry_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: categories_event_id_sort_key_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_rooms_entry_id_idx ON public.entry_rooms USING btree (entry_id);
+CREATE INDEX categories_event_id_sort_key_idx ON public.categories USING btree (event_id, sort_key);
+
+
+--
+-- Name: entries_event_id_begin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entries_event_id_begin_idx ON public.entries USING btree (event_id, begin);
 
 
 --
@@ -637,13 +744,6 @@ CREATE UNIQUE INDEX event_passphrases_event_id_passphrase_idx ON public.event_pa
 
 
 --
--- Name: previous_date_rooms_previous_date_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX previous_date_rooms_previous_date_id_idx ON public.previous_date_rooms USING btree (previous_date_id);
-
-
---
 -- Name: previous_dates_entry_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -651,10 +751,17 @@ CREATE INDEX previous_dates_entry_id_idx ON public.previous_dates USING btree (e
 
 
 --
--- Name: rooms_event_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: rooms_event_id_title_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX rooms_event_id_idx ON public.rooms USING btree (event_id);
+CREATE INDEX rooms_event_id_title_idx ON public.rooms USING btree (event_id, title);
+
+
+--
+-- Name: announcements sync_lastmod; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER sync_lastmod BEFORE UPDATE ON public.announcements FOR EACH ROW EXECUTE FUNCTION public.sync_lastmod();
 
 
 --
@@ -683,6 +790,46 @@ CREATE TRIGGER sync_lastmod BEFORE UPDATE ON public.previous_dates FOR EACH ROW 
 --
 
 CREATE TRIGGER sync_lastmod BEFORE UPDATE ON public.rooms FOR EACH ROW EXECUTE FUNCTION public.sync_lastmod();
+
+
+--
+-- Name: announcement_categories announcement_categories_announcement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_categories
+    ADD CONSTRAINT announcement_categories_announcement_id_fkey FOREIGN KEY (announcement_id) REFERENCES public.announcements(id) ON DELETE CASCADE;
+
+
+--
+-- Name: announcement_categories announcement_categories_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_categories
+    ADD CONSTRAINT announcement_categories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id);
+
+
+--
+-- Name: announcement_rooms announcement_rooms_announcement_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_rooms
+    ADD CONSTRAINT announcement_rooms_announcement_id_fkey FOREIGN KEY (announcement_id) REFERENCES public.announcements(id) ON DELETE CASCADE;
+
+
+--
+-- Name: announcement_rooms announcement_rooms_room_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcement_rooms
+    ADD CONSTRAINT announcement_rooms_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id);
+
+
+--
+-- Name: announcements announcements_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.announcements
+    ADD CONSTRAINT announcements_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
 
 
 --
@@ -723,6 +870,14 @@ ALTER TABLE ONLY public.entry_rooms
 
 ALTER TABLE ONLY public.entry_rooms
     ADD CONSTRAINT entry_rooms_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id);
+
+
+--
+-- Name: event_passphrases event_passphrases_derivable_from_passphrase_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_passphrases
+    ADD CONSTRAINT event_passphrases_derivable_from_passphrase_fkey FOREIGN KEY (derivable_from_passphrase) REFERENCES public.event_passphrases(id);
 
 
 --

@@ -34,7 +34,12 @@ def start_kueaplan_server(request: pytest.FixtureRequest):
         return
     executable_path = _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
     cmd = [executable_path, "serve"]
-    process = subprocess.Popen(cmd)
+    env = dict(os.environ)
+    env["LISTEN_PORT"] = "9099"
+    env["LISTEN_ADDRESS"] = "127.0.0.1"
+    env["ADMIN_NAME"] = "Anton Administrator"
+    env["ADMIN_EMAIL"] = "anton@example.com"
+    process = subprocess.Popen(cmd, env=env)
     time.sleep(2)
     returncode = process.poll()
     if returncode is not None:

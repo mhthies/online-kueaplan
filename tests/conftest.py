@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+import types
 from pathlib import Path
 import shutil
 import subprocess
@@ -60,3 +62,26 @@ def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
     if result.returncode != 0:
         print(result.stdout)
         raise RuntimeError(f"Could not restore database dump. psql exited with return code {result.returncode}")
+
+
+@pytest.fixture(scope="session")
+def generated_api_client(request: pytest.FixtureRequest) -> types.ModuleType:
+    client_path = Path(__file__).parent / "__api_client"
+    openapi_source_path = Path(__file__).parent.parent / "etc" / "spec" / "openapi.json"
+    generator_config_path = Path(__file__).parent / "openapi_python_config.yaml"
+    openapi_generator_executable = shutil.which("openapi-generator")
+    if not openapi_generator_executable:
+        pytest.skip("openapi-generator is not available in the PATH")
+    subprocess.run([openapi_generator_executable,
+                    "generate",
+                    "--generator-name", "python",
+                    "--output", client_path.resolve(),
+                    "--input-spec", openapi_source_path.resolve(),
+                    "--config", generator_config_path],
+                   check=True)
+
+    shutil.rmtree(client_path / "kueaplan_api_client" / "test")
+
+    sys.path.append(str(client_path))
+    import kueaplan_api_client
+    return kueaplan_api_client

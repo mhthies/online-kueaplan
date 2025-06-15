@@ -43,23 +43,21 @@ def main():
 
 def anonymize_entry(entry: dict[str, JSON], replacement_map: dict[str, str], unchanged_names: set[str],
                     changed_texts: list[tuple[str, str]]):
-    regex = re.compile("\\b(" + "|".join(replacement_map.keys()) + ")\\b")
+    regex = re.compile("\\b(" + "|".join(replacement_map.keys()) + ")(s?)\\b")
     new_title = regex.sub(lambda m: replacement_map.get(m.group(1), ""), entry["title"])
     if new_title != entry["title"]:
         changed_texts.append((entry["title"], new_title))
         entry["title"] = new_title
-    new_description = regex.sub(lambda m: replacement_map.get(m.group(1), ""), entry["description"])
-    if new_description != entry["description"]:
-        changed_texts.append((entry["description"], new_description))
-        entry["description"] = new_description
-    new_comment = regex.sub(lambda m: replacement_map.get(m.group(1), ""), entry["comment"])
-    if new_comment != entry["comment"]:
-        changed_texts.append((entry["comment"], new_comment))
-        entry["comment"] = new_comment
-    new_comment = regex.sub(lambda m: replacement_map.get(m.group(1), ""), entry["comment"])
-    if new_comment != entry["comment"]:
-        changed_texts.append((entry["comment"], new_comment))
-        entry["comment"] = new_comment
+    if "description" in entry:
+        new_description = regex.sub(lambda m: replacement_map.get(m.group(1), "") + m.group(2), entry["description"])
+        if new_description != entry["description"]:
+            changed_texts.append((entry["description"], new_description))
+            entry["description"] = new_description
+    if "comment" in entry:
+        new_comment = regex.sub(lambda m: replacement_map.get(m.group(1), "") + m.group(2), entry["comment"])
+        if new_comment != entry["comment"]:
+            changed_texts.append((entry["comment"], new_comment))
+            entry["comment"] = new_comment
     old_person = entry["responsiblePerson"]
     new_person = regex.sub(lambda m: replacement_map.get(m.group(1), ""), old_person)
     entry["responsiblePerson"] = new_person

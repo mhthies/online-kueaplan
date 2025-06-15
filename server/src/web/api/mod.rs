@@ -27,6 +27,7 @@ fn get_api_service() -> actix_web::Scope {
     web::scope("/api/v1")
         .app_data(json_config)
         .service(endpoints_auth::check_authorization)
+        .service(endpoints_event::get_event_info)
         .service(endpoints_auth::authorize)
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)

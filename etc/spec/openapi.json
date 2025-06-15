@@ -30,6 +30,9 @@
       "categoryId": {"$ref": "components/categoryId.json"},
       "roomId": {"$ref": "components/roomId.json"},
       "entryId": {"$ref": "components/entryId.json"}
+    },
+    "securitySchemes": {
+      "sessionTokenAuth": {"$ref": "components/sessionTokenAuth.json"}
     }
   }
 }

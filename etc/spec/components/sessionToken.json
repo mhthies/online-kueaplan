@@ -1,9 +1,0 @@
-{
-  "name": "X-SESSION-TOKEN",
-  "in": "header",
-  "description": "Session token, used for authorization.",
-  "required": true,
-  "schema": {
-    "type": "string"
-  }
-}

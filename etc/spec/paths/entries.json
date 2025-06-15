@@ -3,8 +3,10 @@
     "operationId": "listEntries",
     "summary": "Get all KüA plan entries for this event.",
     "parameters": [
-      {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/sessionToken.json"}
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
     ],
     "responses": {
       "200": {

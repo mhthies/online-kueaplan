@@ -3,8 +3,10 @@
     "operationId": "listCategories",
     "summary": "Get the list of all categories for this event.",
     "parameters": [
-      {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/sessionToken.json"}
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
     ],
     "responses": {
       "200": {

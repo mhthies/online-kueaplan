@@ -4,7 +4,6 @@
     "summary": "Create or update a room.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/sessionToken.json"},
       {
         "name": "roomId",
         "in": "path",
@@ -14,6 +13,9 @@
           "format": "uuid"
         }
       }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
     ],
     "requestBody": {
       "content": {
@@ -58,7 +60,6 @@
     "summary": "Remove a room from the KüA plan. It will be deleted from the database.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/sessionToken.json"},
       {
         "name": "roomId",
         "in": "path",
@@ -68,6 +69,9 @@
           "format": "uuid"
         }
       }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
     ],
     "responses": {
       "204": {

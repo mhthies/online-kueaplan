@@ -1,0 +1,62 @@
+---
+kind: pipeline
+type: docker
+name: build
+
+steps:
+  - name: build
+    image: rust:latest
+    commands:
+      - cargo build --verbose --all
+    depends_on:
+      - clone
+
+  - name: rust test
+    image: rust:latest
+    commands:
+      - cargo test --verbose --all
+    depends_on:
+      - build
+
+  - name: system tests
+    image: mcr.microsoft.com/playwright/python:v1.52.0-noble
+    commands:
+      - cd tests
+      - pip install -r requirements.txt
+      - pytest --browser firefox --browser chromium --start-app
+    environment:
+      DATABASE_URL: postgres://kueaplan:password@postgres/kueaplan_tests
+      SECRET: test_secret
+    depends_on:
+      - build
+
+  - name: clippy
+    image: rust:latest
+    commands:
+      - rustup component add clippy
+      - cargo clippy --all-targets --all-features
+    depends_on:
+      - clone
+
+  - name: fmt
+    image: rust:latest
+    commands:
+      - rustup component add rustfmt
+      - cargo fmt --check
+    depends_on:
+      - clone 
+
+services:
+  - name: postgres
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: kueaplan
+      POSTGRES_DB: kueaplan_tests
+      LANG: de_DE.utf8
+      POSTGRES_INITDB_ARGS: --locale-provider=icu --icu-locale=de-DE
+
+trigger:
+  branch:
+    - master
+    - ci/*

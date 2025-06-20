@@ -29,7 +29,7 @@ def _cargo_build_and_get_executable_path(working_directory: Path) -> str:
 
 
 @pytest.yield_fixture(scope="session", autouse=True)
-def start_kueaplan_server(request: pytest.FixtureRequest):
+def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None):
     if not request.config.getoption("--start-app"):
         yield
         return
@@ -37,7 +37,13 @@ def start_kueaplan_server(request: pytest.FixtureRequest):
         executable_path = _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
     else:
         # best guess: Is already built and located at ../../target/debug/kueaplan_server
-        executable_path = str((Path(__file__).parent.parent / "target" / "debug" / "kueaplan_server").resolve())
+        path = (Path(__file__).parent.parent / "target" / "debug" / "kueaplan_server").resolve()
+        if not path.is_file():
+            raise RuntimeError("Could not find pre-compiled kueaplan_server. Run without --start-app and execute the server manually.")
+        executable_path = str(path)
+
+    _restore_database_dump(os.environ["DATABASE_URL"], Path(__file__).parent / "database_dumps" / "minimal.sql")
+
     cmd = [executable_path, "serve"]
     env = dict(os.environ)
     env["LISTEN_PORT"] = "9099"
@@ -66,11 +72,14 @@ def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
     if database_dump is None:
         database_dump = "minimal.sql"
     database_file = Path(__file__).parent / "database_dumps" / database_dump
-    assert isinstance(database_dump, str)
-    result = subprocess.run([shutil.which("psql"), "-f", str(database_file), os.environ["DATABASE_URL"]],
+    _restore_database_dump(os.environ["DATABASE_URL"], database_file)
+
+
+def _restore_database_dump(database_url: str, database_dump_path: Path) -> None:
+    result = subprocess.run([shutil.which("psql"), "-f", str(database_dump_path), database_url],
                             capture_output=True)
     if result.returncode != 0:
-        print(result.stdout)
+        print(result.stderr)
         raise RuntimeError(f"Could not restore database dump. psql exited with return code {result.returncode}")
 
 

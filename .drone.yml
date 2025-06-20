@@ -36,7 +36,7 @@ steps:
       - rustup component add clippy
       - cargo clippy --all-targets --all-features
     depends_on:
-      - clone
+      - rust test
 
   - name: fmt
     image: rust:latest

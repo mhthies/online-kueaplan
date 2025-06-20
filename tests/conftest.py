@@ -33,7 +33,11 @@ def start_kueaplan_server(request: pytest.FixtureRequest):
     if not request.config.getoption("--start-app"):
         yield
         return
-    executable_path = _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
+    if shutil.which("cargo"):
+        executable_path = _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
+    else:
+        # best guess: Is already built and located at ../../target/debug/kueaplan_server
+        executable_path = str((Path(__file__).parent.parent / "target" / "debug" / "kueaplan_server").resolve())
     cmd = [executable_path, "serve"]
     env = dict(os.environ)
     env["LISTEN_PORT"] = "9099"

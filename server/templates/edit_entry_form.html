@@ -72,7 +72,7 @@
                 {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
             </div>
             <div>
-                {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).build())|safe }}
+                {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).info("z.B. Treffpunkt").build())|safe }}
             </div>
         </div>
         <div class="col-md-6">

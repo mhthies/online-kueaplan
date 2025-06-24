@@ -12,13 +12,17 @@
 }
 
 /* KüA list category colors */
-.table.kuealist > :not(caption) > .kuea-with-category > * {
-    background: var(--category-bg);
+.kuealist tr.kuea-with-category {
+    border-left: solid 5px var(--category-border);
+}
+.kuealist tr.kuea-with-category .kuea-title .content {
     color: var(--category-text);
 }
 
-[data-bs-theme="dark"] .table.kuealist > :not(caption) > .kuea-with-category > * {
-    background: var(--category-bg-dark);
+[data-bs-theme="dark"] .kuealist tr.kuea-with-category {
+    border-left-color: var(--category-border-dark);
+}
+[data-bs-theme="dark"] .kuealist tr.kuea-with-category .kuea-title .content {
     color: var(--category-text-dark);
 }
 

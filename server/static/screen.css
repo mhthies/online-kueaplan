@@ -20,6 +20,7 @@
     }
     .kuealist tr.kuea-with-category {
         border-color: var(--category-border);
+        border-left-width: 1px;
     }
     [data-bs-theme="dark"] .kuealist tr.kuea-with-category {
         border-color: var(--category-border-dark);
@@ -49,6 +50,7 @@
         float: right;
         text-align: right;
         font-size: .875em;
+        box-shadow: none;
     }
     .kuealist td.kuea-time .comment {
         font-size: inherit;
@@ -62,6 +64,7 @@
     }
     .kuealist tr.next-calendar-date-marker td {
         background: var(--bs-body-bg);
+        box-shadow: none;
         width: auto;
         display: inline-block;
         margin-top: -1.25em;

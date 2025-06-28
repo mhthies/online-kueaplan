@@ -84,7 +84,7 @@ def _restore_database_dump(database_url: str, database_dump_path: Path) -> None:
 
 
 @pytest.fixture(scope="session")
-def generated_api_client(request: pytest.FixtureRequest) -> types.ModuleType:
+def generated_api_client(request: pytest.FixtureRequest) -> "ApiClientWrapper":
     client_path = Path(__file__).parent / "__api_client"
     openapi_source_path = Path(__file__).parent.parent / "etc" / "spec" / "openapi.json"
     generator_config_path = Path(__file__).parent / "openapi_python_config.yaml"
@@ -103,4 +103,20 @@ def generated_api_client(request: pytest.FixtureRequest) -> types.ModuleType:
 
     sys.path.append(str(client_path))
     import kueaplan_api_client
-    return kueaplan_api_client
+    return ApiClientWrapper(kueaplan_api_client)
+
+
+class ApiClientWrapper:
+    def __init__(self, kueaplan_api_client: types.ModuleType):
+        self.module = kueaplan_api_client
+        self.client = self._create_api_client()
+
+    def _create_api_client(self) -> "kueaplan_api_client.DefaultApi":
+        BASE_URL = "http://localhost:9099/api/v1"
+        config = self.module.Configuration(host=BASE_URL)
+        client = self.module.ApiClient(config)
+        return self.module.DefaultApi(client)
+
+    def login(self, event_id: int, passphrase: str) -> None:
+        auth_response = self.client.authorize(event_id, self.module.AuthorizeRequest(passphrase=passphrase))
+        self.client.api_client.configuration.api_key["sessionTokenAuth"] = auth_response.session_token

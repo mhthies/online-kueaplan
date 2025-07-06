@@ -1,3 +1,4 @@
+use crate::data_store::models::Event;
 use crate::data_store::EventFilter;
 use crate::web::ui::base_template::BaseTemplateContext;
 use crate::web::ui::error::AppError;
@@ -5,7 +6,6 @@ use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
-use crate::data_store::models::Event;
 
 #[get("/events")]
 async fn events_list(

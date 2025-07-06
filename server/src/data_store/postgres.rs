@@ -1,4 +1,7 @@
-use super::{models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId, EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError};
+use super::{
+    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId,
+    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError,
+};
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
     AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken, Privilege,
@@ -65,7 +68,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .load::<models::Event>(&mut self.connection)
             .map_err(|e| e.into())
     }
-    
+
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
         use schema::events::dsl::*;
 

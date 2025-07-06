@@ -7,7 +7,7 @@ use actix_web::web::Redirect;
 use actix_web::{get, web, HttpRequest, Responder};
 
 #[get("/{event_id}")]
-async fn index(
+async fn event_index(
     path: web::Path<EventId>,
     state: web::Data<AppState>,
     req: HttpRequest,

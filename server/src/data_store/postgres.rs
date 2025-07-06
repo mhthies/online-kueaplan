@@ -1,7 +1,4 @@
-use super::{
-    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId, EventId,
-    KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError,
-};
+use super::{models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId, EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError};
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{
     AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken, Privilege,
@@ -59,6 +56,16 @@ fn sql_upsert_is_updated() -> diesel::expression::SqlLiteral<diesel::sql_types::
 }
 
 impl KueaPlanStoreFacade for PgDataStoreFacade {
+    fn get_events(&mut self, filter: EventFilter) -> Result<Vec<models::Event>, StoreError> {
+        use schema::events::dsl::*;
+
+        events
+            .filter(event_filter_to_sql(filter))
+            .select(models::Event::as_select())
+            .load::<models::Event>(&mut self.connection)
+            .map_err(|e| e.into())
+    }
+    
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError> {
         use schema::events::dsl::*;
 
@@ -973,6 +980,20 @@ fn replace_room_with_other_rooms(
 
 type BoxedBoolExpression<'a, Table> =
     Box<dyn BoxableExpression<Table, diesel::pg::Pg, SqlType = diesel::sql_types::Bool> + 'a>;
+
+fn event_filter_to_sql<'a>(filter: EventFilter) -> BoxedBoolExpression<'a, schema::events::table> {
+    use schema::events::dsl::*;
+
+    let mut expression: BoxedBoolExpression<'a, schema::events::table> =
+        Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
+    if let Some(after) = filter.after {
+        expression = Box::new(expression.as_expression().and(end_date.ge(after)));
+    }
+    if let Some(before) = filter.before {
+        expression = Box::new(expression.as_expression().and(begin_date.lt(before)));
+    }
+    expression
+}
 
 fn entry_filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schema::entries::table> {
     use diesel::dsl::{exists, not};

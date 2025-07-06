@@ -5,7 +5,9 @@ use crate::setup::{
     get_listen_port_from_env, get_secret_from_env,
 };
 use crate::web::http_error_logging::error_logging_middleware;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::error::UrlGenerationError;
+use actix_web::web::Redirect;
+use actix_web::{get, middleware, web, App, HttpRequest, HttpServer, Responder};
 use std::sync::Arc;
 
 mod api;
@@ -21,6 +23,7 @@ pub fn serve() -> Result<(), CliError> {
                 App::new()
                     .configure(api::configure_app)
                     .configure(ui::configure_app)
+                    .service(index)
                     .service(ical::ical)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(actix_web::middleware::from_fn(error_logging_middleware))
@@ -57,4 +60,11 @@ impl AppState {
 struct AdminInfo {
     name: String,
     email: String,
+}
+
+#[get("/")]
+async fn index(request: HttpRequest) -> Result<impl Responder, UrlGenerationError> {
+    Ok(Redirect::to(
+        request.url_for::<_, &&str>("events_list", &[])?.to_string(),
+    ))
 }

@@ -32,7 +32,8 @@ pub fn configure_app(cfg: &mut web::ServiceConfig) {
 fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
-        .service(endpoints::index::index)
+        .service(endpoints::events_list::events_list)
+        .service(endpoints::index::event_index)
         .service(endpoints::main_list::main_list)
         .service(endpoints::categories_list::categories_list)
         .service(endpoints::main_list_by_category::main_list_by_category)

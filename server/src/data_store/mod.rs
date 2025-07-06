@@ -45,6 +45,10 @@ pub type AnnouncementId = uuid::Uuid;
 pub type PassphraseId = i32;
 
 pub trait KueaPlanStoreFacade {
+    /// Get a filtered list of events
+    ///
+    /// Events are returned in chronological order, i.e. sorted by (begin, end)
+    fn get_events(&mut self, filter: EventFilter) -> Result<Vec<models::Event>, StoreError>;
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError>;
     fn get_extended_event(
         &mut self,
@@ -339,6 +343,51 @@ impl EntryFilterBuilder {
 
     /// Create the EntryFilter object
     pub fn build(self) -> EntryFilter {
+        self.result
+    }
+}
+
+/// Filter options for retrieving events from the store via KueaPlanStoreFacade::get_events()
+///
+/// Can be constructed through the EventFilterBuilder
+#[derive(Default)]
+pub struct EventFilter {
+    /// Filter for events that end at or after the given date (this includes events that span over
+    /// this day)
+    pub after: Option<chrono::NaiveDate>,
+    /// Filter for entries that begin at or before the given date (this includes events that span
+    /// over this day)
+    pub before: Option<chrono::NaiveDate>,
+}
+
+impl EventFilter {
+    pub fn builder() -> EventFilterBuilder {
+        EventFilterBuilder {
+            result: Self::default(),
+        }
+    }
+}
+
+/// Builder for constructing EventFilter objects
+pub struct EventFilterBuilder {
+    result: EventFilter,
+}
+
+impl EventFilterBuilder {
+    /// Add filter, to only include events that end at or after the given date (this includes events
+    /// that span over this day)
+    pub fn after(mut self, after: chrono::NaiveDate) -> Self {
+        self.result.after = Some(after);
+        self
+    }
+    /// Add filter, to only include events that start at or before the given date (this includes
+    /// events that span over this day)
+    pub fn before(mut self, before: chrono::NaiveDate) -> Self {
+        self.result.before = Some(before);
+        self
+    }
+    /// Create the EventFilter object
+    pub fn build(self) -> EventFilter {
         self.result
     }
 }

@@ -21,3 +21,4 @@ pub mod new_previous_date;
 pub mod previous_dates;
 pub mod rooms_list;
 pub mod ui_api;
+pub mod events_list;

@@ -1005,10 +1005,18 @@ fn entry_filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schem
     let mut expression: BoxedBoolExpression<'a, schema::entries::table> =
         Box::new(diesel::dsl::sql::<diesel::sql_types::Bool>("TRUE"));
     if let Some(after) = filter.after {
-        expression = Box::new(expression.as_expression().and(end.ge(after)));
+        expression = if filter.after_inclusive {
+            Box::new(expression.as_expression().and(end.ge(after)))
+        } else {
+            Box::new(expression.as_expression().and(end.gt(after)))
+        };
     }
     if let Some(before) = filter.before {
-        expression = Box::new(expression.as_expression().and(begin.lt(before)));
+        expression = if filter.before_inclusive {
+            Box::new(expression.as_expression().and(begin.le(before)))
+        } else {
+            Box::new(expression.as_expression().and(begin.lt(before)))
+        };
     }
     if let Some(rooms) = filter.rooms.clone() {
         expression = Box::new(
@@ -1031,10 +1039,18 @@ fn entry_filter_to_sql<'a>(filter: EntryFilter) -> BoxedBoolExpression<'a, schem
         let mut sub_query_filter: BoxedBoolExpression<'_, _> =
             Box::new(entry_id.eq(schema::entries::dsl::id));
         if let Some(after) = filter.after {
-            sub_query_filter = Box::new(sub_query_filter.and(end.gt(after)));
+            sub_query_filter = if filter.after_inclusive {
+                Box::new(sub_query_filter.and(end.ge(after)))
+            } else {
+                Box::new(sub_query_filter.and(end.gt(after)))
+            };
         }
         if let Some(before) = filter.before {
-            sub_query_filter = Box::new(sub_query_filter.and(begin.lt(before)));
+            sub_query_filter = if filter.before_inclusive {
+                Box::new(sub_query_filter.and(begin.le(before)))
+            } else {
+                Box::new(sub_query_filter.and(begin.lt(before)))
+            };
         }
         if let Some(rooms) = filter.rooms {
             sub_query_filter = Box::new(

@@ -42,7 +42,9 @@ impl From<FilterQuery> for EntryFilter {
     fn from(value: FilterQuery) -> Self {
         EntryFilter {
             after: value.after,
+            after_inclusive: true, // TODO
             before: value.before,
+            before_inclusive: false,              // TODO
             include_previous_date_matches: false, // TODO
             categories: None,                     // TODO
             rooms: None,                          // TODO

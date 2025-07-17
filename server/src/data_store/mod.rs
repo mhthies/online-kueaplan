@@ -229,9 +229,17 @@ pub struct EntryFilter {
     /// Filter for entries that end after the given point in time (this includes entries that span
     /// over this point in time)
     pub after: Option<chrono::DateTime<chrono::Utc>>,
+    /// If the `after` filter is active: If true, entries that end exactly at the `after` point in
+    /// time are included as well. Otherwise, only entries that end strictly after the point in time
+    /// are included.
+    pub after_inclusive: bool,
     /// Filter for entries that begin before the given point in time (this includes entries that
     /// span over this point in time)
     pub before: Option<chrono::DateTime<chrono::Utc>>,
+    /// If the `before` filter is active: If true, entries that start exactly at the `before` point
+    /// in time are included as well. Otherwise, only entries that start strictly before the point
+    /// in time are included.
+    pub before_inclusive: bool,
     /// If true, entries with a previous date that matches the after/before filter are included,
     /// even if their current begin/end does not match the after/before filter.
     pub include_previous_date_matches: bool,
@@ -255,45 +263,45 @@ impl EntryFilter {
     /// Usually, filtering should be done by the database. This function can be used for separate
     /// checks of individual entries in software.
     pub fn matches(&self, entry: &models::FullEntry) -> bool {
-        if !self.matches_times(entry.entry.begin, entry.entry.end)
-            && !entry
-                .previous_dates
-                .iter()
-                .any(|pd| self.matches_times(pd.previous_date.begin, pd.previous_date.end))
-        {
-            return false;
-        }
-        if let Some(before) = self.before {
-            if before <= entry.entry.begin {
-                return false;
-            }
-        }
         if let Some(categories) = &self.categories {
             if !categories.contains(&entry.entry.category) {
                 return false;
             }
         }
-        if let Some(rooms) = &self.rooms {
-            if !rooms.iter().any(|r| entry.room_ids.contains(r)) {
-                return false;
-            }
+        if self.matches_times_and_rooms(entry.entry.begin, entry.entry.end, &entry.room_ids) {
+            return true;
         }
-        if self.no_room && !entry.room_ids.is_empty() {
-            return false;
+        if entry.previous_dates.iter().any(|pd| {
+            self.matches_times_and_rooms(pd.previous_date.begin, pd.previous_date.end, &pd.room_ids)
+        }) {
+            return true;
         }
-        true
+        false
     }
 
-    fn matches_times(&self, begin: chrono::DateTime<Utc>, end: chrono::DateTime<Utc>) -> bool {
+    fn matches_times_and_rooms(
+        &self,
+        begin: chrono::DateTime<Utc>,
+        end: chrono::DateTime<Utc>,
+        room_ids: &Vec<RoomId>,
+    ) -> bool {
         if let Some(after) = self.after {
-            if after >= end {
+            if after > end || after == end && self.after_inclusive {
                 return false;
             }
         }
         if let Some(before) = self.before {
-            if before <= begin {
+            if before < begin || before == begin && self.before_inclusive {
                 return false;
             }
+        }
+        if let Some(rooms) = &self.rooms {
+            if !rooms.iter().any(|r| room_ids.contains(r)) {
+                return false;
+            }
+        }
+        if self.no_room && !room_ids.is_empty() {
+            return false;
         }
         true
     }
@@ -307,14 +315,16 @@ pub struct EntryFilterBuilder {
 impl EntryFilterBuilder {
     /// Add filter, to only include entries that end after the given point in time (this includes
     /// entries that span over this point in time)
-    pub fn after(mut self, after: chrono::DateTime<chrono::Utc>) -> Self {
+    pub fn after(mut self, after: chrono::DateTime<chrono::Utc>, inclusive: bool) -> Self {
         self.result.after = Some(after);
+        self.result.after_inclusive = inclusive;
         self
     }
     /// Add filter, to only include entries that begin before the given point in time (this includes
     /// entries that span over this point in time)
-    pub fn before(mut self, before: chrono::DateTime<chrono::Utc>) -> Self {
+    pub fn before(mut self, before: chrono::DateTime<chrono::Utc>, inclusive: bool) -> Self {
         self.result.before = Some(before);
+        self.result.before_inclusive = inclusive;
         self
     }
     /// Change after/before filters to include entries which do not cover the specified time

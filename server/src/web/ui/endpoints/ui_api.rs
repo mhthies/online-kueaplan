@@ -24,7 +24,10 @@ async fn concurrent_entries(
 
     let begin = timestamp_from_effective_date_and_time(query.effective_day, query.begin_time);
     let end = begin + query.duration;
-    let filter = EntryFilter::builder().after(begin).before(end).build();
+    let filter = EntryFilter::builder()
+        .after(begin, false)
+        .before(end, false)
+        .build();
 
     let entries = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;

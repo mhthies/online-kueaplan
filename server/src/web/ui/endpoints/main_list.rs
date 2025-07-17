@@ -152,13 +152,14 @@ fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>
         timestamp_from_effective_date_and_time(date, begin_time.unwrap_or(EFFECTIVE_BEGIN_OF_DAY));
     let end = date.and_time(EFFECTIVE_BEGIN_OF_DAY) + chrono::Duration::days(1);
     EntryFilter::builder()
-        .after(begin)
+        .after(begin, true)
         .before(
             TIME_ZONE
                 .from_local_datetime(&end)
                 .latest()
                 .map(|dt| dt.to_utc())
                 .unwrap_or(end.and_utc()),
+            false,
         )
         .include_previous_date_matches()
         .build()

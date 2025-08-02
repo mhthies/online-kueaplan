@@ -27,6 +27,7 @@
         {% if let Some(event) = base.event %}
             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
                 <ul class="navbar-nav">
+                    {% let today = crate::web::ui::time_calculation::current_effective_date() %}
                     <li class="nav-item dropdown">
                         {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
                         <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
@@ -39,8 +40,8 @@
                         </a>
                         <ul class="dropdown-menu position-absolute">
                             {% for day in crate::web::ui::util::event_days(event) %}
-                                <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
-                                    {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}
+                                <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% elif day == today %}text-primary{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
+                                    {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}{% if day == today %} <i class="bi bi-arrow-left" title="heute"></i>{% endif %}
                                 </a></li>
                             {% endfor %}
                         </ul>

@@ -53,17 +53,21 @@ pub fn timestamp_from_effective_date_and_time(
         .unwrap_or(local_datetime.and_utc())
 }
 
+/// Get the current (effective) date, but clamp it to the event's boundaries
+pub fn current_effective_date() -> chrono::NaiveDate {
+    let now = chrono::Utc::now().with_timezone(&TIME_ZONE);
+    now.date_naive()
+        + if now.naive_local().time() < EFFECTIVE_BEGIN_OF_DAY {
+        chrono::Duration::days(-1)
+    } else {
+        chrono::Duration::days(0)
+    }
+}
+
 /// Calculate the most reasonable date to show the KüA-Plan for. Use the current (effective) date,
 /// but clamp it to the event's boundaries
 pub fn most_reasonable_date(event: &Event) -> chrono::NaiveDate {
-    let now = chrono::Utc::now().with_timezone(&TIME_ZONE);
-    let effective_date = now.date_naive()
-        + if now.naive_local().time() < EFFECTIVE_BEGIN_OF_DAY {
-            chrono::Duration::days(-1)
-        } else {
-            chrono::Duration::days(0)
-        };
-    effective_date.clamp(event.begin_date, event.end_date)
+    current_effective_date().clamp(event.begin_date, event.end_date)
 }
 
 #[cfg(test)]

@@ -17,7 +17,7 @@
     <h1>
         KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
         {% if date == self::current_effective_date() %}
-            (heute)
+            <span class="d-print-none">(heute)</span>
         {% endif %}
         {% if let Some(time_after) = time_after %}
             <br><small>ab {{ time_after.format("%H:%M") }} Uhr</small>

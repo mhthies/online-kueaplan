@@ -24,7 +24,12 @@
     {% endif %}
 
     {% for (date, rows) in entry_blocks %}
-        <h3 class="mt-4">{{ date|weekday }}, {{ date.format("%d.%m.%Y") }}</h3>
+        <h3 class="mt-4">
+            {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
+            {% if *date == self::current_effective_date() %}
+                <span class="d-print-none">(heute)</span>
+            {% endif %}
+        </h3>
         <table class="table table-striped kuealist">
             <thead>
             <tr>

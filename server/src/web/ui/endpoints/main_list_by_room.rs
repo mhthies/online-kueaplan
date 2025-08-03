@@ -7,7 +7,7 @@ use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
-use crate::web::ui::time_calculation::TIME_ZONE;
+use crate::web::ui::time_calculation::{TIME_ZONE, current_effective_date};
 use crate::web::ui::util;
 use crate::web::ui::util::{
     group_rows_by_date, mark_first_row_of_next_calendar_date_per_effective_date,

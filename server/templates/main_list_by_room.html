@@ -18,6 +18,10 @@
         KüA-Plan, Ort {{ room.title }}
     </h1>
 
+    <div class="d-none d-print-block">
+        Stand: {{ to_our_timezone(&chrono::offset::Utc::now()).format("%d.%m. %H:%M") }}
+    </div>
+
     {% if !room.description.is_empty() %}
         <div class="alert alert-secondary d-flex flex-row">
             <div>

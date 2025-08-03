@@ -24,6 +24,10 @@
         {% endif %}
     </h1>
 
+    <div class="d-none d-print-block">
+        Stand: {{ to_our_timezone(&chrono::offset::Utc::now()).format("%d.%m. %H:%M") }}
+    </div>
+
     {% if entry_blocks.is_empty() %}
         <div class="alert alert-info mt-4">
             <i class="bi bi-info-circle" aria-hidden="true"></i>

@@ -58,10 +58,10 @@ pub fn current_effective_date() -> chrono::NaiveDate {
     let now = chrono::Utc::now().with_timezone(&TIME_ZONE);
     now.date_naive()
         + if now.naive_local().time() < EFFECTIVE_BEGIN_OF_DAY {
-        chrono::Duration::days(-1)
-    } else {
-        chrono::Duration::days(0)
-    }
+            chrono::Duration::days(-1)
+        } else {
+            chrono::Duration::days(0)
+        }
 }
 
 /// Calculate the most reasonable date to show the KüA-Plan for. Use the current (effective) date,

@@ -600,9 +600,9 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "comrak"
-version = "0.39.1"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fefab951771fc3beeed0773ce66a4f7b706273fc6c4c95b08dd1615744abcf5"
+checksum = "57c9011f1cb8ff2306380cd0cd455611341d0a064bf7907234c3da4c6babb423"
 dependencies = [
  "bon",
  "caseless",
@@ -1114,9 +1114,9 @@ dependencies = [
 
 [[package]]
 name = "icalendar"
-version = "0.16.17"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c81bcf05f183477037d33785dd7670d32170b7e96270a9e475c8adee0140a0"
+checksum = "9e69a1b52143a7fc94b55d008e8ab30506ebc93774ddb2752ee44266378fc5d6"
 dependencies = [
  "chrono",
  "iso8601",

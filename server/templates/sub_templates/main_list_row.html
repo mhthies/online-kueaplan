@@ -130,7 +130,7 @@
                 {%- if !loop.last %}, {% endif -%}
             {% endfor -%}
             {% if row.merged_rooms.len() > row.entry.room_ids.len() -%}
-                ,
+                {% if row.entry.room_ids.len() > 0 %}, {% endif -%}
                 <span class="visually-hidden">Zuvor geplante Orte:</span>
                 <span class="text-decoration-line-through">
             {% endif %}

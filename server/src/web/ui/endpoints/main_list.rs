@@ -149,11 +149,9 @@ mod filters {
 /// Generate an EntryFilter for retrieving only the entries on the given day (using the
 /// EFFECTIVE_BEGIN_OF_DAY)
 fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>) -> EntryFilter {
-    let begin =
-        timestamp_from_effective_date_and_time(date, begin_time.unwrap_or(EFFECTIVE_BEGIN_OF_DAY));
     let end = date.and_time(EFFECTIVE_BEGIN_OF_DAY) + chrono::Duration::days(1);
-    EntryFilter::builder()
-        .after(begin, true)
+    let mut builder = EntryFilter::builder()
+        .include_previous_date_matches()
         .before(
             TIME_ZONE
                 .from_local_datetime(&end)
@@ -161,9 +159,26 @@ fn date_to_filter(date: chrono::NaiveDate, begin_time: Option<chrono::NaiveTime>
                 .map(|dt| dt.to_utc())
                 .unwrap_or(end.and_utc()),
             false,
-        )
-        .include_previous_date_matches()
-        .build()
+        );
+    if let Some(begin_time) = begin_time {
+        // When filtering the main list by a start time, the intuitively expected behaviour is to
+        // *not* include entries that end exactly at that time, even for entries with 0:00h
+        // duration.
+        builder = builder.after(
+            timestamp_from_effective_date_and_time(date, begin_time),
+            false,
+        );
+    } else {
+        // When *not* filtering the main list by a start time, we must include entries that end
+        // exactly at the EFFECTIVE_BEGIN_OF_DAY. Otherwise, we would exclude entries of 0:00h
+        // duration which start (and end) at the EFFECTIVE_BEGIN_OF_DAY from all days main_lists,
+        // such that they are not accessible in the plan anymore.
+        builder = builder.after(
+            timestamp_from_effective_date_and_time(date, EFFECTIVE_BEGIN_OF_DAY),
+            true,
+        );
+    }
+    builder.build()
 }
 
 /// Generate the list of [MainListRow]s for the given `date` from the given list of KüA-Plan

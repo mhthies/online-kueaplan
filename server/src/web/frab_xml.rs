@@ -34,7 +34,7 @@ async fn frab_xml(
 
     let url_for_event = |event_id: &EventId| {
         http_request
-            .url_for("index", &[&event_id.to_string()])
+            .url_for("event_index", &[&event_id.to_string()])
             .unwrap()
             .to_string()
     };
@@ -99,7 +99,7 @@ where
             .iter()
             .enumerate()
             .map(|(index, (date, rooms))| DaySchedule {
-                index: index as u32,
+                index: (index + 1) as u32,
                 date: date.clone(),
                 start: date.and_time(EFFECTIVE_BEGIN_OF_DAY).and_utc(),
                 end: (*date + chrono::TimeDelta::days(1))
@@ -136,6 +136,7 @@ where
     serde_xml_rs::to_string(&data).unwrap() // TODO error handling
 }
 
+// TODO change structs to use references instead of owning datatypes
 #[derive(Serialize)]
 struct Schedule {
     version: String,
@@ -230,7 +231,7 @@ struct XmlEntry {
     guid: uuid::Uuid,
     date: chrono::DateTime<chrono::Utc>,
     start: chrono::NaiveTime,
-    duration: chrono::Duration,
+    duration: String,
     room: String,
     url: String,
     title: String,
@@ -257,7 +258,7 @@ impl XmlEntry {
             guid: entry.entry.id,
             date: entry.entry.begin,
             start: entry.entry.begin.time(),
-            duration: entry.entry.end.signed_duration_since(entry.entry.begin),
+            duration: format_duration(entry.entry.end.signed_duration_since(entry.entry.begin)),
             room: "".to_string(),
             url: "".to_string(),
             title: entry.entry.title.clone(),
@@ -373,4 +374,9 @@ fn group_entries_by_date_and_room<'a>(
         ));
     }
     result
+}
+
+fn format_duration(duration: chrono::TimeDelta) -> String {
+    let minutes = duration.num_minutes();
+    format!("{:0>2}:{:0>2}", minutes / 60, minutes % 60)
 }

@@ -9,7 +9,7 @@ use actix_web::http::header::DispositionParam;
 use actix_web::http::StatusCode;
 use actix_web::{get, web, HttpRequest, HttpResponseBuilder, Responder};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
 pub const SESSION_COOKIE_MAX_AGE: std::time::Duration =
@@ -49,8 +49,8 @@ async fn frab_xml(
             store.get_categories(&auth, event_id)?,
         ))
     })
-    .await??;
-    let categories_by_id: HashMap<_, _> = categories.into_iter().map(|c| (c.id, c)).collect();
+        .await??;
+    let categories_by_id: BTreeMap<_, _> = categories.into_iter().map(|c| (c.id, c)).collect();
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
         .content_type("application/xml")
@@ -77,7 +77,7 @@ fn generate_frab_xml<F>(
     event: Event,
     entries: Vec<FullEntry>,
     rooms: Vec<Room>,
-    categories: &HashMap<CategoryId, Category>,
+    categories: &BTreeMap<CategoryId, Category>,
     url_for_event: F,
 ) -> String
 where
@@ -166,7 +166,7 @@ struct XmlGenerator {
 impl ConferenceMetaData {
     fn from_event_and_categories<F>(
         event: &Event,
-        categories: &HashMap<CategoryId, Category>,
+        categories: &BTreeMap<CategoryId, Category>,
         url_for_event: F,
     ) -> Self
     where
@@ -250,7 +250,7 @@ struct XmlEntry {
     attachments: XmlAttachments,
 }
 impl XmlEntry {
-    fn from_full_entry(entry: &FullEntry, categories: &HashMap<CategoryId, Category>) -> Self {
+    fn from_full_entry(entry: &FullEntry, categories: &BTreeMap<CategoryId, Category>) -> Self {
         // TODO time_comment, room_comment
         // TODO room (which one(s)?)
         // TODO URL
@@ -316,12 +316,12 @@ fn group_entries_by_date_and_room<'a>(
     chrono::NaiveDate,
     Vec<(Option<&'a Room>, Vec<&'a FullEntry>)>,
 )> {
-    let rooms_by_id: HashMap<_, _> = rooms.iter().map(|r| (r.id, r)).collect();
+    let rooms_by_id: BTreeMap<_, _> = rooms.iter().map(|r| (r.id, r)).collect();
     let mut result = Vec::new();
     if entries.is_empty() {
         return result;
     }
-    let mut block_entries: HashMap<Option<uuid::Uuid>, Vec<&FullEntry>> = HashMap::new();
+    let mut block_entries: BTreeMap<Option<uuid::Uuid>, Vec<&FullEntry>> = BTreeMap::new();
     let mut current_date = get_effective_date(&entries[0].entry.begin);
     for entry in entries {
         if entry.entry.is_cancelled {
@@ -343,7 +343,7 @@ fn group_entries_by_date_and_room<'a>(
                         .collect(),
                 ));
             }
-            block_entries = HashMap::new();
+            block_entries = BTreeMap::new();
             current_date = get_effective_date(&entry.entry.begin);
         }
         if entry.room_ids.is_empty() {

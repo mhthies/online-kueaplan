@@ -132,10 +132,10 @@ where
                                 } else {
                                     uuid::Uuid::default()
                                 },
-                                name: if let Some(room) = room {
-                                    room.title.clone()
+                                room_name: if let Some(room) = room {
+                                    &room.title
                                 } else {
-                                    "[Ohne Ort]".to_string()
+                                    "[Ohne Ort]"
                                 },
                                 event: entries
                                     .iter()
@@ -158,24 +158,23 @@ where
     serde_xml_rs::to_string(&data).map_err(|e| AppError::InternalError(e.to_string()))
 }
 
-// TODO change structs to use references instead of owning datatypes, at least for strings
 #[derive(Serialize)]
-struct Schedule {
+struct Schedule<'a> {
     version: String,
     generator: XmlGenerator,
-    conference: ConferenceMetaData,
-    day: Vec<DaySchedule>,
+    conference: ConferenceMetaData<'a>,
+    day: Vec<DaySchedule<'a>>,
 }
 #[derive(Serialize)]
-struct ConferenceMetaData {
-    title: String,
+struct ConferenceMetaData<'a> {
+    title: &'a str,
     start: chrono::DateTime<chrono::Utc>,
     end: chrono::DateTime<chrono::Utc>,
     days: i64,
-    time_zone_name: String,
+    time_zone_name: &'a str,
     url: String,
     base_url: String,
-    track: Vec<TrackMetaData>,
+    track: Vec<TrackMetaData<'a>>,
 }
 #[derive(Serialize)]
 struct XmlGenerator {
@@ -185,17 +184,17 @@ struct XmlGenerator {
     version: String,
 }
 
-impl ConferenceMetaData {
+impl<'a> ConferenceMetaData<'a> {
     fn from_event_and_categories<F>(
-        event: &Event,
-        categories: &BTreeMap<CategoryId, Category>,
+        event: &'a Event,
+        categories: &'a BTreeMap<CategoryId, Category>,
         url_for_event: F,
     ) -> Self
     where
         F: Fn(&EventId) -> String,
     {
         Self {
-            title: event.title.clone(),
+            title: &event.title,
             start: event
                 .begin_date
                 .and_time(chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap())
@@ -205,13 +204,13 @@ impl ConferenceMetaData {
                 .and_time(chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap())
                 .and_utc(),
             days: (event.end_date - event.begin_date).num_days() + 1,
-            time_zone_name: TIME_ZONE.name().to_owned(),
+            time_zone_name: TIME_ZONE.name(),
             url: url_for_event(&event.id),
             base_url: url_for_event(&event.id),
             track: categories
                 .values()
                 .map(|category| TrackMetaData {
-                    name: category.title.clone(),
+                    name: &category.title,
                     color: format!("#{}", category.color.clone()),
                 })
                 .collect(),
@@ -220,14 +219,14 @@ impl ConferenceMetaData {
 }
 
 #[derive(Serialize)]
-struct TrackMetaData {
+struct TrackMetaData<'a> {
     #[serde(rename = "@name")]
-    name: String,
+    name: &'a str,
     #[serde(rename = "@color")]
     color: String,
 }
 #[derive(Serialize)]
-struct DaySchedule {
+struct DaySchedule<'a> {
     #[serde(rename = "@index")]
     index: u32,
     #[serde(rename = "@date")]
@@ -236,19 +235,19 @@ struct DaySchedule {
     start: chrono::DateTime<chrono::Utc>,
     #[serde(rename = "@end")]
     end: chrono::DateTime<chrono::Utc>,
-    room: Vec<RoomSchedule>,
+    room: Vec<RoomSchedule<'a>>,
 }
 #[derive(Serialize)]
-struct RoomSchedule {
+struct RoomSchedule<'a> {
     #[serde(rename = "@guid")]
     guid: uuid::Uuid,
     #[serde(rename = "@name")]
-    name: String,
-    event: Vec<XmlEntry>,
+    room_name: &'a str,
+    event: Vec<XmlEntry<'a>>,
 }
 
 #[derive(Serialize)]
-struct XmlEntry {
+struct XmlEntry<'a> {
     #[serde(rename = "@guid")]
     guid: uuid::Uuid,
     date: chrono::DateTime<chrono::Utc>,
@@ -256,26 +255,26 @@ struct XmlEntry {
     duration: String,
     room: String,
     url: String,
-    title: String,
-    slug: String,
-    subtitle: String,
-    track: String,
-    language: String,
+    title: &'a str,
+    slug: &'a str,
+    subtitle: &'a str,
+    track: &'a str,
+    language: &'a str,
     #[serde(rename = "type")]
-    type_: String,
+    type_: &'a str,
     #[serde(rename = "abstract")]
-    abstract_: String,
+    abstract_: &'a str,
     description: String,
-    logo: String,
+    logo: &'a str,
     links: XmlLinks,
-    persons: XmlPersons,
+    persons: XmlPersons<'a>,
     attachments: XmlAttachments,
 }
-impl XmlEntry {
+impl<'a> XmlEntry<'a> {
     fn from_full_entry<G>(
-        entry: &FullEntry,
-        categories: &BTreeMap<CategoryId, Category>,
-        rooms_by_id: &BTreeMap<RoomId, &Room>,
+        entry: &'a FullEntry,
+        categories: &'a BTreeMap<CategoryId, Category>,
+        rooms_by_id: &'a BTreeMap<RoomId, &Room>,
         url_for_entry: G,
     ) -> Self
     where
@@ -288,32 +287,32 @@ impl XmlEntry {
             duration: format_duration(entry.entry.end.signed_duration_since(entry.entry.begin)),
             room: generate_xml_entry_room(entry, rooms_by_id),
             url: url_for_entry(&entry),
-            title: entry.entry.title.clone(),
-            slug: "".to_string(),
-            subtitle: entry.entry.comment.clone(),
+            title: &entry.entry.title,
+            slug: "",
+            subtitle: &entry.entry.comment,
             track: categories
                 .get(&entry.entry.category)
-                .map(|c| c.title.clone())
-                .unwrap_or("".to_string()),
-            language: "".to_string(),
-            type_: "".to_string(),
-            abstract_: "".to_string(),
+                .map(|c| c.title.as_ref())
+                .unwrap_or(""),
+            language: "",
+            type_: "",
+            abstract_: "",
             description: generate_xml_description(entry),
-            logo: "".to_string(),
+            logo: "",
             links: Default::default(),
-            persons: XmlPersons::from_responsible_person(entry.entry.responsible_person.clone()),
+            persons: XmlPersons::from_responsible_person(&entry.entry.responsible_person),
             attachments: Default::default(),
         }
     }
 }
 
 #[derive(Serialize)]
-struct XmlPersons {
-    person: Vec<XmlPerson>,
+struct XmlPersons<'a> {
+    person: Vec<XmlPerson<'a>>,
 }
 
-impl XmlPersons {
-    fn from_responsible_person(entry_persons: String) -> Self {
+impl<'a> XmlPersons<'a> {
+    fn from_responsible_person(entry_persons: &'a str) -> Self {
         Self {
             person: if entry_persons.is_empty() {
                 vec![]
@@ -327,9 +326,9 @@ impl XmlPersons {
 }
 
 #[derive(Serialize)]
-struct XmlPerson {
+struct XmlPerson<'a> {
     #[serde(rename = "#text")]
-    name: String,
+    name: &'a str,
 }
 #[derive(Default, Serialize)]
 struct XmlLinks;

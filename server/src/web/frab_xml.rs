@@ -1,10 +1,11 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
-use crate::data_store::{CategoryId, EntryFilter, EventId};
+use crate::data_store::{CategoryId, EntryFilter, EntryId, EventId, RoomId};
 use crate::web::time_calculation::{get_effective_date, EFFECTIVE_BEGIN_OF_DAY, TIME_ZONE};
 use crate::web::ui::error::AppError;
 use crate::web::AppState;
+use actix_web::error::UrlGenerationError;
 use actix_web::http::header::DispositionParam;
 use actix_web::http::StatusCode;
 use actix_web::{get, web, HttpRequest, HttpResponseBuilder, Responder};
@@ -38,6 +39,16 @@ async fn frab_xml(
             .unwrap()
             .to_string()
     };
+    let url_for_entry = |entry: &FullEntry| {
+        xml_entry_url(
+            &http_request,
+            event_id,
+            &entry.entry.id,
+            &get_effective_date(&entry.entry.begin),
+        )
+        .unwrap()
+        .to_string()
+    };
 
     let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
@@ -49,7 +60,7 @@ async fn frab_xml(
             store.get_categories(&auth, event_id)?,
         ))
     })
-        .await??;
+    .await??;
     let categories_by_id: BTreeMap<_, _> = categories.into_iter().map(|c| (c.id, c)).collect();
 
     Ok(HttpResponseBuilder::new(StatusCode::OK)
@@ -64,7 +75,8 @@ async fn frab_xml(
             rooms,
             &categories_by_id,
             url_for_event,
-        )))
+            url_for_entry,
+        )?))
 }
 
 #[derive(Deserialize, Serialize)]
@@ -73,17 +85,20 @@ pub struct FrabXmlQueryParams {
     pub session_token: String,
 }
 
-fn generate_frab_xml<F>(
+fn generate_frab_xml<F, G>(
     event: Event,
     entries: Vec<FullEntry>,
     rooms: Vec<Room>,
     categories: &BTreeMap<CategoryId, Category>,
     url_for_event: F,
-) -> String
+    url_for_entry: G,
+) -> Result<String, AppError>
 where
     F: Fn(&EventId) -> String,
+    G: Fn(&FullEntry) -> String,
 {
-    let grouped_entries = group_entries_by_date_and_room(&entries, &rooms);
+    let rooms_by_id: BTreeMap<_, _> = rooms.iter().map(|r| (r.id, r)).collect();
+    let grouped_entries = group_entries_by_date_and_room(&entries, &rooms_by_id);
     let data = Schedule {
         version: chrono::Utc::now().to_string(),
         generator: XmlGenerator {
@@ -120,11 +135,18 @@ where
                                 name: if let Some(room) = room {
                                     room.title.clone()
                                 } else {
-                                    "Ort nicht definiert".to_string()
+                                    "[Ohne Ort]".to_string()
                                 },
                                 event: entries
                                     .iter()
-                                    .map(|e| XmlEntry::from_full_entry(e, &categories))
+                                    .map(|e| {
+                                        XmlEntry::from_full_entry(
+                                            e,
+                                            &categories,
+                                            &rooms_by_id,
+                                            &url_for_entry,
+                                        )
+                                    })
                                     .collect(),
                             })
                         }
@@ -133,10 +155,10 @@ where
             })
             .collect(),
     };
-    serde_xml_rs::to_string(&data).unwrap() // TODO error handling
+    serde_xml_rs::to_string(&data).map_err(|e| AppError::InternalError(e.to_string()))
 }
 
-// TODO change structs to use references instead of owning datatypes
+// TODO change structs to use references instead of owning datatypes, at least for strings
 #[derive(Serialize)]
 struct Schedule {
     version: String,
@@ -250,17 +272,22 @@ struct XmlEntry {
     attachments: XmlAttachments,
 }
 impl XmlEntry {
-    fn from_full_entry(entry: &FullEntry, categories: &BTreeMap<CategoryId, Category>) -> Self {
-        // TODO time_comment, room_comment
-        // TODO room (which one(s)?)
-        // TODO URL
+    fn from_full_entry<G>(
+        entry: &FullEntry,
+        categories: &BTreeMap<CategoryId, Category>,
+        rooms_by_id: &BTreeMap<RoomId, &Room>,
+        url_for_entry: G,
+    ) -> Self
+    where
+        G: Fn(&FullEntry) -> String,
+    {
         Self {
             guid: entry.entry.id,
             date: entry.entry.begin,
             start: entry.entry.begin.time(),
             duration: format_duration(entry.entry.end.signed_duration_since(entry.entry.begin)),
-            room: "".to_string(),
-            url: "".to_string(),
+            room: generate_xml_entry_room(entry, rooms_by_id),
+            url: url_for_entry(&entry),
             title: entry.entry.title.clone(),
             slug: "".to_string(),
             subtitle: entry.entry.comment.clone(),
@@ -271,7 +298,7 @@ impl XmlEntry {
             language: "".to_string(),
             type_: "".to_string(),
             abstract_: "".to_string(),
-            description: entry.entry.description.clone(),
+            description: generate_xml_description(entry),
             logo: "".to_string(),
             links: Default::default(),
             persons: XmlPersons::from_responsible_person(entry.entry.responsible_person.clone()),
@@ -311,12 +338,11 @@ struct XmlAttachments;
 
 fn group_entries_by_date_and_room<'a>(
     entries: &'a Vec<FullEntry>,
-    rooms: &'a Vec<Room>,
+    rooms_by_id: &'a BTreeMap<RoomId, &'a Room>,
 ) -> Vec<(
     chrono::NaiveDate,
     Vec<(Option<&'a Room>, Vec<&'a FullEntry>)>,
 )> {
-    let rooms_by_id: BTreeMap<_, _> = rooms.iter().map(|r| (r.id, r)).collect();
     let mut result = Vec::new();
     if entries.is_empty() {
         return result;
@@ -328,19 +354,10 @@ fn group_entries_by_date_and_room<'a>(
             continue;
         }
         if get_effective_date(&entry.entry.begin) != current_date {
-            // TODO deduplicate code
             if !block_entries.is_empty() {
                 result.push((
                     current_date,
-                    block_entries
-                        .into_iter()
-                        .map(|(room_id, room_entries)| {
-                            (
-                                room_id.and_then(|rid| rooms_by_id.get(&rid).map(|r| *r)),
-                                room_entries,
-                            )
-                        })
-                        .collect(),
+                    finalize_room_block(block_entries, rooms_by_id),
                 ));
             }
             block_entries = BTreeMap::new();
@@ -362,21 +379,89 @@ fn group_entries_by_date_and_room<'a>(
     if !block_entries.is_empty() {
         result.push((
             current_date,
-            block_entries
-                .into_iter()
-                .map(|(room_id, room_entries)| {
-                    (
-                        room_id.and_then(|rid| rooms_by_id.get(&rid).map(|r| *r)),
-                        room_entries,
-                    )
-                })
-                .collect(),
+            finalize_room_block(block_entries, rooms_by_id),
         ));
     }
     result
 }
 
+/// Uninlined code block from group_entries_by_date_and_room() for deduplication.
+/// Transforms the intermediate block_entries map by room_uuid into the final result vector of
+/// rooms + entries for a single date.
+fn finalize_room_block<'a>(
+    block_entries: BTreeMap<Option<uuid::Uuid>, Vec<&'a FullEntry>>,
+    rooms_by_id: &BTreeMap<RoomId, &'a Room>,
+) -> Vec<(Option<&'a Room>, Vec<&'a FullEntry>)> {
+    block_entries
+        .into_iter()
+        .map(|(room_id, room_entries)| {
+            (
+                room_id.and_then(|rid| rooms_by_id.get(&rid).map(|r| *r)),
+                room_entries,
+            )
+        })
+        .collect()
+}
+
 fn format_duration(duration: chrono::TimeDelta) -> String {
     let minutes = duration.num_minutes();
     format!("{:0>2}:{:0>2}", minutes / 60, minutes % 60)
+}
+
+/// Generate the <description> content for a given entry in the Frab XML format
+fn generate_xml_description(entry: &FullEntry) -> String {
+    let mut description = String::new();
+    append_if_not_empty(&mut description, &entry.entry.time_comment, "\n");
+    append_if_not_empty(&mut description, &entry.entry.room_comment, "\n");
+    append_if_not_empty(&mut description, &entry.entry.description, "\n\n");
+    description
+}
+
+/// Generate the <room> field for a given entry in the Frab XML format
+fn generate_xml_entry_room(entry: &FullEntry, rooms: &BTreeMap<RoomId, &Room>) -> String {
+    let room_names: Vec<String> = entry
+        .room_ids
+        .iter()
+        .filter_map(|room_id| rooms.get(room_id))
+        .map(|r| r.title.clone())
+        .collect();
+
+    let mut location = room_names.join(", ");
+    if !entry.entry.room_comment.is_empty() {
+        if !location.is_empty() {
+            location.push_str("; ");
+        }
+        location.push_str(&entry.entry.room_comment);
+    }
+
+    location
+}
+
+pub fn xml_entry_url(
+    req: &HttpRequest,
+    event_id: EventId,
+    entry_id: &EntryId,
+    entry_begin_effective_date: &chrono::NaiveDate,
+) -> Result<url::Url, UrlGenerationError> {
+    let mut url = req.url_for(
+        "main_list",
+        [
+            &event_id.to_string(),
+            &entry_begin_effective_date.to_string(),
+        ],
+    )?;
+    url.set_fragment(Some(&format!("entry-{}", entry_id)));
+    Ok(url)
+}
+
+/// Utility function to append the string slice `source` to the `target` string, separated by
+/// `separator` if neither of both is empty.
+fn append_if_not_empty(target: &mut String, source: &str, separator: &str) {
+    if source.is_empty() {
+        return;
+    }
+    if !target.is_empty() {
+        target.push_str(separator);
+    }
+    target.push_str(source);
 }

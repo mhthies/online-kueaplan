@@ -259,16 +259,16 @@ struct XmlEntry<'a> {
     slug: &'a str,
     subtitle: &'a str,
     track: &'a str,
-    language: &'a str,
+    //language: &'a str,
     #[serde(rename = "type")]
     type_: &'a str,
     #[serde(rename = "abstract")]
     abstract_: &'a str,
     description: String,
-    logo: &'a str,
-    links: XmlLinks,
+    //logo: &'a str,
+    //links: XmlLinks,
     persons: XmlPersons<'a>,
-    attachments: XmlAttachments,
+    //attachments: XmlAttachments,
 }
 impl<'a> XmlEntry<'a> {
     fn from_full_entry<G>(
@@ -294,14 +294,14 @@ impl<'a> XmlEntry<'a> {
                 .get(&entry.entry.category)
                 .map(|c| c.title.as_ref())
                 .unwrap_or(""),
-            language: "",
+            //language: "",
             type_: "",
             abstract_: "",
             description: generate_xml_description(entry),
-            logo: "",
-            links: Default::default(),
+            //logo: "",
+            //links: Default::default(),
             persons: XmlPersons::from_responsible_person(&entry.entry.responsible_person),
-            attachments: Default::default(),
+            //attachments: Default::default(),
         }
     }
 }
@@ -330,10 +330,10 @@ struct XmlPerson<'a> {
     #[serde(rename = "#text")]
     name: &'a str,
 }
-#[derive(Default, Serialize)]
-struct XmlLinks;
-#[derive(Default, Serialize)]
-struct XmlAttachments;
+// #[derive(Default, Serialize)]
+// struct XmlLinks;
+// #[derive(Default, Serialize)]
+// struct XmlAttachments;
 
 fn group_entries_by_date_and_room<'a>(
     entries: &'a Vec<FullEntry>,
@@ -403,8 +403,13 @@ fn finalize_room_block<'a>(
 }
 
 fn format_duration(duration: chrono::TimeDelta) -> String {
-    let minutes = duration.num_minutes();
-    format!("{:0>2}:{:0>2}", minutes / 60, minutes % 60)
+    let seconds = duration.num_seconds();
+    format!(
+        "{:0>2}:{:0>2}:{:0>2}",
+        seconds / 3600,
+        (seconds / 60) % 60,
+        seconds % 60
+    )
 }
 
 /// Generate the <description> content for a given entry in the Frab XML format

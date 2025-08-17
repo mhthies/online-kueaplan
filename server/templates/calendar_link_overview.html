@@ -19,6 +19,19 @@
                         <i class="bi bi-info-circle" aria-hidden="true"></i> Für Kalender-Programme und Kalender-Apps
                     </div>
                 </div>
+                <div class="mb-3">
+                    <label for="frabXmlLink">XML-Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="frabXmlLink" readonly value="{{ frab_xml_link()? }}">
+                        <button type="button" class="btn btn-outline-secondary copy-button">
+                            <i class="bi bi-copy" aria-hidden="true"></i> kopieren
+                            <div class="d-none text-success" style="width: 100%; height: 100%"><i class="bi bi-check"></i></div>
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i> Entspricht dem XML-Zeitplan-Format der Konferenz-Planungs-Tools <em>frab</em>, <em>pretalx</em> und <em>Pentabarf</em> (u.a. bekannt vom Chaos Communication Congress, der Gulasch-Programmier-Nacht und der FrOSCon) und kann mit kompatiblen Apps verwendet werden, z.B. <a href="https://wilmer.gaa.st/main.php/giggity.html">Giggity</a>.
+                    </div>
+                </div>
             {% else %}
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Konnte keinen Authentifizierungs-Token für Link-Freigabe erzeugen.

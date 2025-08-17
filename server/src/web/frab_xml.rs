@@ -159,6 +159,7 @@ where
 }
 
 #[derive(Serialize)]
+#[serde(rename = "schedule")]
 struct Schedule<'a> {
     version: String,
     generator: XmlGenerator,

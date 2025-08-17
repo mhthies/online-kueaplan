@@ -249,6 +249,8 @@ struct RoomSchedule<'a> {
 
 #[derive(Serialize)]
 struct XmlEntry<'a> {
+    #[serde(rename = "@id")]
+    id: u32,
     #[serde(rename = "@guid")]
     guid: uuid::Uuid,
     date: chrono::DateTime<chrono::Utc>,
@@ -282,6 +284,7 @@ impl<'a> XmlEntry<'a> {
         G: Fn(&FullEntry) -> String,
     {
         Self {
+            id: simplehash::murmurhash3_32(entry.entry.id.as_bytes(), 0),
             guid: entry.entry.id,
             date: entry.entry.begin,
             start: entry.entry.begin.time(),

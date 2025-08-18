@@ -248,7 +248,7 @@ struct DeleteRoomFormTemplate<'a> {
 }
 
 impl DeleteRoomFormTemplate<'_> {
-    fn other_room_entries(&self) -> Vec<SelectEntry> {
+    fn other_room_entries(&self) -> Vec<SelectEntry<'_>> {
         self.all_rooms
             .iter()
             .filter(|c| c.id != self.room.id)

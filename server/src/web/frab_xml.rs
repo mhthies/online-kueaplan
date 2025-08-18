@@ -35,7 +35,7 @@ async fn frab_xml(
 
     let url_for_event = |event_id: &EventId| {
         http_request
-            .url_for("event_index", &[&event_id.to_string()])
+            .url_for("event_index", [&event_id.to_string()])
             .unwrap()
             .to_string()
     };
@@ -115,7 +115,7 @@ where
             .enumerate()
             .map(|(index, (date, rooms))| DaySchedule {
                 index: (index + 1) as u32,
-                date: date.clone(),
+                date: *date,
                 start: date.and_time(EFFECTIVE_BEGIN_OF_DAY).and_utc(),
                 end: (*date + chrono::TimeDelta::days(1))
                     .and_time(EFFECTIVE_BEGIN_OF_DAY)
@@ -142,7 +142,7 @@ where
                                     .map(|e| {
                                         XmlEntry::from_full_entry(
                                             e,
-                                            &categories,
+                                            categories,
                                             &rooms_by_id,
                                             &url_for_entry,
                                         )
@@ -290,7 +290,7 @@ impl<'a> XmlEntry<'a> {
             start: entry.entry.begin.time(),
             duration: format_duration(entry.entry.end.signed_duration_since(entry.entry.begin)),
             room: generate_xml_entry_room(entry, rooms_by_id),
-            url: url_for_entry(&entry),
+            url: url_for_entry(entry),
             title: &entry.entry.title,
             slug: "",
             subtitle: &entry.entry.comment,
@@ -399,7 +399,7 @@ fn finalize_room_block<'a>(
         .into_iter()
         .map(|(room_id, room_entries)| {
             (
-                room_id.and_then(|rid| rooms_by_id.get(&rid).map(|r| *r)),
+                room_id.and_then(|rid| rooms_by_id.get(&rid).copied()),
                 room_entries,
             )
         })

@@ -232,7 +232,7 @@ struct DeleteCategoryFormTemplate<'a> {
 }
 
 impl DeleteCategoryFormTemplate<'_> {
-    fn other_category_entries(&self) -> Vec<SelectEntry> {
+    fn other_category_entries(&self) -> Vec<SelectEntry<'_>> {
         self.all_categories
             .iter()
             .filter(|c| c.id != self.category.id)

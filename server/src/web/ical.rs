@@ -97,14 +97,14 @@ fn generate_ical_description(entry: &FullEntry) -> String {
     let mut description = entry.entry.comment.clone();
     if !entry.entry.responsible_person.is_empty() {
         if !description.is_empty() {
-            description.push_str("\n");
+            description.push('\n');
         }
         description.push_str("von ");
         description.push_str(&entry.entry.responsible_person);
     }
     if !entry.entry.time_comment.is_empty() {
         if !description.is_empty() {
-            description.push_str("\n");
+            description.push('\n');
         }
         description.push_str(&entry.entry.time_comment);
     }

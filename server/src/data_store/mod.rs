@@ -95,7 +95,7 @@ pub trait KueaPlanStoreFacade {
     /// - `Err(StoreError::ConcurrentEditConflict)` if `expected_last_update` is given but the
     ///   `last_updated` field does not match
     /// - `Err(StoreError::NotExisting)` if `expected_last_update` is given but the entry
-    ///    does not exist in the database.
+    ///   does not exist in the database.
     /// - `Err(_)` if something different went wrong, as usual
     fn create_or_update_entry(
         &mut self,
@@ -283,7 +283,7 @@ impl EntryFilter {
         &self,
         begin: chrono::DateTime<Utc>,
         end: chrono::DateTime<Utc>,
-        room_ids: &Vec<RoomId>,
+        room_ids: &[RoomId],
     ) -> bool {
         if let Some(after) = self.after {
             if after > end || after == end && self.after_inclusive {
@@ -402,6 +402,7 @@ impl EventFilterBuilder {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 pub enum AnnouncementFilter {
     ForDate(chrono::NaiveDate),
     ForCategory(CategoryId),

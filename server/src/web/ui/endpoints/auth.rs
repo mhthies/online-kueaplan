@@ -174,7 +174,10 @@ async fn login(
     }
 }
 
-fn create_session_cookie(session_token: SessionToken, secret: &str) -> actix_web::cookie::Cookie {
+fn create_session_cookie<'a, 'b>(
+    session_token: SessionToken,
+    secret: &'a str,
+) -> actix_web::cookie::Cookie<'b> {
     let mut cookie =
         actix_web::cookie::Cookie::new(SESSION_COOKIE_NAME, session_token.as_string(secret));
     cookie.set_path("/");

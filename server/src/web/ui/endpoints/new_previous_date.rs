@@ -124,7 +124,7 @@ pub async fn new_previous_date(
             let last_updated = entry.entry.last_updated;
             let mut entry: FullNewEntry = entry.into();
             entry.previous_dates = vec![previous_date];
-            store.create_or_update_entry(&auth_clone, entry.into(), true, Some(last_updated))?;
+            store.create_or_update_entry(&auth_clone, entry, true, Some(last_updated))?;
             Ok(())
         })
         .await?

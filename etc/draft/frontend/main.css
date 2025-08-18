@@ -1,7 +1,7 @@
-html { 
+html {
 	scroll-snap-type: x proximity;
 	scroll-snap-stop: always;
-} 
+}
 
 body {
 	font-family: "Roboto";

@@ -10,16 +10,16 @@ The server-side web application would only serve static files and provide the RE
 The client-side frontend would either be based on a modern JavaScript/TypeScript framework or a Rust web frontend framework (using WASM).
 
 Thus, a comprehensive REST API has been defined and implemented.
-In addition, the Rust structure definitions corresponding to the JSON object schemas of the API specification have been declared in a separate Rust crate, to be reused in the client-side frontend code. 
+In addition, the Rust structure definitions corresponding to the JSON object schemas of the API specification have been declared in a separate Rust crate, to be reused in the client-side frontend code.
 
 In the meantime, due to immediate need, a very simplistic online KüA-Plan application has been implemented and used at SommerAkademie 2024: The [simple-kueaplan](https://tracker.cde-ev.de/gitea/michaelthies/simple_kueaplan).
 It is implemented in Python, uses server-side template rendering with Jinja and has no database backend, but is fed from YAML files in a Git repository.
-This system was well received by the event's participants, but the YAML files were cumbersome to use for the orgas. 
+This system was well received by the event's participants, but the YAML files were cumbersome to use for the orgas.
 
 In order to get the database-backed Rust KüA-Plan application to a usable state as fast as possible, a server-side user interface has been added, using the fundamental UI design of the *simple-kueaplan*.
 
 The client-side frontend may be added any time later.
-Regardless, the existing REST API can be used for programmatic interaction with the KüA-Plan application. 
+Regardless, the existing REST API can be used for programmatic interaction with the KüA-Plan application.
 
 ## Structure and Tech Stack
 
@@ -49,7 +49,7 @@ The application's Rust code is split into the following major modules:
 The formal OpenAPI specification of the REST API, including JSON schemas, can be found in `etc/spec`.
 
 Rust representations of the JSON schemas, annotated with the appropriate Serde attributes for use with serde_json are implemented in the separate Rust crate *kueaplan_api_types* in `api_types/`.
-This crate is used by the server application for serializing and deserializing data in the REST API endpoints. 
+This crate is used by the server application for serializing and deserializing data in the REST API endpoints.
 
 
 ## Deployment and Usage
@@ -62,7 +62,7 @@ The database should be created with an appropriate unicode encoding and collatio
 
 Database schema migrations (including initial creationg) are *not* automatically executed at application startup.
 This allows to use a separate database user/role with reduced privileges for operation.
-However, the application checks the migration state at startup and refuses to start with an outdated database schema. 
+However, the application checks the migration state at startup and refuses to start with an outdated database schema.
 
 Setup example on a hosted Postgresql server:
 ```sql
@@ -87,7 +87,7 @@ The following environment variables are available.
 | LISTEN_PORT          | 9000                                                  | HTTP listening port                                                                          |
 | LISTEN_ADDRESS       | ::1                                                   | HTTP listen address. Use `::` for listening on all IPv4 and IPv6 interfaces.                 |
 | ADMIN_NAME           | Anton Administrator                                   | displayed name of the admin of this instance (for error messages, etc.)                      |
-| ADMIN_EMAIL          | mail@example.com                                      | displayed email address of the admin of this instance (for error messages, etc.)             |                                                                              
+| ADMIN_EMAIL          | mail@example.com                                      | displayed email address of the admin of this instance (for error messages, etc.)             |
 
 To start the server, run
 ```bash
@@ -110,7 +110,7 @@ To execute all pending database schema migrations, run
 kueaplan_server migrate-database
 ```
 This command requires the configuration environment variables to be provided as environment or `.env` file (see above).
-In particular, it uses the `DATABASE_URL` to select the Postgresql database to be migrated. 
+In particular, it uses the `DATABASE_URL` to select the Postgresql database to be migrated.
 
 
 ### Systemd Unit
@@ -169,4 +169,4 @@ For the apache web server, the following virtual host configuration can be used 
 
 Besides other tools, the [OpenAPI Generator](https://openapi-generator.tech/) can be used to generate Code or documentation from the API specification files.
 This can be used to check the specification's syntax and semantics.
-For generating an API documentation in HTML format, the command in `etc/spec/gendocs.sh` can be used. 
+For generating an API documentation in HTML format, the command in `etc/spec/gendocs.sh` can be used.

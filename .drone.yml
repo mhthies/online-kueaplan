@@ -45,7 +45,7 @@ steps:
       - rustup component add rustfmt
       - cargo fmt --check
     depends_on:
-      - clone 
+      - clone
 
 services:
   - name: postgres

@@ -3,7 +3,7 @@
 /// This filter is based on the comrak Markdown parser (https://docs.rs/comrak/latest/comrak/).
 /// Most of the comrak GFM extensions are enabled.
 /// In addition, we increase the heading level of all Markdown headings by 3, i.e. h1 becomes h4,
-/// h2 becomes h5 and all additional headings become h6.  
+/// h2 becomes h5 and all additional headings become h6.
 pub fn markdown(
     input: &str,
     _: &dyn askama::Values,

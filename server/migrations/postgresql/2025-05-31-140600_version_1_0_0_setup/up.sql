@@ -89,7 +89,7 @@ CREATE TRIGGER
 CREATE TABLE entry_rooms (
     entry_id UUID REFERENCES entries(id) ON DELETE CASCADE,
     room_id UUID REFERENCES rooms(id),
-    
+
     PRIMARY KEY (entry_id, room_id)
 );
 

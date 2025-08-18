@@ -41,7 +41,7 @@
 ### Properties
 | Usage                        | Icon                   |
 |------------------------------|------------------------|
-| visibility                   | `bi-eye`               | 
+| visibility                   | `bi-eye`               |
 | true                         | `bi-check-circle-fill` |
 | false                        | `bi-x-circle`          |
 | actual current date of entry | `bi-clock-fill`        |

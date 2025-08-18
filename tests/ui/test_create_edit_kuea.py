@@ -20,7 +20,7 @@ def test_create_entry(page: Page, reset_database: None):
     page.get_by_role("textbox", name="Kommentar zur Zeit").fill("Direkt nach dem Mittagessen")
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(
         """Wir bauen Drachen und lassen sie steigen.
-        
+
         Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
         """)
     page.get_by_role("button", name="Speichern").click()

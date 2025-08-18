@@ -28,5 +28,5 @@
       "403": {"$ref": "../components/authorizationError.json"},
       "500": {"$ref": "../components/serverError.json"}
     }
-  }  
+  }
 }

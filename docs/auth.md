@@ -7,7 +7,7 @@ Instead, each event has multiple pre-shared passphrases, which grant a certain s
 The possible privileges are mapped to access roles.
 
 For example, we may have the passphrase "Buxtehude", granting orga access (role) for event 1 for all time and the passphrase "Foo", granting user access (role) for event 2.
-The orga access role qualifies for retrieving and editing entries, categories and rooms; the user access role only qualifies for retrieving the data. 
+The orga access role qualifies for retrieving and editing entries, categories and rooms; the user access role only qualifies for retrieving the data.
 
 Passphrases are stored in the database as plain text and have a global unique id, used for session token storage (see below).
 

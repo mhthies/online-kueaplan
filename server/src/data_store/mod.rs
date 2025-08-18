@@ -419,7 +419,7 @@ pub enum StoreError {
     /// The query could not be executed because of some error not covered by the other members (see
     /// string description)
     QueryError(diesel::result::Error),
-    /// Database transaction could not be commited due to a conflicting concurrent transaction  
+    /// Database transaction could not be commited due to a conflicting concurrent transaction
     TransactionConflict,
     /// The requested entity does not exist
     NotExisting,

@@ -96,5 +96,5 @@
       },
       "500": {"$ref": "../components/serverError.json"}
     }
-  }  
+  }
 }

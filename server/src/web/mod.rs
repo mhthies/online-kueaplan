@@ -11,8 +11,10 @@ use actix_web::{get, middleware, web, App, HttpRequest, HttpServer, Responder};
 use std::sync::Arc;
 
 mod api;
+mod frab_xml;
 mod http_error_logging;
 mod ical;
+mod time_calculation;
 mod ui;
 
 pub fn serve() -> Result<(), CliError> {
@@ -25,6 +27,7 @@ pub fn serve() -> Result<(), CliError> {
                     .configure(ui::configure_app)
                     .service(index)
                     .service(ical::ical)
+                    .service(frab_xml::frab_xml)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(actix_web::middleware::from_fn(error_logging_middleware))
                     .wrap(middleware::Compress::default())

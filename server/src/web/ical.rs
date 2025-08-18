@@ -102,6 +102,12 @@ fn generate_ical_description(entry: &FullEntry) -> String {
         description.push_str("von ");
         description.push_str(&entry.entry.responsible_person);
     }
+    if !entry.entry.time_comment.is_empty() {
+        if !description.is_empty() {
+            description.push_str("\n");
+        }
+        description.push_str(&entry.entry.time_comment);
+    }
     if !entry.entry.description.is_empty() {
         if !description.is_empty() {
             description.push_str("\n\n");

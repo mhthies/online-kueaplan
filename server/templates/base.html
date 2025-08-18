@@ -27,7 +27,7 @@
         {% if let Some(event) = base.event %}
             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
                 <ul class="navbar-nav">
-                    {% let today = crate::web::ui::time_calculation::current_effective_date() %}
+                    {% let today = crate::web::time_calculation::current_effective_date() %}
                     <li class="nav-item dropdown">
                         {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
                         <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
@@ -93,6 +93,10 @@
 <footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
     {% block footer_extra_text %}{% endblock %}
     online-kueaplan v{{ crate::get_version() }}
+    {% if base.event.is_some()
+       && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
+        | <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a>
+    {% endif %}
     {% if base.event.is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}

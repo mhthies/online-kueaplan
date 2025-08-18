@@ -1,9 +1,10 @@
 use crate::data_store::models::{Category, FullEntry, FullPreviousDate, Room};
 use crate::data_store::{CategoryId, RoomId};
+use crate::web::time_calculation;
+use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::colors::CategoryColors;
-use crate::web::ui::time_calculation::TIME_ZONE;
+use crate::web::ui::util;
 use crate::web::ui::util::url_for_entry_details;
-use crate::web::ui::{time_calculation, util};
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
 use askama::Template;

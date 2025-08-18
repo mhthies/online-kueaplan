@@ -1,15 +1,15 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
 use crate::data_store::{AnnouncementFilter, EntryFilter};
+use crate::web::time_calculation::{
+    current_effective_date, timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY,
+    TIME_BLOCKS, TIME_ZONE,
+};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
-};
-use crate::web::ui::time_calculation::{
-    current_effective_date, timestamp_from_effective_date_and_time, EFFECTIVE_BEGIN_OF_DAY,
-    TIME_BLOCKS, TIME_ZONE,
 };
 use crate::web::ui::util;
 use crate::web::ui::util::mark_first_row_of_next_calendar_date;

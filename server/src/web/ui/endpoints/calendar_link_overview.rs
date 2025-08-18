@@ -64,8 +64,16 @@ struct CalendarLinkOverviewTemplate<'a> {
 
 impl CalendarLinkOverviewTemplate<'_> {
     fn ical_link(&self) -> Result<String, AppError> {
+        self.generic_calendar_link("ical")
+    }
+
+    fn frab_xml_link(&self) -> Result<String, AppError> {
+        self.generic_calendar_link("frab_xml")
+    }
+
+    fn generic_calendar_link(&self, endpoint_name: &str) -> Result<String, AppError> {
         let mut url = self.base.request.url_for(
-            "ical",
+            endpoint_name,
             &[self
                 .base
                 .event

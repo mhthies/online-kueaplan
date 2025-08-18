@@ -16,7 +16,6 @@ pub mod error_page;
 pub mod flash;
 mod form_values;
 mod sub_templates;
-mod time_calculation;
 mod util;
 pub mod validation;
 

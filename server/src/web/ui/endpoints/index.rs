@@ -1,8 +1,8 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::EventId;
 use crate::web::ui::error::AppError;
-use crate::web::ui::{time_calculation, util};
-use crate::web::AppState;
+use crate::web::ui::util;
+use crate::web::{time_calculation, AppState};
 use actix_web::web::Redirect;
 use actix_web::{get, web, HttpRequest, Responder};
 

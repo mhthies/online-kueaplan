@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{FullEntry, Room};
 use crate::data_store::{EntryFilter, EventId, RoomId};
+use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::base_template::{
     BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -10,7 +11,6 @@ use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
 use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, InputConfiguration, SelectEntry,
 };
-use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};

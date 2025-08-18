@@ -1,14 +1,14 @@
 use crate::data_store::models::{Category, FullEntry, FullPreviousDate, Room};
 use crate::data_store::{CategoryId, RoomId};
-use crate::web::ui::colors::CategoryColors;
+use crate::web::time_calculation;
 use crate::web::time_calculation::TIME_ZONE;
-use crate::web::ui::util::url_for_entry_details;
+use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::util;
+use crate::web::ui::util::url_for_entry_details;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
 use askama::Template;
 use std::collections::BTreeMap;
-use crate::web::time_calculation;
 
 /// Sub-Template for rendering a single row in a main KüA-List, based on a [MainListRow] struct.
 ///

@@ -1,13 +1,13 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
 use crate::data_store::{AnnouncementFilter, CategoryId, EntryFilter, EventId};
+use crate::web::time_calculation::{current_effective_date, TIME_ZONE};
 use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
 };
-use crate::web::time_calculation::{current_effective_date, TIME_ZONE};
 use crate::web::ui::util;
 use crate::web::ui::util::mark_first_row_of_next_calendar_date_per_effective_date;
 use crate::web::AppState;

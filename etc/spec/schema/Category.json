@@ -30,5 +30,5 @@
             "type": "integer"
         }
     },
-    "required": ["id", "title", "icon", "color"]
+    "required": ["id", "title", "icon", "color", "sort_key"]
 }

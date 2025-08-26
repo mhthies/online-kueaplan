@@ -28,6 +28,11 @@
             "description": "New list of categories. If this property exists, all categories shall be replaced by this list.",
             "type": "array",
             "items": {"$ref": "./Category.json"}
+        },
+        "announcements": {
+            "description": "New list of announcements. If this property exists, all announcements shall be replaced by this list.",
+            "type": "array",
+            "items": {"$ref": "./Announcement.json"}
         }
     },
     "required": ["changedEntries", "deletedEntries"]

@@ -1,0 +1,92 @@
+{
+  "put": {
+    "operationId": "createOrUpdateAnnouncement",
+    "summary": "Create or update an announcement.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "announcementId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/Announcement.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "201": {
+        "description": "Creating the new announcement was successful."
+      },
+      "204": {
+        "description": "Updating the announcement was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The event with given eventId does not exist; so creating/updating an announcement there is not possible.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "409": {
+        "description": "The announcement could not created with this id, because it already exists in another event or has been deleted.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
+  "delete": {
+    "operationId": "deleteAnnouncement",
+    "summary": "Remove an announcement from the KüA plan. It will be removed from the database.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "announcementId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "204": {
+        "description": "Removing the announcement was successful."
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The announcement to be deleted does not exist or is not part of the event with given eventId.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

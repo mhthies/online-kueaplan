@@ -71,6 +71,43 @@ pub struct Category {
 }
 
 #[derive(Serialize, Deserialize)]
+pub enum AnnouncementType {
+    #[serde(rename = "info")]
+    Info,
+    #[serde(rename = "warning")]
+    Warning,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Announcement {
+    pub id: Uuid,
+    #[serde(rename = "announcementType")]
+    pub announcement_type: AnnouncementType,
+    pub text: String,
+    #[serde(default)]
+    #[serde(rename = "showWithDays")]
+    pub show_with_days: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "beginDate")]
+    pub begin_date: Option<NaiveDate>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "endDate")]
+    pub end_date: Option<NaiveDate>,
+    #[serde(rename = "sortKey")]
+    pub sort_key: i32,
+    #[serde(default, rename = "showWithCategories")]
+    pub show_with_categories: bool,
+    #[serde(default)]
+    pub categories: Vec<Uuid>,
+    #[serde(default, rename = "showWithAllCategories")]
+    pub show_with_all_categories: bool,
+    #[serde(default, rename = "showWithRooms")]
+    pub show_with_rooms: bool,
+    #[serde(default)]
+    pub rooms: Vec<Uuid>,
+    #[serde(default, rename = "showWithAllRooms")]
+    pub show_with_all_rooms: bool,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Updates {
     #[serde(rename = "changedEntries")]
     pub changed_entries: Vec<Entry>,

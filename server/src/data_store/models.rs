@@ -1,4 +1,4 @@
-use crate::data_store::EntryId;
+use crate::data_store::{EntryId, EventId};
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
 use diesel::backend::Backend;
@@ -496,6 +496,67 @@ impl From<Category> for kueaplan_api_types::Category {
             color: value.color,
             is_official: value.is_official,
             sort_key: value.sort_key,
+        }
+    }
+}
+
+impl From<AnnouncementType> for kueaplan_api_types::AnnouncementType {
+    fn from(value: AnnouncementType) -> Self {
+        match value {
+            AnnouncementType::Info => Self::Info,
+            AnnouncementType::Warning => Self::Warning,
+        }
+    }
+}
+
+impl From<FullAnnouncement> for kueaplan_api_types::Announcement {
+    fn from(value: FullAnnouncement) -> Self {
+        Self {
+            id: value.announcement.id,
+            announcement_type: value.announcement.announcement_type.into(),
+            text: value.announcement.text,
+            show_with_days: value.announcement.show_with_days,
+            begin_date: value.announcement.begin_date,
+            end_date: value.announcement.end_date,
+            sort_key: value.announcement.sort_key,
+            show_with_categories: value.announcement.show_with_categories,
+            categories: value.category_ids,
+            show_with_all_categories: value.announcement.show_with_all_categories,
+            show_with_rooms: value.announcement.show_with_rooms,
+            rooms: value.room_ids,
+            show_with_all_rooms: value.announcement.show_with_all_rooms,
+        }
+    }
+}
+
+impl From<kueaplan_api_types::AnnouncementType> for AnnouncementType {
+    fn from(value: kueaplan_api_types::AnnouncementType) -> Self {
+        match value {
+            kueaplan_api_types::AnnouncementType::Info => Self::Info,
+            kueaplan_api_types::AnnouncementType::Warning => Self::Warning,
+        }
+    }
+}
+
+impl FullNewAnnouncement {
+    pub fn from_api(announcement: kueaplan_api_types::Announcement, event_id: EventId) -> Self {
+        Self {
+            announcement: NewAnnouncement {
+                id: announcement.id,
+                event_id,
+                announcement_type: announcement.announcement_type.into(),
+                text: announcement.text,
+                show_with_days: announcement.show_with_days,
+                begin_date: announcement.begin_date,
+                end_date: announcement.end_date,
+                show_with_categories: announcement.show_with_categories,
+                show_with_all_categories: announcement.show_with_all_categories,
+                show_with_rooms: announcement.show_with_rooms,
+                show_with_all_rooms: announcement.show_with_all_rooms,
+                sort_key: announcement.sort_key,
+            },
+            category_ids: announcement.categories,
+            room_ids: announcement.rooms,
         }
     }
 }

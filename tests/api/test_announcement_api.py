@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from types import ModuleType
 
@@ -12,15 +13,25 @@ def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -
     announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(
         id=str(uuid.uuid4()),
         announcementType="info",
+        show_with_days=True,
+        begin_date=datetime.date(2025, 1, 4),
+        end_date=None,
         text="This is an important Announcement! I can use **Markdown** for extra highlighting.",
-        sortKey=42,
+        sort_key=42,
     )
     generated_api_client.client.create_or_update_announcement(EVENT_ID, announcement.id, announcement)
 
     result = generated_api_client.client.list_announcements(EVENT_ID)
+    # Set defaults, so that comparison works out
+    announcement.show_with_categories = False
+    announcement.categories = []
+    announcement.show_with_all_categories = False
+    announcement.show_with_rooms = False
+    announcement.rooms = []
+    announcement.show_with_all_rooms = False
     assert result[0] == announcement
 
-    announcement.sortKey = 5
+    announcement.sort_key = 5
     announcement.text = "Now, the Announcement text is shorter."
     generated_api_client.client.create_or_update_announcement(EVENT_ID, announcement.id, announcement)
 
@@ -33,7 +44,7 @@ def test_create_or_update_announcement_errors(generated_api_client: ApiClientWra
         id=str(uuid.uuid4()),
         announcementType="info",
         text="This is an important Announcement!",
-        sortKey=42,
+        sort_key=42,
     )
     generated_api_client.login(event_id, "user")
     # Unauthenticated

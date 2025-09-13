@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+mod endpoints_announcement;
 mod endpoints_auth;
 mod endpoints_category;
 mod endpoints_entry;
@@ -39,6 +40,9 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_category::list_categories)
         .service(endpoints_category::create_or_update_category)
         .service(endpoints_category::delete_category)
+        .service(endpoints_announcement::list_announcements)
+        .service(endpoints_announcement::create_or_update_announcement)
+        .service(endpoints_announcement::delete_announcement)
 }
 
 #[derive(Debug)]

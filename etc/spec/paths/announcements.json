@@ -1,0 +1,35 @@
+{
+  "get": {
+    "operationId": "listAnnouncements",
+    "summary": "Get the list of all announcements for this event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the list of announcements.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {"$ref": "../schema/Announcement.json"}
+            }
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

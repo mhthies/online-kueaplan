@@ -4,15 +4,7 @@
     "summary": "Create or update a KüA plan entry.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
-      {
-        "name": "entryId",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      }
+      {"$ref": "../components/entryId.json"}
     ],
     "security": [
       {"sessionTokenAuth": []}
@@ -60,30 +52,14 @@
     "summary": "Remove a KüA plan entry. It will be marked as deleted in the database.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
-      {
-        "name": "entryId",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      },
-      {
-        "name": "leaveResidue",
-        "in": "query",
-        "required": false,
-        "schema": {
-          "type": "boolean"
-        }
-      }
+      {"$ref": "../components/entryId.json"}
     ],
     "security": [
       {"sessionTokenAuth": []}
     ],
     "responses": {
       "204": {
-        "description": "Removing the entry (and creating the residue, if requested) was successful."
+        "description": "Removing the entry was successful."
       },
       "403": {"$ref": "../components/authorizationError.json"},
       "404": {

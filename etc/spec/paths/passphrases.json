@@ -1,0 +1,77 @@
+{
+  "get": {
+    "operationId": "listPassphrases",
+    "summary": "List all authentication passphrases of the event. Can only be used by Admins.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the list of passphrases.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {"$ref": "../schema/Passphrase.json"}
+            }
+          }
+        }
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
+  "post": {
+    "operationId": "createPassphrase",
+    "summary": "Create a new authentication passphrase for the event. Can only be used by Admins.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/passphraseId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/Passphrase.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "200": {
+        "description": "Passphrase has been created successfully. Resulting passphrase configuration (including actual id) is returned in the response.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Passphrase.json"}
+          }
+        }
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The requested event does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "passphraseId",
+  "in": "path",
+  "description": "ID of an authentication passphrase",
+  "required": true,
+  "schema": {
+    "type": "integer"
+  }
+}

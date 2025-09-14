@@ -24,6 +24,8 @@
     "/events/{eventId}/entries/{entryId}": {"$ref": "./paths/entry.json"},
     "/events/{eventId}/announcements": {"$ref": "./paths/announcements.json"},
     "/events/{eventId}/announcements/{announcementId}": {"$ref": "./paths/announcement.json"},
+    "/events/{eventId}/passphrases": {"$ref": "./paths/passphrases.json"},
+    "/events/{eventId}/passphrases/{passphraseId}": {"$ref": "./paths/passphrase.json"},
     "/events/{eventId}/updates": {"$ref": "./paths/updates.json"}
   },
   "components": {
@@ -31,7 +33,8 @@
       "eventId": {"$ref": "components/eventId.json"},
       "categoryId": {"$ref": "components/categoryId.json"},
       "roomId": {"$ref": "components/roomId.json"},
-      "entryId": {"$ref": "components/entryId.json"}
+      "entryId": {"$ref": "components/entryId.json"},
+      "passphraseId": {"$ref": "components/passphraseId.json"}
     },
     "securitySchemes": {
       "sessionTokenAuth": {"$ref": "components/sessionTokenAuth.json"}

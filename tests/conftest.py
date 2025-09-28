@@ -28,7 +28,7 @@ def _cargo_build_and_get_executable_path(working_directory: Path) -> str:
             return data["executable"]
 
 
-@pytest.yield_fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None):
     if not request.config.getoption("--start-app"):
         yield

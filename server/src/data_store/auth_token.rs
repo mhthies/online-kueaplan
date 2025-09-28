@@ -179,7 +179,9 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
             AccessRole::Admin => kueaplan_api_types::AuthorizationRole::Admin,
-            AccessRole::SharableViewLink => unimplemented!(),
+            AccessRole::SharableViewLink => {
+                kueaplan_api_types::AuthorizationRole::ParticipantSharable
+            }
         }
     }
 }

@@ -21,7 +21,7 @@
         "role": {
             "description": "The access role granted by activating this passphrase. Corresponds to the roles shown in Authorization Information.",
             "type": "string",
-            "enum": ["participant", "orga", "admin"]
+            "enum": ["participant", "orga", "admin", "participant-sharable"]
         }
     },
     "required": ["role"]

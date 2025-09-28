@@ -1,5 +1,6 @@
 use crate::cli::CliAuthTokenKey;
 use crate::data_store::{EventId, StoreError};
+use diesel::deserialize::FromSql;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
@@ -147,7 +148,10 @@ impl GlobalAuthToken {
 /// Possible roles, a client can authenticate for, using passphrases.
 ///
 /// Each role qualifies for a set of [Privileges]. See [Privilege::qualifying_roles].
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug, diesel::AsExpression, diesel::FromSqlRow,
+)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]
 pub enum AccessRole {
     User = 1,
@@ -170,6 +174,20 @@ impl TryFrom<i32> for AccessRole {
                 enum_name: "AccessRole",
             }),
         }
+    }
+}
+
+impl<DB> FromSql<diesel::sql_types::Integer, DB> for AccessRole
+where
+    DB: diesel::backend::Backend,
+    i32: FromSql<diesel::sql_types::Integer, DB>,
+{
+    fn from_sql(
+        bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        let x = i32::from_sql(bytes)?;
+        x.try_into()
+            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
     }
 }
 

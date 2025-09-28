@@ -749,17 +749,12 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<AuthToken, StoreError> {
         use schema::event_passphrases::dsl::*;
 
-        let role_ids = event_passphrases
+        let mut roles = event_passphrases
             .select(privilege)
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))
-            .load::<i32>(&mut self.connection)?;
+            .load::<AccessRole>(&mut self.connection)?;
 
-        let mut roles = role_ids
-            .iter()
-            .map(|r| (*r).try_into())
-            .collect::<Result<Vec<AccessRole>, EnumMemberNotExistingError>>()
-            .map_err(|e| StoreError::InvalidDataInDatabase(e.to_string()))?;
         roles.sort_unstable();
         roles.dedup();
 

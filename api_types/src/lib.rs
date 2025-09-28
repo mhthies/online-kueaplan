@@ -123,6 +123,8 @@ pub enum AuthorizationRole {
     Participant,
     #[serde(rename = "orga")]
     Orga,
+    #[serde(rename = "admin")]
+    Admin,
 }
 
 #[derive(Serialize, Deserialize)]

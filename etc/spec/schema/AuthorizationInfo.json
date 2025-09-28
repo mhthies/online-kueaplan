@@ -12,7 +12,7 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "enum": ["participant", "orga"]
+                        "enum": ["participant", "orga", "admin"]
                     }
                 },
                 "required": ["role"]

@@ -178,7 +178,7 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
         match value {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
-            AccessRole::Admin => unimplemented!(),
+            AccessRole::Admin => kueaplan_api_types::AuthorizationRole::Admin,
             AccessRole::SharableViewLink => unimplemented!(),
         }
     }

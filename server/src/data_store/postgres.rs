@@ -3,9 +3,7 @@ use super::{
     EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError,
 };
 use crate::auth_session::SessionToken;
-use crate::data_store::auth_token::{
-    AccessRole, AuthToken, EnumMemberNotExistingError, GlobalAuthToken, Privilege,
-};
+use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
 use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;

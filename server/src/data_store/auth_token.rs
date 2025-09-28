@@ -1,23 +1,7 @@
 use crate::cli::CliAuthTokenKey;
-use crate::data_store::{EventId, StoreError};
+use crate::data_store::{EnumMemberNotExistingError, EventId, StoreError};
 use diesel::deserialize::FromSql;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
-
-pub struct EnumMemberNotExistingError {
-    pub member_value: i32,
-    pub enum_name: &'static str,
-}
-
-impl Display for EnumMemberNotExistingError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} is not a valid value for {} neum",
-            self.member_value, self.enum_name
-        )
-    }
-}
 
 /// Authorization token for authorizing access to the data_store for a specific event
 ///

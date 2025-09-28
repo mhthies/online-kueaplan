@@ -1,4 +1,4 @@
-use crate::data_store::{EntryId, EventId};
+use crate::data_store::{EntryId, EnumMemberNotExistingError, EventId};
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
 use diesel::backend::Backend;
@@ -260,13 +260,16 @@ pub enum AnnouncementType {
 }
 
 impl TryFrom<i32> for AnnouncementType {
-    type Error = ();
+    type Error = EnumMemberNotExistingError;
 
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(AnnouncementType::Info),
             1 => Ok(AnnouncementType::Warning),
-            _ => Err(()),
+            _ => Err(EnumMemberNotExistingError {
+                member_value: value,
+                enum_name: "AnnouncementType",
+            }),
         }
     }
 }
@@ -301,7 +304,7 @@ where
     ) -> diesel::deserialize::Result<Self> {
         let x = i32::from_sql(bytes)?;
         x.try_into()
-            .map_err(|_| format!("Unrecognized AnnouncementType {}", x).into())
+            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
     }
 }
 

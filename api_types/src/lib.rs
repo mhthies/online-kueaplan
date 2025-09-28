@@ -117,7 +117,7 @@ pub struct Updates {
     pub rooms: Option<Vec<Room>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum AuthorizationRole {
     #[serde(rename = "participant")]
     Participant,
@@ -137,4 +137,19 @@ pub struct Authorization {
 #[derive(Serialize, Deserialize)]
 pub struct AuthorizationInfo {
     pub authorization: Vec<Authorization>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Passphrase {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub passphrase: Option<String>,
+    #[serde(
+        default,
+        rename = "derivableFromPassphrase5",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub derivable_from_passphrase: Option<i32>,
+    pub role: AuthorizationRole,
 }

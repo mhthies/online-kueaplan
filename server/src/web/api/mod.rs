@@ -5,6 +5,7 @@ mod endpoints_auth;
 mod endpoints_category;
 mod endpoints_entry;
 mod endpoints_event;
+mod endpoints_passphrase;
 mod endpoints_room;
 
 use crate::auth_session::SessionToken;
@@ -43,6 +44,9 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_announcement::list_announcements)
         .service(endpoints_announcement::create_or_update_announcement)
         .service(endpoints_announcement::delete_announcement)
+        .service(endpoints_passphrase::list_passphrases)
+        .service(endpoints_passphrase::create_passphrase)
+        .service(endpoints_passphrase::delete_passphrase)
 }
 
 #[derive(Debug)]

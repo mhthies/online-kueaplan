@@ -219,6 +219,28 @@ pub trait KueaPlanStoreFacade {
         event_id: EventId,
         expected_privilege: Privilege,
     ) -> Result<SessionToken, StoreError>;
+
+    /// Create a new passphrase
+    ///
+    /// returns the id of the new passphrase.
+    fn create_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase: models::NewPassphrase,
+    ) -> Result<PassphraseId, StoreError>;
+
+    fn delete_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        passphrase_id: PassphraseId,
+    ) -> Result<(), StoreError>;
+
+    fn get_passphrases(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<models::Passphrase>, StoreError>;
 }
 
 /// Filter options for retrieving entries from the store via KueaPlanStoreFacade::get_entries_filtered()

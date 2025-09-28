@@ -1,6 +1,6 @@
 use super::{
     models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId,
-    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, RoomId, StoreError,
+    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, RoomId, StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
@@ -101,8 +101,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         Ok(diesel::insert_into(events)
             .values(&event)
-            .get_results::<models::Event>(&mut self.connection)
-            .map(|e| e[0].id)?)
+            .returning(id)
+            .get_result::<EventId>(&mut self.connection)?)
     }
 
     fn get_entries_filtered(
@@ -791,6 +791,69 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         result.add_authorization(eligible_passphrase_ids[0]);
         Ok(result)
     }
+
+    fn create_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase: models::NewPassphrase,
+    ) -> Result<PassphraseId, StoreError> {
+        auth_token.check_privilege(passphrase.event_id, Privilege::ManagePassphrases)?;
+        if !passphrase.privilege.can_be_managed_online() {
+            return Err(StoreError::InvalidInputData(format!(
+                "Cannot create a passphrase with access role {} via the web interface.",
+                passphrase.privilege.name()
+            )));
+        }
+
+        let result = diesel::insert_into(schema::event_passphrases::table)
+            .values(passphrase)
+            .returning(schema::event_passphrases::id)
+            .get_result::<PassphraseId>(&mut self.connection)?;
+        Ok(result)
+    }
+
+    fn delete_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+        passphrase_id: PassphraseId,
+    ) -> Result<(), StoreError> {
+        use schema::event_passphrases::dsl::*;
+
+        // correctness of event_id is checked in DELETE statement below
+        auth_token.check_privilege(the_event_id, Privilege::ManagePassphrases)?;
+
+        let affected_rows = diesel::delete(event_passphrases)
+            .filter(id.eq(passphrase_id))
+            .filter(event_id.eq(the_event_id))
+            // Admin passphrases cannot be deleted via the web UI and API
+            .filter(privilege.eq_any(AccessRole::all().filter(|x| x.can_be_managed_online())))
+            .execute(&mut self.connection)?;
+        if affected_rows > 0 {
+            Ok(())
+        } else {
+            Err(StoreError::NotExisting)
+        }
+    }
+
+    fn get_passphrases(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<models::Passphrase>, StoreError> {
+        use schema::event_passphrases::dsl::*;
+        auth_token.check_privilege(the_event_id, Privilege::ManagePassphrases)?;
+
+        let mut passphrases = event_passphrases
+            .select(models::Passphrase::as_select())
+            .filter(event_id.eq(the_event_id))
+            .order_by(privilege)
+            .load::<models::Passphrase>(&mut self.connection)?;
+        for p in passphrases.iter_mut() {
+            p.passphrase = p.passphrase.as_ref().map(|x| obfuscate_passphrase(x));
+        }
+        Ok(passphrases)
+    }
 }
 
 fn update_entry_rooms(
@@ -1110,4 +1173,16 @@ fn announcement_filter_to_sql<'a>(
             ),
         ),
     }
+}
+
+/// Replace some characters of the passphrase with <DEL> characters to allow the user to recognize
+/// the passphrase without leaking it completely.
+fn obfuscate_passphrase(value: &str) -> String {
+    let length = value.chars().count();
+    let num_clear_chars = length.div_ceil(5);
+    let num_obfuscated_chars = length - num_clear_chars;
+    std::iter::repeat('\x7f')
+        .take(num_obfuscated_chars)
+        .chain(value.chars().skip(num_obfuscated_chars))
+        .collect()
 }

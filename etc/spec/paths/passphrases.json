@@ -36,8 +36,7 @@
     "operationId": "createPassphrase",
     "summary": "Create a new authentication passphrase for the event. Can only be used by Admins.",
     "parameters": [
-      {"$ref": "../components/eventId.json"},
-      {"$ref": "../components/passphraseId.json"}
+      {"$ref": "../components/eventId.json"}
     ],
     "security": [
       {"sessionTokenAuth": []}

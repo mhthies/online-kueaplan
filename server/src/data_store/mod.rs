@@ -21,7 +21,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::setup;
 use auth_token::{AuthToken, GlobalAuthToken};
 use chrono::Utc;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Formatter};
 
 pub mod auth_token;
 pub mod models;
@@ -219,6 +219,28 @@ pub trait KueaPlanStoreFacade {
         event_id: EventId,
         expected_privilege: Privilege,
     ) -> Result<SessionToken, StoreError>;
+
+    /// Create a new passphrase
+    ///
+    /// returns the id of the new passphrase.
+    fn create_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase: models::NewPassphrase,
+    ) -> Result<PassphraseId, StoreError>;
+
+    fn delete_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+        passphrase_id: PassphraseId,
+    ) -> Result<(), StoreError>;
+
+    fn get_passphrases(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<models::Passphrase>, StoreError>;
 }
 
 /// Filter options for retrieving entries from the store via KueaPlanStoreFacade::get_entries_filtered()
@@ -509,3 +531,18 @@ impl std::fmt::Display for StoreError {
 }
 
 impl std::error::Error for StoreError {}
+
+pub struct EnumMemberNotExistingError {
+    pub member_value: i32,
+    pub enum_name: &'static str,
+}
+
+impl Display for EnumMemberNotExistingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} is not a valid value for {} neum",
+            self.member_value, self.enum_name
+        )
+    }
+}

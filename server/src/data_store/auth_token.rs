@@ -1,22 +1,10 @@
 use crate::cli::CliAuthTokenKey;
-use crate::data_store::{EventId, StoreError};
+use crate::data_store::{EnumMemberNotExistingError, EventId, StoreError};
+use diesel::backend::Backend;
+use diesel::deserialize::FromSql;
+use diesel::query_builder::bind_collector::RawBytesBindCollector;
+use diesel::serialize::ToSql;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
-
-pub struct EnumMemberNotExistingError {
-    pub member_value: i32,
-    pub enum_name: &'static str,
-}
-
-impl Display for EnumMemberNotExistingError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} is not a valid value for {} neum",
-            self.member_value, self.enum_name
-        )
-    }
-}
 
 /// Authorization token for authorizing access to the data_store for a specific event
 ///
@@ -147,7 +135,10 @@ impl GlobalAuthToken {
 /// Possible roles, a client can authenticate for, using passphrases.
 ///
 /// Each role qualifies for a set of [Privileges]. See [Privilege::qualifying_roles].
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
+#[derive(
+    Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug, diesel::AsExpression, diesel::FromSqlRow,
+)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]
 pub enum AccessRole {
     User = 1,
@@ -173,13 +164,63 @@ impl TryFrom<i32> for AccessRole {
     }
 }
 
+impl From<AccessRole> for i32 {
+    fn from(value: AccessRole) -> Self {
+        value as i32
+    }
+}
+
+impl<DB> FromSql<diesel::sql_types::Integer, DB> for AccessRole
+where
+    DB: diesel::backend::Backend,
+    i32: FromSql<diesel::sql_types::Integer, DB>,
+{
+    fn from_sql(
+        bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        let x = i32::from_sql(bytes)?;
+        x.try_into()
+            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
+    }
+}
+
+impl<DB> ToSql<diesel::sql_types::Integer, DB> for AccessRole
+where
+    DB: Backend,
+    i32: ToSql<diesel::sql_types::Integer, DB>,
+    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        let value: i32 = (*self).into();
+        value.to_sql(&mut out.reborrow())
+    }
+}
+
 impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
     fn from(value: AccessRole) -> Self {
         match value {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
-            AccessRole::Admin => unimplemented!(),
-            AccessRole::SharableViewLink => unimplemented!(),
+            AccessRole::Admin => kueaplan_api_types::AuthorizationRole::Admin,
+            AccessRole::SharableViewLink => {
+                kueaplan_api_types::AuthorizationRole::ParticipantSharable
+            }
+        }
+    }
+}
+
+impl From<kueaplan_api_types::AuthorizationRole> for AccessRole {
+    fn from(value: kueaplan_api_types::AuthorizationRole) -> Self {
+        match value {
+            kueaplan_api_types::AuthorizationRole::Participant => AccessRole::User,
+            kueaplan_api_types::AuthorizationRole::Orga => AccessRole::Orga,
+            kueaplan_api_types::AuthorizationRole::Admin => AccessRole::Admin,
+            kueaplan_api_types::AuthorizationRole::ParticipantSharable => {
+                AccessRole::SharableViewLink
+            }
         }
     }
 }
@@ -192,6 +233,21 @@ impl AccessRole {
             AccessRole::Admin => "Admin",
             AccessRole::SharableViewLink => "Teilbarer Link",
         }
+    }
+
+    /// If true, Passphrases which grant this AccessRole can be managed via the web interface
+    /// (web UI and REST API) by a user with the [Privilege::ManageAnnouncements] privilege.
+    /// Otherwise, Passphrases for this Role can only be managed via the command line interface
+    /// on the server.
+    pub fn can_be_managed_online(&self) -> bool {
+        match self {
+            AccessRole::User | AccessRole::Orga | AccessRole::SharableViewLink => true,
+            AccessRole::Admin => false,
+        }
+    }
+
+    pub fn all() -> impl Iterator<Item = &'static AccessRole> {
+        [Self::User, Self::Orga, Self::Admin, Self::SharableViewLink].iter()
     }
 }
 

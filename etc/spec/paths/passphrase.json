@@ -1,0 +1,28 @@
+{
+  "delete": {
+    "operationId": "deletePassphrase",
+    "summary": "Delete an authentication passphrase.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/passphraseId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "204": {
+        "description": "Removing the passphrase was successful."
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The passphrase to be deleted does not exist or is not part of the event with given eventId.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

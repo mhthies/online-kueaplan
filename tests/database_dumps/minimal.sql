@@ -609,14 +609,14 @@ SELECT pg_catalog.setval('public.event_passphrases_event_id_seq', 1, false);
 -- Name: event_passphrases_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.event_passphrases_id_seq', 1, false);
+SELECT pg_catalog.setval('public.event_passphrases_id_seq', 6, false);
 
 
 --
 -- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.events_id_seq', 1, true);
+SELECT pg_catalog.setval('public.events_id_seq', 2, true);
 
 
 --

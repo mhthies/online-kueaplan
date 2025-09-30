@@ -1,4 +1,5 @@
-use crate::data_store::{EntryId, EventId};
+use crate::data_store::auth_token::AccessRole;
+use crate::data_store::{EntryId, EnumMemberNotExistingError, EventId, PassphraseId};
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
 use diesel::backend::Backend;
@@ -228,6 +229,25 @@ pub struct FullNewAnnouncement {
     pub room_ids: Vec<Uuid>,
 }
 
+#[derive(Clone, Queryable, Identifiable, Selectable)]
+#[diesel(table_name=super::schema::event_passphrases)]
+pub struct Passphrase {
+    pub id: PassphraseId,
+    pub event_id: EventId,
+    pub privilege: AccessRole,
+    pub passphrase: Option<String>,
+    pub derivable_from_passphrase: Option<PassphraseId>,
+}
+
+#[derive(Clone, Insertable)]
+#[diesel(table_name=super::schema::event_passphrases)]
+pub struct NewPassphrase {
+    pub event_id: EventId,
+    pub passphrase: Option<String>,
+    pub privilege: AccessRole,
+    pub derivable_from_passphrase: Option<PassphraseId>,
+}
+
 impl From<FullAnnouncement> for FullNewAnnouncement {
     fn from(value: FullAnnouncement) -> Self {
         Self {
@@ -260,13 +280,16 @@ pub enum AnnouncementType {
 }
 
 impl TryFrom<i32> for AnnouncementType {
-    type Error = ();
+    type Error = EnumMemberNotExistingError;
 
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(AnnouncementType::Info),
             1 => Ok(AnnouncementType::Warning),
-            _ => Err(()),
+            _ => Err(EnumMemberNotExistingError {
+                member_value: value,
+                enum_name: "AnnouncementType",
+            }),
         }
     }
 }
@@ -301,7 +324,7 @@ where
     ) -> diesel::deserialize::Result<Self> {
         let x = i32::from_sql(bytes)?;
         x.try_into()
-            .map_err(|_| format!("Unrecognized AnnouncementType {}", x).into())
+            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
     }
 }
 
@@ -557,6 +580,28 @@ impl FullNewAnnouncement {
             },
             category_ids: announcement.categories,
             room_ids: announcement.rooms,
+        }
+    }
+}
+
+impl NewPassphrase {
+    pub fn from_api(passphrase: kueaplan_api_types::Passphrase, event_id: EventId) -> Self {
+        Self {
+            event_id,
+            passphrase: passphrase.passphrase,
+            privilege: passphrase.role.into(),
+            derivable_from_passphrase: passphrase.derivable_from_passphrase,
+        }
+    }
+}
+
+impl From<Passphrase> for kueaplan_api_types::Passphrase {
+    fn from(value: Passphrase) -> Self {
+        Self {
+            id: Some(value.id),
+            passphrase: value.passphrase,
+            derivable_from_passphrase: value.derivable_from_passphrase,
+            role: value.privilege.into(),
         }
     }
 }

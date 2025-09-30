@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.4
--- Dumped by pg_dump version 17.4
+-- Dumped from database version 17.5
+-- Dumped by pg_dump version 17.5
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -56,41 +56,23 @@ ALTER TABLE ONLY public.announcements DROP CONSTRAINT announcements_pkey;
 ALTER TABLE ONLY public.announcement_rooms DROP CONSTRAINT announcement_rooms_pkey;
 ALTER TABLE ONLY public.announcement_categories DROP CONSTRAINT announcement_categories_pkey;
 ALTER TABLE ONLY public.__diesel_schema_migrations DROP CONSTRAINT __diesel_schema_migrations_pkey;
-ALTER TABLE public.rooms ALTER COLUMN event_id DROP DEFAULT;
 ALTER TABLE public.events ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.event_passphrases ALTER COLUMN event_id DROP DEFAULT;
 ALTER TABLE public.event_passphrases ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.entries ALTER COLUMN event_id DROP DEFAULT;
-ALTER TABLE public.categories ALTER COLUMN event_id DROP DEFAULT;
-ALTER TABLE public.announcements ALTER COLUMN event_id DROP DEFAULT;
-DROP SEQUENCE public.rooms_event_id_seq;
 DROP TABLE public.rooms;
 DROP TABLE public.previous_dates;
 DROP TABLE public.previous_date_rooms;
 DROP SEQUENCE public.events_id_seq;
 DROP TABLE public.events;
 DROP SEQUENCE public.event_passphrases_id_seq;
-DROP SEQUENCE public.event_passphrases_event_id_seq;
 DROP TABLE public.event_passphrases;
 DROP TABLE public.entry_rooms;
-DROP SEQUENCE public.entries_event_id_seq;
 DROP TABLE public.entries;
-DROP SEQUENCE public.categories_event_id_seq;
 DROP TABLE public.categories;
-DROP SEQUENCE public.announcements_event_id_seq;
 DROP TABLE public.announcements;
 DROP TABLE public.announcement_rooms;
 DROP TABLE public.announcement_categories;
 DROP TABLE public.__diesel_schema_migrations;
 DROP FUNCTION public.sync_lastmod();
--- *not* dropping schema, since initdb creates it
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
-
 --
 -- Name: sync_lastmod(); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -163,26 +145,6 @@ CREATE TABLE public.announcements (
 
 
 --
--- Name: announcements_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.announcements_event_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: announcements_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.announcements_event_id_seq OWNED BY public.announcements.event_id;
-
-
---
 -- Name: categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -197,26 +159,6 @@ CREATE TABLE public.categories (
     is_official boolean DEFAULT false NOT NULL,
     sort_key integer DEFAULT 0 NOT NULL
 );
-
-
---
--- Name: categories_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.categories_event_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: categories_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.categories_event_id_seq OWNED BY public.categories.event_id;
 
 
 --
@@ -241,26 +183,6 @@ CREATE TABLE public.entries (
     is_exclusive boolean DEFAULT false NOT NULL,
     is_cancelled boolean DEFAULT false NOT NULL
 );
-
-
---
--- Name: entries_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.entries_event_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: entries_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.entries_event_id_seq OWNED BY public.entries.event_id;
 
 
 --
@@ -291,26 +213,6 @@ CREATE TABLE public.event_passphrases (
 --
 
 COMMENT ON COLUMN public.event_passphrases.passphrase IS 'if NULL, this passphrase can only derived from another one';
-
-
---
--- Name: event_passphrases_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.event_passphrases_event_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: event_passphrases_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.event_passphrases_event_id_seq OWNED BY public.event_passphrases.event_id;
 
 
 --
@@ -404,58 +306,10 @@ CREATE TABLE public.rooms (
 
 
 --
--- Name: rooms_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.rooms_event_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: rooms_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.rooms_event_id_seq OWNED BY public.rooms.event_id;
-
-
---
--- Name: announcements event_id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.announcements ALTER COLUMN event_id SET DEFAULT nextval('public.announcements_event_id_seq'::regclass);
-
-
---
--- Name: categories event_id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.categories ALTER COLUMN event_id SET DEFAULT nextval('public.categories_event_id_seq'::regclass);
-
-
---
--- Name: entries event_id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.entries ALTER COLUMN event_id SET DEFAULT nextval('public.entries_event_id_seq'::regclass);
-
-
---
 -- Name: event_passphrases id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.event_passphrases ALTER COLUMN id SET DEFAULT nextval('public.event_passphrases_id_seq'::regclass);
-
-
---
--- Name: event_passphrases event_id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_passphrases ALTER COLUMN event_id SET DEFAULT nextval('public.event_passphrases_event_id_seq'::regclass);
 
 
 --
@@ -466,19 +320,13 @@ ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.event
 
 
 --
--- Name: rooms event_id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.rooms ALTER COLUMN event_id SET DEFAULT nextval('public.rooms_event_id_seq'::regclass);
-
-
---
 -- Data for Name: __diesel_schema_migrations; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20250531140600	2025-06-15 14:20:26.968825
 20250602173009	2025-06-15 14:20:26.986616
+20250930072909	2025-09-30 07:49:01.019478
 \.
 
 
@@ -578,34 +426,6 @@ COPY public.rooms (id, title, description, event_id, deleted, last_updated) FROM
 
 
 --
--- Name: announcements_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.announcements_event_id_seq', 1, false);
-
-
---
--- Name: categories_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.categories_event_id_seq', 1, false);
-
-
---
--- Name: entries_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.entries_event_id_seq', 1, false);
-
-
---
--- Name: event_passphrases_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.event_passphrases_event_id_seq', 1, false);
-
-
---
 -- Name: event_passphrases_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -617,13 +437,6 @@ SELECT pg_catalog.setval('public.event_passphrases_id_seq', 6, false);
 --
 
 SELECT pg_catalog.setval('public.events_id_seq', 2, true);
-
-
---
--- Name: rooms_event_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.rooms_event_id_seq', 1, false);
 
 
 --

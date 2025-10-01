@@ -2,15 +2,15 @@ use crate::data_store::auth_token::AccessRole;
 use crate::data_store::{EntryId, EnumMemberNotExistingError, EventId, PassphraseId};
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
-use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::prelude::*;
 use diesel::query_builder::bind_collector::RawBytesBindCollector;
 use diesel::serialize::ToSql;
 use diesel::{AsExpression, FromSqlRow};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Queryable, Selectable)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name=super::schema::events)]
 pub struct Event {
     pub id: i32,
@@ -19,11 +19,53 @@ pub struct Event {
     pub end_date: NaiveDate,
 }
 
-#[derive(Clone, Debug, Queryable, Selectable)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name=super::schema::events)]
 pub struct ExtendedEvent {
     #[diesel(embed)]
     pub basic_data: Event,
+    #[diesel(serialize_as=super::util::TimezoneWrapper, deserialize_as=super::util::TimezoneWrapper)]
+    pub timezone: chrono_tz::Tz,
+    pub effective_begin_of_day: chrono::NaiveTime,
+    pub default_time_schedule: EventDayTimeSchedule,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, AsExpression, FromSqlRow)]
+#[diesel(sql_type = diesel::sql_types::Jsonb)]
+pub struct EventDayTimeSchedule {
+    pub sections: Vec<EventDayScheduleSection>,
+}
+
+impl<DB> FromSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule
+where
+    DB: diesel::backend::Backend,
+    serde_json::Value: FromSql<diesel::sql_types::Jsonb, DB>,
+{
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let value = serde_json::Value::from_sql(bytes)?;
+        Ok(serde_json::from_value(value)?)
+    }
+}
+
+impl<DB> ToSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule
+where
+    DB: diesel::backend::Backend,
+    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+    serde_json::Value: ToSql<diesel::sql_types::Jsonb, DB>,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        let value = serde_json::to_value(self)?;
+        value.to_sql(&mut out.reborrow())
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct EventDayScheduleSection {
+    pub name: String,
+    pub end_time: Option<chrono::NaiveTime>,
 }
 
 #[derive(Insertable)]
@@ -301,9 +343,9 @@ impl From<AnnouncementType> for i32 {
 
 impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
 where
-    DB: Backend,
+    DB: diesel::backend::Backend,
+    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
     i32: ToSql<diesel::sql_types::Integer, DB>,
-    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
 {
     fn to_sql<'b>(
         &'b self,
@@ -319,9 +361,7 @@ where
     DB: diesel::backend::Backend,
     i32: FromSql<diesel::sql_types::Integer, DB>,
 {
-    fn from_sql(
-        bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
-    ) -> diesel::deserialize::Result<Self> {
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let x = i32::from_sql(bytes)?;
         x.try_into()
             .map_err(|e: EnumMemberNotExistingError| e.to_string().into())

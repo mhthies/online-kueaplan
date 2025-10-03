@@ -11,7 +11,7 @@
     <h1>Eintrag bearbeiten</h1>
     {{ EditEntryNavbar::new(
            base.request,
-           *base.event.expect("Event should always be known").id,
+           *event.basic_data.id,
            entry.entry.id,
            base.current_date.expect("For non-new entries, `entry_id` should always be known."),
            EditEntryNavbarActiveLink::DeleteEntry,
@@ -33,6 +33,7 @@
                    &MainListRow::from_entry(entry),
                    entry_category,
                    rooms,
+                   event,
                    false,
                    false,
                    None,
@@ -46,7 +47,7 @@
             Löschen
         </h2>
         <div class="card-body">
-            <form class="row align-items-center mb-3" method="post" action="{{ base.request.url_for("delete_entry", [event.id.to_string(), entry.entry.id.to_string()])? }}">
+            <form class="row align-items-center mb-3" method="post" action="{{ base.request.url_for("delete_entry", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
                 <div class="col-md-auto mb-2 mb-md-0">
                     <button type="submit" class="btn btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Löschen</button>
                 </div>
@@ -55,7 +56,7 @@
                     Der Eintrag bleibt zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, kann aber nicht ohne Eingriff eines Admins wiederhergestellt werden.
                 </div>
             </form>
-            <form class="row align-items-center" method="post" action="{{ base.request.url_for("mark_entry_cancelled", [event.id.to_string(), entry.entry.id.to_string()])? }}">
+            <form class="row align-items-center" method="post" action="{{ base.request.url_for("mark_entry_cancelled", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
                 <div class="col-md-auto mb-2 mb-md-0">
                     <button type="submit" class="btn btn-primary" {% if entry.entry.is_cancelled %}disabled{% endif %}>
                         <i class="bi bi-x-circle" aria-hidden="true"></i> Als „fällt aus“ markieren

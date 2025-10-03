@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::Privilege;
+use crate::data_store::models::Event;
 use crate::data_store::{EventId, StoreError};
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
 use crate::web::AppState;
@@ -24,7 +25,7 @@ pub async fn calendar_link_overview(
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
             auth.check_privilege(event_id, Privilege::ShowKueaPlan)?;
             Ok((
-                store.get_event(event_id)?,
+                store.get_extended_event(&auth, event_id)?,
                 store.create_reduced_session_token(
                     &session_token,
                     event_id,
@@ -45,12 +46,13 @@ pub async fn calendar_link_overview(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Links für Kalender-Apps",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
         shareable_session_token: shareable_session_token.map(|t| t.as_string(&state.secret)),
+        event: &event.basic_data,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -60,6 +62,7 @@ pub async fn calendar_link_overview(
 struct CalendarLinkOverviewTemplate<'a> {
     base: BaseTemplateContext<'a>,
     shareable_session_token: Option<String>,
+    event: &'a Event,
 }
 
 impl CalendarLinkOverviewTemplate<'_> {
@@ -72,17 +75,10 @@ impl CalendarLinkOverviewTemplate<'_> {
     }
 
     fn generic_calendar_link(&self, endpoint_name: &str) -> Result<String, AppError> {
-        let mut url = self.base.request.url_for(
-            endpoint_name,
-            &[self
-                .base
-                .event
-                .ok_or(AppError::InternalError(
-                    "event is not set in CalendarLinkOverviewTemplate.base".to_owned(),
-                ))?
-                .id
-                .to_string()],
-        )?;
+        let mut url = self
+            .base
+            .request
+            .url_for(endpoint_name, &[self.event.id.to_string()])?;
         url.set_query(Some(&serde_urlencoded::to_string(
             crate::web::ical::ICalQueryParams {
                 session_token: self
@@ -98,17 +94,10 @@ impl CalendarLinkOverviewTemplate<'_> {
     }
 
     fn login_url(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        let mut url = self.base.request.url_for(
-            "login_form",
-            [&self
-                .base
-                .event
-                .ok_or(AppError::InternalError(
-                    "event is not set in CalendarLinkOverviewTemplate.base".to_owned(),
-                ))?
-                .id
-                .to_string()],
-        )?;
+        let mut url = self
+            .base
+            .request
+            .url_for("login_form", [&self.event.id.to_string()])?;
         url.set_query(Some(&serde_urlencoded::to_string(
             super::auth::LoginQueryData {
                 privilege: None,

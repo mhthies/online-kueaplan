@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::Privilege;
+use crate::data_store::models::ExtendedEvent;
 use crate::data_store::EntryFilter;
-use crate::web::time_calculation::{timestamp_from_effective_date_and_time, TIME_ZONE};
+use crate::web::time_calculation::timestamp_from_effective_date_and_time;
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::ValidateFromFormInput;
 use crate::web::ui::{util, validation};
@@ -22,17 +23,15 @@ async fn concurrent_entries(
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let query = query.into_inner();
 
-    let begin = timestamp_from_effective_date_and_time(query.effective_day, query.begin_time);
-    let end = begin + query.duration;
-    let filter = EntryFilter::builder()
-        .after(begin, false)
-        .before(end, false)
-        .build();
-
-    let entries = web::block(move || -> Result<_, AppError> {
+    let (entries, event, query) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok(store.get_entries_filtered(&auth, event_id, filter)?)
+        let event = store.get_extended_event(&auth, event_id)?;
+        Ok((
+            store.get_entries_filtered(&auth, event_id, query.to_filter(&event))?,
+            event,
+            query,
+        ))
     })
     .await??;
 
@@ -52,8 +51,8 @@ async fn concurrent_entries(
         .filter(|(e, _)| !e.entry.is_cancelled)
         .filter(|(e, _)| Some(e.entry.id) != query.current_entry_id)
         .map(|(e, has_room_conflict)| {
-            let begin = e.entry.begin.with_timezone(&TIME_ZONE).naive_local();
-            let end = e.entry.end.with_timezone(&TIME_ZONE).naive_local();
+            let begin = e.entry.begin.with_timezone(&event.timezone).naive_local();
+            let end = e.entry.end.with_timezone(&event.timezone).naive_local();
             let show_begin_date = begin.date() < query.effective_day;
             let show_end_date =
                 query.duration > chrono::Duration::hours(12) && end.date() != begin.date();
@@ -81,6 +80,19 @@ struct ConcurrentEntriesQuery {
     #[serde(deserialize_with = "deserialize_comma_separated_list_of_uuids")]
     rooms: Vec<uuid::Uuid>,
     current_entry_id: Option<uuid::Uuid>,
+}
+
+impl ConcurrentEntriesQuery {
+    fn to_filter(&self, event: &ExtendedEvent) -> EntryFilter {
+        let begin =
+            timestamp_from_effective_date_and_time(self.effective_day, self.begin_time, event);
+        let end = begin + self.duration;
+        let filter = EntryFilter::builder()
+            .after(begin, false)
+            .before(end, false)
+            .build();
+        filter
+    }
 }
 
 fn deserialize_comma_separated_list_of_uuids<'de, D>(

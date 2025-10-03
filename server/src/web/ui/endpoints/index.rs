@@ -20,7 +20,15 @@ async fn event_index(
         let auth = session_token
             .map(|token| store.get_auth_token_for_session(&token, event_id))
             .transpose()?;
-        Ok((store.get_event(event_id)?, auth))
+        let event = if auth
+            .as_ref()
+            .is_some_and(|auth| auth.has_privilege(event_id, Privilege::ShowKueaPlan))
+        {
+            Some(store.get_extended_event(auth.as_ref().unwrap(), event_id)?)
+        } else {
+            None
+        };
+        Ok((event, auth))
     })
     .await??;
 
@@ -30,7 +38,12 @@ async fn event_index(
                 "main_list",
                 &[
                     event_id.to_string(),
-                    time_calculation::most_reasonable_date(&event).to_string(),
+                    time_calculation::most_reasonable_date(
+                        &event.expect(
+                            "Event should be available if ShowKueaPlan privilege is present",
+                        ),
+                    )
+                    .to_string(),
                 ],
             )?
             .to_string(),

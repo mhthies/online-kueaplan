@@ -1,9 +1,8 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullEntry};
+use crate::data_store::models::{Category, ExtendedEvent, FullEntry};
 use crate::data_store::{CategoryId, EntryFilter, EventId};
-use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -34,7 +33,7 @@ pub async fn delete_category_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, entry_filter)?,
             auth,
@@ -58,7 +57,7 @@ pub async fn delete_category_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Kategorie löschen", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -66,7 +65,7 @@ pub async fn delete_category_form(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Categories,
         },
-        event_id,
+        event: &event,
         category,
         all_categories: &categories,
         category_entries: &category_entries,
@@ -92,7 +91,7 @@ pub async fn delete_category(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -196,7 +195,7 @@ pub async fn delete_category(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Kategorie löschen", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -204,7 +203,7 @@ pub async fn delete_category(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Categories,
         },
-        event_id,
+        event: &event,
         category,
         all_categories: &categories,
         category_entries: &category_entries,
@@ -224,7 +223,7 @@ struct DeleteCategoryFormData {
 struct DeleteCategoryFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
-    event_id: EventId,
+    event: &'a ExtendedEvent,
     category: &'a Category,
     all_categories: &'a Vec<Category>,
     category_entries: &'a Vec<FullEntry>,
@@ -246,11 +245,14 @@ impl DeleteCategoryFormTemplate<'_> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         Ok(self.base.request.url_for(
             "delete_category",
-            [&self.event_id.to_string(), &self.category.id.to_string()],
+            [
+                &self.event.basic_data.id.to_string(),
+                &self.category.id.to_string(),
+            ],
         )?)
     }
 
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&TIME_ZONE).naive_local()
+        timestamp.with_timezone(&self.event.timezone).naive_local()
     }
 }

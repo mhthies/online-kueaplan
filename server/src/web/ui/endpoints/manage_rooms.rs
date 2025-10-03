@@ -2,7 +2,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::Room;
 use crate::data_store::EventId;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -25,7 +25,7 @@ async fn manage_rooms(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -36,7 +36,7 @@ async fn manage_rooms(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Orte",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),

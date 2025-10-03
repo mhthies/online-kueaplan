@@ -2,7 +2,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{NewRoom, Room};
 use crate::data_store::{EventId, RoomId, StoreError};
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
@@ -33,7 +33,7 @@ pub async fn edit_room_form(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required room
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -50,7 +50,7 @@ pub async fn edit_room_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Ort bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -85,7 +85,7 @@ pub async fn edit_room(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required room
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -117,7 +117,7 @@ pub async fn edit_room(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Ort bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -161,7 +161,7 @@ pub async fn new_room_form(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(event_id)?, auth))
+        Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
 
@@ -172,7 +172,7 @@ pub async fn new_room_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Ort", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -205,7 +205,7 @@ pub async fn new_room(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(event_id)?, auth))
+        Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
 
@@ -230,7 +230,7 @@ pub async fn new_room(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Ort", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),

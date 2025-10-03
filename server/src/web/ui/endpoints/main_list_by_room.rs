@@ -1,8 +1,8 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
+use crate::data_store::models::{Category, ExtendedEvent, FullAnnouncement, FullEntry, Room};
 use crate::data_store::{AnnouncementFilter, EntryFilter, EventId, RoomId};
-use crate::web::time_calculation::{current_effective_date, TIME_ZONE};
-use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
+use crate::web::time_calculation::current_effective_date;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
@@ -32,7 +32,7 @@ async fn main_list_by_room(
             let mut store = state.store.get_facade()?;
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
             Ok((
-                store.get_event(event_id)?,
+                store.get_extended_event(&auth, event_id)?,
                 store.get_entries_filtered(
                     &auth,
                     event_id,
@@ -59,17 +59,17 @@ async fn main_list_by_room(
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", room.title);
     let mut rows = generate_filtered_merged_list_entries(&entries, &room.id);
-    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows);
+    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows, &event);
     let tmpl = MainListByRoomTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByRoom),
         },
-        entry_blocks: group_rows_by_date(&rows),
+        entry_blocks: group_rows_by_date(&rows, &event),
         entries_with_descriptions: rows
             .iter()
             .filter(|row| {
@@ -83,6 +83,7 @@ async fn main_list_by_room(
         categories: categories.iter().map(|c| (c.id, c)).collect(),
         room,
         announcements: &announcements,
+        event: &event,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -97,11 +98,12 @@ struct MainListByRoomTemplate<'a> {
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     room: &'a Room,
     announcements: &'a Vec<FullAnnouncement>,
+    event: &'a ExtendedEvent,
 }
 
 impl MainListByRoomTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&TIME_ZONE).naive_local()
+        timestamp.with_timezone(&self.event.timezone).naive_local()
     }
 }
 

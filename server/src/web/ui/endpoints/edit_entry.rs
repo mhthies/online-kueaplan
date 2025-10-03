@@ -1,13 +1,13 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, Event, FullEntry, FullNewEntry, FullPreviousDate, NewEntry, PreviousDate, Room,
+    Category, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry, PreviousDate,
+    Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time,
-    EFFECTIVE_BEGIN_OF_DAY, TIME_ZONE,
 };
-use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
 use crate::web::ui::sub_templates::form_inputs::{
@@ -42,7 +42,7 @@ async fn edit_entry_form(
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -52,14 +52,14 @@ async fn edit_entry_form(
 
     let entry_id = entry.entry.id;
     let entry_begin = entry.entry.begin;
-    let form_data: EntryFormData = entry.into();
+    let form_data = EntryFormData::from_full_entry(entry, &event);
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
-            event: Some(&event),
-            current_date: Some(get_effective_date(&entry_begin)),
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: Some(get_effective_date(&entry_begin, &event)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -91,7 +91,7 @@ async fn edit_entry(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_entry(&auth, entry_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
@@ -108,6 +108,7 @@ async fn edit_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         Some(entry_id),
+        &event,
     );
 
     let mut entry_begin = old_entry.entry.begin;
@@ -148,8 +149,8 @@ async fn edit_entry(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
-            event: Some(&event),
-            current_date: Some(get_effective_date(&old_entry.entry.begin)),
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: Some(get_effective_date(&old_entry.entry.begin, &event)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -176,7 +177,7 @@ async fn edit_entry(
             &req,
             event_id,
             &entry_id,
-            &time_calculation::get_effective_date(&entry_begin),
+            &time_calculation::get_effective_date(&entry_begin, &event),
         )?,
         &req,
     )
@@ -199,7 +200,7 @@ async fn new_entry_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -218,7 +219,7 @@ async fn new_entry_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Eintrag",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: date,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::AddEntry),
@@ -253,7 +254,7 @@ async fn new_entry(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
@@ -266,6 +267,7 @@ async fn new_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         None,
+        &event,
     );
 
     let mut entry_id = None;
@@ -291,7 +293,7 @@ async fn new_entry(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Eintrag",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: date,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::AddEntry),
@@ -316,7 +318,7 @@ async fn new_entry(
             &req,
             event_id,
             &entry_id.unwrap_or_default(),
-            &time_calculation::get_effective_date(&entry_begin),
+            &time_calculation::get_effective_date(&entry_begin, &event),
         )?,
         &req,
     )
@@ -334,7 +336,7 @@ pub struct NewEntryQueryParams {
 #[template(path = "edit_entry_form.html")]
 struct EditEntryFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
-    event: &'a Event,
+    event: &'a ExtendedEvent,
     form_data: &'a EntryFormData,
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
@@ -349,7 +351,7 @@ impl<'a> EditEntryFormTemplate<'a> {
             let mut url = self
                 .base
                 .request
-                .url_for("new_entry", &[self.event.id.to_string()])?;
+                .url_for("new_entry", &[self.event.basic_data.id.to_string()])?;
             url.set_query(Some(&serde_urlencoded::to_string(NewEntryQueryParams {
                 date: self.base.current_date,
             })?));
@@ -358,7 +360,7 @@ impl<'a> EditEntryFormTemplate<'a> {
             Ok(self.base.request.url_for(
                 "edit_entry",
                 &[
-                    self.event.id.to_string(),
+                    self.event.basic_data.id.to_string(),
                     self.entry_id
                         .expect("For non-new entries, `entry_id` should always be known.")
                         .to_string(),
@@ -371,7 +373,7 @@ impl<'a> EditEntryFormTemplate<'a> {
             self.base.request.url_for(
                 "main_list",
                 &[
-                    self.event.id.to_string(),
+                    self.event.basic_data.id.to_string(),
                     self.base
                         .current_date
                         .unwrap_or_else(|| time_calculation::most_reasonable_date(self.event))
@@ -381,7 +383,7 @@ impl<'a> EditEntryFormTemplate<'a> {
         } else {
             url_for_entry_details(
                 self.base.request,
-                self.event.id,
+                self.event.basic_data.id,
                 self.entry_id
                     .expect("For non-new entries, `entry_id` should always be known."),
                 &self
@@ -410,7 +412,7 @@ impl<'a> EditEntryFormTemplate<'a> {
             .collect()
     }
     fn day_entries(&self) -> Vec<SelectEntry<'static>> {
-        event_days(self.event)
+        event_days(&self.event.basic_data)
             .into_iter()
             .map(|date| SelectEntry {
                 value: Cow::Owned(date.to_string()),
@@ -423,9 +425,12 @@ impl<'a> EditEntryFormTemplate<'a> {
             .collect()
     }
 
-    fn effective_begin_of_day_milliseconds() -> u64 {
-        EFFECTIVE_BEGIN_OF_DAY.num_seconds_from_midnight() as u64 * 1000
-            + EFFECTIVE_BEGIN_OF_DAY.nanosecond() as u64 / 1_000_000
+    fn effective_begin_of_day_milliseconds(&self) -> u64 {
+        self.event
+            .effective_begin_of_day
+            .num_seconds_from_midnight() as u64
+            * 1000
+            + self.event.effective_begin_of_day.nanosecond() as u64 / 1_000_000
     }
 }
 
@@ -470,6 +475,7 @@ impl EntryFormData {
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
         known_entry_id: Option<EntryId>,
+        event: &ExtendedEvent,
     ) -> Option<(
         FullNewEntry,
         Option<chrono::DateTime<chrono::Utc>>,
@@ -494,7 +500,8 @@ impl EntryFormData {
         let create_previous_date = self.create_previous_date.get_value();
         let previous_date_comment = self.previous_date_comment.validate();
 
-        let begin = timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner());
+        let begin =
+            timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner(), event);
         Some((
             FullNewEntry {
                 entry: NewEntry {
@@ -524,10 +531,8 @@ impl EntryFormData {
             },
         ))
     }
-}
 
-impl From<FullEntry> for EntryFormData {
-    fn from(value: FullEntry) -> Self {
+    fn from_full_entry(value: FullEntry, event: &ExtendedEvent) -> Self {
         Self {
             entry_id: FormValue::empty(),
             title: validation::NonEmptyString(value.entry.title).into(),
@@ -536,12 +541,12 @@ impl From<FullEntry> for EntryFormData {
             time_comment: value.entry.time_comment.into(),
             description: value.entry.description.into(),
             responsible_person: value.entry.responsible_person.into(),
-            day: validation::IsoDate(get_effective_date(&value.entry.begin)).into(),
+            day: validation::IsoDate(get_effective_date(&value.entry.begin, event)).into(),
             begin: validation::TimeOfDay(
                 value
                     .entry
                     .begin
-                    .with_timezone(&TIME_ZONE)
+                    .with_timezone(&event.timezone)
                     .naive_local()
                     .time(),
             )

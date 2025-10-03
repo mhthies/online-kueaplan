@@ -1,9 +1,9 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, Event, FullEntry, Room};
+use crate::data_store::models::{Category, ExtendedEvent, FullEntry, Room};
 use crate::data_store::EntryId;
 use crate::web::time_calculation;
 use crate::web::time_calculation::get_effective_date;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::edit_entry_helpers::{
@@ -35,7 +35,7 @@ async fn delete_entry_form(
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?, // TODO only get relevant category?
             auth,
@@ -47,8 +47,8 @@ async fn delete_entry_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag löschen",
-            event: Some(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin)),
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -82,12 +82,15 @@ async fn delete_entry(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         let entry = store.get_entry(&auth, entry_id)?;
         store.delete_entry(&auth, event_id, entry_id)?;
-        Ok(entry.entry.begin)
+        Ok((
+            entry.entry.begin,
+            store.get_extended_event(&auth, event_id)?,
+        ))
     })
     .await?;
 
     match result {
-        Ok(entry_begin) => {
+        Ok((entry_begin, event)) => {
             let notification = FlashMessage {
                 flash_type: FlashType::Success,
                 message: "Der Eintrag wurde gelöscht.".to_string(),
@@ -98,7 +101,7 @@ async fn delete_entry(
             Ok(Redirect::to(util::url_for_main_list(
                 &req,
                 event_id,
-                &time_calculation::get_effective_date(&entry_begin),
+                &time_calculation::get_effective_date(&entry_begin, &event),
             )?)
             .see_other())
         }
@@ -145,12 +148,12 @@ async fn mark_entry_cancelled(
         let entry_begin = entry.entry.begin;
         entry.entry.is_cancelled = true;
         store.create_or_update_entry(&auth, entry.into(), false, Some(last_updated))?;
-        Ok(entry_begin)
+        Ok((entry_begin, store.get_extended_event(&auth, event_id)?))
     })
     .await?;
 
     match result {
-        Ok(entry_begin) => {
+        Ok((entry_begin, event)) => {
             let notification = FlashMessage {
                 flash_type: FlashType::Success,
                 message: "Die Änderung wurde gespeichert.".to_string(),
@@ -164,7 +167,7 @@ async fn mark_entry_cancelled(
                     &req,
                     event_id,
                     &entry_id,
-                    &time_calculation::get_effective_date(&entry_begin),
+                    &time_calculation::get_effective_date(&entry_begin, &event),
                 )?
                 .to_string(),
             )
@@ -204,7 +207,7 @@ async fn mark_entry_cancelled(
 #[template(path = "delete_entry_form.html")]
 struct DeleteEntryTemplate<'a> {
     base: BaseTemplateContext<'a>,
-    event: &'a Event,
+    event: &'a ExtendedEvent,
     entry: &'a FullEntry,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     entry_category: &'a Category,

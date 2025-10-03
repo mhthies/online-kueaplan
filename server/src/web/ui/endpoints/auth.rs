@@ -1,12 +1,12 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::util;
 use crate::web::ui::util::{SESSION_COOKIE_MAX_AGE, SESSION_COOKIE_NAME};
-use crate::web::{time_calculation, AppState};
+use crate::web::AppState;
 use actix_web::http::header;
 use actix_web::http::header::{ContentType, TryIntoHeaderValue};
 use actix_web::web::{Html, Query};
@@ -49,7 +49,7 @@ async fn login_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Login",
-            event: Some(&event),
+            event: AnyEventData::BasicEvent(&event),
             current_date: None,
             auth_token: auth.as_ref(),
             active_main_nav_button: None,
@@ -128,7 +128,7 @@ async fn login(
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
-                event: Some(&event),
+                event: AnyEventData::BasicEvent(&event),
                 current_date: None,
                 auth_token: Some(&auth),
                 active_main_nav_button: None,
@@ -160,14 +160,8 @@ async fn login(
                 if let Some(ref redirect_to) = query_data.redirect_to {
                     redirect_to.clone()
                 } else {
-                    req.url_for(
-                        "main_list",
-                        &[
-                            event_id.to_string(),
-                            time_calculation::most_reasonable_date(&event).to_string(),
-                        ],
-                    )?
-                    .to_string()
+                    req.url_for("event_index", &[event_id.to_string()])?
+                        .to_string()
                 },
             ))
             .finish())

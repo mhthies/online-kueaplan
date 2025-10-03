@@ -7,7 +7,7 @@
 //! files and other pages.
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::EventId;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::{AdminInfo, AppState};
 use actix_web::body::EitherBody;
@@ -102,7 +102,7 @@ fn generate_app_error_page(
         base: BaseTemplateContext {
             request: http_request,
             page_title: "Fehler",
-            event: None,
+            event: AnyEventData::None,
             current_date: None,
             auth_token: None,
             active_main_nav_button: None,
@@ -126,7 +126,7 @@ fn generate_generic_error_page(
         base: BaseTemplateContext {
             request: http_request,
             page_title: "Fehler",
-            event: None,
+            event: AnyEventData::None,
             current_date: None,
             auth_token: None,
             active_main_nav_button: None,

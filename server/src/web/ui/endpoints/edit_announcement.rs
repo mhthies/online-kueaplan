@@ -4,7 +4,7 @@ use crate::data_store::models::{
 };
 use crate::data_store::{AnnouncementId, CategoryId, EventId, RoomId, StoreError};
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{
@@ -42,7 +42,7 @@ pub async fn edit_announcement_form(
             auth.check_privilege(event_id, Privilege::ManageCategories)?;
             Ok((
                 // TODO only get required announcement
-                store.get_event(event_id)?,
+                store.get_extended_event(&auth, event_id)?,
                 store.get_announcements(&auth, event_id, None)?,
                 store.get_categories(&auth, event_id)?,
                 store.get_rooms(&auth, event_id)?,
@@ -61,7 +61,7 @@ pub async fn edit_announcement_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Bekanntmachung bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -69,12 +69,11 @@ pub async fn edit_announcement_form(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Announcements,
         },
-        event_id,
         form_data: &form_data,
         announcement_id: Some(&announcement_id),
         has_unsaved_changes: false,
         is_new_announcement: false,
-        event: &event,
+        event: &event.basic_data,
         categories: &categories,
         rooms: &rooms,
     };
@@ -100,7 +99,7 @@ pub async fn edit_announcement(
             auth.check_privilege(event_id, Privilege::ManageCategories)?;
             Ok((
                 // TODO only get required announcement
-                store.get_event(event_id)?,
+                store.get_extended_event(&auth, event_id)?,
                 store.get_announcements(&auth, event_id, None)?,
                 store.get_categories(&auth, event_id)?,
                 store.get_rooms(&auth, event_id)?,
@@ -143,7 +142,7 @@ pub async fn edit_announcement(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Bekanntmachung bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -151,12 +150,11 @@ pub async fn edit_announcement(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Announcements,
         },
-        event_id,
         form_data: &form_data,
         announcement_id: Some(&announcement_id),
         has_unsaved_changes: false,
         is_new_announcement: false,
-        event: &event,
+        event: &event.basic_data,
         categories: &categories,
         rooms: &rooms,
     };
@@ -191,7 +189,7 @@ pub async fn new_announcement_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
@@ -207,7 +205,7 @@ pub async fn new_announcement_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neue Bekanntmachung", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -215,12 +213,11 @@ pub async fn new_announcement_form(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Announcements,
         },
-        event_id,
         form_data: &form_data,
         announcement_id: None,
         has_unsaved_changes: false,
         is_new_announcement: true,
-        event: &event,
+        event: &event.basic_data,
         categories: &categories,
         rooms: &rooms,
     };
@@ -244,7 +241,7 @@ pub async fn new_announcement(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
@@ -278,7 +275,7 @@ pub async fn new_announcement(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Ort", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -286,12 +283,11 @@ pub async fn new_announcement(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Announcements,
         },
-        event_id,
         form_data: &form_data,
         announcement_id: None,
         has_unsaved_changes: true,
         is_new_announcement: true,
-        event: &event,
+        event: &event.basic_data,
         categories: &categories,
         rooms: &rooms,
     };
@@ -446,7 +442,6 @@ impl From<FullAnnouncement> for AnnouncementFormData {
 struct EditAnnouncementFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
-    event_id: EventId,
     form_data: &'a AnnouncementFormData,
     announcement_id: Option<&'a AnnouncementId>,
     has_unsaved_changes: bool,
@@ -462,12 +457,12 @@ impl<'a> EditAnnouncementFormTemplate<'a> {
             Ok(self
                 .base
                 .request
-                .url_for("new_announcement", &[self.event_id.to_string()])?)
+                .url_for("new_announcement", &[self.event.id.to_string()])?)
         } else {
             Ok(self.base.request.url_for(
                 "edit_announcement",
                 &[
-                    self.event_id.to_string(),
+                    self.event.id.to_string(),
                     self.announcement_id
                         .expect(
                             "For non-new announcements, `announcement_id` should always be known.",

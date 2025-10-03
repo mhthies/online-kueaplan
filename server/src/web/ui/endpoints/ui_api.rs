@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::ExtendedEvent;
+use crate::data_store::models::EventClockInfo;
 use crate::data_store::EntryFilter;
 use crate::web::time_calculation::timestamp_from_effective_date_and_time;
 use crate::web::ui::error::AppError;
@@ -28,7 +28,7 @@ async fn concurrent_entries(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         let event = store.get_extended_event(&auth, event_id)?;
         Ok((
-            store.get_entries_filtered(&auth, event_id, query.to_filter(&event))?,
+            store.get_entries_filtered(&auth, event_id, query.to_filter(&event.clock_info))?,
             event,
             query,
         ))
@@ -51,8 +51,8 @@ async fn concurrent_entries(
         .filter(|(e, _)| !e.entry.is_cancelled)
         .filter(|(e, _)| Some(e.entry.id) != query.current_entry_id)
         .map(|(e, has_room_conflict)| {
-            let begin = e.entry.begin.with_timezone(&event.timezone).naive_local();
-            let end = e.entry.end.with_timezone(&event.timezone).naive_local();
+            let begin = e.entry.begin.with_timezone(&event.clock_info.timezone).naive_local();
+            let end = e.entry.end.with_timezone(&event.clock_info.timezone).naive_local();
             let show_begin_date = begin.date() < query.effective_day;
             let show_end_date =
                 query.duration > chrono::Duration::hours(12) && end.date() != begin.date();
@@ -83,9 +83,9 @@ struct ConcurrentEntriesQuery {
 }
 
 impl ConcurrentEntriesQuery {
-    fn to_filter(&self, event: &ExtendedEvent) -> EntryFilter {
+    fn to_filter(&self, clock_info: &EventClockInfo) -> EntryFilter {
         let begin =
-            timestamp_from_effective_date_and_time(self.effective_day, self.begin_time, event);
+            timestamp_from_effective_date_and_time(self.effective_day, self.begin_time, clock_info);
         let end = begin + self.duration;
         let filter = EntryFilter::builder()
             .after(begin, false)

@@ -47,7 +47,7 @@ async fn previous_dates_overview(
             request: &req,
             page_title: "Vorherige Termine",
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin, &event)),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -141,6 +141,8 @@ struct PreviousDatesOverviewTemplate<'a> {
 
 impl PreviousDatesOverviewTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.event.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }

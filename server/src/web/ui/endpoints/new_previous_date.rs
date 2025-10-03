@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, PreviousDate, Room,
+    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate,
+    PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{get_effective_date, timestamp_from_effective_date_and_time};
@@ -54,14 +55,14 @@ pub async fn new_previous_date_form(
 
     let previous_date_id = Uuid::now_v7();
     let form_data: PreviousDateFormData =
-        PreviousDateFormData::for_new_previous_date(previous_date_id, &entry, &event);
+        PreviousDateFormData::for_new_previous_date(previous_date_id, &entry, &event.clock_info);
 
     let tmpl = NewPreviousDateFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neuer Vorheriger Termin", // TODO
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin, &event)),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByDate),
         },
@@ -109,7 +110,8 @@ pub async fn new_previous_date(
     .await??;
 
     let mut form_data = data.into_inner();
-    let previous_date = form_data.validate(&rooms.iter().map(|r| r.id).collect(), &event);
+    let previous_date =
+        form_data.validate(&rooms.iter().map(|r| r.id).collect(), &event.clock_info);
 
     let result: util::FormSubmitResult = if let Some(mut previous_date) = previous_date {
         previous_date.previous_date.entry_id = entry_id;
@@ -136,7 +138,7 @@ pub async fn new_previous_date(
             request: &req,
             page_title: "Neuer Vorheriger Termin", // TODO
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin, &event)),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByDate),
         },
@@ -187,16 +189,16 @@ impl PreviousDateFormData {
     fn for_new_previous_date(
         previous_date_id: Uuid,
         entry: &FullEntry,
-        event: &ExtendedEvent,
+        clock_info: &EventClockInfo,
     ) -> Self {
         Self {
             previous_date_id: previous_date_id.into(),
-            day: validation::IsoDate(get_effective_date(&entry.entry.begin, event)).into(),
+            day: validation::IsoDate(get_effective_date(&entry.entry.begin, clock_info)).into(),
             begin: validation::TimeOfDay(
                 entry
                     .entry
                     .begin
-                    .with_timezone(&event.timezone)
+                    .with_timezone(&clock_info.timezone)
                     .naive_local()
                     .time(),
             )
@@ -207,7 +209,11 @@ impl PreviousDateFormData {
         }
     }
 
-    fn validate(&mut self, rooms: &Vec<Uuid>, event: &ExtendedEvent) -> Option<FullPreviousDate> {
+    fn validate(
+        &mut self,
+        rooms: &Vec<Uuid>,
+        clock_info: &EventClockInfo,
+    ) -> Option<FullPreviousDate> {
         let previous_date_id = self.previous_date_id.validate();
         let day = self.day.validate();
         let time = self.begin.validate();
@@ -215,8 +221,11 @@ impl PreviousDateFormData {
         let room_ids = self.rooms.validate_with(rooms);
         let comment = self.comment.validate();
 
-        let begin =
-            timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner(), event);
+        let begin = timestamp_from_effective_date_and_time(
+            day?.into_inner(),
+            time?.into_inner(),
+            clock_info,
+        );
         Some(FullPreviousDate {
             previous_date: PreviousDate {
                 id: previous_date_id?,

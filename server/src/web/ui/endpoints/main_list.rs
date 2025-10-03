@@ -1,5 +1,7 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, ExtendedEvent, FullAnnouncement, FullEntry, Room};
+use crate::data_store::models::{
+    Category, EventClockInfo, ExtendedEvent, FullAnnouncement, FullEntry, Room,
+};
 use crate::data_store::{AnnouncementFilter, EntryFilter};
 use crate::web::time_calculation::{
     current_effective_date, timestamp_from_effective_date_and_time,
@@ -45,7 +47,7 @@ async fn main_list(
                 store.get_entries_filtered(
                     &auth,
                     event_id,
-                    date_to_filter(date, time_after, &event),
+                    date_to_filter(date, time_after, &event.clock_info),
                 )?,
                 event,
                 store.get_rooms(&auth, event_id)?,
@@ -61,8 +63,8 @@ async fn main_list(
         .await??;
 
     let title = date.format("%d.%m.").to_string();
-    let mut rows = generate_filtered_merged_list_entries(&entries, date, &event);
-    mark_first_row_of_next_calendar_date(&mut rows, date, &event.timezone);
+    let mut rows = generate_filtered_merged_list_entries(&entries, date, &event.clock_info);
+    mark_first_row_of_next_calendar_date(&mut rows, date, &event.clock_info.timezone);
     let tmpl = MainListTemplate {
         base: BaseTemplateContext {
             request: &req,
@@ -91,7 +93,7 @@ async fn main_list(
             .sections
             .iter()
             .filter_map(|b| b.end_time)
-            .filter(|t| *t > event.effective_begin_of_day)
+            .filter(|t| *t > event.clock_info.effective_begin_of_day)
             .collect(),
         announcements: &announcements,
         event: &event,
@@ -116,7 +118,9 @@ struct MainListTemplate<'a> {
 
 impl MainListTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.event.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 
     fn link_to_time_constrained_list(
@@ -159,13 +163,13 @@ mod filters {
 fn date_to_filter(
     date: chrono::NaiveDate,
     begin_time: Option<chrono::NaiveTime>,
-    event: &ExtendedEvent,
+    clock_info: &EventClockInfo,
 ) -> EntryFilter {
-    let end = date.and_time(event.effective_begin_of_day) + chrono::Duration::days(1);
+    let end = date.and_time(clock_info.effective_begin_of_day) + chrono::Duration::days(1);
     let mut builder = EntryFilter::builder()
         .include_previous_date_matches()
         .before(
-            event
+            clock_info
                 .timezone
                 .from_local_datetime(&end)
                 .latest()
@@ -178,7 +182,7 @@ fn date_to_filter(
         // *not* include entries that end exactly at that time, even for entries with 0:00h
         // duration.
         builder = builder.after(
-            timestamp_from_effective_date_and_time(date, begin_time, event),
+            timestamp_from_effective_date_and_time(date, begin_time, clock_info),
             false,
         );
     } else {
@@ -187,7 +191,11 @@ fn date_to_filter(
         // duration which start (and end) at the EFFECTIVE_BEGIN_OF_DAY from all days main_lists,
         // such that they are not accessible in the plan anymore.
         builder = builder.after(
-            timestamp_from_effective_date_and_time(date, event.effective_begin_of_day, event),
+            timestamp_from_effective_date_and_time(
+                date,
+                clock_info.effective_begin_of_day,
+                clock_info,
+            ),
             true,
         );
     }
@@ -202,11 +210,11 @@ fn date_to_filter(
 fn generate_filtered_merged_list_entries<'entries, 'event>(
     entries: &'entries [FullEntry],
     date: chrono::NaiveDate,
-    event: &'event ExtendedEvent,
+    clock_info: &'event EventClockInfo,
 ) -> Vec<MainListRow<'entries>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
-        if effective_date_matches(&entry.entry.begin, &entry.entry.end, date, event) {
+        if effective_date_matches(&entry.entry.begin, &entry.entry.end, date, clock_info) {
             result.push(MainListRow::from_entry(entry));
         }
         for previous_date in entry.previous_dates.iter() {
@@ -214,7 +222,7 @@ fn generate_filtered_merged_list_entries<'entries, 'event>(
                 &previous_date.previous_date.begin,
                 &previous_date.previous_date.end,
                 date,
-                event,
+                clock_info,
             ) {
                 result.push(MainListRow::from_previous_date(entry, previous_date))
             }
@@ -238,17 +246,17 @@ fn effective_date_matches(
     begin: &chrono::DateTime<chrono::Utc>,
     end: &chrono::DateTime<chrono::Utc>,
     effective_date: chrono::NaiveDate,
-    event: &ExtendedEvent,
+    clock_info: &EventClockInfo,
 ) -> bool {
-    let after = effective_date.and_time(event.effective_begin_of_day);
+    let after = effective_date.and_time(clock_info.effective_begin_of_day);
     let before = after + chrono::Duration::days(1);
-    let after = event
+    let after = clock_info
         .timezone
         .from_local_datetime(&after)
         .earliest()
         .map(|dt| dt.to_utc())
         .unwrap_or(after.and_utc());
-    let before = event
+    let before = clock_info
         .timezone
         .from_local_datetime(&before)
         .latest()
@@ -277,7 +285,7 @@ fn group_rows_into_blocks<'a, 'e>(
         .expect("If no time schedule section is defined, we should exit early above.");
     for entry in entries {
         while section.end_time.is_some_and(|block_begin_time| {
-            timestamp_from_effective_date_and_time(date, block_begin_time, event)
+            timestamp_from_effective_date_and_time(date, block_begin_time, &event.clock_info)
                 <= *entry.sort_time
         }) {
             if !block_entries.is_empty() {
@@ -303,25 +311,13 @@ fn group_rows_into_blocks<'a, 'e>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_store::models::{Entry, Event, FullPreviousDate, PreviousDate};
-    use chrono::NaiveDate;
+    use crate::data_store::models::{Entry, FullPreviousDate, PreviousDate};
     use uuid::uuid;
 
-    fn get_test_event() -> ExtendedEvent {
-        ExtendedEvent {
-            basic_data: Event {
-                id: 0,
-                title: "Test".to_string(),
-                begin_date: NaiveDate::from_ymd_opt(2025, 1, 1).unwrap(),
-                end_date: NaiveDate::from_ymd_opt(2025, 1, 5).unwrap(),
-            },
-            timezone: chrono_tz::Tz::Europe__Berlin,
-            effective_begin_of_day: chrono::NaiveTime::from_hms_milli_opt(5, 30, 0, 0).unwrap(),
-            default_time_schedule: crate::data_store::models::EventDayTimeSchedule {
-                sections: vec![],
-            },
-        }
-    }
+    const DEFAULT_CLOCK_INFO: EventClockInfo = EventClockInfo {
+        timezone: chrono_tz::Tz::Europe__Berlin,
+        effective_begin_of_day: chrono::NaiveTime::from_hms_opt(5, 30, 0).unwrap(),
+    };
 
     #[test]
     fn test_generate_list_entries() {
@@ -448,7 +444,7 @@ mod tests {
         let result = generate_filtered_merged_list_entries(
             &entries,
             "2025-04-28".parse().unwrap(),
-            &get_test_event(),
+            &DEFAULT_CLOCK_INFO,
         );
         assert_eq!(
             result

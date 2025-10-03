@@ -48,7 +48,7 @@ async fn delete_entry_form(
             request: &req,
             page_title: "Eintrag löschen",
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin, &event)),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -101,7 +101,7 @@ async fn delete_entry(
             Ok(Redirect::to(util::url_for_main_list(
                 &req,
                 event_id,
-                &time_calculation::get_effective_date(&entry_begin, &event),
+                &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
             )?)
             .see_other())
         }
@@ -167,7 +167,7 @@ async fn mark_entry_cancelled(
                     &req,
                     event_id,
                     &entry_id,
-                    &time_calculation::get_effective_date(&entry_begin, &event),
+                    &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
                 )?
                 .to_string(),
             )

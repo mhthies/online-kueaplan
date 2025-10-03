@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry, PreviousDate,
-    Room,
+    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry,
+    PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{
@@ -52,14 +52,14 @@ async fn edit_entry_form(
 
     let entry_id = entry.entry.id;
     let entry_begin = entry.entry.begin;
-    let form_data = EntryFormData::from_full_entry(entry, &event);
+    let form_data = EntryFormData::from_full_entry(entry, &event.clock_info);
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&entry_begin, &event)),
+            current_date: Some(get_effective_date(&entry_begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -108,7 +108,7 @@ async fn edit_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         Some(entry_id),
-        &event,
+        &event.clock_info,
     );
 
     let mut entry_begin = old_entry.entry.begin;
@@ -150,7 +150,10 @@ async fn edit_entry(
             request: &req,
             page_title: "Eintrag bearbeiten", // TODO
             event: AnyEventData::ExtendedEvent(&event),
-            current_date: Some(get_effective_date(&old_entry.entry.begin, &event)),
+            current_date: Some(get_effective_date(
+                &old_entry.entry.begin,
+                &event.clock_info,
+            )),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -177,7 +180,7 @@ async fn edit_entry(
             &req,
             event_id,
             &entry_id,
-            &time_calculation::get_effective_date(&entry_begin, &event),
+            &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
     )
@@ -267,7 +270,7 @@ async fn new_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         None,
-        &event,
+        &event.clock_info,
     );
 
     let mut entry_id = None;
@@ -318,7 +321,7 @@ async fn new_entry(
             &req,
             event_id,
             &entry_id.unwrap_or_default(),
-            &time_calculation::get_effective_date(&entry_begin, &event),
+            &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
     )
@@ -427,10 +430,11 @@ impl<'a> EditEntryFormTemplate<'a> {
 
     fn effective_begin_of_day_milliseconds(&self) -> u64 {
         self.event
+            .clock_info
             .effective_begin_of_day
             .num_seconds_from_midnight() as u64
             * 1000
-            + self.event.effective_begin_of_day.nanosecond() as u64 / 1_000_000
+            + self.event.clock_info.effective_begin_of_day.nanosecond() as u64 / 1_000_000
     }
 }
 
@@ -475,7 +479,7 @@ impl EntryFormData {
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
         known_entry_id: Option<EntryId>,
-        event: &ExtendedEvent,
+        clock_info: &EventClockInfo,
     ) -> Option<(
         FullNewEntry,
         Option<chrono::DateTime<chrono::Utc>>,
@@ -500,8 +504,11 @@ impl EntryFormData {
         let create_previous_date = self.create_previous_date.get_value();
         let previous_date_comment = self.previous_date_comment.validate();
 
-        let begin =
-            timestamp_from_effective_date_and_time(day?.into_inner(), time?.into_inner(), event);
+        let begin = timestamp_from_effective_date_and_time(
+            day?.into_inner(),
+            time?.into_inner(),
+            &clock_info,
+        );
         Some((
             FullNewEntry {
                 entry: NewEntry {
@@ -532,7 +539,7 @@ impl EntryFormData {
         ))
     }
 
-    fn from_full_entry(value: FullEntry, event: &ExtendedEvent) -> Self {
+    fn from_full_entry(value: FullEntry, clock_info: &EventClockInfo) -> Self {
         Self {
             entry_id: FormValue::empty(),
             title: validation::NonEmptyString(value.entry.title).into(),
@@ -541,12 +548,12 @@ impl EntryFormData {
             time_comment: value.entry.time_comment.into(),
             description: value.entry.description.into(),
             responsible_person: value.entry.responsible_person.into(),
-            day: validation::IsoDate(get_effective_date(&value.entry.begin, event)).into(),
+            day: validation::IsoDate(get_effective_date(&value.entry.begin, clock_info)).into(),
             begin: validation::TimeOfDay(
                 value
                     .entry
                     .begin
-                    .with_timezone(&event.timezone)
+                    .with_timezone(&clock_info.timezone)
                     .naive_local()
                     .time(),
             )

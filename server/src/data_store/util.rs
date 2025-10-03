@@ -6,7 +6,7 @@ use diesel::{AsExpression, FromSqlRow};
 
 /// Helper struct to allow storin a chrono_tz timezone in the database (as string identifier of the
 /// timezone). This struct implements `ToSql<VarChar, _>` and `FromSql<VarChar, _>`.
-#[derive(Debug, AsExpression, FromSqlRow)]
+#[derive(Clone, Debug, AsExpression, FromSqlRow)]
 #[diesel(sql_type=diesel::sql_types::Text)]
 pub struct TimezoneWrapper(chrono_tz::Tz);
 

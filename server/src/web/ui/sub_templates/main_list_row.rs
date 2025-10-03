@@ -1,4 +1,4 @@
-use crate::data_store::models::{Category, ExtendedEvent, FullEntry, FullPreviousDate, Room};
+use crate::data_store::models::{Category, EventClockInfo, FullEntry, FullPreviousDate, Room};
 use crate::data_store::{CategoryId, RoomId};
 use crate::web::time_calculation;
 use crate::web::ui::colors::CategoryColors;
@@ -22,7 +22,7 @@ pub struct MainListRowTemplate<'a> {
     row: &'a MainListRow<'a>,
     category: &'a Category,
     rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
-    event: &'a ExtendedEvent,
+    clock_info: &'a EventClockInfo,
     show_edit_links: bool,
     show_description_links: bool,
     date_context: Option<chrono::NaiveDate>,
@@ -36,7 +36,7 @@ impl<'a> MainListRowTemplate<'a> {
         row: &'a MainListRow<'a>,
         entry_category: &'a Category,
         rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
-        event: &'a ExtendedEvent,
+        clock_info: &'a EventClockInfo,
         show_edit_links: bool,
         show_description_links: bool,
         date_context: Option<chrono::NaiveDate>,
@@ -49,7 +49,7 @@ impl<'a> MainListRowTemplate<'a> {
             row,
             category: entry_category,
             rooms,
-            event,
+            clock_info,
             show_edit_links,
             show_description_links,
             date_context,
@@ -59,7 +59,9 @@ impl<'a> MainListRowTemplate<'a> {
     }
 
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.event.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.clock_info.timezone)
+            .naive_local()
     }
 
     fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
@@ -92,7 +94,7 @@ impl<'a> MainListRowTemplate<'a> {
                 self.request,
                 entry.event_id,
                 &entry.id,
-                &time_calculation::get_effective_date(&entry.begin, self.event),
+                &time_calculation::get_effective_date(&entry.begin, &self.clock_info),
             ))
             .transpose(),
             MainEntryLinkMode::ByCategory => {

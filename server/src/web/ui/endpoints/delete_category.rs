@@ -253,6 +253,8 @@ impl DeleteCategoryFormTemplate<'_> {
     }
 
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.event.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }

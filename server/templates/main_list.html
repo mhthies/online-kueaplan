@@ -16,7 +16,7 @@
 
     <h1>
         KüA-Plan {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
-        {% if date == self::current_effective_date(event) %}
+        {% if date == self::current_effective_date(event.clock_info) %}
             <span class="d-print-none">(heute)</span>
         {% endif %}
         {% if let Some(time_after) = time_after %}
@@ -53,7 +53,7 @@
                                                 **row,
                                                 category,
                                                 rooms,
-                                                event,
+                                                event.clock_info,
                                                 base.has_privilege(Privilege::ManageEntries),
                                                 true,
                                                 Some(*date),

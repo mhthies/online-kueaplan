@@ -59,7 +59,7 @@ async fn main_list_by_room(
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", room.title);
     let mut rows = generate_filtered_merged_list_entries(&entries, &room.id);
-    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows, &event);
+    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows, &event.clock_info);
     let tmpl = MainListByRoomTemplate {
         base: BaseTemplateContext {
             request: &req,
@@ -69,7 +69,7 @@ async fn main_list_by_room(
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByRoom),
         },
-        entry_blocks: group_rows_by_date(&rows, &event),
+        entry_blocks: group_rows_by_date(&rows, &event.clock_info),
         entries_with_descriptions: rows
             .iter()
             .filter(|row| {
@@ -103,7 +103,9 @@ struct MainListByRoomTemplate<'a> {
 
 impl MainListByRoomTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.event.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }
 

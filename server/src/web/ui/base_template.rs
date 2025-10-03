@@ -125,6 +125,12 @@ impl<'a> BaseTemplateContext<'a> {
             )?
             .to_string())
     }
+
+    /// Get the current effective date, if all required information is present to determine it
+    pub fn get_current_date_opt(&self) -> Option<chrono::NaiveDate> {
+        self.get_extended_event()
+            .map(|e| crate::web::time_calculation::current_effective_date(&e.clock_info))
+    }
 }
 
 #[derive(Debug, PartialEq)]

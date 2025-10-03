@@ -19,14 +19,87 @@ pub struct Event {
     pub end_date: NaiveDate,
 }
 
+#[derive(Clone, Debug, Queryable, Selectable, AsChangeset)]
+#[diesel(table_name=super::schema::events)]
+pub struct EventClockInfo {
+    #[diesel(serialize_as=super::util::TimezoneWrapper, deserialize_as=super::util::TimezoneWrapper)]
+    pub timezone: chrono_tz::Tz,
+    pub effective_begin_of_day: chrono::NaiveTime,
+}
+
+// Manual implementation of diesel::insertable::Insertable, because the derive macro is too stupid
+// to create the Insertable for &EventClockInfo, when `#[diesel(serialize_as=...)` is used, which
+// in turn is required for deriving Insertable for &ExtendedEvent.
+impl Insertable<super::schema::events::table> for EventClockInfo {
+    type Values = <(
+        Option<diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>>,
+        Option<diesel::dsl::Eq<super::schema::events::effective_begin_of_day, chrono::NaiveTime>>,
+    ) as Insertable<super::schema::events::table>>::Values;
+    fn values(
+        self,
+    ) -> <(
+        Option<diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>>,
+        Option<diesel::dsl::Eq<super::schema::events::effective_begin_of_day, chrono::NaiveTime>>,
+    ) as Insertable<super::schema::events::table>>::Values {
+        Insertable::<super::schema::events::table>::values((
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::timezone,
+                ::std::convert::Into::<super::util::TimezoneWrapper>::into(self.timezone),
+            )),
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::effective_begin_of_day,
+                self.effective_begin_of_day,
+            )),
+        ))
+    }
+}
+impl<'insert> Insertable<super::schema::events::table> for &'insert EventClockInfo {
+    type Values = <(
+        Option<diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>>,
+        Option<
+            diesel::dsl::Eq<
+                super::schema::events::effective_begin_of_day,
+                &'insert chrono::NaiveTime,
+            >,
+        >,
+    ) as Insertable<super::schema::events::table>>::Values;
+    // This is kind of a hack, because we actually use the owned TimezoneWrapper in the Eq, where
+    // the derived trait implementation would normally use a referenced.
+    fn values(
+        self,
+    ) -> <(
+        Option<diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>>,
+        Option<
+            diesel::dsl::Eq<
+                super::schema::events::effective_begin_of_day,
+                &'insert chrono::NaiveTime,
+            >,
+        >,
+    ) as Insertable<super::schema::events::table>>::Values {
+        Insertable::<super::schema::events::table>::values((
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::timezone,
+                super::util::TimezoneWrapper::from(self.timezone.clone()),
+            )),
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::effective_begin_of_day,
+                &self.effective_begin_of_day,
+            )),
+        ))
+    }
+}
+impl diesel::internal::derives::insertable::UndecoratedInsertRecord<super::schema::events::table>
+    for EventClockInfo
+{
+}
+
 #[derive(Clone, Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name=super::schema::events)]
 pub struct ExtendedEvent {
     #[diesel(embed)]
     pub basic_data: Event,
-    #[diesel(serialize_as=super::util::TimezoneWrapper, deserialize_as=super::util::TimezoneWrapper)]
-    pub timezone: chrono_tz::Tz,
-    pub effective_begin_of_day: chrono::NaiveTime,
+    #[diesel(embed)]
+    pub clock_info: EventClockInfo,
     pub default_time_schedule: EventDayTimeSchedule,
 }
 

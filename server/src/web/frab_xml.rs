@@ -1,6 +1,6 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, ExtendedEvent, FullEntry, Room};
+use crate::data_store::models::{Category, EventClockInfo, ExtendedEvent, FullEntry, Room};
 use crate::data_store::{CategoryId, EntryFilter, EntryId, EventId, RoomId};
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
@@ -44,7 +44,7 @@ async fn frab_xml(
             &http_request,
             event_id,
             &entry.entry.id,
-            &get_effective_date(&entry.entry.begin, event),
+            &get_effective_date(&entry.entry.begin, &event.clock_info),
         )
         .unwrap()
         .to_string()
@@ -98,7 +98,7 @@ where
     G: Fn(&FullEntry, &ExtendedEvent) -> String,
 {
     let rooms_by_id: BTreeMap<_, _> = rooms.iter().map(|r| (r.id, r)).collect();
-    let grouped_entries = group_entries_by_date_and_room(&entries, &rooms_by_id, &event);
+    let grouped_entries = group_entries_by_date_and_room(&entries, &rooms_by_id, &event.clock_info);
     let data = Schedule {
         version: chrono::Utc::now().to_string(),
         generator: XmlGenerator {
@@ -116,9 +116,11 @@ where
             .map(|(index, (date, rooms))| DaySchedule {
                 index: (index + 1) as u32,
                 date: *date,
-                start: date.and_time(event.effective_begin_of_day).and_utc(),
+                start: date
+                    .and_time(event.clock_info.effective_begin_of_day)
+                    .and_utc(),
                 end: (*date + chrono::TimeDelta::days(1))
-                    .and_time(event.effective_begin_of_day)
+                    .and_time(event.clock_info.effective_begin_of_day)
                     .and_utc(),
                 room: rooms
                     .iter()
@@ -207,7 +209,7 @@ impl<'a> ConferenceMetaData<'a> {
                 .and_time(chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap())
                 .and_utc(),
             days: (event.basic_data.end_date - event.basic_data.begin_date).num_days() + 1,
-            time_zone_name: event.timezone.name(),
+            time_zone_name: event.clock_info.timezone.name(),
             url: url_for_event(&event.basic_data.id),
             base_url: url_for_event(&event.basic_data.id),
             track: categories
@@ -344,7 +346,7 @@ struct XmlPerson<'a> {
 fn group_entries_by_date_and_room<'a>(
     entries: &'a Vec<FullEntry>,
     rooms_by_id: &'a BTreeMap<RoomId, &'a Room>,
-    event: &'a ExtendedEvent,
+    clock_info: &'a EventClockInfo,
 ) -> Vec<(
     chrono::NaiveDate,
     Vec<(Option<&'a Room>, Vec<&'a FullEntry>)>,
@@ -354,12 +356,12 @@ fn group_entries_by_date_and_room<'a>(
         return result;
     }
     let mut block_entries: BTreeMap<Option<uuid::Uuid>, Vec<&FullEntry>> = BTreeMap::new();
-    let mut current_date = get_effective_date(&entries[0].entry.begin, event);
+    let mut current_date = get_effective_date(&entries[0].entry.begin, clock_info);
     for entry in entries {
         if entry.entry.is_cancelled {
             continue;
         }
-        if get_effective_date(&entry.entry.begin, event) != current_date {
+        if get_effective_date(&entry.entry.begin, clock_info) != current_date {
             if !block_entries.is_empty() {
                 result.push((
                     current_date,
@@ -367,7 +369,7 @@ fn group_entries_by_date_and_room<'a>(
                 ));
             }
             block_entries = BTreeMap::new();
-            current_date = get_effective_date(&entry.entry.begin, event);
+            current_date = get_effective_date(&entry.entry.begin, clock_info);
         }
         if entry.room_ids.is_empty() {
             block_entries

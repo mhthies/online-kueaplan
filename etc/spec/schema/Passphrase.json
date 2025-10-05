@@ -12,11 +12,13 @@
         },
         "passphrase": {
             "description": "The actual passphrase to be entered by the user for authentication. When receiving existing passphrases from the server, parts of the string may be replaced with DEL (0x7f) characters. If this passphrase is only activatable by deriving deriving from another passphrase, this property is omitted.",
-            "type": "string"
+            "type": "string",
+            "nullable": true
         },
         "derivableFromPassphrase": {
             "description": "If present, the passphrase can be derived from the other passphrase with this id, i.e. a user being authenticated with the other passphrase can get the role granted by this passphrase without actually entering this passphrase.",
-            "type": "integer"
+            "type": "integer",
+            "nullable": true
         },
         "role": {
             "description": "The access role granted by activating this passphrase. Corresponds to the roles shown in Authorization Information.",
@@ -24,5 +26,5 @@
             "enum": ["participant", "orga", "admin", "participant-sharable"]
         }
     },
-    "required": ["role"]
+    "required": ["passphrase", "derivableFromPassphrase" ,"role"]
 }

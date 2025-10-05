@@ -29,6 +29,7 @@ def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
     generated_api_client.login(EVENT_ID, "admin")
     passphrase: "kuaeplan_api_client.Passphrase" = generated_api_client.module.Passphrase(
         passphrase="verysecret",
+        derivable_from_passphrase=None,
         role="orga",
     )
     generated_api_client.client.create_passphrase(EVENT_ID, passphrase)

@@ -88,9 +88,9 @@ def generated_api_client(request: pytest.FixtureRequest) -> "ApiClientWrapper":
     client_path = Path(__file__).parent / "__api_client"
     openapi_source_path = Path(__file__).parent.parent / "etc" / "spec" / "openapi.json"
     generator_config_path = Path(__file__).parent / "openapi_python_config.yaml"
-    openapi_generator_executable = shutil.which("openapi-generator")
+    openapi_generator_executable = shutil.which("openapi-generator-cli")
     if not openapi_generator_executable:
-        pytest.skip("openapi-generator is not available in the PATH")
+        pytest.skip("openapi-generator-cli is not available in the PATH")
     subprocess.run([openapi_generator_executable,
                     "generate",
                     "--generator-name", "python",

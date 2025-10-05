@@ -87,11 +87,11 @@ impl ConcurrentEntriesQuery {
         let begin =
             timestamp_from_effective_date_and_time(self.effective_day, self.begin_time, clock_info);
         let end = begin + self.duration;
-        let filter = EntryFilter::builder()
+
+        EntryFilter::builder()
             .after(begin, false)
             .before(end, false)
-            .build();
-        filter
+            .build()
     }
 }
 

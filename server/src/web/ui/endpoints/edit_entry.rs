@@ -507,7 +507,7 @@ impl EntryFormData {
         let begin = timestamp_from_effective_date_and_time(
             day?.into_inner(),
             time?.into_inner(),
-            &clock_info,
+            clock_info,
         );
         Some((
             FullNewEntry {

@@ -94,7 +94,7 @@ impl<'a> MainListRowTemplate<'a> {
                 self.request,
                 entry.event_id,
                 &entry.id,
-                &time_calculation::get_effective_date(&entry.begin, &self.clock_info),
+                &time_calculation::get_effective_date(&entry.begin, self.clock_info),
             ))
             .transpose(),
             MainEntryLinkMode::ByCategory => {

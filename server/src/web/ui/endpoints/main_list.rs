@@ -207,10 +207,10 @@ fn date_to_filter(
 ///
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry at the
 /// current date, sorts them by `begin` and merges consecutive list rows
-fn generate_filtered_merged_list_entries<'entries, 'event>(
+fn generate_filtered_merged_list_entries<'entries>(
     entries: &'entries [FullEntry],
     date: chrono::NaiveDate,
-    clock_info: &'event EventClockInfo,
+    clock_info: &EventClockInfo,
 ) -> Vec<MainListRow<'entries>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {

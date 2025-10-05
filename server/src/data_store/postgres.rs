@@ -1181,8 +1181,7 @@ fn obfuscate_passphrase(value: &str) -> String {
     let length = value.chars().count();
     let num_clear_chars = length.div_ceil(5);
     let num_obfuscated_chars = length - num_clear_chars;
-    std::iter::repeat('\x7f')
-        .take(num_obfuscated_chars)
+    std::iter::repeat_n('\x7f', num_obfuscated_chars)
         .chain(value.chars().skip(num_obfuscated_chars))
         .collect()
 }

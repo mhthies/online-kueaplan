@@ -174,7 +174,7 @@ async fn login(
                         "main_list",
                         &[
                             event_id.to_string(),
-                            time_calculation::most_reasonable_date(&e).to_string(),
+                            time_calculation::most_reasonable_date(e).to_string(),
                         ],
                     )?
                     .to_string()
@@ -187,9 +187,9 @@ async fn login(
     }
 }
 
-fn create_session_cookie<'a, 'b>(
+fn create_session_cookie<'b>(
     session_token: SessionToken,
-    secret: &'a str,
+    secret: &str,
 ) -> actix_web::cookie::Cookie<'b> {
     let mut cookie =
         actix_web::cookie::Cookie::new(SESSION_COOKIE_NAME, session_token.as_string(secret));

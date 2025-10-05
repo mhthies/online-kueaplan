@@ -126,7 +126,7 @@ impl<'insert> Insertable<super::schema::events::table> for &'insert EventClockIn
         Insertable::<super::schema::events::table>::values((
             Some(diesel::ExpressionMethods::eq(
                 super::schema::events::timezone,
-                super::util::TimezoneWrapper::from(self.timezone.clone()),
+                super::util::TimezoneWrapper::from(self.timezone),
             )),
             Some(diesel::ExpressionMethods::eq(
                 super::schema::events::effective_begin_of_day,

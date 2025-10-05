@@ -147,7 +147,7 @@ pub struct Passphrase {
     pub passphrase: Option<String>,
     #[serde(
         default,
-        rename = "derivableFromPassphrase5",
+        rename = "derivableFromPassphrase",
         skip_serializing_if = "Option::is_none"
     )]
     pub derivable_from_passphrase: Option<i32>,

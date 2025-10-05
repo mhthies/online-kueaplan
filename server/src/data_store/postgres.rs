@@ -120,7 +120,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(event_id.eq(the_event_id))
                 .filter(not(deleted))
                 .filter(entry_filter_to_sql(filter))
-                .order_by((begin.asc(), end.asc()))
+                .order_by((begin.asc(), end.asc(), id.asc()))
                 .select(models::Entry::as_select())
                 .load::<models::Entry>(connection)?;
 

@@ -1,5 +1,7 @@
 import json
 import os
+import secrets
+
 import sys
 import types
 from pathlib import Path
@@ -50,6 +52,7 @@ def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None):
     env["LISTEN_ADDRESS"] = "127.0.0.1"
     env["ADMIN_NAME"] = "Anton Administrator"
     env["ADMIN_EMAIL"] = "anton@example.com"
+    env["SECRET"] = secrets.token_urlsafe(20)
     process = subprocess.Popen(cmd, env=env)
     time.sleep(2)
     returncode = process.poll()

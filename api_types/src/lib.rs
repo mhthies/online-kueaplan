@@ -6,7 +6,9 @@ use uuid::Uuid;
 pub struct Event {
     pub id: i32,
     pub title: String,
+    #[serde(rename = "beginDate")]
     pub begin_date: NaiveDate,
+    #[serde(rename = "endDate")]
     pub end_date: NaiveDate,
 }
 

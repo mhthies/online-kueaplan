@@ -170,3 +170,28 @@ For the apache web server, the following virtual host configuration can be used 
 Besides other tools, the [OpenAPI Generator](https://openapi-generator.tech/) can be used to generate Code or documentation from the API specification files.
 This can be used to check the specification's syntax and semantics.
 For generating an API documentation in HTML format, the command in `etc/spec/gendocs.sh` can be used.
+
+
+### Code formatting
+
+- Rust code must be properly formatted, using rustfmt's default settings.
+  Run `cargo fmt` to fix formatting before committing!
+- All files should be free of trailing whitespace and end with a single line-feed.
+
+
+#### pre-commit Framework for Git Hooks
+
+The pre-commit framework [link](https://pre-commit.com/) can be used to automatically check and fix the code formatting before committing.
+To use it:
+* Install pre-commit (e.g. using `uv tool install pre-commit`)
+* Run `pre-commit install` in this repository to install the Git Hooks according to the `.pre-commit-config.yaml`.
+
+
+### Unit Tests and System Tests
+
+Running the Rust unittests:
+```bash
+cargo test
+```
+
+Running the system tests, written in Python: See [tests/README.md](tests/README.md).

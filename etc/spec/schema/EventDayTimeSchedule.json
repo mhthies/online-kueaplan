@@ -1,0 +1,32 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/EventDayTimeSchedule.json",
+    "title": "KüA Plan Day Time Schedule",
+    "description": "Information about the outline of a single day's schedule of an event, represented in the KüA-Plan.",
+    "type": "object",
+    "properties": {
+        "sections": {
+            "description": "Rough subdivision of a day into sections like 'morning', 'afternoon', 'night', etc. that are used to divide the KüA-Plan main list with subheadings.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of this schedule section, i.e. the subheading above this section."
+                    },
+                    "endTime": {
+                        "nullable": true,
+                        "type": "string",
+                        "pattern": "\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?",
+                        "description": "End of this section. Interpreted as local time in the event's timezone. Must be `null` in the last section. When it is equal to the event's `effectiveBeginOfDay`, this section gathers only the ongoing entries from previous event days."
+                    }
+                }
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "sections"
+    ]
+}

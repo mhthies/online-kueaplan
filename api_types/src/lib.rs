@@ -1,4 +1,4 @@
-use chrono::{naive::NaiveDate, DateTime, Utc};
+use chrono::{naive::NaiveDate, DateTime, NaiveTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -6,8 +6,33 @@ use uuid::Uuid;
 pub struct Event {
     pub id: i32,
     pub title: String,
+    #[serde(rename = "beginDate")]
     pub begin_date: NaiveDate,
+    #[serde(rename = "endDate")]
     pub end_date: NaiveDate,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ExtendedEvent {
+    #[serde(flatten)]
+    pub basic_data: Event,
+    pub timezone: String,
+    #[serde(rename = "effectiveBeginOfDay")]
+    pub effective_begin_of_day: NaiveTime,
+    #[serde(rename = "defaultTimeSchedule")]
+    pub default_time_schedule: EventDayTimeSchedule,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EventDayTimeSchedule {
+    pub sections: Vec<EventDayScheduleSection>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EventDayScheduleSection {
+    pub name: String,
+    #[serde(rename = "endTime")]
+    pub end_time: Option<NaiveTime>,
 }
 
 fn not(v: &bool) -> bool {

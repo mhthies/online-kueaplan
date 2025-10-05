@@ -1,8 +1,8 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, FullAnnouncement, FullEntry, Room};
+use crate::data_store::models::{Category, ExtendedEvent, FullAnnouncement, FullEntry, Room};
 use crate::data_store::{AnnouncementFilter, CategoryId, EntryFilter, EventId};
-use crate::web::time_calculation::{current_effective_date, TIME_ZONE};
-use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
+use crate::web::time_calculation::current_effective_date;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
@@ -30,7 +30,7 @@ async fn main_list_by_category(
             let mut store = state.store.get_facade()?;
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
             Ok((
-                store.get_event(event_id)?,
+                store.get_extended_event(&auth, event_id)?,
                 store.get_entries_filtered(
                     &auth,
                     event_id,
@@ -55,18 +55,18 @@ async fn main_list_by_category(
         .find(|c| c.id == category_id)
         .ok_or(AppError::EntityNotFound)?;
     let title = format!("Kategorie {}", category.title);
-    let mut rows = util::generate_merged_list_rows_per_date(&entries);
-    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows);
+    let mut rows = util::generate_merged_list_rows_per_date(&entries, &event.clock_info);
+    mark_first_row_of_next_calendar_date_per_effective_date(&mut rows, &event.clock_info);
     let tmpl = MainListByCategoryTemplate {
         base: BaseTemplateContext {
             request: &req,
             page_title: &title,
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByCategory),
         },
-        entry_blocks: util::group_rows_by_date(&rows),
+        entry_blocks: util::group_rows_by_date(&rows, &event.clock_info),
         entries_with_descriptions: rows
             .iter()
             .filter(|row| {
@@ -79,6 +79,7 @@ async fn main_list_by_category(
         rooms: rooms.iter().map(|r| (r.id, r)).collect(),
         category,
         announcements: &announcements,
+        event: &event,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -92,11 +93,14 @@ struct MainListByCategoryTemplate<'a> {
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     category: &'a Category,
     announcements: &'a Vec<FullAnnouncement>,
+    event: &'a ExtendedEvent,
 }
 
 impl MainListByCategoryTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&TIME_ZONE).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::data_store::models::Event;
 use crate::data_store::EventFilter;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::AppState;
 use actix_web::web::Html;
@@ -26,7 +26,7 @@ async fn events_list(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Veranstaltungen",
-            event: None,
+            event: AnyEventData::None,
             current_date: None,
             auth_token: None,
             active_main_nav_button: None,

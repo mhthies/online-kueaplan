@@ -11,7 +11,7 @@
     <h1>Eintrag bearbeiten</h1>
     {{ EditEntryNavbar::new(
            base.request,
-           *base.event.expect("Event should always be known").id,
+           *base.get_basic_event().expect("Event should always be known").id,
            entry.entry.id,
            base.current_date.expect("For non-new entries, `entry_id` should always be known."),
            EditEntryNavbarActiveLink::PreviousDatesOverview,
@@ -33,6 +33,7 @@
                &MainListRow::from_entry(entry),
                entry_category,
                rooms,
+               event.clock_info,
                false,
                false,
                None,
@@ -80,7 +81,7 @@
                         </td>
                         <td class="text-end">
                             <form class="d-inline-block" method="post"
-                                  action="{{ base.request.url_for("delete_previous_date", [event.id.to_string(), entry.entry.id.to_string(), previous_date.previous_date.id.to_string()])? }}">
+                                  action="{{ base.request.url_for("delete_previous_date", [event.basic_data.id.to_string(), entry.entry.id.to_string(), previous_date.previous_date.id.to_string()])? }}">
                                 <button type="submit" class="btn btn-sm btn-danger" title="Diesen vorherigen Termin aus dem KüA-Plan löschen">
                                     <i class="bi bi-trash" aria-hidden="true"></i></button>
                             </form>
@@ -91,7 +92,7 @@
         </table>
     </div>
     <div class="mt-3">
-        <a href="{{ base.request.url_for("new_previous_date_form", [event.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Vorherigen Termin hinzufügen</a>
+        <a href="{{ base.request.url_for("new_previous_date_form", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Vorherigen Termin hinzufügen</a>
     </div>
 </div>
 {% endblock %}

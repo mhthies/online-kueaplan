@@ -22,12 +22,12 @@
     <div class="container">
         <div class="navbar-brand" href="#">
             <img height="24" width="24" class="d-inline-block align-text-top me-2" alt="Logo" src="{{ base.url_for_static("touch-icon.png")? }}">
-            {% if let Some(event) = base.event %}{{ event.title }}{% else %}KüA-Plan{% endif %}
+            {% if let Some(event) = base.get_basic_event() %}{{ event.title }}{% else %}KüA-Plan{% endif %}
         </div>
-        {% if let Some(event) = base.event %}
+        {% if let Some(event) = base.get_basic_event() %}
             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
                 <ul class="navbar-nav">
-                    {% let today = crate::web::time_calculation::current_effective_date() %}
+                    {% let today = base.get_current_date_opt() %}
                     <li class="nav-item dropdown">
                         {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
                         <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
@@ -40,8 +40,8 @@
                         </a>
                         <ul class="dropdown-menu position-absolute">
                             {% for day in crate::web::ui::util::event_days(event) %}
-                                <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% elif day == today %}text-primary{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
-                                    {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}{% if day == today %} <i class="bi bi-arrow-left" title="heute"></i>{% endif %}
+                                <li><a class="dropdown-item {% if date_active && Some(*day) == base.current_date %}active{% elif Some(*day) == today %}text-primary{% endif %}" href="{{ crate::web::ui::util::url_for_main_list(base.request, *event.id, day)? }}" {% if date_active && Some(*day) == base.current_date %}aria-current="page"{% endif %}>
+                                    {{ crate::web::ui::util::weekday_short(day) }} {{ day.format("%d.%m.") }}{% if Some(*day) == today %} <i class="bi bi-arrow-left" title="heute"></i>{% endif %}
                                 </a></li>
                             {% endfor %}
                         </ul>
@@ -93,11 +93,11 @@
 <footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
     {% block footer_extra_text %}{% endblock %}
     online-kueaplan v{{ crate::get_version() }}
-    {% if base.event.is_some()
+    {% if base.get_basic_event().is_some()
        && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
         | <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a>
     {% endif %}
-    {% if base.event.is_some()
+    {% if base.get_basic_event().is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
         | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a>

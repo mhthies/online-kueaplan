@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::Category;
 use crate::data_store::EventId;
-use crate::web::ui::base_template::{BaseTemplateContext, MainNavButton};
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -24,7 +24,7 @@ async fn categories_list(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ShowKueaPlan)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -35,7 +35,7 @@ async fn categories_list(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Kategorien",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::ByCategory),

@@ -2,7 +2,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Event, FullAnnouncement};
 use crate::data_store::AnnouncementId;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -29,7 +29,7 @@ async fn delete_announcement_form(
         auth.check_privilege(event_id, Privilege::ManageAnnouncements)?;
         Ok((
             store.get_announcements(&auth, event_id, None)?,
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             auth,
         ))
     })
@@ -44,7 +44,7 @@ async fn delete_announcement_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Bekanntmachung löschen",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -52,7 +52,7 @@ async fn delete_announcement_form(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Announcements,
         },
-        event: &event,
+        event: &event.basic_data,
         announcement: &announcement,
     };
 

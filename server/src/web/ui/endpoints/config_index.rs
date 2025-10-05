@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -17,11 +17,11 @@ async fn config_index(
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
+        util::extract_session_token(&state, &req, Privilege::ShowConfigArea, event_id)?;
     let (event, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((store.get_event(event_id)?, auth))
+        Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
     auth.check_privilege(event_id, Privilege::ShowConfigArea)?;
@@ -30,7 +30,7 @@ async fn config_index(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Konfiguration",
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),

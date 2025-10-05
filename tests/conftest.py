@@ -84,7 +84,7 @@ def _restore_database_dump(database_url: str, database_dump_path: Path) -> None:
 
 
 @pytest.fixture(scope="session")
-def generated_api_client(request: pytest.FixtureRequest) -> "ApiClientWrapper":
+def generated_api_client_module(request: pytest.FixtureRequest) -> "types.ModuleType":
     client_path = Path(__file__).parent / "__api_client"
     openapi_source_path = Path(__file__).parent.parent / "etc" / "spec" / "openapi.json"
     generator_config_path = Path(__file__).parent / "openapi_python_config.yaml"
@@ -103,7 +103,12 @@ def generated_api_client(request: pytest.FixtureRequest) -> "ApiClientWrapper":
 
     sys.path.append(str(client_path))
     import kueaplan_api_client
-    return ApiClientWrapper(kueaplan_api_client)
+    return kueaplan_api_client
+
+
+@pytest.fixture(scope="function")
+def generated_api_client(generated_api_client_module: types.ModuleType) -> "ApiClientWrapper":
+    return ApiClientWrapper(generated_api_client_module)
 
 
 class ApiClientWrapper:

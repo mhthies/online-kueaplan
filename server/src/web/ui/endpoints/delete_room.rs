@@ -1,9 +1,8 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{FullEntry, Room};
+use crate::data_store::models::{ExtendedEvent, FullEntry, Room};
 use crate::data_store::{EntryFilter, EventId, RoomId};
-use crate::web::time_calculation::TIME_ZONE;
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -36,7 +35,7 @@ pub async fn delete_room_form(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_entries_filtered(&auth, event_id, entry_filter)?,
             auth,
@@ -55,7 +54,7 @@ pub async fn delete_room_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Ort löschen", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -63,11 +62,11 @@ pub async fn delete_room_form(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Categories,
         },
-        event_id,
         room,
         all_rooms: &rooms,
         room_entries: &room_entries,
         form_data: &form_data,
+        event: &event,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -89,7 +88,7 @@ pub async fn delete_room(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             auth,
         ))
@@ -194,7 +193,7 @@ pub async fn delete_room(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Ort löschen", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -202,11 +201,11 @@ pub async fn delete_room(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Categories,
         },
-        event_id,
         room,
         all_rooms: &rooms,
         room_entries: &room_entries,
         form_data: &form_data,
+        event: &event,
     };
 
     Ok(Either::Right(Html::new(tmpl.render()?)))
@@ -240,11 +239,11 @@ struct DeleteRoomReplacementData {
 struct DeleteRoomFormTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
-    event_id: EventId,
     room: &'a Room,
     all_rooms: &'a Vec<Room>,
     room_entries: &'a Vec<FullEntry>,
     form_data: &'a DeleteRoomFormData,
+    event: &'a ExtendedEvent,
 }
 
 impl DeleteRoomFormTemplate<'_> {
@@ -262,11 +261,16 @@ impl DeleteRoomFormTemplate<'_> {
     fn post_url(&self) -> Result<url::Url, AppError> {
         Ok(self.base.request.url_for(
             "delete_room",
-            [&self.event_id.to_string(), &self.room.id.to_string()],
+            [
+                &self.event.basic_data.id.to_string(),
+                &self.room.id.to_string(),
+            ],
         )?)
     }
 
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&TIME_ZONE).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }

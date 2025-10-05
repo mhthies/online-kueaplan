@@ -2,15 +2,15 @@ use crate::data_store::auth_token::AccessRole;
 use crate::data_store::{EntryId, EnumMemberNotExistingError, EventId, PassphraseId};
 use chrono::{naive::NaiveDate, DateTime, Utc};
 use diesel::associations::BelongsTo;
-use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::prelude::*;
 use diesel::query_builder::bind_collector::RawBytesBindCollector;
 use diesel::serialize::ToSql;
 use diesel::{AsExpression, FromSqlRow};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Queryable, Selectable)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name=super::schema::events)]
 pub struct Event {
     pub id: i32,
@@ -19,11 +19,153 @@ pub struct Event {
     pub end_date: NaiveDate,
 }
 
-#[derive(Clone, Debug, Queryable, Selectable)]
+#[derive(Clone, Debug, Queryable, Selectable, AsChangeset, Insertable)]
+#[diesel(table_name=super::schema::events)]
+pub struct EventClockInfo {
+    #[diesel(serialize_as=super::util::TimezoneWrapper, deserialize_as=super::util::TimezoneWrapper)]
+    pub timezone: chrono_tz::Tz,
+    pub effective_begin_of_day: chrono::NaiveTime,
+}
+
+// Manual implementation of diesel::insertable::Insertable for &EventClockInfo, because the derive
+// macro only creates an implementation for EventClockInfo (not the reference) when
+// `#[diesel(serialize_as=...)` is used on a field. The trait implementation for the reference type
+// is in turn required for using the type with `#[diesel(embed)]` and deriving `Insertable` on the
+// outer type.
+// This manual implementation is also kind of a hack, because it actually uses the owned
+// TimezoneWrapper in the resulting SQL expression/values struct, where the derived trait
+// implementation would normally use a reference.
+impl<'insert> Insertable<super::schema::events::table> for &'insert EventClockInfo {
+    type Values = <(
+        Option<diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>>,
+        Option<
+            diesel::dsl::Eq<
+                super::schema::events::effective_begin_of_day,
+                &'insert chrono::NaiveTime,
+            >,
+        >,
+    ) as Insertable<super::schema::events::table>>::Values;
+
+    fn values(self) -> Self::Values {
+        Insertable::<super::schema::events::table>::values((
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::timezone,
+                super::util::TimezoneWrapper::from(self.timezone.clone()),
+            )),
+            Some(diesel::ExpressionMethods::eq(
+                super::schema::events::effective_begin_of_day,
+                &self.effective_begin_of_day,
+            )),
+        ))
+    }
+}
+
+#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name=super::schema::events)]
 pub struct ExtendedEvent {
     #[diesel(embed)]
     pub basic_data: Event,
+    #[diesel(embed)]
+    pub clock_info: EventClockInfo,
+    pub default_time_schedule: EventDayTimeSchedule,
+}
+
+impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
+    type Error = String;
+
+    fn try_from(value: kueaplan_api_types::ExtendedEvent) -> Result<Self, Self::Error> {
+        Ok(Self {
+            basic_data: value.basic_data.into(),
+            clock_info: EventClockInfo {
+                timezone: value.timezone.parse().map_err(|e| format!("{:?}", e))?,
+                effective_begin_of_day: value.effective_begin_of_day,
+            },
+            default_time_schedule: value.default_time_schedule.into(),
+        })
+    }
+}
+
+impl From<ExtendedEvent> for kueaplan_api_types::ExtendedEvent {
+    fn from(value: ExtendedEvent) -> Self {
+        Self {
+            basic_data: value.basic_data.into(),
+            timezone: value.clock_info.timezone.to_string(),
+            effective_begin_of_day: value.clock_info.effective_begin_of_day,
+            default_time_schedule: value.default_time_schedule.into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, AsExpression, FromSqlRow)]
+#[diesel(sql_type = diesel::sql_types::Jsonb)]
+pub struct EventDayTimeSchedule {
+    pub sections: Vec<EventDayScheduleSection>,
+}
+
+impl<DB> FromSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule
+where
+    DB: diesel::backend::Backend,
+    serde_json::Value: FromSql<diesel::sql_types::Jsonb, DB>,
+{
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let value = serde_json::Value::from_sql(bytes)?;
+        Ok(serde_json::from_value(value)?)
+    }
+}
+
+impl<DB> ToSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule
+where
+    DB: diesel::backend::Backend,
+    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+    serde_json::Value: ToSql<diesel::sql_types::Jsonb, DB>,
+{
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, DB>,
+    ) -> diesel::serialize::Result {
+        let value = serde_json::to_value(self)?;
+        value.to_sql(&mut out.reborrow())
+    }
+}
+
+impl From<kueaplan_api_types::EventDayTimeSchedule> for EventDayTimeSchedule {
+    fn from(value: kueaplan_api_types::EventDayTimeSchedule) -> Self {
+        Self {
+            sections: value.sections.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+impl From<EventDayTimeSchedule> for kueaplan_api_types::EventDayTimeSchedule {
+    fn from(value: EventDayTimeSchedule) -> Self {
+        Self {
+            sections: value.sections.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct EventDayScheduleSection {
+    pub name: String,
+    pub end_time: Option<chrono::NaiveTime>,
+}
+
+impl From<kueaplan_api_types::EventDayScheduleSection> for EventDayScheduleSection {
+    fn from(value: kueaplan_api_types::EventDayScheduleSection) -> Self {
+        Self {
+            name: value.name,
+            end_time: value.end_time,
+        }
+    }
+}
+
+impl From<EventDayScheduleSection> for kueaplan_api_types::EventDayScheduleSection {
+    fn from(value: EventDayScheduleSection) -> Self {
+        Self {
+            name: value.name,
+            end_time: value.end_time,
+        }
+    }
 }
 
 #[derive(Insertable)]
@@ -301,9 +443,9 @@ impl From<AnnouncementType> for i32 {
 
 impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
 where
-    DB: Backend,
+    DB: diesel::backend::Backend,
+    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
     i32: ToSql<diesel::sql_types::Integer, DB>,
-    for<'c> DB: Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
 {
     fn to_sql<'b>(
         &'b self,
@@ -319,9 +461,7 @@ where
     DB: diesel::backend::Backend,
     i32: FromSql<diesel::sql_types::Integer, DB>,
 {
-    fn from_sql(
-        bytes: <DB as diesel::backend::Backend>::RawValue<'_>,
-    ) -> diesel::deserialize::Result<Self> {
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let x = i32::from_sql(bytes)?;
         x.try_into()
             .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
@@ -350,6 +490,17 @@ pub struct AnnouncementRoomMapping {
 impl From<kueaplan_api_types::Event> for NewEvent {
     fn from(value: kueaplan_api_types::Event) -> Self {
         Self {
+            title: value.title,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+        }
+    }
+}
+
+impl From<kueaplan_api_types::Event> for Event {
+    fn from(value: kueaplan_api_types::Event) -> Self {
+        Self {
+            id: value.id,
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,

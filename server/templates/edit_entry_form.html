@@ -13,7 +13,7 @@
     {% if !is_new_entry %}
         {{ sub_templates::edit_entry_helpers::EditEntryNavbar::new(
                base.request,
-               *base.event.expect("Event should always be known").id,
+               *base.get_basic_event().expect("Event should always be known").id,
                entry_id.expect("For non-new entries, `entry_id` should always be known."),
                base.current_date.expect("For non-new entries, `entry_id` should always be known."),
                sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::EditEntry,
@@ -141,7 +141,7 @@
     });
     protectChanges(document.getElementById("edit_entry_form"));
     initializeEditEntryForm(
-        {{ Self::effective_begin_of_day_milliseconds() }},
+        {{ effective_begin_of_day_milliseconds() }},
         rooms,
         {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
         entryId

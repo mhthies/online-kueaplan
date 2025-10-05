@@ -15,7 +15,7 @@
     <h1>Eintrag bearbeiten</h1>
     {{ EditEntryNavbar::new(
            base.request,
-           *base.event.expect("Event should always be known").id,
+           *event.basic_data.id,
            entry.entry.id,
            base.current_date.expect("For non-new entries, `entry_id` should always be known."),
            EditEntryNavbarActiveLink::PreviousDatesOverview,
@@ -37,6 +37,7 @@
                &MainListRow::from_entry(entry),
                entry_category,
                rooms_by_id,
+               event.clock_info,
                false,
                false,
                None,
@@ -74,7 +75,7 @@
         </div>
         {{ HiddenInputTemplate::new(form_data.previous_date_id, "previous_date_id")?|safe }}
         <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
-        <a href="{{ base.request.url_for("previous_dates_overview", [event.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+        <a href="{{ base.request.url_for("previous_dates_overview", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-secondary allow-exit-with-changes">
             <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
         </a>
     </form>

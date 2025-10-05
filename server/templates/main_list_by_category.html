@@ -30,7 +30,7 @@
     {% for (date, rows) in entry_blocks %}
         <h3 class="mt-4">
             {{ date|weekday }}, {{ date.format("%d.%m.%Y") }}
-            {% if *date == self::current_effective_date() %}
+            {% if *date == self::current_effective_date(event.clock_info) %}
                 <span class="d-print-none">(heute)</span>
             {% endif %}
         </h3>
@@ -49,6 +49,7 @@
                                             **row,
                                             category,
                                             rooms,
+                                            event.clock_info,
                                             base.has_privilege(Privilege::ManageEntries),
                                             true,
                                             Some(**date),

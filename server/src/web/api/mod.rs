@@ -5,6 +5,7 @@ mod endpoints_auth;
 mod endpoints_category;
 mod endpoints_entry;
 mod endpoints_event;
+mod endpoints_event_extended;
 mod endpoints_passphrase;
 mod endpoints_room;
 
@@ -30,6 +31,7 @@ fn get_api_service() -> actix_web::Scope {
         .app_data(json_config)
         .service(endpoints_auth::check_authorization)
         .service(endpoints_event::get_event_info)
+        .service(endpoints_event_extended::get_extended_event_info)
         .service(endpoints_auth::authorize)
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)

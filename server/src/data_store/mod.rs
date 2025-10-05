@@ -27,6 +27,7 @@ pub mod auth_token;
 pub mod models;
 mod postgres;
 mod schema;
+mod util;
 
 /// Get a [KuaPlanStore] instances, according the "DATABASE_URL" environment variable.
 ///

@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::{AuthToken, Privilege};
-use crate::data_store::models::Event;
+use crate::data_store::models::{Event, ExtendedEvent};
 use crate::web::ui;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::FlashesInterface;
@@ -7,6 +7,13 @@ use crate::web::ui::Resources;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
 use std::fmt::Write;
+
+#[derive(Debug)]
+pub enum AnyEventData<'a> {
+    ExtendedEvent(&'a ExtendedEvent),
+    BasicEvent(&'a Event),
+    None,
+}
 
 /// Common template data for all ui templates extending the `base.html` template
 ///
@@ -19,9 +26,10 @@ pub struct BaseTemplateContext<'a> {
     pub request: &'a HttpRequest,
     /// HTML title
     pub page_title: &'a str,
-    /// If the current page belongs to the context of an event, the information about the event.
+    /// If the current page belongs to the context of an event, the information about the event, to
+    /// the level of detail that is available (either an [[ExtendedEvent]] or at least an [[Event]].
     /// This is used for rendering the navigation bar.
-    pub event: Option<&'a Event>,
+    pub event: AnyEventData<'a>,
     /// If the current page belongs to the context of an event, and it is clearly associated to a
     /// specific day of the event (e.g. main list for date or entry editing)
     pub current_date: Option<chrono::NaiveDate>,
@@ -31,7 +39,27 @@ pub struct BaseTemplateContext<'a> {
     pub active_main_nav_button: Option<MainNavButton>,
 }
 
-impl BaseTemplateContext<'_> {
+impl<'a> BaseTemplateContext<'a> {
+    /// Get basic data about the event to which the current page belongs, if available.
+    pub fn get_basic_event(&self) -> Option<&'a Event> {
+        match self.event {
+            AnyEventData::ExtendedEvent(e) => Some(&e.basic_data),
+            AnyEventData::BasicEvent(e) => Some(e),
+            AnyEventData::None => None,
+        }
+    }
+
+    /// Get extended data about the event to which the current page belongs, if available.
+    /// If only basic event data is available (e.g. because user is not authorized for ShowKueaPlan
+    /// privilege), this function return None.
+    pub fn get_extended_event(&self) -> Option<&'a ExtendedEvent> {
+        match self.event {
+            AnyEventData::ExtendedEvent(e) => Some(e),
+            AnyEventData::BasicEvent(_) => None,
+            AnyEventData::None => None,
+        }
+    }
+
     pub fn url_for_static(&self, file: &str) -> Result<String, UrlGenerationError> {
         let mut url = self.request.url_for("static_resources", [file])?;
         url.query_pairs_mut().append_pair(
@@ -48,7 +76,7 @@ impl BaseTemplateContext<'_> {
     }
 
     pub fn has_privilege(&self, privilege: Privilege) -> bool {
-        let event_id = if let Some(event) = self.event {
+        let event_id = if let Some(event) = self.get_basic_event() {
             event.id
         } else {
             return false;
@@ -64,7 +92,7 @@ impl BaseTemplateContext<'_> {
         let mut url = self.request.url_for(
             "new_entry_form",
             &[self
-                .event
+                .get_basic_event()
                 .ok_or(AppError::InternalError(
                     "Cannot generate new_entry_form URL, because `event` is not present".to_owned(),
                 ))?
@@ -87,7 +115,7 @@ impl BaseTemplateContext<'_> {
             .url_for(
                 endpoint_name,
                 &[self
-                    .event
+                    .get_basic_event()
                     .ok_or(AppError::InternalError(format!(
                         "Cannot generate URL for {}, because `event` is not present",
                         endpoint_name
@@ -96,6 +124,12 @@ impl BaseTemplateContext<'_> {
                     .to_string()],
             )?
             .to_string())
+    }
+
+    /// Get the current effective date, if all required information is present to determine it
+    pub fn get_current_date_opt(&self) -> Option<chrono::NaiveDate> {
+        self.get_extended_event()
+            .map(|e| crate::web::time_calculation::current_effective_date(&e.clock_info))
     }
 }
 

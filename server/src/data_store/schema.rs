@@ -92,6 +92,9 @@ diesel::table! {
         title -> Varchar,
         begin_date -> Date,
         end_date -> Date,
+        timezone -> Varchar,
+        effective_begin_of_day -> Time,
+        default_time_schedule -> Jsonb,
     }
 }
 

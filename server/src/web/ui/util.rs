@@ -1,8 +1,8 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{AnnouncementType, Event, FullEntry};
+use crate::data_store::models::{AnnouncementType, Event, EventClockInfo, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
-use crate::web::time_calculation::{get_effective_date, TIME_ZONE};
+use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::main_list_row::MainListRow;
@@ -278,7 +278,10 @@ pub fn create_edit_form_response(
 /// This algorithm creates a MainListEntry for each entry and each previous_date of an entry,
 /// sorts them by `begin` and merges consecutive list rows.
 /// This is a simplified version of [main_list::generate_filtered_merged_list_entries].
-pub fn generate_merged_list_rows_per_date(entries: &[FullEntry]) -> Vec<MainListRow<'_>> {
+pub fn generate_merged_list_rows_per_date<'a>(
+    entries: &'a [FullEntry],
+    clock_info: &'_ EventClockInfo,
+) -> Vec<MainListRow<'a>> {
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries.iter() {
         result.push(MainListRow::from_entry(entry));
@@ -289,7 +292,8 @@ pub fn generate_merged_list_rows_per_date(entries: &[FullEntry]) -> Vec<MainList
     result.sort_by_key(|e| e.sort_time);
     result.dedup_by(|a, b| {
         if a.entry.entry.id == b.entry.entry.id
-            && get_effective_date(a.sort_time) == get_effective_date(b.sort_time)
+            && get_effective_date(a.sort_time, clock_info)
+                == get_effective_date(b.sort_time, clock_info)
         {
             b.merge_from(a);
             true
@@ -305,20 +309,21 @@ pub fn generate_merged_list_rows_per_date(entries: &[FullEntry]) -> Vec<MainList
 /// The list must be already be sorted by [MainListRow::sort_time].
 pub fn group_rows_by_date<'a>(
     entries: &'a Vec<MainListRow<'a>>,
+    clock_info: &'_ EventClockInfo,
 ) -> Vec<(chrono::NaiveDate, Vec<&'a MainListRow<'a>>)> {
     let mut result = Vec::new();
     let mut block_entries = Vec::new();
     if entries.is_empty() {
         return result;
     }
-    let mut current_date = get_effective_date(entries[0].sort_time);
+    let mut current_date = get_effective_date(entries[0].sort_time, clock_info);
     for entry in entries {
-        if get_effective_date(entry.sort_time) != current_date {
+        if get_effective_date(entry.sort_time, clock_info) != current_date {
             if !block_entries.is_empty() {
                 result.push((current_date, block_entries));
             }
             block_entries = Vec::new();
-            current_date = get_effective_date(entry.sort_time);
+            current_date = get_effective_date(entry.sort_time, clock_info);
         }
         block_entries.push(entry);
     }
@@ -333,9 +338,10 @@ pub fn group_rows_by_date<'a>(
 pub fn mark_first_row_of_next_calendar_date(
     rows: &mut Vec<MainListRow>,
     date_context: chrono::NaiveDate,
+    timezone: &chrono_tz::Tz,
 ) {
     for row in rows.iter_mut() {
-        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > date_context {
+        if row.sort_time.with_timezone(timezone).date_naive() > date_context {
             row.is_first_row_of_next_calendar_date = true;
             break;
         }
@@ -346,15 +352,22 @@ pub fn mark_first_row_of_next_calendar_date(
 /// on the calendar day after its effective date, for each effective date.
 ///
 /// The list must be already be sorted by [MainListRow::sort_time].
-pub fn mark_first_row_of_next_calendar_date_per_effective_date(rows: &mut Vec<MainListRow>) {
+pub fn mark_first_row_of_next_calendar_date_per_effective_date(
+    rows: &mut Vec<MainListRow>,
+    clock_info: &EventClockInfo,
+) {
     let mut current_effective_date = None;
     let mut found_first_row_of_current_date = false;
     for row in rows.iter_mut() {
-        if Some(get_effective_date(row.sort_time)) != current_effective_date {
+        if Some(get_effective_date(row.sort_time, clock_info)) != current_effective_date {
             found_first_row_of_current_date = false;
-            current_effective_date = Some(get_effective_date(row.sort_time));
+            current_effective_date = Some(get_effective_date(row.sort_time, clock_info));
         }
-        if row.sort_time.with_timezone(&TIME_ZONE).date_naive() > get_effective_date(row.sort_time)
+        if row
+            .sort_time
+            .with_timezone(&clock_info.timezone)
+            .date_naive()
+            > get_effective_date(row.sort_time, clock_info)
             && !found_first_row_of_current_date
         {
             row.is_first_row_of_next_calendar_date = true;

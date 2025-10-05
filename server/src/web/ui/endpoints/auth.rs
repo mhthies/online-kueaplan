@@ -1,7 +1,7 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::util;
@@ -49,7 +49,7 @@ async fn login_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Login",
-            event: Some(&event),
+            event: AnyEventData::BasicEvent(&event),
             current_date: None,
             auth_token: auth.as_ref(),
             active_main_nav_button: None,
@@ -75,7 +75,7 @@ async fn login(
 
     let store = state.store.clone();
     let expected_privilege = query_data.privilege;
-    let (event, login_success, privilege_unlocked, session_token, auth) =
+    let (event, extended_event, login_success, privilege_unlocked, session_token, auth) =
         web::block(move || -> Result<_, AppError> {
             let mut store = store.get_facade()?;
             let event = store.get_event(event_id)?;
@@ -89,8 +89,14 @@ async fn login(
                 Err(e) => return Err(e.into()),
             };
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            let extended_event = if auth.has_privilege(event_id, Privilege::ShowKueaPlan) {
+                Some(store.get_extended_event(&auth, event_id)?)
+            } else {
+                None
+            };
             Ok((
                 event,
+                extended_event,
                 login_result,
                 auth.has_privilege(
                     event_id,
@@ -128,7 +134,11 @@ async fn login(
             base: BaseTemplateContext {
                 request: &req,
                 page_title: "Login",
-                event: Some(&event),
+                event: if let Some(e) = extended_event.as_ref() {
+                    AnyEventData::ExtendedEvent(e)
+                } else {
+                    AnyEventData::BasicEvent(&event)
+                },
                 current_date: None,
                 auth_token: Some(&auth),
                 active_main_nav_button: None,
@@ -159,15 +169,18 @@ async fn login(
                 header::LOCATION,
                 if let Some(ref redirect_to) = query_data.redirect_to {
                     redirect_to.clone()
-                } else {
+                } else if let Some(e) = extended_event.as_ref() {
                     req.url_for(
                         "main_list",
                         &[
                             event_id.to_string(),
-                            time_calculation::most_reasonable_date(&event).to_string(),
+                            time_calculation::most_reasonable_date(&e).to_string(),
                         ],
                     )?
                     .to_string()
+                } else {
+                    req.url_for("event_index", &[event_id.to_string()])?
+                        .to_string()
                 },
             ))
             .finish())

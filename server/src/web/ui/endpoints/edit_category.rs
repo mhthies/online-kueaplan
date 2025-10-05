@@ -2,7 +2,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, NewCategory};
 use crate::data_store::{CategoryId, EventId, StoreError};
 use crate::web::ui::base_template::{
-    BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
@@ -34,7 +34,7 @@ pub async fn edit_category_form(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required category
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -51,7 +51,7 @@ pub async fn edit_category_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Kategorie bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -86,7 +86,7 @@ pub async fn edit_category(
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
             // TODO only get required category
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
             auth,
         ))
@@ -118,7 +118,7 @@ pub async fn edit_category(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Kategorie bearbeiten", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -162,7 +162,7 @@ pub async fn new_category_form(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(event_id)?, auth))
+        Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
 
@@ -173,7 +173,7 @@ pub async fn new_category_form(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neue Kategorie", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),
@@ -206,7 +206,7 @@ pub async fn new_category(
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
-        Ok((store.get_event(event_id)?, auth))
+        Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
 
@@ -231,7 +231,7 @@ pub async fn new_category(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Neue Kategorie", // TODO
-            event: Some(&event),
+            event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
             active_main_nav_button: Some(MainNavButton::Configuration),

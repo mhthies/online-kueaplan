@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://kuaplan.de/meta/schema/Event.json",
     "title": "KüA Plan Event/Instance",
-    "description": "The metadata of the KüA plan's event, i.e. the KüA plan instance",
+    "description": "Basic public metadata of the KüA plan's event, i.e. the KüA plan instance",
     "type": "object",
 
     "properties": {

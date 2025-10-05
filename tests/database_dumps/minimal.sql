@@ -243,7 +243,10 @@ CREATE TABLE public.events (
     id integer NOT NULL,
     title character varying NOT NULL,
     begin_date date NOT NULL,
-    end_date date NOT NULL
+    end_date date NOT NULL,
+    timezone character varying NOT NULL,
+    effective_begin_of_day time without time zone NOT NULL,
+    default_time_schedule jsonb NOT NULL
 );
 
 
@@ -327,6 +330,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20250531140600	2025-06-15 14:20:26.968825
 20250602173009	2025-06-15 14:20:26.986616
 20250930072909	2025-09-30 07:49:01.019478
+20250930103534	2025-10-03 10:43:38.47852
 \.
 
 
@@ -396,8 +400,8 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 -- Data for Name: events; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.events (id, title, begin_date, end_date) FROM stdin;
-1	TestEvent	2025-01-01	2025-01-06
+COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule) FROM stdin;
+1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}
 \.
 
 

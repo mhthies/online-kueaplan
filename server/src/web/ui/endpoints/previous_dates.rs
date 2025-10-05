@@ -1,8 +1,8 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, Event, FullEntry, Room};
+use crate::data_store::models::{Category, ExtendedEvent, FullEntry, Room};
 use crate::data_store::EntryId;
-use crate::web::time_calculation::{get_effective_date, TIME_ZONE};
-use crate::web::ui::base_template::BaseTemplateContext;
+use crate::web::time_calculation::get_effective_date;
+use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::edit_entry_helpers::{
@@ -34,7 +34,7 @@ async fn previous_dates_overview(
         auth.check_privilege(event_id, Privilege::ManageEntries)?;
         Ok((
             store.get_entry(&auth, entry_id)?,
-            store.get_event(event_id)?,
+            store.get_extended_event(&auth, event_id)?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?, // TODO only get relevant category?
             auth,
@@ -46,8 +46,8 @@ async fn previous_dates_overview(
         base: BaseTemplateContext {
             request: &req,
             page_title: "Vorherige Termine",
-            event: Some(&event),
-            current_date: Some(get_effective_date(&entry.entry.begin)),
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),
             active_main_nav_button: None,
         },
@@ -61,7 +61,6 @@ async fn previous_dates_overview(
                 "Entry's category {} does not exist.",
                 entry.entry.category
             )))?,
-        timezone: TIME_ZONE,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -134,15 +133,16 @@ async fn delete_previous_date(
 #[template(path = "previous_dates_overview.html")]
 struct PreviousDatesOverviewTemplate<'a> {
     base: BaseTemplateContext<'a>,
-    event: &'a Event,
+    event: &'a ExtendedEvent,
     entry: &'a FullEntry,
     rooms: BTreeMap<uuid::Uuid, &'a Room>,
     entry_category: &'a Category,
-    timezone: chrono_tz::Tz,
 }
 
 impl PreviousDatesOverviewTemplate<'_> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
-        timestamp.with_timezone(&self.timezone).naive_local()
+        timestamp
+            .with_timezone(&self.event.clock_info.timezone)
+            .naive_local()
     }
 }

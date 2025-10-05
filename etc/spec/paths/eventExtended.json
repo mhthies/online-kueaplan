@@ -1,19 +1,23 @@
 {
   "get": {
-    "operationId": "getEventInfo",
-    "summary": "Get basic public information about a single event.",
+    "operationId": "getExtendedEventInfo",
+    "summary": "Get full information about a single event, including day schedule and clock information. (Requires authentication for the event.)",
     "parameters": [
       {"$ref": "../components/eventId.json"}
     ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
     "responses": {
       "200": {
-        "description": "Returns the event data.",
+        "description": "Returns the extended event data.",
         "content": {
           "application/json": {
-            "schema": {"$ref": "../schema/Event.json"}
+            "schema": {"$ref": "../schema/ExtendedEvent.json"}
           }
         }
       },
+      "403": {"$ref": "../components/authorizationError.json"},
       "404": {
         "description": "The requested event does not exist.",
         "content": {

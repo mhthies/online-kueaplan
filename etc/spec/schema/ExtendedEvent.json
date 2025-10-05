@@ -1,0 +1,27 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/ExtendedEvent.json",
+    "title": "Extended KüA Plan Event/Instance",
+    "description": "The full data of the KüA plan's event, i.e. the KüA plan instance, including information that is only available to authenticated users of this event.",
+    "type": "object",
+
+    "allOf": [
+        {"$ref": "Event.json"},
+        {
+            "type": "object",
+            "properties": {
+                "timezone": {
+                    "description": "Name of the timezone of the event. This timezone will be used for all user-facing date/time formatting.",
+                    "type": "string"
+                },
+                "effectiveBeginOfDay": {
+                    "description": "The wall clock time at which two 'effective days' of the event are separated, i.e. the split point between the day-wise KüA-Plan lists. Interpreted in local time, according the `timezone`.",
+                    "type": "string",
+                    "pattern": "\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?"
+                },
+                "defaultTimeSchedule": {"$ref": "EventDayTimeSchedule.json"}
+            },
+            "required": ["timezone", "effectiveBeginOfDay", "defaultTimeSchedule"]
+        }
+    ]
+}

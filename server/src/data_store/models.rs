@@ -70,6 +70,32 @@ pub struct ExtendedEvent {
     pub default_time_schedule: EventDayTimeSchedule,
 }
 
+impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
+    type Error = String;
+
+    fn try_from(value: kueaplan_api_types::ExtendedEvent) -> Result<Self, Self::Error> {
+        Ok(Self {
+            basic_data: value.basic_data.into(),
+            clock_info: EventClockInfo {
+                timezone: value.timezone.parse().map_err(|e| format!("{:?}", e))?,
+                effective_begin_of_day: value.effective_begin_of_day,
+            },
+            default_time_schedule: value.default_time_schedule.into(),
+        })
+    }
+}
+
+impl From<ExtendedEvent> for kueaplan_api_types::ExtendedEvent {
+    fn from(value: ExtendedEvent) -> Self {
+        Self {
+            basic_data: value.basic_data.into(),
+            timezone: value.clock_info.timezone.to_string(),
+            effective_begin_of_day: value.clock_info.effective_begin_of_day,
+            default_time_schedule: value.default_time_schedule.into(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, AsExpression, FromSqlRow)]
 #[diesel(sql_type = diesel::sql_types::Jsonb)]
 pub struct EventDayTimeSchedule {
@@ -102,10 +128,44 @@ where
     }
 }
 
+impl From<kueaplan_api_types::EventDayTimeSchedule> for EventDayTimeSchedule {
+    fn from(value: kueaplan_api_types::EventDayTimeSchedule) -> Self {
+        Self {
+            sections: value.sections.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+impl From<EventDayTimeSchedule> for kueaplan_api_types::EventDayTimeSchedule {
+    fn from(value: EventDayTimeSchedule) -> Self {
+        Self {
+            sections: value.sections.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EventDayScheduleSection {
     pub name: String,
     pub end_time: Option<chrono::NaiveTime>,
+}
+
+impl From<kueaplan_api_types::EventDayScheduleSection> for EventDayScheduleSection {
+    fn from(value: kueaplan_api_types::EventDayScheduleSection) -> Self {
+        Self {
+            name: value.name,
+            end_time: value.end_time,
+        }
+    }
+}
+
+impl From<EventDayScheduleSection> for kueaplan_api_types::EventDayScheduleSection {
+    fn from(value: EventDayScheduleSection) -> Self {
+        Self {
+            name: value.name,
+            end_time: value.end_time,
+        }
+    }
 }
 
 #[derive(Insertable)]
@@ -430,6 +490,17 @@ pub struct AnnouncementRoomMapping {
 impl From<kueaplan_api_types::Event> for NewEvent {
     fn from(value: kueaplan_api_types::Event) -> Self {
         Self {
+            title: value.title,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+        }
+    }
+}
+
+impl From<kueaplan_api_types::Event> for Event {
+    fn from(value: kueaplan_api_types::Event) -> Self {
+        Self {
+            id: value.id,
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,

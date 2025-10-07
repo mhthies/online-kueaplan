@@ -9,6 +9,34 @@ use actix_web::HttpRequest;
 use askama::Template;
 use std::collections::BTreeMap;
 
+/// Type of the room lookup map as expected by the MainListRowTemplate.
+///
+/// Consists of a BTreeMap that maps each room's uuid to the room (as reference) and a sort key,
+/// used for sorting the looked-up rooms back to their original order.
+pub struct RoomByIdWithOrder<'a>(BTreeMap<uuid::Uuid, (&'a Room, usize)>);
+
+impl<'a, 'b> RoomByIdWithOrder<'a> {
+    pub fn iter_rooms_by_id_ordered<I: IntoIterator<Item = &'b RoomId>>(
+        &'a self,
+        ids: I,
+    ) -> impl Iterator<Item = &'a Room> {
+        let mut rooms: Vec<_> = ids.into_iter().filter_map(|id| self.0.get(id)).collect();
+        rooms.sort_by_key(|(_room, sort_key)| *sort_key);
+        rooms.into_iter().map(|(room, _sort_key)| *room)
+    }
+}
+
+impl<'a> FromIterator<&'a Room> for RoomByIdWithOrder<'a> {
+    fn from_iter<T: IntoIterator<Item = &'a Room>>(iter: T) -> Self {
+        Self(
+            iter.into_iter()
+                .enumerate()
+                .map(|(idx, r)| (r.id, (r, idx)))
+                .collect(),
+        )
+    }
+}
+
 /// Sub-Template for rendering a single row in a main KüA-List, based on a [MainListRow] struct.
 ///
 /// The output of this template must be used within a `<table class="table kuealist">` with four
@@ -21,7 +49,7 @@ pub struct MainListRowTemplate<'a> {
     request: &'a HttpRequest,
     row: &'a MainListRow<'a>,
     category: &'a Category,
-    rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
+    rooms: &'a RoomByIdWithOrder<'a>,
     clock_info: &'a EventClockInfo,
     show_edit_links: bool,
     show_description_links: bool,
@@ -35,7 +63,7 @@ impl<'a> MainListRowTemplate<'a> {
         request: &'a HttpRequest,
         row: &'a MainListRow<'a>,
         entry_category: &'a Category,
-        rooms: &'a BTreeMap<uuid::Uuid, &'a Room>,
+        rooms: &'a RoomByIdWithOrder<'a>,
         clock_info: &'a EventClockInfo,
         show_edit_links: bool,
         show_description_links: bool,
@@ -62,6 +90,26 @@ impl<'a> MainListRowTemplate<'a> {
         timestamp
             .with_timezone(&self.clock_info.timezone)
             .naive_local()
+    }
+
+    /// Helper function to retrieve Room references for the currently planned rooms of the entry,
+    /// ordered by the sort key.
+    fn get_entry_rooms_ordered(&self) -> impl Iterator<Item = &Room> {
+        self.rooms
+            .iter_rooms_by_id_ordered(self.row.entry.room_ids.iter())
+    }
+
+    /// Helper function to retrieve Room references for the previously planned rooms of the entry,
+    /// i.e. rooms of previous dates represented by this row which are not currently planned for the
+    /// entry.
+    fn get_previous_rooms_ordered(&self) -> impl Iterator<Item = &Room> {
+        self.rooms.iter_rooms_by_id_ordered(
+            self.row
+                .merged_rooms
+                .iter()
+                .filter(|id| !self.row.includes_entry || !self.row.entry.room_ids.contains(id))
+                .map(|r| *r),
+        )
     }
 
     fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {

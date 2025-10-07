@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, ExtendedEvent, FullEntry, Room};
+use crate::data_store::models::{Category, ExtendedEvent, FullEntry};
 use crate::data_store::EntryId;
 use crate::web::time_calculation;
 use crate::web::time_calculation::get_effective_date;
@@ -10,14 +10,13 @@ use crate::web::ui::sub_templates::edit_entry_helpers::{
     EditEntryNavbar, EditEntryNavbarActiveLink,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
+    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
 use crate::web::ui::util;
 use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
-use std::collections::BTreeMap;
 
 #[get("/{event_id}/entry/{entry_id}/delete")]
 async fn delete_entry_form(
@@ -54,7 +53,7 @@ async fn delete_entry_form(
         },
         event: &event,
         entry: &entry,
-        rooms: rooms.iter().map(|r| (r.id, r)).collect(),
+        rooms: rooms.iter().collect(),
         entry_category: categories
             .iter()
             .find(|c| c.id == entry.entry.category)
@@ -209,6 +208,6 @@ struct DeleteEntryTemplate<'a> {
     base: BaseTemplateContext<'a>,
     event: &'a ExtendedEvent,
     entry: &'a FullEntry,
-    rooms: BTreeMap<uuid::Uuid, &'a Room>,
+    rooms: RoomByIdWithOrder<'a>,
     entry_category: &'a Category,
 }

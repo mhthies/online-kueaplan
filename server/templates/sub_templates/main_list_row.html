@@ -88,8 +88,8 @@
                 {% if row.rooms_differ_from_entry() %}
                     {% if !row.entry.room_ids.is_empty() %}
                         nach
-                        {% for room_id in row.entry.room_ids %}
-                            {{ rooms[room_id].title }}{%- if !loop.last %}, {% endif -%}
+                        {% for room in get_entry_rooms_ordered() %}
+                            {{ room.title }}{%- if !loop.last %}, {% endif -%}
                         {% endfor %}
                     {% else %}
                         zu undefiniertem Ort
@@ -125,8 +125,8 @@
     </td>
     <td class="kuea-place">
         {% if row.includes_entry %}
-            {% for room_id in row.entry.room_ids %}
-                {{ rooms[room_id].title }}
+            {% for room in get_entry_rooms_ordered() %}
+                {{ room.title }}
                 {%- if !loop.last %}, {% endif -%}
             {% endfor -%}
             {% if row.merged_rooms.len() > row.entry.room_ids.len() -%}
@@ -135,8 +135,8 @@
                 <span class="text-decoration-line-through">
             {% endif %}
         {% endif %}
-        {% for room_id in row.merged_rooms if !row.includes_entry || !row.entry.room_ids.contains(room_id) %}
-                {{ rooms[room_id].title }}
+        {% for room in get_previous_rooms_ordered() %}
+                {{ room.title }}
             {%- if !loop.last %}, {% endif -%}
         {% endfor %}
         {% if row.includes_entry && row.merged_rooms.len() > row.entry.room_ids.len() %}

@@ -6,7 +6,7 @@ use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavBu
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
+    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
 use crate::web::ui::util;
 use crate::web::ui::util::{
@@ -79,7 +79,7 @@ async fn main_list_by_room(
             })
             .map(|row| row.entry)
             .collect(),
-        rooms: rooms.iter().map(|r| (r.id, r)).collect(),
+        rooms: rooms.iter().collect(),
         categories: categories.iter().map(|c| (c.id, c)).collect(),
         room,
         announcements: &announcements,
@@ -94,7 +94,7 @@ struct MainListByRoomTemplate<'a> {
     base: BaseTemplateContext<'a>,
     entry_blocks: Vec<(chrono::NaiveDate, Vec<&'a MainListRow<'a>>)>,
     entries_with_descriptions: Vec<&'a FullEntry>,
-    rooms: BTreeMap<uuid::Uuid, &'a Room>,
+    rooms: RoomByIdWithOrder<'a>,
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     room: &'a Room,
     announcements: &'a Vec<FullAnnouncement>,

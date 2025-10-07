@@ -16,7 +16,7 @@ use crate::web::ui::sub_templates::form_inputs::{
     SelectTemplate,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate,
+    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
 use crate::web::ui::util::{event_days, weekday_short};
 use crate::web::ui::{util, validation};
@@ -26,7 +26,6 @@ use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
 use serde::Deserialize;
 use std::borrow::Cow;
-use std::collections::BTreeMap;
 use uuid::Uuid;
 
 #[get("/{event_id}/entry/{entry_id}/new_previous_date")]
@@ -69,7 +68,7 @@ pub async fn new_previous_date_form(
         event: &event,
         entry: &entry,
         rooms: &rooms,
-        rooms_by_id: rooms.iter().map(|r| (r.id, r)).collect(),
+        rooms_by_id: rooms.iter().collect(),
         entry_category: categories
             .iter()
             .find(|c| c.id == entry.entry.category)
@@ -145,7 +144,7 @@ pub async fn new_previous_date(
         event: &event,
         entry: &entry,
         rooms: &rooms,
-        rooms_by_id: rooms.iter().map(|r| (r.id, r)).collect(),
+        rooms_by_id: rooms.iter().collect(),
         entry_category: categories
             .iter()
             .find(|c| c.id == entry.entry.category)
@@ -246,7 +245,7 @@ struct NewPreviousDateFormTemplate<'a> {
     event: &'a ExtendedEvent,
     entry: &'a FullEntry,
     rooms: &'a Vec<Room>,
-    rooms_by_id: BTreeMap<Uuid, &'a Room>,
+    rooms_by_id: RoomByIdWithOrder<'a>,
     entry_category: &'a Category,
     form_data: &'a PreviousDateFormData,
     has_unsaved_changes: bool,

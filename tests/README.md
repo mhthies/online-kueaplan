@@ -93,3 +93,18 @@ In addition, a `.env` file can be used to specify `DATABASE_URL` variable instea
 ```text
 DATABASE_URL=postgres://user:password@localhost/test_database_name
 ```
+
+## Utilities
+
+### Updating the database schema of the database dumps
+
+When new Diesel database migrations are created, the database dumps in `database_dumps/` need to be updated.
+Otherwise, the kueaplan_server won't run on the test database.
+To update all database dumps automatically, the `migrate_database_dumps.py` script can be used:
+```bash
+export DATABASE_URL=postgres://user:password@localhost/test_database_name
+uv run python migrate_database_dumps.py
+```
+The script requires `pg_dump` and `diesel` executables to be available in the PATH, in addition to `psql` (which is also required for running the test; see above).
+Like the PyTest tests, the script uses a `.env` file, if available.
+This allows to omit the `DATABASE_URL` variable in the environment.

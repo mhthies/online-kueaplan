@@ -16,6 +16,7 @@ mod http_error_logging;
 mod ical;
 mod time_calculation;
 mod ui;
+mod util;
 
 pub fn serve() -> Result<(), CliError> {
     let state = AppState::new()?;

@@ -5,6 +5,7 @@ use crate::web::time_calculation::timestamp_from_effective_date_and_time;
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::ValidateFromFormInput;
 use crate::web::ui::{util, validation};
+use crate::web::util::deserialize_comma_separated_list_of_uuids;
 use crate::web::AppState;
 use actix_web::{get, web, HttpRequest, Responder};
 use serde::de::{Error, Unexpected};
@@ -93,26 +94,6 @@ impl ConcurrentEntriesQuery {
             .before(end, false)
             .build()
     }
-}
-
-fn deserialize_comma_separated_list_of_uuids<'de, D>(
-    deserializer: D,
-) -> Result<Vec<uuid::Uuid>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let str_sequence = String::deserialize(deserializer)?;
-    str_sequence
-        .split(',')
-        .filter(|s| !s.is_empty())
-        .map(uuid::Uuid::parse_str)
-        .collect::<Result<Vec<uuid::Uuid>, uuid::Error>>()
-        .map_err(|_| {
-            D::Error::invalid_value(
-                Unexpected::Str(&str_sequence),
-                &"A comma-separated list of uuids",
-            )
-        })
 }
 
 fn deserialize_nice_duration_hours<'de, D>(deserializer: D) -> Result<chrono::Duration, D::Error>

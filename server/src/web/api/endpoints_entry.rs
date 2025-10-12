@@ -36,12 +36,12 @@ async fn list_entries(
 struct FilterQuery {
     after: Option<chrono::DateTime<chrono::Utc>>,
     before: Option<chrono::DateTime<chrono::Utc>>,
-    #[serde(default = "just_true")]
-    after_inclusive: bool,
+    #[serde(default)]
+    after_exclusive: bool,
     #[serde(default)]
     before_inclusive: bool,
     #[serde(default)]
-    include_previous_date_matches: bool,
+    match_previous_dates: bool,
     #[serde(
         default,
         deserialize_with = "deserialize_optional_comma_separated_list_of_uuids"
@@ -54,10 +54,6 @@ struct FilterQuery {
     rooms: Option<Vec<uuid::Uuid>>,
     #[serde(default)]
     without_room: bool,
-}
-
-fn just_true() -> bool {
-    true
 }
 
 fn deserialize_optional_comma_separated_list_of_uuids<'de, D>(
@@ -75,10 +71,10 @@ impl From<FilterQuery> for EntryFilter {
     fn from(value: FilterQuery) -> Self {
         EntryFilter {
             after: value.after,
-            after_inclusive: value.after_inclusive,
+            after_inclusive: !value.after_exclusive,
             before: value.before,
             before_inclusive: value.before_inclusive,
-            include_previous_date_matches: value.include_previous_date_matches,
+            include_previous_date_matches: value.match_previous_dates,
             categories: value.categories,
             rooms: value.rooms,
             no_room: value.without_room,

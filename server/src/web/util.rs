@@ -1,6 +1,6 @@
 use crate::data_store::EntryFilter;
 use serde::de::{Error, Unexpected};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Helper function for deserializing a string, containing a comma-separated list of uuids, to a
 /// `Vec<Uuid>` within a struct by deriving `serde::Deserialize` with
@@ -36,32 +36,60 @@ where
     )?))
 }
 
+fn serialize_optional_comma_separated_list_of_uuids<S: Serializer>(
+    value: &Option<Vec<uuid::Uuid>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    if let Some(value) = value.as_ref() {
+        let mut result = String::new();
+        for (i, uuid) in value.iter().enumerate() {
+            if i > 0 {
+                result.push(',');
+            }
+            result.push_str(&uuid.to_string());
+        }
+        serializer.serialize_str(&result)
+    } else {
+        serializer.serialize_none()
+    }
+}
+
+fn not(v: &bool) -> bool {
+    !v
+}
+
 /// A struct that can be used as HTTP Query data on endpoints that return a list of KüA-Plan entries
 /// to allow filtering the entries by time, category and room.
 ///
 /// Typically, this struct should be used as type parameter for [actix_web::web::Query] as an
 /// endpoint function parameter.
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub struct EntryFilterAsQuery {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     after: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     before: Option<chrono::DateTime<chrono::Utc>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "not")]
     after_exclusive: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "not")]
     before_inclusive: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "not")]
     match_previous_dates: bool,
     #[serde(
         default,
-        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids"
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids",
+        serialize_with = "serialize_optional_comma_separated_list_of_uuids"
     )]
     categories: Option<Vec<uuid::Uuid>>,
     #[serde(
         default,
-        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids"
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids",
+        serialize_with = "serialize_optional_comma_separated_list_of_uuids"
     )]
     rooms: Option<Vec<uuid::Uuid>>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "not")]
     without_room: bool,
 }
 

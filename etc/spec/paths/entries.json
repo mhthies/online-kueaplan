@@ -3,7 +3,91 @@
     "operationId": "listEntries",
     "summary": "Get all KüA plan entries for this event.",
     "parameters": [
-      {"$ref": "../components/eventId.json"}
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "after",
+        "in": "query",
+        "description": "If given, only include entries that end after the given point in time (this includes entries that span over this point in time)",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "before",
+        "in": "query",
+        "description": "If given, only include entries that begin before the given point in time (this includes entries that span over this point in time)",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      {
+        "name": "categories",
+        "in": "query",
+        "description": "If given, only include entries that belong to one of the given categories. Must be a comma-separated list of categories' UUIDs.",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "collectionFormat": "csv",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      {
+        "name": "rooms",
+        "in": "query",
+        "description": "If given, only include entries that take place (at least) in one of the given rooms. Must be a comma-separated list of rooms' UUIDs.",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "collectionFormat": "csv",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      {
+        "name": "without_room",
+        "in": "query",
+        "description": "If true, only include entries that have no room assigned.",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "after_exclusive",
+        "in": "query",
+        "description": "If the `after` filter is active: If true, only entries that end strictly after the point in time are included. Otherwise, entries that end exactly at the `after` point in time are included as well.",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "before_inclusive",
+        "in": "query",
+        "description": "If the `before` filter is active: If true, entries that start exactly at the `before` point in time are included as well. Otherwise, only entries that start strictly before the point in time are included.",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "match_previous_dates",
+        "in": "query",
+        "description": "If true, entries with a previous date that matches the after/before and rooms filters are included,  even if their current begin/end or rooms do not match the after/before filter.",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        }
+      }
     ],
     "security": [
       {"sessionTokenAuth": []}

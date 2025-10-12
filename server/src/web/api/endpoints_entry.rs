@@ -1,9 +1,10 @@
 use crate::data_store::models::FullNewEntry;
 use crate::data_store::EntryFilter;
 use crate::web::api::{APIError, SessionTokenHeader};
+use crate::web::util::deserialize_comma_separated_list_of_uuids;
 use crate::web::AppState;
 use actix_web::{delete, get, put, web, HttpResponse, Responder};
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
 
 #[get("/events/{event_id}/entries")]
@@ -35,20 +36,48 @@ async fn list_entries(
 struct FilterQuery {
     after: Option<chrono::DateTime<chrono::Utc>>,
     before: Option<chrono::DateTime<chrono::Utc>>,
-    // TODO
+    #[serde(default)]
+    after_exclusive: bool,
+    #[serde(default)]
+    before_inclusive: bool,
+    #[serde(default)]
+    match_previous_dates: bool,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids"
+    )]
+    categories: Option<Vec<uuid::Uuid>>,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_comma_separated_list_of_uuids"
+    )]
+    rooms: Option<Vec<uuid::Uuid>>,
+    #[serde(default)]
+    without_room: bool,
+}
+
+fn deserialize_optional_comma_separated_list_of_uuids<'de, D>(
+    deserializer: D,
+) -> Result<Option<Vec<uuid::Uuid>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(Some(deserialize_comma_separated_list_of_uuids(
+        deserializer,
+    )?))
 }
 
 impl From<FilterQuery> for EntryFilter {
     fn from(value: FilterQuery) -> Self {
         EntryFilter {
             after: value.after,
-            after_inclusive: true, // TODO
+            after_inclusive: !value.after_exclusive,
             before: value.before,
-            before_inclusive: false,              // TODO
-            include_previous_date_matches: false, // TODO
-            categories: None,                     // TODO
-            rooms: None,                          // TODO
-            no_room: false,                       // TODO
+            before_inclusive: value.before_inclusive,
+            include_previous_date_matches: value.match_previous_dates,
+            categories: value.categories,
+            rooms: value.rooms,
+            no_room: value.without_room,
         }
     }
 }

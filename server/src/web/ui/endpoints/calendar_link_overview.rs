@@ -80,15 +80,14 @@ impl CalendarLinkOverviewTemplate<'_> {
             .request
             .url_for(endpoint_name, &[self.event.id.to_string()])?;
         url.set_query(Some(&serde_urlencoded::to_string(
-            crate::web::ical::ICalQueryParams {
-                session_token: self
-                    .shareable_session_token
+            crate::web::ical::ICalQueryParams::with_session_token(
+                self.shareable_session_token
                     .as_ref()
                     .ok_or(AppError::InternalError(
                         "Kein Shareable Session Token wurde gefunden.".to_owned(),
                     ))?
                     .clone(),
-            },
+            ),
         )?));
         Ok(url.to_string())
     }

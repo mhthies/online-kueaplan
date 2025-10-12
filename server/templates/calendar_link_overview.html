@@ -18,6 +18,26 @@
                     <div class="form-text">
                         <i class="bi bi-info-circle" aria-hidden="true"></i> Für Kalender-Programme und Kalender-Apps
                     </div>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Der iCal-Link unterstützt zusätzliche Filter-Parameter.
+                        Diese können an die oben gezeigte URL angehangen werden, um nur KüAs, die die Filter-Kriterien erfüllen, im Kalender anzuzeigen.
+                        <ul>
+                            <li>
+                                <code>&categories={uuid1},{uuid2}</code> schränkt die Ausgabe auf KüAs in den zwei Kategorien mit den Ids {uuid1} und {uuid2} ein.
+                                Es können auch mehr oder weniger als zwei Kategorien angegeben werden.
+                                Um die UUID einer Kategorie herauszufinden, nutze die <a href="{{base.url_for_event_endpoint("categories_list")?}}">Liste der Kategorien</a> und achte auf die URLs der KüA-Plan-Seiten nach Kategorie.
+                            </li>
+                            <li>
+                                <code>&rooms={uuid1},{uuid2}</code> schränkt die Ausgabe auf KüAs ein, die (mindestens) an einem der zwei Orte mit den Ids {uuid1} und {uuid2} stattfinden.
+                                Es können auch mehr oder weniger als zwei Orte angegeben werden.
+                                Um die UUID eines Orts herauszufinden, nutze die <a href="{{base.url_for_event_endpoint("rooms_list")?}}">Liste der Räume</a> und achte auf die URLs der KüA-Plan-Seiten nach Raum.
+                            </li>
+                            <li>
+                                <code>&without_room=true</code> schränkt die Ausgabe auf KüAs ein, die keinen Ort zugewiesen haben.
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="frabXmlLink">XML-Link</label>

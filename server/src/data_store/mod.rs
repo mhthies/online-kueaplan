@@ -263,8 +263,8 @@ pub struct EntryFilter {
     /// in time are included as well. Otherwise, only entries that start strictly before the point
     /// in time are included.
     pub before_inclusive: bool,
-    /// If true, entries with a previous date that matches the after/before filter are included,
-    /// even if their current begin/end does not match the after/before filter.
+    /// If true, entries with a previous date that matches the after/before and rooms filters are
+    /// included, even if their current begin/end or rooms do not match the after/before filter.
     pub include_previous_date_matches: bool,
     /// Filter for entries that belong to any of the given categories
     pub categories: Option<Vec<uuid::Uuid>>,

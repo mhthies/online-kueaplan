@@ -1,8 +1,9 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, Event, FullEntry, Room};
-use crate::data_store::{CategoryId, EntryFilter, RoomId};
+use crate::data_store::{CategoryId, RoomId};
 use crate::web::ui::error::AppError;
+use crate::web::util::EntryFilterAsQuery;
 use crate::web::AppState;
 use actix_web::http::header::DispositionParam;
 use actix_web::http::StatusCode;
@@ -36,7 +37,7 @@ async fn ical(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_event(event_id)?,
-            store.get_entries_filtered(&auth, event_id, EntryFilter::default())?,
+            store.get_entries_filtered(&auth, event_id, query.entry_filter.into())?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
         ))
@@ -55,7 +56,18 @@ async fn ical(
 #[derive(Deserialize, Serialize)]
 pub struct ICalQueryParams {
     #[serde(rename = "token")]
-    pub session_token: String,
+    session_token: String,
+    #[serde(flatten)]
+    entry_filter: EntryFilterAsQuery,
+}
+
+impl ICalQueryParams {
+    pub fn with_session_token(session_token: String) -> Self {
+        Self {
+            session_token,
+            entry_filter: EntryFilterAsQuery::default(),
+        }
+    }
 }
 
 fn generate_ical(

@@ -54,6 +54,14 @@ fn serialize_optional_comma_separated_list_of_uuids<S: Serializer>(
     }
 }
 
+fn deserialize_bool_from_string<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = <&str>::deserialize(deserializer)?;
+    Ok(value.to_lowercase() == "true")
+}
+
 fn not(v: &bool) -> bool {
     !v
 }
@@ -69,11 +77,23 @@ pub struct EntryFilterAsQuery {
     after: Option<chrono::DateTime<chrono::Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     before: Option<chrono::DateTime<chrono::Utc>>,
-    #[serde(default, skip_serializing_if = "not")]
+    #[serde(
+        default,
+        skip_serializing_if = "not",
+        deserialize_with = "deserialize_bool_from_string"
+    )]
     after_exclusive: bool,
-    #[serde(default, skip_serializing_if = "not")]
+    #[serde(
+        default,
+        skip_serializing_if = "not",
+        deserialize_with = "deserialize_bool_from_string"
+    )]
     before_inclusive: bool,
-    #[serde(default, skip_serializing_if = "not")]
+    #[serde(
+        default,
+        skip_serializing_if = "not",
+        deserialize_with = "deserialize_bool_from_string"
+    )]
     match_previous_dates: bool,
     #[serde(
         default,
@@ -89,7 +109,11 @@ pub struct EntryFilterAsQuery {
         serialize_with = "serialize_optional_comma_separated_list_of_uuids"
     )]
     rooms: Option<Vec<uuid::Uuid>>,
-    #[serde(default, skip_serializing_if = "not")]
+    #[serde(
+        default,
+        skip_serializing_if = "not",
+        deserialize_with = "deserialize_bool_from_string"
+    )]
     without_room: bool,
 }
 

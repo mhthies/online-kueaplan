@@ -19,9 +19,19 @@
                     "type": "string",
                     "pattern": "\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?"
                 },
-                "defaultTimeSchedule": {"$ref": "EventDayTimeSchedule.json"}
+                "defaultTimeSchedule": {"$ref": "EventDayTimeSchedule.json"},
+                "precedingEventId": {
+                    "description": "id of an event which directly precedes this event, or null if there is no such event. If existing, users should be guided back to the preceding event from the first day of this event.",
+                    "type": "integer",
+                    "nullable": true
+                },
+                "subsequentEventId": {
+                    "description": "id of an event which directly follows this event, or null if there is no such event. If existing, users should be guided to the subsequent event from the last day of this event.",
+                    "type": "integer",
+                    "nullable": true
+                }
             },
-            "required": ["timezone", "effectiveBeginOfDay", "defaultTimeSchedule"]
+            "required": ["timezone", "effectiveBeginOfDay", "defaultTimeSchedule", "precedingEventId", "subsequentEventId"]
         }
     ]
 }

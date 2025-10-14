@@ -27,7 +27,7 @@ impl From<kueaplan_api_types::Event> for Event {
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,
-            slug: None,
+            slug: value.slug,
         }
     }
 }
@@ -39,6 +39,7 @@ impl From<Event> for kueaplan_api_types::Event {
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,
+            slug: value.slug,
         }
     }
 }
@@ -84,8 +85,8 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
                 effective_begin_of_day: value.effective_begin_of_day,
             },
             default_time_schedule: value.default_time_schedule.into(),
-            preceding_event_id: None,
-            subsequent_event_id: None,
+            preceding_event_id: value.preceding_event_id,
+            subsequent_event_id: value.subsequent_event_id,
         })
     }
 }
@@ -97,6 +98,8 @@ impl From<ExtendedEvent> for kueaplan_api_types::ExtendedEvent {
             timezone: value.clock_info.timezone.to_string(),
             effective_begin_of_day: value.clock_info.effective_begin_of_day,
             default_time_schedule: value.default_time_schedule.into(),
+            preceding_event_id: value.preceding_event_id,
+            subsequent_event_id: value.subsequent_event_id,
         }
     }
 }

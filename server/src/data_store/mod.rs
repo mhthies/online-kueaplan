@@ -51,6 +51,7 @@ pub trait KueaPlanStoreFacade {
     /// Events are returned in chronological order, i.e. sorted by (begin, end)
     fn get_events(&mut self, filter: EventFilter) -> Result<Vec<models::Event>, StoreError>;
     fn get_event(&mut self, event_id: i32) -> Result<models::Event, StoreError>;
+    fn get_event_by_slug(&mut self, slug: &str) -> Result<models::Event, StoreError>;
     fn get_extended_event(
         &mut self,
         auth_token: &AuthToken,

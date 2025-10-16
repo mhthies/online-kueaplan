@@ -77,6 +77,16 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .map_err(|e| e.into())
     }
 
+    fn get_event_by_slug(&mut self, event_slug: &str) -> Result<models::Event, StoreError> {
+        use schema::events::dsl::*;
+
+        events
+            .filter(slug.eq(event_slug))
+            .select(models::Event::as_select())
+            .first::<models::Event>(&mut self.connection)
+            .map_err(|e| e.into())
+    }
+
     fn get_extended_event(
         &mut self,
         _auth_token: &AuthToken,

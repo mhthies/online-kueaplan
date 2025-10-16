@@ -14,6 +14,7 @@ mod api;
 mod frab_xml;
 mod http_error_logging;
 mod ical;
+mod redirect_endpoints;
 mod time_calculation;
 mod ui;
 mod util;
@@ -29,6 +30,7 @@ pub fn serve() -> Result<(), CliError> {
                     .service(index)
                     .service(ical::ical)
                     .service(frab_xml::frab_xml)
+                    .service(redirect_endpoints::event_redirect_by_slug)
                     .app_data(web::Data::new(state.clone()))
                     .wrap(actix_web::middleware::from_fn(error_logging_middleware))
                     .wrap(middleware::Compress::default())

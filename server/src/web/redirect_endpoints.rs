@@ -1,7 +1,15 @@
 use crate::web::ui::error::AppError;
 use crate::web::AppState;
+use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
 use actix_web::{get, web, HttpRequest, Responder};
+
+#[get("/")]
+async fn index(request: HttpRequest) -> Result<impl Responder, UrlGenerationError> {
+    Ok(Redirect::to(
+        request.url_for::<_, &&str>("events_list", &[])?.to_string(),
+    ))
+}
 
 #[get("/{event_slug}")]
 async fn event_redirect_by_slug(

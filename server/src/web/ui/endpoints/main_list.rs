@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, EventClockInfo, ExtendedEvent, FullAnnouncement, FullEntry,
+    Category, Event, EventClockInfo, ExtendedEvent, FullAnnouncement, FullEntry,
 };
 use crate::data_store::{AnnouncementFilter, EntryFilter};
 use crate::web::time_calculation::{
@@ -38,7 +38,7 @@ async fn main_list(
     let time_after = query_data.after;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (entries, event, rooms, categories, announcements, auth) =
+    let (entries, rooms, categories, announcements, preceding_event, subsequent_event, event, auth) =
         web::block(move || -> Result<_, AppError> {
             let mut store = state.store.get_facade()?;
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
@@ -49,7 +49,6 @@ async fn main_list(
                     event_id,
                     date_to_filter(date, time_after, &event.clock_info),
                 )?,
-                event,
                 store.get_rooms(&auth, event_id)?,
                 store.get_categories(&auth, event_id)?,
                 store.get_announcements(
@@ -57,6 +56,15 @@ async fn main_list(
                     event_id,
                     Some(AnnouncementFilter::ForDate(date)),
                 )?,
+                event
+                    .preceding_event_id
+                    .map(|id| store.get_event(id))
+                    .transpose()?,
+                event
+                    .subsequent_event_id
+                    .map(|id| store.get_event(id))
+                    .transpose()?,
+                event,
                 auth,
             ))
         })
@@ -95,6 +103,8 @@ async fn main_list(
             .filter_map(|b| b.end_time)
             .filter(|t| *t > event.clock_info.effective_begin_of_day)
             .collect(),
+        preceding_event: preceding_event.as_ref(),
+        subsequent_event: subsequent_event.as_ref(),
         announcements: &announcements,
         event: &event,
     };
@@ -112,11 +122,13 @@ struct MainListTemplate<'a> {
     date: chrono::NaiveDate,
     time_after: Option<chrono::NaiveTime>,
     footer_constrained_link_times: Vec<chrono::NaiveTime>,
+    preceding_event: Option<&'a Event>,
+    subsequent_event: Option<&'a Event>,
     announcements: &'a Vec<FullAnnouncement>,
     event: &'a ExtendedEvent,
 }
 
-impl MainListTemplate<'_> {
+impl<'a> MainListTemplate<'a> {
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
         timestamp
             .with_timezone(&self.event.clock_info.timezone)
@@ -142,6 +154,34 @@ impl MainListTemplate<'_> {
             after: Some(*after_time),
         })?));
         Ok(result)
+    }
+
+    fn preceding_event_link_data(&self) -> Option<(&'a Event, chrono::NaiveDate)> {
+        if self.preceding_event.is_none() {
+            return None;
+        }
+        let preceding_event = self.preceding_event.unwrap();
+        if self.date >= preceding_event.begin_date && self.date <= preceding_event.end_date {
+            return Some((preceding_event, self.date));
+        }
+        if self.date == self.event.basic_data.begin_date && self.date >= preceding_event.end_date {
+            return Some((preceding_event, preceding_event.end_date));
+        }
+        None
+    }
+
+    fn subsequent_event_link_data(&self) -> Option<(&'a Event, chrono::NaiveDate)> {
+        if self.subsequent_event.is_none() {
+            return None;
+        }
+        let subsequent_event = self.subsequent_event.unwrap();
+        if self.date >= subsequent_event.begin_date && self.date <= subsequent_event.end_date {
+            return Some((subsequent_event, self.date));
+        }
+        if self.date == self.event.basic_data.end_date && self.date <= subsequent_event.begin_date {
+            return Some((subsequent_event, subsequent_event.begin_date));
+        }
+        None
     }
 }
 

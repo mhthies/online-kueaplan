@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.5
--- Dumped by pg_dump version 17.5
+\restrict jvdpqgBBFccMYN4fQHGpWKMP7gYLxrfJVKhiAWIDnJSvJVGt2WW6kXzBM5MXPyA
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.6
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -21,6 +23,8 @@ ALTER TABLE ONLY public.rooms DROP CONSTRAINT rooms_event_id_fkey;
 ALTER TABLE ONLY public.previous_dates DROP CONSTRAINT previous_dates_entry_id_fkey;
 ALTER TABLE ONLY public.previous_date_rooms DROP CONSTRAINT previous_date_rooms_room_id_fkey;
 ALTER TABLE ONLY public.previous_date_rooms DROP CONSTRAINT previous_date_rooms_previous_date_id_fkey;
+ALTER TABLE ONLY public.events DROP CONSTRAINT events_subsequent_event_id_fkey;
+ALTER TABLE ONLY public.events DROP CONSTRAINT events_preceding_event_id_fkey;
 ALTER TABLE ONLY public.event_passphrases DROP CONSTRAINT event_passphrases_event_id_fkey;
 ALTER TABLE ONLY public.event_passphrases DROP CONSTRAINT event_passphrases_derivable_from_passphrase_fkey;
 ALTER TABLE ONLY public.entry_rooms DROP CONSTRAINT entry_rooms_room_id_fkey;
@@ -246,7 +250,10 @@ CREATE TABLE public.events (
     end_date date NOT NULL,
     timezone character varying NOT NULL,
     effective_begin_of_day time without time zone NOT NULL,
-    default_time_schedule jsonb NOT NULL
+    default_time_schedule jsonb NOT NULL,
+    slug character varying,
+    preceding_event_id integer,
+    subsequent_event_id integer
 );
 
 
@@ -331,6 +338,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20250602173009	2025-06-15 14:20:26.986616
 20250930072909	2025-09-30 07:49:01.019478
 20250930103534	2025-10-03 10:43:38.47852
+20251014195940	2025-10-14 20:09:37.97214
 \.
 
 
@@ -400,8 +408,8 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 -- Data for Name: events; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule) FROM stdin;
-1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}
+COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id) FROM stdin;
+1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	\N	\N	\N
 \.
 
 
@@ -713,6 +721,22 @@ ALTER TABLE ONLY public.event_passphrases
 
 
 --
+-- Name: events events_preceding_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_preceding_event_id_fkey FOREIGN KEY (preceding_event_id) REFERENCES public.events(id);
+
+
+--
+-- Name: events events_subsequent_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_subsequent_event_id_fkey FOREIGN KEY (subsequent_event_id) REFERENCES public.events(id);
+
+
+--
 -- Name: previous_date_rooms previous_date_rooms_previous_date_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -755,3 +779,6 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict jvdpqgBBFccMYN4fQHGpWKMP7gYLxrfJVKhiAWIDnJSvJVGt2WW6kXzBM5MXPyA
+

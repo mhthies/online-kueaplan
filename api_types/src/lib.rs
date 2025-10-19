@@ -10,6 +10,7 @@ pub struct Event {
     pub begin_date: NaiveDate,
     #[serde(rename = "endDate")]
     pub end_date: NaiveDate,
+    pub slug: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -21,6 +22,10 @@ pub struct ExtendedEvent {
     pub effective_begin_of_day: NaiveTime,
     #[serde(rename = "defaultTimeSchedule")]
     pub default_time_schedule: EventDayTimeSchedule,
+    #[serde(rename = "precedingEventId")]
+    pub preceding_event_id: Option<i32>,
+    #[serde(rename = "subsequentEventId")]
+    pub subsequent_event_id: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize)]

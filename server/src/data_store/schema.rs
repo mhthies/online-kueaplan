@@ -95,6 +95,9 @@ diesel::table! {
         timezone -> Varchar,
         effective_begin_of_day -> Time,
         default_time_schedule -> Jsonb,
+        slug -> Nullable<Varchar>,
+        preceding_event_id -> Nullable<Int4>,
+        subsequent_event_id -> Nullable<Int4>,
     }
 }
 

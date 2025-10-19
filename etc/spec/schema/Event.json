@@ -23,7 +23,12 @@
             "description": "The first day of the event",
             "type": "string",
             "format": "date"
+        },
+        "slug": {
+            "description": "A short abbreviation of the event's title, typically all lowercase. E.g. 'pa25'.",
+            "type": "string",
+            "nullable": true
         }
     },
-    "required": ["id", "title", "beginDate", "endDate"]
+    "required": ["id", "title", "beginDate", "endDate", "slug"]
 }

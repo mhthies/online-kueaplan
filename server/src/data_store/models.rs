@@ -17,6 +17,7 @@ pub struct Event {
     pub title: String,
     pub begin_date: NaiveDate,
     pub end_date: NaiveDate,
+    pub slug: Option<String>,
 }
 
 impl From<kueaplan_api_types::Event> for Event {
@@ -26,6 +27,7 @@ impl From<kueaplan_api_types::Event> for Event {
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,
+            slug: value.slug,
         }
     }
 }
@@ -37,6 +39,7 @@ impl From<Event> for kueaplan_api_types::Event {
             title: value.title,
             begin_date: value.begin_date,
             end_date: value.end_date,
+            slug: value.slug,
         }
     }
 }
@@ -67,6 +70,8 @@ pub struct ExtendedEvent {
     #[diesel(embed)]
     pub clock_info: EventClockInfo,
     pub default_time_schedule: EventDayTimeSchedule,
+    pub preceding_event_id: Option<EventId>,
+    pub subsequent_event_id: Option<EventId>,
 }
 
 impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
@@ -80,6 +85,8 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
                 effective_begin_of_day: value.effective_begin_of_day,
             },
             default_time_schedule: value.default_time_schedule.into(),
+            preceding_event_id: value.preceding_event_id,
+            subsequent_event_id: value.subsequent_event_id,
         })
     }
 }
@@ -91,6 +98,8 @@ impl From<ExtendedEvent> for kueaplan_api_types::ExtendedEvent {
             timezone: value.clock_info.timezone.to_string(),
             effective_begin_of_day: value.clock_info.effective_begin_of_day,
             default_time_schedule: value.default_time_schedule.into(),
+            preceding_event_id: value.preceding_event_id,
+            subsequent_event_id: value.subsequent_event_id,
         }
     }
 }

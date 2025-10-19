@@ -26,7 +26,8 @@
         },
         "slug": {
             "description": "A short abbreviation of the event's title, typically all lowercase. E.g. 'pa25'.",
-            "type": "string"
+            "type": "string",
+            "nullable": true
         }
     },
     "required": ["id", "title", "beginDate", "endDate", "slug"]

@@ -9,8 +9,8 @@ pub fn markdown(
     _: &dyn askama::Values,
 ) -> askama::Result<askama::filters::Safe<String>> {
     let arena = comrak::Arena::new();
-    let options = comrak::ComrakOptions {
-        extension: comrak::ExtensionOptions::builder()
+    let options = comrak::options::Options {
+        extension: comrak::options::Extension::builder()
             .strikethrough(true)
             .tagfilter(true)
             .table(true)
@@ -18,21 +18,15 @@ pub fn markdown(
             .underline(true)
             .build(),
         parse: Default::default(),
-        render: comrak::RenderOptions::builder().escape(true).build(),
+        render: comrak::options::Render::builder().escape(true).build(),
     };
     let ast_root = comrak::parse_document(&arena, input, &options);
 
     markdown_increase_heading_level(ast_root, 3);
 
-    let mut bw = std::io::BufWriter::new(Vec::new());
-    comrak::format_html(ast_root, &options, &mut bw)?;
-    Ok(askama::filters::Safe(
-        String::from_utf8(
-            bw.into_inner()
-                .expect("Extracting vector from BufWriter should not fail."),
-        )
-        .expect("comrak HTML formatter should only generate valid UTF-8 bytes."),
-    ))
+    let mut html = String::new();
+    comrak::format_html(ast_root, &options, &mut html)?;
+    Ok(askama::filters::Safe(html))
 }
 
 /// Helper function to increase the heading level of all headings in the given comrak AST.

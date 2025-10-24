@@ -78,18 +78,8 @@ async fn delete_previous_date(
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        // TODO add explicit delete function to the data_store interface and use it here instead of
-        //   reading + updating entry
-        let mut entry = store.get_entry(&auth, entry_id)?;
-        let last_updated = entry.entry.last_updated;
-        let previous_date_index = entry
-            .previous_dates
-            .iter()
-            .position(|pd| pd.previous_date.id == previous_date_id)
-            .ok_or(AppError::EntityNotFound)?;
-        let removed_previous_date = entry.previous_dates.swap_remove(previous_date_index);
-        store.create_or_update_entry(&auth, entry.into(), false, Some(last_updated))?;
-        Ok(removed_previous_date)
+        store.delete_previous_date(&auth, entry_id, previous_date_id)?;
+        Ok(())
     })
     .await?;
 

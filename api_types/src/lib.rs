@@ -73,6 +73,60 @@ pub struct Entry {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct EntryPatch {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub room: Option<Vec<Uuid>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "roomComment"
+    )]
+    pub room_comment: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub begin: Option<DateTime<Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub end: Option<DateTime<Utc>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "timeComment"
+    )]
+    pub time_comment: Option<String>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "responsiblePerson"
+    )]
+    pub responsible_person: Option<String>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "isExclusive"
+    )]
+    pub is_exclusive: Option<bool>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "isCancelled"
+    )]
+    pub is_cancelled: Option<bool>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "isRoomReservation"
+    )]
+    pub is_room_reservation: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<Uuid>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct PreviousDate {
     pub id: Uuid,
     pub begin: DateTime<Utc>,

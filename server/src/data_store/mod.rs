@@ -106,6 +106,12 @@ pub trait KueaPlanStoreFacade {
         extend_previous_dates: bool,
         expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError>;
+    fn patch_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+        entry_data: models::EntryPatch,
+    ) -> Result<(), StoreError>;
     fn delete_entry(
         &mut self,
         auth_token: &AuthToken,

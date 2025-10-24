@@ -318,6 +318,33 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
+    fn patch_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+        entry_data: models::EntryPatch,
+    ) -> Result<(), StoreError> {
+        use schema::entries::dsl::*;
+
+        self.connection.transaction(|connection| {
+            let current_event_id = entries
+                .select(event_id)
+                .filter(id.eq(entry_id))
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(current_event_id, Privilege::ManageEntries)?;
+
+            if let Some(room_ids) = entry_data.room_ids.as_ref() {
+                update_entry_rooms(entry_id, &room_ids, connection)?;
+            }
+            diesel::update(entries)
+                .filter(id.eq(entry_id))
+                .set(entry_data)
+                .execute(connection)?;
+            Ok(())
+        })
+    }
+
     fn delete_entry(
         &mut self,
         auth_token: &AuthToken,

@@ -47,6 +47,43 @@
       "500": {"$ref": "../components/serverError.json"}
     }
   },
+  "patch": {
+    "operationId": "changeEntry",
+    "summary": "Change selected attributes of a KüA plan entry.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/entryId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/EntryPatch.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "204": {
+        "description": "Changing the entry was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The entry with given entryId does not exist in the event with given eventId or the entry with the given do not exist; so creating/updating an entry there is not possible.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
   "delete": {
     "operationId": "deleteEntry",
     "summary": "Remove a KüA plan entry. It will be marked as deleted in the database.",

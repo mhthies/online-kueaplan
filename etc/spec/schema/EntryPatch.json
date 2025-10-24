@@ -1,0 +1,70 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/EntryPatch.json",
+    "title": "KüA Plan Entry Patchset",
+    "description": "A patch set of a single entry of the KüA plan, allowing to change only selected attributes of the entry",
+    "type": "object",
+
+    "properties": {
+        "title": {
+            "description": "If present, changes the subject of the planned KüA (or reservation)",
+            "type": "string"
+        },
+        "comment": {
+            "description": "If present, changes the short explanatory comment to be shown together with the subject.",
+            "type": "string"
+        },
+        "description": {
+            "description": "If present, changes the longer description of the planned KüA, formatted as Markdown.",
+            "type": "string"
+        },
+        "begin": {
+            "description": "If present, changes the begin of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "description": "If present, changes the end of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
+        "timeComment": {
+            "description": "If present, changes the short comment about the KüA's time (e.g. start after another KüA, \"open end\", etc.).",
+            "type": "string"
+        },
+        "room": {
+            "description": "If present, changes list rooms this entry takes place in, given as the rooms' unique identifiers.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        },
+        "roomComment": {
+            "description": "If present, changes the short comment about the KüA's room (e.g. the meeting point or which part of the room).",
+            "type": "string"
+        },
+        "responsiblePerson": {
+            "description": "If present, changes the name of the persons responsible for this KüA or blocker.",
+            "type": "string"
+        },
+        "isRoomReservation": {
+            "description": "if present, changes whether this is not a real KüA announcement, but instead an informative entry to mark this time slot in this room as reserved for some reason (e.g. some non-public meeting).",
+            "type": "boolean"
+        },
+        "isExclusive": {
+            "description": "if present, changes whether this KüA (possibly together with other entries) exclusively blocks its interval for other KüAs (e.g. a mandatory plenum or reserved time slot for talks).",
+            "type": "boolean"
+        },
+        "isCancelled": {
+            "description": "if present, changes whether this is not a KüA announcement anymore, but instead informs that his plan entry is no longer valid.",
+            "type": "boolean"
+        },
+        "category": {
+            "description": "if present, changes the category this entry belongs to, given as the category's unique identifier.",
+            "type": "string",
+            "format": "uuid"
+        }
+    },
+    "required": []
+}

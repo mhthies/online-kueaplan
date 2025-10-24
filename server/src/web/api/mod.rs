@@ -36,6 +36,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)
+        .service(endpoints_entry::change_entry)
         .service(endpoints_entry::delete_entry)
         .service(endpoints_room::list_rooms)
         .service(endpoints_room::create_or_update_room)

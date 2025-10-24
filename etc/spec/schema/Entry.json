@@ -38,7 +38,7 @@
             "type": "string"
         },
         "room": {
-            "description": "List of unique identifiers of the rooms this entry is valid for.",
+            "description": "List of unique identifiers of the rooms this entry takes place in.",
             "type": "array",
             "items": {
                 "type": "string",
@@ -66,7 +66,7 @@
             "type": "boolean"
         },
         "category": {
-            "description": "Unique identifier of a Category of this event",
+            "description": "The unique identifier of the category this entry belongs to.",
             "type": "string",
             "format": "uuid"
         },

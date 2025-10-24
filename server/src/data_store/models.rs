@@ -271,7 +271,7 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
 }
 
 #[derive(Clone, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::entries)]
+#[diesel(table_name=super::schema::entries, treat_none_as_null=true)]
 pub struct NewEntry {
     pub id: Uuid,
     pub title: String,
@@ -381,7 +381,7 @@ impl From<Room> for kueaplan_api_types::Room {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[diesel(table_name=super::schema::rooms)]
+#[diesel(table_name=super::schema::rooms, treat_none_as_null=true)]
 pub struct NewRoom {
     pub id: Uuid,
     pub title: String,
@@ -401,7 +401,7 @@ impl NewRoom {
 }
 
 #[derive(Clone, Queryable, Selectable, Associations, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::previous_dates)]
+#[diesel(table_name=super::schema::previous_dates, treat_none_as_null=true)]
 #[diesel(belongs_to(Entry))]
 pub struct PreviousDate {
     pub id: Uuid,
@@ -493,7 +493,7 @@ impl From<Category> for kueaplan_api_types::Category {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[diesel(table_name=super::schema::categories)]
+#[diesel(table_name=super::schema::categories, treat_none_as_null=true)]
 pub struct NewCategory {
     pub id: Uuid,
     pub title: String,
@@ -564,7 +564,7 @@ impl From<FullAnnouncement> for kueaplan_api_types::Announcement {
 }
 
 #[derive(Clone, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::announcements)]
+#[diesel(table_name=super::schema::announcements, treat_none_as_null=true)]
 pub struct NewAnnouncement {
     pub id: Uuid,
     pub event_id: i32,

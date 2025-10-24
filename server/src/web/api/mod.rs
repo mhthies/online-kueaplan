@@ -34,6 +34,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_event::list_events)
         .service(endpoints_event::get_event_info)
         .service(endpoints_event_extended::get_extended_event_info)
+        .service(endpoints_event_extended::update_extended_event)
         .service(endpoints_auth::authorize)
         .service(endpoints_entry::list_entries)
         .service(endpoints_entry::get_entry)

@@ -63,6 +63,11 @@ pub trait KueaPlanStoreFacade {
         auth_token: &GlobalAuthToken,
         event: models::NewEvent,
     ) -> Result<EventId, StoreError>;
+    fn update_event(
+        &mut self,
+        auth_token: &AuthToken,
+        event: models::ExtendedEvent,
+    ) -> Result<(), StoreError>;
 
     /// Get a filtered list of entries of the event
     ///

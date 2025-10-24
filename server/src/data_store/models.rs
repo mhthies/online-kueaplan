@@ -10,8 +10,8 @@ use diesel::{AsExpression, FromSqlRow};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
-#[diesel(table_name=super::schema::events)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct Event {
     pub id: i32,
     pub title: String,
@@ -62,8 +62,8 @@ impl From<kueaplan_api_types::Event> for NewEvent {
     }
 }
 
-#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
-#[diesel(table_name=super::schema::events)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct ExtendedEvent {
     #[diesel(embed)]
     pub basic_data: Event,
@@ -141,6 +141,20 @@ impl<'insert> Insertable<super::schema::events::table> for &'insert EventClockIn
                 super::schema::events::effective_begin_of_day,
                 &self.effective_begin_of_day,
             )),
+        ))
+    }
+}
+// Same for diesel::query_builder::AsChangeset
+impl diesel::query_builder::AsChangeset for &EventClockInfo {
+    type Target = super::schema::events::table;
+    type Changeset = <(
+        diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>,
+        diesel::dsl::Eq<super::schema::events::effective_begin_of_day, chrono::NaiveTime>,
+    ) as diesel::query_builder::AsChangeset>::Changeset;
+    fn as_changeset(self) -> <Self as diesel::query_builder::AsChangeset>::Changeset {
+        diesel::query_builder::AsChangeset::as_changeset((
+            super::schema::events::timezone.eq(super::util::TimezoneWrapper::from(self.timezone)),
+            super::schema::events::effective_begin_of_day.eq(self.effective_begin_of_day),
         ))
     }
 }

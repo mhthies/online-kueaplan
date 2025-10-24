@@ -1,4 +1,40 @@
 {
+  "put": {
+    "operationId": "updateExtendedEvent",
+    "summary": "Update (extended) meta information about an event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/ExtendedEvent.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "204": {
+        "description": "Updating the event data was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The event with given eventId does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
   "get": {
     "operationId": "getExtendedEventInfo",
     "summary": "Get full information about a single event, including day schedule and clock information. (Requires authentication for the event.)",

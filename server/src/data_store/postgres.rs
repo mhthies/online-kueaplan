@@ -5,7 +5,6 @@ use super::{
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
-use crate::data_store::models::FullPreviousDate;
 use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
@@ -115,6 +114,25 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .values(&event)
             .returning(id)
             .get_result::<EventId>(&mut self.connection)?)
+    }
+
+    fn update_event(
+        &mut self,
+        auth_token: &AuthToken,
+        event: models::ExtendedEvent,
+    ) -> Result<(), StoreError> {
+        use schema::events::dsl::*;
+        auth_token.check_privilege(event.basic_data.id, Privilege::EditEventDetails)?;
+
+        let result = diesel::update(events)
+            .filter(id.eq(event.basic_data.id))
+            .set(event)
+            .execute(&mut self.connection)?;
+        if result == 1 {
+            Ok(())
+        } else {
+            Err(StoreError::NotExisting)
+        }
     }
 
     fn get_entries_filtered(
@@ -375,7 +393,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     fn create_or_update_previous_date(
         &mut self,
         auth_token: &AuthToken,
-        previous_date: FullPreviousDate,
+        previous_date: models::FullPreviousDate,
     ) -> Result<bool, StoreError> {
         self.connection.transaction(|connection| {
             // Check if referenced entry exists and get entry's event_id for auth check

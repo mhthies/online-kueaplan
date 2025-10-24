@@ -457,7 +457,7 @@ pub struct FullPreviousDate {
 }
 
 impl FullPreviousDate {
-    fn from_api(value: kueaplan_api_types::PreviousDate, entry_id: EntryId) -> Self {
+    pub fn from_api(value: kueaplan_api_types::PreviousDate, entry_id: EntryId) -> Self {
         Self {
             previous_date: PreviousDate {
                 id: value.id,

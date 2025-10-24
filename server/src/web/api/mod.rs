@@ -7,6 +7,7 @@ mod endpoints_entry;
 mod endpoints_event;
 mod endpoints_event_extended;
 mod endpoints_passphrase;
+mod endpoints_previous_date;
 mod endpoints_room;
 
 use crate::auth_session::SessionToken;
@@ -38,6 +39,8 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_entry::create_or_update_entry)
         .service(endpoints_entry::change_entry)
         .service(endpoints_entry::delete_entry)
+        .service(endpoints_previous_date::create_or_update_previous_date)
+        .service(endpoints_previous_date::delete_previous_date)
         .service(endpoints_room::list_rooms)
         .service(endpoints_room::create_or_update_room)
         .service(endpoints_room::delete_room)

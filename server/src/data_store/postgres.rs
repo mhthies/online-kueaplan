@@ -1,9 +1,11 @@
 use super::{
     models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId,
-    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, RoomId, StoreError,
+    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, PreviousDateId, RoomId,
+    StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
+use crate::data_store::models::FullPreviousDate;
 use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
@@ -311,7 +313,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
 
             for previous_date in entry.previous_dates {
-                update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?
+                update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?;
             }
 
             Ok(!is_updated)
@@ -366,6 +368,54 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 return Err(StoreError::NotExisting);
             }
 
+            Ok(())
+        })
+    }
+
+    fn create_or_update_previous_date(
+        &mut self,
+        auth_token: &AuthToken,
+        previous_date: FullPreviousDate,
+    ) -> Result<bool, StoreError> {
+        self.connection.transaction(|connection| {
+            // Check if referenced entry exists and get entry's event_id for auth check
+            let event_id = schema::entries::table
+                .filter(schema::entries::id.eq(previous_date.previous_date.entry_id))
+                .select(schema::entries::event_id)
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(event_id, Privilege::ManageEntries)?;
+
+            let created = update_or_insert_previous_date(
+                &previous_date,
+                previous_date.previous_date.entry_id,
+                connection,
+            )?;
+            Ok(created)
+        })
+    }
+
+    fn delete_previous_date(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+        previous_date_id: PreviousDateId,
+    ) -> Result<(), StoreError> {
+        self.connection.transaction(|connection| {
+            // Check if referenced entry exists and get entry's event_id for auth check
+            let event_id = schema::entries::table
+                .filter(schema::entries::id.eq(entry_id))
+                .select(schema::entries::event_id)
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(event_id, Privilege::ManageEntries)?;
+
+            diesel::delete(
+                schema::previous_dates::table
+                    .filter(schema::previous_dates::entry_id.eq(entry_id))
+                    .filter(schema::previous_dates::id.eq(previous_date_id)),
+            )
+            .execute(connection)?;
             Ok(())
         })
     }
@@ -920,21 +970,22 @@ fn update_or_insert_previous_date(
     previous_date: &models::FullPreviousDate,
     the_entry_id: EntryId,
     connection: &mut PgConnection,
-) -> Result<(), StoreError> {
+) -> Result<bool, StoreError> {
     use diesel::query_dsl::methods::FilterDsl;
     use schema::previous_dates::dsl::*;
 
-    let result = diesel::insert_into(previous_dates)
+    let upsert_result = diesel::insert_into(previous_dates)
         .values(&previous_date.previous_date)
         .on_conflict(id)
         .do_update()
         .set(&previous_date.previous_date)
         .filter(entry_id.eq(the_entry_id))
-        .execute(connection)?;
-
-    if result == 0 {
+        .returning(sql_upsert_is_updated())
+        .load::<bool>(connection)?;
+    if upsert_result.is_empty() {
         return Err(StoreError::ConflictEntityExists);
     }
+    let is_updated = upsert_result[0];
 
     update_previous_date_rooms(
         previous_date.previous_date.id,
@@ -942,7 +993,7 @@ fn update_or_insert_previous_date(
         connection,
     )?;
 
-    Ok(())
+    Ok(!is_updated)
 }
 
 fn update_previous_date_rooms(

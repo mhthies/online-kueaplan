@@ -1,0 +1,110 @@
+{
+  "put": {
+    "operationId": "createOrUpdatePreviousDate",
+    "summary": "Create or update a previous date of the entry.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "entryId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      {
+        "name": "previousDateId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/PreviousDate.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "201": {
+        "description": "Creating the new previous date for the entry was successful."
+      },
+      "204": {
+        "description": "Updating the existing previous date was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The event with given eventId or entry with given entryId at this event does not exist; so creating/updating a category there is not possible.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "409": {
+        "description": "The previous date could not created with this id, because it already exists in another entry.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
+  "delete": {
+    "operationId": "deletePreviousDate",
+    "summary": "Remove a previous date from this entry of the KüA plan. It will be removed from the database.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "entryId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      {
+        "name": "previousDateId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "204": {
+        "description": "Removing the category was successful."
+      },
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The previous date to be deleted does not exist or is not part of the entry with given entryId.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

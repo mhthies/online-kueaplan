@@ -72,7 +72,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% for room in rooms.iter_rooms_by_id_ordered(entry.room_ids.iter()) %}
+                            {% for room in rooms.iter_rooms_by_id_ordered(previous_date.room_ids.iter()) %}
                                 {{ room.title }}{% if !loop.last %}, {% endif -%}
                             {% endfor %}
                         </td>

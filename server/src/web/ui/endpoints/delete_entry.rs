@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, ExtendedEvent, FullEntry};
+use crate::data_store::models::{Category, EntryPatch, ExtendedEvent, FullEntry};
 use crate::data_store::EntryId;
 use crate::web::time_calculation;
 use crate::web::time_calculation::get_effective_date;
@@ -140,19 +140,20 @@ async fn mark_entry_cancelled(
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        // TODO add explicit function to the data_store interface and use it here instead of
-        //   reading + updating entry
-        let mut entry = store.get_entry(&auth, entry_id)?;
-        let last_updated = entry.entry.last_updated;
-        let entry_begin = entry.entry.begin;
-        entry.entry.is_cancelled = true;
-        store.create_or_update_entry(&auth, entry.into(), false, Some(last_updated))?;
-        Ok((entry_begin, store.get_extended_event(&auth, event_id)?))
+        let patchset = EntryPatch {
+            is_cancelled: Some(true),
+            ..Default::default()
+        };
+        store.patch_entry(&auth, entry_id, patchset)?;
+        Ok((
+            store.get_entry(&auth, entry_id)?,
+            store.get_extended_event(&auth, event_id)?,
+        ))
     })
     .await?;
 
     match result {
-        Ok((entry_begin, event)) => {
+        Ok((entry, event)) => {
             let notification = FlashMessage {
                 flash_type: FlashType::Success,
                 message: "Die Änderung wurde gespeichert.".to_string(),
@@ -166,7 +167,7 @@ async fn mark_entry_cancelled(
                     &req,
                     event_id,
                     &entry_id,
-                    &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
+                    &time_calculation::get_effective_date(&entry.entry.begin, &event.clock_info),
                 )?
                 .to_string(),
             )
@@ -174,12 +175,6 @@ async fn mark_entry_cancelled(
         }
         Err(e) => {
             let notification = match e {
-                AppError::TransactionConflict => FlashMessage {
-                    flash_type: FlashType::Error,
-                    message: "Der Eintrag konnte wegen eines parallelen Datenbank-Zugriff nicht geändert werden. Bitte erneut versuchen.".to_string(),
-                    keep_open: true,
-                    button: None,
-                },
                 AppError::ConcurrentEditConflict => FlashMessage {
                     flash_type: FlashType::Error,
                     message: "Der Eintrag konnte wegen einer parallelen Änderung nicht geändert werden. Bitte erneut versuchen.".to_string(),

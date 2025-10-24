@@ -40,6 +40,7 @@ pub fn get_store_from_env() -> Result<impl KuaPlanStore, CliError> {
 
 pub type EventId = i32;
 pub type EntryId = uuid::Uuid;
+pub type PreviousDateId = uuid::Uuid;
 pub type RoomId = uuid::Uuid;
 pub type CategoryId = uuid::Uuid;
 pub type AnnouncementId = uuid::Uuid;
@@ -106,11 +107,28 @@ pub trait KueaPlanStoreFacade {
         extend_previous_dates: bool,
         expected_last_update: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<bool, StoreError>;
+    fn patch_entry(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+        entry_data: models::EntryPatch,
+    ) -> Result<(), StoreError>;
     fn delete_entry(
         &mut self,
         auth_token: &AuthToken,
         event_id: EventId,
         entry_id: EntryId,
+    ) -> Result<(), StoreError>;
+    fn create_or_update_previous_date(
+        &mut self,
+        auth_token: &AuthToken,
+        previous_date: models::FullPreviousDate,
+    ) -> Result<bool, StoreError>;
+    fn delete_previous_date(
+        &mut self,
+        auth_token: &AuthToken,
+        entry_id: EntryId,
+        previous_date_id: PreviousDateId,
     ) -> Result<(), StoreError>;
 
     fn get_rooms(

@@ -23,6 +23,7 @@
     "/events/{eventId}/categories/{categoryId}": {"$ref": "./paths/category.json"},
     "/events/{eventId}/entries": {"$ref": "./paths/entries.json"},
     "/events/{eventId}/entries/{entryId}": {"$ref": "./paths/entry.json"},
+    "/events/{eventId}/entries/{entryId}/previousDates/{previousDateId}": {"$ref": "./paths/previousDate.json"},
     "/events/{eventId}/announcements": {"$ref": "./paths/announcements.json"},
     "/events/{eventId}/announcements/{announcementId}": {"$ref": "./paths/announcement.json"},
     "/events/{eventId}/passphrases": {"$ref": "./paths/passphrases.json"},

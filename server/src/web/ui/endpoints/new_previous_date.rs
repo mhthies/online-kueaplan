@@ -1,7 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate,
-    PreviousDate, Room,
+    Category, EventClockInfo, ExtendedEvent, FullEntry, FullPreviousDate, PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{get_effective_date, timestamp_from_effective_date_and_time};
@@ -117,13 +116,7 @@ pub async fn new_previous_date(
         let auth_clone = auth.clone();
         web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
-            // TODO add explicit function to the data_store interface and use it here instead of
-            //   reading + updating entry
-            let entry = store.get_entry(&auth_clone, entry_id)?;
-            let last_updated = entry.entry.last_updated;
-            let mut entry: FullNewEntry = entry.into();
-            entry.previous_dates = vec![previous_date];
-            store.create_or_update_entry(&auth_clone, entry, true, Some(last_updated))?;
+            store.create_or_update_previous_date(&auth_clone, previous_date)?;
             Ok(())
         })
         .await?

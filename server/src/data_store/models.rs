@@ -271,7 +271,7 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
 }
 
 #[derive(Clone, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::entries)]
+#[diesel(table_name=super::schema::entries, treat_none_as_null=true)]
 pub struct NewEntry {
     pub id: Uuid,
     pub title: String,
@@ -349,6 +349,45 @@ impl From<FullEntry> for FullNewEntry {
     }
 }
 
+#[derive(Clone, Default, AsChangeset)]
+#[diesel(table_name=super::schema::entries)]
+pub struct EntryPatch {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub responsible_person: Option<String>,
+    pub is_room_reservation: Option<bool>,
+    pub begin: Option<DateTime<Utc>>,
+    pub end: Option<DateTime<Utc>>,
+    pub category: Option<Uuid>,
+    pub comment: Option<String>,
+    pub time_comment: Option<String>,
+    pub room_comment: Option<String>,
+    pub is_exclusive: Option<bool>,
+    pub is_cancelled: Option<bool>,
+    #[diesel(skip_update)]
+    pub room_ids: Option<Vec<Uuid>>,
+}
+
+impl From<kueaplan_api_types::EntryPatch> for EntryPatch {
+    fn from(value: kueaplan_api_types::EntryPatch) -> Self {
+        Self {
+            title: value.title,
+            description: value.description,
+            responsible_person: value.responsible_person,
+            is_room_reservation: value.is_room_reservation,
+            begin: value.begin,
+            end: value.end,
+            category: value.category,
+            comment: value.comment,
+            time_comment: value.time_comment,
+            room_comment: value.room_comment,
+            is_exclusive: value.is_exclusive,
+            is_cancelled: value.is_cancelled,
+            room_ids: value.room,
+        }
+    }
+}
+
 // Introduce type for Entry-Room-association, to simplify grouped retrieval of room_ids of an Entry
 // using Diesel's .grouped_by() method.
 #[derive(Queryable, Associations, Identifiable, Selectable)]
@@ -381,7 +420,7 @@ impl From<Room> for kueaplan_api_types::Room {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[diesel(table_name=super::schema::rooms)]
+#[diesel(table_name=super::schema::rooms, treat_none_as_null=true)]
 pub struct NewRoom {
     pub id: Uuid,
     pub title: String,
@@ -401,7 +440,7 @@ impl NewRoom {
 }
 
 #[derive(Clone, Queryable, Selectable, Associations, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::previous_dates)]
+#[diesel(table_name=super::schema::previous_dates, treat_none_as_null=true)]
 #[diesel(belongs_to(Entry))]
 pub struct PreviousDate {
     pub id: Uuid,
@@ -418,7 +457,7 @@ pub struct FullPreviousDate {
 }
 
 impl FullPreviousDate {
-    fn from_api(value: kueaplan_api_types::PreviousDate, entry_id: EntryId) -> Self {
+    pub fn from_api(value: kueaplan_api_types::PreviousDate, entry_id: EntryId) -> Self {
         Self {
             previous_date: PreviousDate {
                 id: value.id,
@@ -493,7 +532,7 @@ impl From<Category> for kueaplan_api_types::Category {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[diesel(table_name=super::schema::categories)]
+#[diesel(table_name=super::schema::categories, treat_none_as_null=true)]
 pub struct NewCategory {
     pub id: Uuid,
     pub title: String,
@@ -564,7 +603,7 @@ impl From<FullAnnouncement> for kueaplan_api_types::Announcement {
 }
 
 #[derive(Clone, Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name=super::schema::announcements)]
+#[diesel(table_name=super::schema::announcements, treat_none_as_null=true)]
 pub struct NewAnnouncement {
     pub id: Uuid,
     pub event_id: i32,

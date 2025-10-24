@@ -349,7 +349,7 @@ impl From<FullEntry> for FullNewEntry {
     }
 }
 
-#[derive(Clone, AsChangeset)]
+#[derive(Clone, Default, AsChangeset)]
 #[diesel(table_name=super::schema::entries)]
 pub struct EntryPatch {
     pub title: Option<String>,

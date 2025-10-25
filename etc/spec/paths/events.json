@@ -1,0 +1,43 @@
+{
+  "get": {
+    "operationId": "listEvents",
+    "summary": "Get basic public information about all known events, which are using the KüA plan, optionally filtered.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "after",
+        "in": "query",
+        "description": "If given, only include entries that end after the given point in time (this includes entries that span over this point in time)",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      {
+        "name": "before",
+        "in": "query",
+        "description": "If given, only include entries that begin before the given point in time (this includes entries that span over this point in time)",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Returns the list of events.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {"$ref": "../schema/Event.json"}
+            }
+          }
+        }
+      },
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

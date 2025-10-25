@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Ww2ciqiv18jKvCrLK3fKrlQcGKW73BgPeeU2Om9GWl26iSfz1mwYA1FZaFstzSG
+\restrict yMSFeUSo9l1tJklPazmgJQMKpdEVyO73IZD8bGF0VIMhPy6lohetxbdQJww4Huu
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -144,7 +144,8 @@ CREATE TABLE public.announcements (
     show_with_all_rooms boolean NOT NULL,
     sort_key integer DEFAULT 0 NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT announcements_date_range CHECK (((begin_date IS NULL) OR (end_date IS NULL) OR (end_date >= begin_date)))
 );
 
 
@@ -185,7 +186,8 @@ CREATE TABLE public.entries (
     time_comment character varying DEFAULT ''::character varying NOT NULL,
     room_comment character varying DEFAULT ''::character varying NOT NULL,
     is_exclusive boolean DEFAULT false NOT NULL,
-    is_cancelled boolean DEFAULT false NOT NULL
+    is_cancelled boolean DEFAULT false NOT NULL,
+    CONSTRAINT entries_time_range CHECK (("end" >= begin))
 );
 
 
@@ -253,7 +255,8 @@ CREATE TABLE public.events (
     default_time_schedule jsonb NOT NULL,
     slug character varying,
     preceding_event_id integer,
-    subsequent_event_id integer
+    subsequent_event_id integer,
+    CONSTRAINT events_date_range CHECK ((end_date >= begin_date))
 );
 
 
@@ -297,7 +300,8 @@ CREATE TABLE public.previous_dates (
     comment character varying NOT NULL,
     begin timestamp with time zone NOT NULL,
     "end" timestamp with time zone NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT previous_dates_time_range CHECK (("end" >= begin))
 );
 
 
@@ -339,6 +343,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20250930072909	2025-09-30 07:49:42.540633
 20250930103534	2025-10-03 10:40:26.573708
 20251014195940	2025-10-14 20:09:38.243814
+20251025113806	2025-10-25 14:32:23.431471
 \.
 
 
@@ -773,5 +778,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Ww2ciqiv18jKvCrLK3fKrlQcGKW73BgPeeU2Om9GWl26iSfz1mwYA1FZaFstzSG
+\unrestrict yMSFeUSo9l1tJklPazmgJQMKpdEVyO73IZD8bGF0VIMhPy6lohetxbdQJww4Huu
 

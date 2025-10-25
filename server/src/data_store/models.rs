@@ -10,8 +10,8 @@ use diesel::{AsExpression, FromSqlRow};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
-#[diesel(table_name=super::schema::events)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct Event {
     pub id: i32,
     pub title: String,
@@ -62,8 +62,8 @@ impl From<kueaplan_api_types::Event> for NewEvent {
     }
 }
 
-#[derive(Clone, Debug, Queryable, Selectable, Insertable)]
-#[diesel(table_name=super::schema::events)]
+#[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
+#[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct ExtendedEvent {
     #[diesel(embed)]
     pub basic_data: Event,
@@ -81,7 +81,7 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
         Ok(Self {
             basic_data: value.basic_data.into(),
             clock_info: EventClockInfo {
-                timezone: value.timezone.parse().map_err(|e| format!("{:?}", e))?,
+                timezone: value.timezone.parse().map_err(|e| format!("{}", e))?,
                 effective_begin_of_day: value.effective_begin_of_day,
             },
             default_time_schedule: value.default_time_schedule.into(),
@@ -144,11 +144,57 @@ impl<'insert> Insertable<super::schema::events::table> for &'insert EventClockIn
         ))
     }
 }
+// Same for diesel::query_builder::AsChangeset
+impl diesel::query_builder::AsChangeset for &EventClockInfo {
+    type Target = super::schema::events::table;
+    type Changeset = <(
+        diesel::dsl::Eq<super::schema::events::timezone, super::util::TimezoneWrapper>,
+        diesel::dsl::Eq<super::schema::events::effective_begin_of_day, chrono::NaiveTime>,
+    ) as diesel::query_builder::AsChangeset>::Changeset;
+    fn as_changeset(self) -> <Self as diesel::query_builder::AsChangeset>::Changeset {
+        diesel::query_builder::AsChangeset::as_changeset((
+            super::schema::events::timezone.eq(super::util::TimezoneWrapper::from(self.timezone)),
+            super::schema::events::effective_begin_of_day.eq(self.effective_begin_of_day),
+        ))
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, AsExpression, FromSqlRow)]
 #[diesel(sql_type = diesel::sql_types::Jsonb)]
 pub struct EventDayTimeSchedule {
     pub sections: Vec<EventDayScheduleSection>,
+}
+
+impl EventDayTimeSchedule {
+    pub fn validate(&self, effective_begin_of_day: chrono::NaiveTime) -> Result<(), String> {
+        if self.sections.is_empty() {
+            return Err("At least one schedule section must be present.".to_owned());
+        }
+        if self.sections[self.sections.len() - 1].end_time.is_some() {
+            return Err("Last schedule section's end time must be null.".to_owned());
+        }
+        // Transform effective_begin_of_day into a chrono::Duration, that can be subtracted from
+        // chrono::NaiveTime with wraparound behaviour. This allows us to check the monotonicity
+        // of the sections' end_times as "effective time of day", i.e. in relation to the effective
+        // begin of day.
+        let effective_time_of_day_offset =
+            effective_begin_of_day - chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+        if !self.sections.windows(2).all(|section_pair| {
+            section_pair[1].end_time.is_none_or(|end_time1| {
+                section_pair[0].end_time.is_some_and(|end_time0| {
+                    end_time0 - effective_time_of_day_offset
+                        < end_time1 - effective_time_of_day_offset
+                })
+            })
+        }) {
+            return Err(
+                "Schedule sections' end_times must be strictly monotonically increasing."
+                    .to_owned(),
+            );
+        }
+
+        Ok(())
+    }
 }
 
 impl<DB> FromSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule

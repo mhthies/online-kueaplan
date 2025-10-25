@@ -14,8 +14,9 @@
     "version": "0.1"
   },
   "paths": {
-    "/events/{eventId}/auth": {"$ref": "./paths/auth.json"},
+    "/events": {"$ref": "./paths/events.json"},
     "/events/{eventId}": {"$ref": "./paths/event.json"},
+    "/events/{eventId}/auth": {"$ref": "./paths/auth.json"},
     "/events/{eventId}/extended": {"$ref": "./paths/eventExtended.json"},
     "/events/{eventId}/rooms": {"$ref": "./paths/rooms.json"},
     "/events/{eventId}/rooms/{roomId}": {"$ref": "./paths/room.json"},

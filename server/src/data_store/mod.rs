@@ -63,6 +63,11 @@ pub trait KueaPlanStoreFacade {
         auth_token: &GlobalAuthToken,
         event: models::NewEvent,
     ) -> Result<EventId, StoreError>;
+    fn update_event(
+        &mut self,
+        auth_token: &AuthToken,
+        event: models::ExtendedEvent,
+    ) -> Result<(), StoreError>;
 
     /// Get a filtered list of entries of the event
     ///
@@ -502,8 +507,15 @@ impl From<diesel::result::Error> for StoreError {
             diesel::result::Error::DatabaseError(
                 e @ diesel::result::DatabaseErrorKind::ForeignKeyViolation
                 | e @ diesel::result::DatabaseErrorKind::CheckViolation,
-                _,
-            ) => Self::InvalidInputData(format!("{:?}", e)),
+                info,
+            ) => Self::InvalidInputData(
+                info.constraint_name()
+                    .and_then(|constraint_name| {
+                        postgres::description_for_postgres_constraint(constraint_name)
+                    })
+                    .map(|s| s.to_owned())
+                    .unwrap_or(format!("{:?}: {}", e, info.message())),
+            ),
             diesel::result::Error::SerializationError(e) => Self::InvalidInputData(e.to_string()),
             diesel::result::Error::DeserializationError(e) => {
                 Self::InvalidDataInDatabase(e.to_string())

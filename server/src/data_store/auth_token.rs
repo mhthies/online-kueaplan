@@ -287,7 +287,7 @@ impl Privilege {
             Privilege::ManageEntries => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageCategories => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageRooms => &[AccessRole::Orga, AccessRole::Admin],
-            Privilege::EditEventDetails => &[AccessRole::Orga, AccessRole::Admin],
+            Privilege::EditEventDetails => &[AccessRole::Admin],
             Privilege::ManagePassphrases => &[AccessRole::Admin],
             Privilege::CreateEvents => &[AccessRole::Admin],
             Privilege::ManageAnnouncements => &[AccessRole::Orga, AccessRole::Admin],

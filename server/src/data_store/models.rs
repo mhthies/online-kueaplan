@@ -81,7 +81,7 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
         Ok(Self {
             basic_data: value.basic_data.into(),
             clock_info: EventClockInfo {
-                timezone: value.timezone.parse().map_err(|e| format!("{:?}", e))?,
+                timezone: value.timezone.parse().map_err(|e| format!("{}", e))?,
                 effective_begin_of_day: value.effective_begin_of_day,
             },
             default_time_schedule: value.default_time_schedule.into(),

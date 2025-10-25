@@ -1291,3 +1291,29 @@ fn obfuscate_passphrase(value: &str) -> String {
         .chain(value.chars().skip(num_obfuscated_chars))
         .collect()
 }
+
+/// Get a human-readable description of the consistency expectation that is checked by a specific
+/// constraint in our Postgres database schema by the constraint's name.
+///
+/// These are visible to the user when creating or updating entities inconsistently via the REST
+/// API.
+///
+/// Returns None, when no human-readable description is present of the given constraint name. This
+/// may be the case when we don't expect this constraint to be violated by a user interaction.
+pub fn description_for_postgres_constraint(constraint_name: &str) -> Option<&'static str> {
+    match constraint_name {
+        "announcement_categories_category_id_fkey" => Some("Announcement's categories must reference existing categories."),
+        "announcement_rooms_room_id_fkey" => Some("Announcement's rooms must reference existing rooms."),
+        "announcements_date_range" => Some("Announcement's begin_date must be earlier or equal to end_date."),
+        "entries_category_fkey" => Some("Entry's category must reference an existing category."),
+        "entries_time_range" => Some("Entry's begin must be earlier or equal to end."),
+        "entry_rooms_room_id_fkey" => Some("Entry's rooms must reference existing rooms."),
+        "event_passphrases_derivable_from_passphrase_fkey" => Some("Passphrase's derivable_from_passphrase must be null or reference an existing passphrase."),
+        "events_preceding_event_id_fkey" => Some("Event's preceding_event_id must be null or reference an existing event."),
+        "events_subsequent_event_id_fkey" => Some("Event's subsequent_event_id must be null or reference an existing event."),
+        "events_date_range" => Some("Event's begin_date must be earlier or equal to end_date."),
+        "previous_date_rooms_room_id_fkey" => Some("PreviousDate's rooms must reference existing rooms."),
+        "previous_dates_time_range" => Some("PreviousDate's begin must be earlier or equal to end."),
+        _ => None,
+    }
+}

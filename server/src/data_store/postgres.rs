@@ -124,6 +124,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         use schema::events::dsl::*;
         auth_token.check_privilege(event.basic_data.id, Privilege::EditEventDetails)?;
 
+        event
+            .default_time_schedule
+            .validate(event.clock_info.effective_begin_of_day)
+            .map_err(|e| StoreError::InvalidInputData(e))?;
+
         let result = diesel::update(events)
             .filter(id.eq(event.basic_data.id))
             .set(event)

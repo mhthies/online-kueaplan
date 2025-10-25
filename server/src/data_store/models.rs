@@ -165,6 +165,38 @@ pub struct EventDayTimeSchedule {
     pub sections: Vec<EventDayScheduleSection>,
 }
 
+impl EventDayTimeSchedule {
+    pub fn validate(&self, effective_begin_of_day: chrono::NaiveTime) -> Result<(), String> {
+        if self.sections.is_empty() {
+            return Err("At least one schedule section must be present.".to_owned());
+        }
+        if self.sections[self.sections.len() - 1].end_time.is_some() {
+            return Err("Last schedule section's end time must be null.".to_owned());
+        }
+        // Transform effective_begin_of_day into a chrono::Duration, that can be subtracted from
+        // chrono::NaiveTime with wraparound behaviour. This allows us to check the monotonicity
+        // of the sections' end_times as "effective time of day", i.e. in relation to the effective
+        // begin of day.
+        let effective_time_of_day_offset =
+            effective_begin_of_day - chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+        if !self.sections.windows(2).all(|section_pair| {
+            section_pair[1].end_time.is_none_or(|end_time1| {
+                section_pair[0].end_time.is_some_and(|end_time0| {
+                    end_time0 - effective_time_of_day_offset
+                        < end_time1 - effective_time_of_day_offset
+                })
+            })
+        }) {
+            return Err(
+                "Schedule sections' end_times must be strictly monotonically increasing."
+                    .to_owned(),
+            );
+        }
+
+        Ok(())
+    }
+}
+
 impl<DB> FromSql<diesel::sql_types::Jsonb, DB> for EventDayTimeSchedule
 where
     DB: diesel::backend::Backend,

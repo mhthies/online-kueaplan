@@ -1,3 +1,4 @@
+use crate::data_store::models::EventDayTimeSchedule;
 use crate::web::ui::form_values::{
     FormValueRepresentation, ValidateFromFormInput, ValidationDataForFormValue,
 };
@@ -26,6 +27,32 @@ impl ValidateFromFormInput for NonEmptyString {
             Err("Darf nicht leer sein".to_owned())
         } else {
             Ok(NonEmptyString(value.to_owned()))
+        }
+    }
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct Int32FromList(pub i32);
+
+impl Int32FromList {
+    pub fn into_inner(self) -> i32 {
+        self.0
+    }
+}
+
+impl FormValueRepresentation for Int32FromList {
+    fn into_form_value_string(self) -> String {
+        self.0.to_string()
+    }
+}
+
+impl ValidationDataForFormValue<Int32FromList> for &Vec<i32> {
+    fn validate_form_value(self, value: &'_ str) -> Result<Int32FromList, String> {
+        let id: i32 = value.parse().map_err(|e| format!("Keine Id: {}", e))?;
+        if self.contains(&id) {
+            Ok(Int32FromList(id))
+        } else {
+            Err("Unbekannte id".to_owned())
         }
     }
 }
@@ -337,6 +364,50 @@ impl<T: FormValueRepresentation + PartialEq, D: ValidationDataForFormValue<T>>
                 <D as ValidationDataForFormValue<T>>::validate_form_value(self, value)?,
             )))
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct Timezone(pub chrono_tz::Tz);
+
+impl Timezone {
+    pub fn into_inner(self) -> chrono_tz::Tz {
+        self.0
+    }
+}
+
+impl FormValueRepresentation for Timezone {
+    fn into_form_value_string(self) -> String {
+        self.0.name().to_string()
+    }
+}
+
+impl ValidateFromFormInput for Timezone {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        Ok(Self(
+            value
+                .parse()
+                .map_err(|_| "Keine bekannte Zeitzone.".to_string())?,
+        ))
+    }
+}
+
+#[derive(Debug)]
+pub struct EventDayTimeScheduleAsJson(pub EventDayTimeSchedule);
+
+impl FormValueRepresentation for EventDayTimeScheduleAsJson {
+    fn into_form_value_string(self) -> String {
+        serde_json::to_string(&self.0)
+            .ok()
+            .unwrap_or("{}".to_string())
+    }
+}
+
+impl ValidateFromFormInput for EventDayTimeScheduleAsJson {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        Ok(Self(
+            serde_json::from_str(value).map_err(|e| e.to_string())?,
+        ))
     }
 }
 

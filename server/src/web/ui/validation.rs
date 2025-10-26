@@ -326,6 +326,20 @@ impl<T: ValidateFromFormInput + PartialEq> ValidateFromFormInput for MaybeEmpty<
     }
 }
 
+impl<T: FormValueRepresentation + PartialEq, D: ValidationDataForFormValue<T>>
+    ValidationDataForFormValue<MaybeEmpty<T>> for D
+{
+    fn validate_form_value(self, value: &'_ str) -> Result<MaybeEmpty<T>, String> {
+        if value.is_empty() {
+            Ok(MaybeEmpty(None))
+        } else {
+            Ok(MaybeEmpty(Some(
+                <D as ValidationDataForFormValue<T>>::validate_form_value(self, value)?,
+            )))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -339,20 +353,35 @@ mod tests {
         ]
     }
 
+    // Alias function to avoid repeating the long-ish canonical form of the trait function call
+    fn validate_comma_separated_uuids_fromlist(
+        list: &Vec<Uuid>,
+        value: &str,
+    ) -> Result<CommaSeparatedUuidsFromList, String> {
+        // We need to explicitly state the trait's type parameter here. Otherwise, Rust's type
+        // inference engine will run into an endless recursion due to our generic trait
+        // implementation for ValidationDataForFormValue<MaybeEmpty<T>>
+        <&Vec<Uuid> as ValidationDataForFormValue<CommaSeparatedUuidsFromList>>::validate_form_value(
+            list, value,
+        )
+    }
+
     #[test]
     fn test_comma_separated_uuids_from_list() {
-        let result: CommaSeparatedUuidsFromList = get_example_uuids()
-            .validate_form_value("21f253ea-a0c8-4f1e-a591-4a8000e979e9")
-            .unwrap();
+        let result = validate_comma_separated_uuids_fromlist(
+            &get_example_uuids(),
+            "21f253ea-a0c8-4f1e-a591-4a8000e979e9",
+        )
+        .unwrap();
         assert_eq!(
             result.into_inner(),
             vec![uuid!("21f253ea-a0c8-4f1e-a591-4a8000e979e9")]
         );
-        let result: CommaSeparatedUuidsFromList = get_example_uuids()
-            .validate_form_value(
-                "21f253ea-a0c8-4f1e-a591-4a8000e979e9,b46b9e54-4316-4f07-a9d9-8b6323822467",
-            )
-            .unwrap();
+        let result = validate_comma_separated_uuids_fromlist(
+            &get_example_uuids(),
+            "21f253ea-a0c8-4f1e-a591-4a8000e979e9,b46b9e54-4316-4f07-a9d9-8b6323822467",
+        )
+        .unwrap();
         assert_eq!(
             result.into_inner(),
             vec![
@@ -360,20 +389,21 @@ mod tests {
                 uuid!("b46b9e54-4316-4f07-a9d9-8b6323822467")
             ]
         );
-        let result: CommaSeparatedUuidsFromList =
-            get_example_uuids().validate_form_value("").unwrap();
+        let result = validate_comma_separated_uuids_fromlist(&get_example_uuids(), "").unwrap();
         assert_eq!(result.into_inner(), Vec::<Uuid>::new());
     }
 
     #[test]
     fn test_comma_separated_uuids_from_error() {
-        let result: Result<CommaSeparatedUuidsFromList, _> =
-            get_example_uuids().validate_form_value("21f253ea-a0c8-4f1e-a591-------------");
+        let result = validate_comma_separated_uuids_fromlist(
+            &get_example_uuids(),
+            "21f253ea-a0c8-4f1e-a591-------------",
+        );
         assert!(result.is_err());
-        let result: Result<CommaSeparatedUuidsFromList, _> = get_example_uuids()
-            .validate_form_value(
-                "21f253ea-a0c8-4f1e-a591-4a8000e979e9,9ab30a1f-f0b8-462d-ad4c-231f5ae214d6",
-            );
+        let result = validate_comma_separated_uuids_fromlist(
+            &get_example_uuids(),
+            "21f253ea-a0c8-4f1e-a591-4a8000e979e9,9ab30a1f-f0b8-462d-ad4c-231f5ae214d6",
+        );
         assert!(result.is_err());
     }
 

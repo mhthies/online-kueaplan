@@ -805,6 +805,36 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
+    fn patch_announcement(
+        &mut self,
+        auth_token: &AuthToken,
+        announcement_id: AnnouncementId,
+        announcement_data: models::AnnouncementPatch,
+    ) -> Result<(), StoreError> {
+        use schema::announcements::dsl::*;
+
+        self.connection.transaction(|connection| {
+            let current_event_id = announcements
+                .select(event_id)
+                .filter(id.eq(announcement_id))
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(current_event_id, Privilege::ManageAnnouncements)?;
+
+            if let Some(room_ids) = announcement_data.room_ids.as_ref() {
+                update_announcement_rooms(announcement_id, &room_ids, connection)?;
+            }
+            if let Some(room_ids) = announcement_data.room_ids.as_ref() {
+                update_announcement_categories(announcement_id, &room_ids, connection)?;
+            }
+            diesel::update(announcements)
+                .filter(id.eq(announcement_id))
+                .set(announcement_data)
+                .execute(connection)?;
+            Ok(())
+        })
+    }
+
     fn delete_announcement(
         &mut self,
         auth_token: &AuthToken,

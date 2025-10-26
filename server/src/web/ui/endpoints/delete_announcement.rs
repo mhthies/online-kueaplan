@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, FullAnnouncement};
+use crate::data_store::models::{AnnouncementPatch, Event, FullAnnouncement};
 use crate::data_store::AnnouncementId;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
@@ -128,18 +128,16 @@ async fn disable_announcement(
     let result = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        // TODO add explicit function to the data_store interface and use it here instead of
-        //   reading + updating announcement
-        let announcements = store.get_announcements(&auth, event_id, None)?;
-        let mut announcement = announcements
-            .into_iter()
-            .find(|a| a.announcement.id == announcement_id)
-            .ok_or(AppError::EntityNotFound)?;
-        let last_updated = announcement.announcement.last_updated;
-        announcement.announcement.show_with_days = false;
-        announcement.announcement.show_with_categories = false;
-        announcement.announcement.show_with_rooms = false;
-        store.create_or_update_announcement(&auth, announcement.into(), Some(last_updated))?;
+        store.patch_announcement(
+            &auth,
+            announcement_id,
+            AnnouncementPatch {
+                show_with_days: Some(false),
+                show_with_categories: Some(false),
+                show_with_rooms: Some(false),
+                ..Default::default()
+            },
+        )?;
         Ok(())
     })
     .await?;
@@ -162,12 +160,6 @@ async fn disable_announcement(
         }
         Err(e) => {
             let notification = match e {
-                AppError::TransactionConflict => FlashMessage {
-                    flash_type: FlashType::Error,
-                    message: "Die Bekanntmachung konnte wegen eines parallelen Datenbank-Zugriff nicht geändert werden. Bitte erneut versuchen.".to_string(),
-                    keep_open: true,
-                    button: None,
-                },
                 AppError::ConcurrentEditConflict => FlashMessage {
                     flash_type: FlashType::Error,
                     message: "Die Bekanntmachung konnte wegen einer parallelen Änderung nicht geändert werden. Bitte erneut versuchen.".to_string(),

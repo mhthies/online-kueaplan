@@ -718,6 +718,44 @@ impl From<FullAnnouncement> for FullNewAnnouncement {
     }
 }
 
+#[derive(Clone, Default, AsChangeset)]
+#[diesel(table_name=super::schema::announcements)]
+pub struct AnnouncementPatch {
+    pub announcement_type: Option<AnnouncementType>,
+    pub text: Option<String>,
+    pub show_with_days: Option<bool>,
+    pub begin_date: Option<Option<NaiveDate>>,
+    pub end_date: Option<Option<NaiveDate>>,
+    pub show_with_categories: Option<bool>,
+    pub show_with_all_categories: Option<bool>,
+    pub show_with_rooms: Option<bool>,
+    pub show_with_all_rooms: Option<bool>,
+    pub sort_key: Option<i32>,
+    #[diesel(skip_update)]
+    pub room_ids: Option<Vec<Uuid>>,
+    #[diesel(skip_update)]
+    pub category_ids: Option<Vec<Uuid>>,
+}
+
+impl From<kueaplan_api_types::AnnouncementPatch> for AnnouncementPatch {
+    fn from(value: kueaplan_api_types::AnnouncementPatch) -> Self {
+        Self {
+            announcement_type: value.announcement_type.map(|t| t.into()),
+            text: value.text,
+            show_with_days: value.show_with_days,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+            show_with_categories: value.show_with_categories,
+            show_with_all_categories: value.show_with_all_categories,
+            show_with_rooms: value.show_with_rooms,
+            show_with_all_rooms: value.show_with_all_rooms,
+            sort_key: value.sort_key,
+            room_ids: value.rooms,
+            category_ids: value.categories,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]

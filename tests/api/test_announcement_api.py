@@ -38,6 +38,29 @@ def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -
     result = generated_api_client.client.list_announcements(EVENT_ID)
     assert result[0] == announcement
 
+def test_change_announcement(generated_api_client: ApiClientWrapper) -> None:
+    EVENT_ID = 1
+    generated_api_client.login(EVENT_ID, "orga")
+    announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(
+        id=str(uuid.uuid4()),
+        announcementType="info",
+        show_with_days=True,
+        begin_date=datetime.date(2025, 1, 4),
+        text="This is an important Announcement! I can use **Markdown** for extra highlighting.",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_announcement(EVENT_ID, announcement.id, announcement)
+
+    generated_api_client.client.change_announcement(EVENT_ID, announcement.id, generated_api_client.module.AnnouncementPatch(
+        sort_key=5,
+        text="Now, the Announcement text is shorter.",
+    ))
+
+    result = generated_api_client.client.list_announcements(EVENT_ID)
+    assert result[0].sort_key == 5
+    assert result[0].show_with_days == True
+    assert result[0].text == "Now, the Announcement text is shorter."
+
 def test_create_or_update_announcement_errors(generated_api_client: ApiClientWrapper) -> None:
     event_id = 1
     announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(

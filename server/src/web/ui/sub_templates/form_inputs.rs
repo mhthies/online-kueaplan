@@ -13,6 +13,7 @@ pub enum InputSize {
 #[derive(Debug, PartialEq)]
 pub enum InputType {
     Text,
+    Date,
     Time,
     Color,
     Textarea,
@@ -23,6 +24,7 @@ impl InputType {
     fn as_html_type_attr(&self) -> &'static str {
         match self {
             InputType::Text => "text",
+            InputType::Date => "date",
             InputType::Time => "time",
             InputType::Color => "color",
             InputType::Integer => "number",

@@ -718,7 +718,7 @@ impl From<FullAnnouncement> for FullNewAnnouncement {
     }
 }
 
-#[derive(Clone, AsChangeset)]
+#[derive(Clone, Default, AsChangeset)]
 #[diesel(table_name=super::schema::announcements)]
 pub struct AnnouncementPatch {
     pub announcement_type: Option<AnnouncementType>,

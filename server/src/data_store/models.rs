@@ -718,6 +718,25 @@ impl From<FullAnnouncement> for FullNewAnnouncement {
     }
 }
 
+#[derive(Clone, AsChangeset)]
+#[diesel(table_name=super::schema::announcements)]
+pub struct AnnouncementPatch {
+    pub announcement_type: Option<AnnouncementType>,
+    pub text: Option<String>,
+    pub show_with_days: Option<bool>,
+    pub begin_date: Option<Option<NaiveDate>>,
+    pub end_date: Option<Option<NaiveDate>>,
+    pub show_with_categories: Option<bool>,
+    pub show_with_all_categories: Option<bool>,
+    pub show_with_rooms: Option<bool>,
+    pub show_with_all_rooms: Option<bool>,
+    pub sort_key: Option<i32>,
+    #[diesel(skip_update)]
+    pub room_ids: Option<Vec<Uuid>>,
+    #[diesel(skip_update)]
+    pub category_ids: Option<Vec<Uuid>>,
+}
+
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]

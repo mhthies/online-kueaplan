@@ -192,6 +192,58 @@ pub struct Announcement {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct AnnouncementPatch {
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "announcementType"
+    )]
+    pub announcement_type: Option<AnnouncementType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "showWithDays"
+    )]
+    pub show_with_days: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "beginDate")]
+    pub begin_date: Option<Option<NaiveDate>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "endDate")]
+    pub end_date: Option<Option<NaiveDate>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "sortKey")]
+    pub sort_key: Option<i32>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "showWithCategories"
+    )]
+    pub show_with_categories: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub categories: Option<Vec<Uuid>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "showWithAllCategories"
+    )]
+    pub show_with_all_categories: Option<bool>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "showWithRooms"
+    )]
+    pub show_with_rooms: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rooms: Option<Vec<Uuid>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "showWithAllRooms"
+    )]
+    pub show_with_all_rooms: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Updates {
     #[serde(rename = "changedEntries")]
     pub changed_entries: Vec<Entry>,

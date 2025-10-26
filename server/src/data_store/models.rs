@@ -737,6 +737,25 @@ pub struct AnnouncementPatch {
     pub category_ids: Option<Vec<Uuid>>,
 }
 
+impl From<kueaplan_api_types::AnnouncementPatch> for AnnouncementPatch {
+    fn from(value: kueaplan_api_types::AnnouncementPatch) -> Self {
+        Self {
+            announcement_type: value.announcement_type.map(|t| t.into()),
+            text: value.text,
+            show_with_days: value.show_with_days,
+            begin_date: value.begin_date,
+            end_date: value.end_date,
+            show_with_categories: value.show_with_categories,
+            show_with_all_categories: value.show_with_all_categories,
+            show_with_rooms: value.show_with_rooms,
+            show_with_all_rooms: value.show_with_all_rooms,
+            sort_key: value.sort_key,
+            room_ids: value.rooms,
+            category_ids: value.categories,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]

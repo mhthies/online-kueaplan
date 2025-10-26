@@ -55,6 +55,51 @@
       "500": {"$ref": "../components/serverError.json"}
     }
   },
+  "patch": {
+    "operationId": "changeAnnouncement",
+    "summary": "Change selected attributes of an announcement.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {
+        "name": "announcementId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/AnnouncementPatch.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "204": {
+        "description": "Changing the announcement was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The announcement with given announcementId does not exist in the event with given eventId; so changing it is not possible.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
   "delete": {
     "operationId": "deleteAnnouncement",
     "summary": "Remove an announcement from the KüA plan. It will be removed from the database.",

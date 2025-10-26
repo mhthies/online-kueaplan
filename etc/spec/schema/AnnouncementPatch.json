@@ -1,0 +1,70 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/AnnouncementPatch.json",
+    "title": "KüA-Plan Announcement Patchset",
+    "description": "A patch set of for updating a single textual announcement on the KüA-Plan",
+    "type": "object",
+
+    "properties": {
+        "announcementType": {
+            "description": "",
+            "type": "string",
+            "enum": ["info", "warning"]
+        },
+        "text": {
+            "description": "The textual content of the announcement, using Markdown markup.",
+            "type": "string"
+        },
+        "showWithDays": {
+            "description": "If true, this announcement shall be displayed when viewing the KüA-Plan in the usual single day view. Defaults to 'false'.",
+            "type": "boolean"
+        },
+        "beginDate": {
+            "description": "If present and \"showWithDays\" is true, the announcement shall only shown on the KüA-Plan of this (effective) day and later days. If not present (but \"show_with_days\" is true), the announcement shall be shown from the first day's plan of the event on.",
+            "type": "string",
+            "format": "date"
+        },
+        "endDate": {
+            "description": "If present and \"showWithDays\" is true, the announcement shall only shown on the KüA-Plan of this (effective) day and earlier days. If not present (but \"show_with_days\" is true), the announcement shall be shown up to the last day's plan of the event.",
+            "type": "string",
+            "format": "date"
+        },
+        "sortKey": {
+            "description": "Key for sorting the announcements in the UI. This includes the display order of the announcements in the KüA-Plan when multiple announcements are active on the same page. The announcements with lowest sort_key is shown first.",
+            "type": "integer"
+        },
+        "showWithCategories": {
+            "description": "If true, this announcement shall be displayed when viewing single-category overview pages of the KüA-Plan. The fields \"categories\" and \"showWithAllCategories\" control on which of the category overview pages, the announcement is shown. Defaults to 'false'.",
+            "type": "boolean"
+        },
+        "categories": {
+            "description": "List of unique identifiers of categories to show the announcement on their single-category overview pages. This attribute is ignored if \"showWithCategories\" is false or \"showWithAllCategories\" is true.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        },
+        "showWithAllCategories": {
+            "description": "If true (and \"showWithCategories\" is true), this announcement shall be displayed on the single-category overview page of *every* category, independent from the value of \"categories\". Defaults to 'false'.",
+            "type": "boolean"
+        },
+        "showWithRooms": {
+            "description": "If true, this announcement shall be displayed when viewing single-room overview pages of the KüA-Plan. The fields \"rooms\" and \"showWithAllRooms\" control on which of the room overview pages, the announcement is shown. Defaults to 'false'.",
+            "type": "boolean"
+        },
+        "rooms": {
+            "description": "List of unique identifiers of rooms to show the announcement on their single-room overview pages. This attribute is ignored if \"showWithRooms\" is false or \"showWithAllRooms\" is true.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        },
+        "showWithAllRooms": {
+            "description": "If true (and \"showWithRooms\" is true), this announcement shall be displayed on the single-room overview page of *every* room, independent from the value of \"rooms\". Defaults to 'false'.",
+            "type": "boolean"
+        }
+    },
+    "required": []
+}

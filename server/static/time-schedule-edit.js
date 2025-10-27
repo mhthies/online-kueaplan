@@ -87,6 +87,7 @@ function timeScheduleEdit(jsonInputField, domParent) {
         }
         if (nextRow) {
             updateRowAfterPrevRowChange(nextRow);
+            updateRowAfterNextRowRemove(nextRow);
         }
         updateJsonResult();
     }

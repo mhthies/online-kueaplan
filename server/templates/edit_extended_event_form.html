@@ -42,11 +42,18 @@
             {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung", InputConfiguration::default())|safe }}
         </div>
     </div>
-    <div class="mb-3 card">
-        <h3 class="card-header">Zeitplan-Abschnitte</h3>
-        <div class="card-body" id="timeScheduleArea">
+    <div class="mb-3 card {% if form_data.default_time_schedule.has_errors() %}border-invalid{% endif %}">
+        <h3 class="card-header">
+            Zeitplan-Abschnitte
+            {% if form_data.default_time_schedule.has_errors() %}<i class="bi bi-exclamation-circle text-danger float-end" title="Enthält Validierungsfehler"></i>{% endif %}
+        </h3>
+        <div class="card-body">
+            <div id="timeScheduleArea"></div>
+            {% if form_data.default_time_schedule.has_errors() %}
+                <div class="text-invalid">{{form_data.default_time_schedule.errors().join(", ")}}</div>
+            {% endif %}
         </div>
-        {{ HiddenInputTemplate::new(form_data.default_time_schedule, "default_time_schedule")?|safe }}
+        {{ HiddenInputTemplate::new_ignore_errors(form_data.default_time_schedule, "default_time_schedule")?|safe }}
     </div>
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>
 </form>

@@ -163,6 +163,14 @@ impl ExtendedEventFormData {
         let preceding_event_id = self.preceding_event_id.validate_with(other_event_ids);
         let subsequent_event_id = self.subsequent_event_id.validate_with(other_event_ids);
 
+        let effective_begin_of_day = effective_begin_of_day?;
+        let default_time_schedule = default_time_schedule?;
+
+        if let Err(e) = default_time_schedule.0.validate(effective_begin_of_day.0) {
+            self.default_time_schedule.add_error(e.into());
+            return None;
+        }
+
         Some(ExtendedEvent {
             basic_data: Event {
                 id: event_id,
@@ -173,9 +181,9 @@ impl ExtendedEventFormData {
             },
             clock_info: EventClockInfo {
                 timezone: timezone?.into_inner(),
-                effective_begin_of_day: effective_begin_of_day?.into_inner(),
+                effective_begin_of_day: effective_begin_of_day.0,
             },
-            default_time_schedule: default_time_schedule?.0,
+            default_time_schedule: default_time_schedule.0,
             preceding_event_id: preceding_event_id?.0.map(|v| v.into_inner()),
             subsequent_event_id: subsequent_event_id?.0.map(|v| v.into_inner()),
         })

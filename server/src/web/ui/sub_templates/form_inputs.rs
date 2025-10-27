@@ -128,6 +128,9 @@ impl<'a, T: FormValueRepresentation> HiddenInputTemplate<'a, T> {
         }
         Ok(Self { name, data })
     }
+    pub fn new_ignore_errors(data: &'a FormValue<T>, name: &'a str) -> Result<Self, AppError> {
+        Ok(Self { name, data })
+    }
 }
 
 #[derive(Serialize)]

@@ -105,6 +105,14 @@ tr.category-row>* {
     border-radius: 0 0 var(--bs-card-border-radius) var(--bs-card-border-radius);
 }
 
+/* Add text color and border color "invalid", which is the same as "is-invalid" on a form-control input */
+.text-invalid {
+    color: var(--bs-form-invalid-color);
+}
+.border-invalid {
+    border-color: var(--bs-form-invalid-border-color);
+}
+
 /* Helper classes */
 .inner-margin-fix>:last-child{
     margin-bottom: 0;

@@ -1,7 +1,12 @@
 {% extends "base_config.html" %}
 
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ base.url_for_static("tom-select.bootstrap5.min.css")? }}">
+{% endblock %}
+
+
 {% block config_content %}
-<h1>
+<h1 class="mb-3">
     Veranstaltungs-Metadaten
 </h1>
 
@@ -12,23 +17,30 @@
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.slug, "slug", "Kürzel der Veranstaltung", InputConfiguration::builder().info("Für Kurzlink").build())|safe }}
     </div>
-    <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.begin_date, "begin_date", "Anfang", InputConfiguration::builder().input_type(InputType::Date).build())|safe }}
+    <div class="row g-3 mb-3">
+        <div class="col-6">
+            {{ FormFieldTemplate::new(form_data.begin_date, "begin_date", "Anfang", InputConfiguration::builder().input_type(InputType::Date).build())|safe }}
+        </div>
+        <div class="col-6">
+            {{ FormFieldTemplate::new(form_data.end_date, "end_date", "Ende", InputConfiguration::builder().input_type(InputType::Date).build())|safe }}
+        </div>
     </div>
-    <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.end_date, "end_date", "Ende", InputConfiguration::builder().input_type(InputType::Date).build())|safe }}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.timezone, "timezone", "Zeitzone", InputConfiguration::default())|safe }}
+        </div>
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.effective_begin_of_day, "effective_begin_of_day", "Tagesgrenze",
+                                      InputConfiguration::builder().input_type(InputType::Time).info("In lokaler Zeit gemäß eingesteller Zeitzone.").build())|safe }}
+        </div>
     </div>
-    <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.effective_begin_of_day, "effective_begin_of_day", "Tagesgrenze", InputConfiguration::builder().input_type(InputType::Time).build())|safe }}
-    </div>
-    <div class="mb-3">
-        {{ SelectTemplate::new(form_data.timezone, "timezone", &Self::timezone_entries(), "Zeitzone", InputConfiguration::default())|safe }}
-    </div>
-    <div class="mb-3">
-        {{ SelectTemplate::new(form_data.preceding_event_id, "preceding_event_id", &other_event_entries(), "Vorangehende Veranstaltung", InputConfiguration::default())|safe }}
-    </div>
-    <div class="mb-3">
-        {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung", InputConfiguration::default())|safe }}
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            {{ SelectTemplate::new(form_data.preceding_event_id, "preceding_event_id", &other_event_entries(), "Vorangehende Veranstaltung", InputConfiguration::default())|safe }}
+        </div>
+        <div class="col-sm-6">
+            {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung", InputConfiguration::default())|safe }}
+        </div>
     </div>
     <div class="mb-3">
         {{ HiddenInputTemplate::new(form_data.default_time_schedule, "default_time_schedule")?|safe }}
@@ -38,8 +50,14 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
 <script>
+    const timezones = {{ Self::timezone_entries()|json|safe }};
+    new TomSelect("#timezoneInput", {
+        options: timezones,
+        maxItems: 1,
+    });
     protectChanges(document.getElementById("edit_extended_event_form"));
 </script>
 {% endblock %}

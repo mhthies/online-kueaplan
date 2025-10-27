@@ -42,7 +42,10 @@
             {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung", InputConfiguration::default())|safe }}
         </div>
     </div>
-    <div class="mb-3">
+    <div class="mb-3 card">
+        <h3 class="card-header">Zeitplan-Abschnitte</h3>
+        <div class="card-body" id="timeScheduleArea">
+        </div>
         {{ HiddenInputTemplate::new(form_data.default_time_schedule, "default_time_schedule")?|safe }}
     </div>
     <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>
@@ -52,12 +55,16 @@
 {% block scripts %}
 <script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script src="{{ base.url_for_static("time-schedule-edit.js")? }}"></script>
 <script>
     const timezones = {{ Self::timezone_entries()|json|safe }};
     new TomSelect("#timezoneInput", {
         options: timezones,
         maxItems: 1,
     });
+    timeScheduleEdit(
+        document.getElementById("default_time_scheduleInput"),
+        document.getElementById("timeScheduleArea"));
     protectChanges(document.getElementById("edit_extended_event_form"));
 </script>
 {% endblock %}

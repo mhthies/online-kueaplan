@@ -7,7 +7,7 @@ function timeScheduleEdit(jsonInputField, domParent) {
         let tableElement = document.createElement("table");
         tableElement.classList.add("table");
         let tableHeadElement = document.createElement("thead");
-        tableHeadElement.innerHTML = "<tr><td>von</td><td>bis</td><td>Bezeichnung</td><td></td></tr>";
+        tableHeadElement.innerHTML = "<tr><th>von</th><th>bis</th><th>Bezeichnung</th><th></th></tr>";
         tableElement.appendChild(tableHeadElement);
         tableBodyElement = document.createElement("tbody");
         tableElement.appendChild(tableBodyElement);
@@ -17,7 +17,7 @@ function timeScheduleEdit(jsonInputField, domParent) {
         let addButton = document.createElement("button");
         addButton.type = "button";
         addButton.classList.add("btn", "btn-sm", "btn-success");
-        addButton.innerHTML = '<i class="bi bi-plus-lg"></i> Abschnitt hinzufügen';
+        addButton.innerHTML = '<i class="bi bi-plus-lg" aria-hidden="true"></i> Abschnitt hinzufügen';
         addButton.addEventListener("click", () => {
             let lastRow = tableBodyElement.lastElementChild;
             addRow();

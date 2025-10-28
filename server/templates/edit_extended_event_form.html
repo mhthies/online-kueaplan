@@ -34,7 +34,7 @@
                                       InputConfiguration::builder().input_type(InputType::Time).info("In lokaler Zeit gemäß eingesteller Zeitzone.").build())|safe }}
         </div>
     </div>
-    <div class="row g-3 mb-3">
+    <div class="row g-3 mb-4">
         <div class="col-sm-6">
             {{ SelectTemplate::new(form_data.preceding_event_id, "preceding_event_id", &other_event_entries(), "Vorangehende Veranstaltung", InputConfiguration::default())|safe }}
         </div>
@@ -43,10 +43,10 @@
         </div>
     </div>
     <div class="mb-3 card {% if form_data.default_time_schedule.has_errors() %}border-invalid{% endif %}">
-        <h3 class="card-header">
+        <h2 class="card-header h4">
             Zeitplan-Abschnitte
             {% if form_data.default_time_schedule.has_errors() %}<i class="bi bi-exclamation-circle text-danger float-end" title="Enthält Validierungsfehler"></i>{% endif %}
-        </h3>
+        </h2>
         <div class="card-body">
             <div id="timeScheduleArea"></div>
             {% if form_data.default_time_schedule.has_errors() %}

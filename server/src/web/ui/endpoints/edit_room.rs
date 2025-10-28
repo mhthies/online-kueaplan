@@ -25,12 +25,12 @@ pub async fn edit_room_form(
 ) -> Result<impl Responder, AppError> {
     let (event_id, room_id) = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ManageCategories, event_id)?;
+        util::extract_session_token(&state, &req, Privilege::ManageRooms, event_id)?;
     let store = state.store.clone();
     let (event, rooms, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageCategories)?;
+        auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((
             // TODO only get required room
             store.get_extended_event(&auth, event_id)?,
@@ -56,7 +56,7 @@ pub async fn edit_room_form(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         event_id,
         form_data: &form_data,
@@ -77,12 +77,12 @@ pub async fn edit_room(
 ) -> Result<impl Responder, AppError> {
     let (event_id, room_id) = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ManageCategories, event_id)?;
+        util::extract_session_token(&state, &req, Privilege::ManageRooms, event_id)?;
     let store = state.store.clone();
     let (event, rooms, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageCategories)?;
+        auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((
             // TODO only get required room
             store.get_extended_event(&auth, event_id)?,
@@ -123,7 +123,7 @@ pub async fn edit_room(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         event_id,
         form_data: &form_data,
@@ -155,12 +155,12 @@ pub async fn new_room_form(
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ManageCategories, event_id)?;
+        util::extract_session_token(&state, &req, Privilege::ManageRooms, event_id)?;
     let store = state.store.clone();
     let (event, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageCategories)?;
+        auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
@@ -178,7 +178,7 @@ pub async fn new_room_form(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         event_id,
         form_data: &form_data,
@@ -199,12 +199,12 @@ pub async fn new_room(
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ManageCategories, event_id)?;
+        util::extract_session_token(&state, &req, Privilege::ManageRooms, event_id)?;
     let store = state.store.clone();
     let (event, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageCategories)?;
+        auth.check_privilege(event_id, Privilege::ManageRooms)?;
         Ok((store.get_extended_event(&auth, event_id)?, auth))
     })
     .await??;
@@ -236,7 +236,7 @@ pub async fn new_room(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         event_id,
         form_data: &form_data,

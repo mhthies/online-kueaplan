@@ -13,6 +13,7 @@ pub enum InputSize {
 #[derive(Debug, PartialEq)]
 pub enum InputType {
     Text,
+    Date,
     Time,
     Color,
     Textarea,
@@ -23,6 +24,7 @@ impl InputType {
     fn as_html_type_attr(&self) -> &'static str {
         match self {
             InputType::Text => "text",
+            InputType::Date => "date",
             InputType::Time => "time",
             InputType::Color => "color",
             InputType::Integer => "number",
@@ -124,6 +126,9 @@ impl<'a, T: FormValueRepresentation> HiddenInputTemplate<'a, T> {
                 data.errors().join(", ")
             )));
         }
+        Ok(Self { name, data })
+    }
+    pub fn new_ignore_errors(data: &'a FormValue<T>, name: &'a str) -> Result<Self, AppError> {
         Ok(Self { name, data })
     }
 }

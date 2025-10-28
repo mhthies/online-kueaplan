@@ -22,13 +22,11 @@
                                     "Übersicht",
                                     crate::data_store::auth_token::Privilege::ShowConfigArea,
                                     crate::web::ui::base_template::ConfigNavButton::Overview) %}
-                    {#
-                    {% call navlink("#",
+                    {% call navlink(base.url_for_event_endpoint("edit_extended_event_form")?,
                                     "sliders",
-                                    "Basis-Konfiguration",
+                                    "Veranstaltungs-Metadaten",
                                     crate::data_store::auth_token::Privilege::EditEventDetails,
                                     crate::web::ui::base_template::ConfigNavButton::EventConfig) %}
-                    #}
                     {% call navlink(base.url_for_event_endpoint("manage_categories")?,
                                     "grid",
                                     "KüA-Kategorien",

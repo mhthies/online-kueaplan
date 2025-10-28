@@ -163,6 +163,36 @@ For the apache web server, the following virtual host configuration can be used 
 ```
 
 
+### fail2ban
+
+The kueaplan_server logs authentication errors at warning level, including the client's IP address.
+(Thanks to the X-Forwarded-For header, this does even work behind the reverse proxy.)
+This allows us to mitigate brute-force attacks on the authentication mechanism (esp. automated testing of passphrases), using fail2ban.
+
+The following fail2ban config files can be used as starting point, assuming the systemd service unit, as shown above:
+
+`/etc/fail2ban/filter.d/kueaplan.conf`:
+```
+[Definition]
+failregex = kueaplan_server::[^ ]+ HTTP \d+ (authentication failed|invalid session token). Client: <<HOST>>
+ignoreregex =
+
+[Init]
+journalmatch = _SYSTEMD_UNIT=kueaplan.service
+```
+
+`/etc/fail2ban/jail.d/kueaplan.conf`:
+```
+[kueaplan]
+enabled = true
+backend = systemd
+filter = kueaplan
+port = 80,443
+maxretry = 15
+bantime = 3600
+findtime = 3600
+```
+
 ## Development
 
 ### API Spec

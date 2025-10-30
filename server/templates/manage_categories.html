@@ -13,7 +13,7 @@
                     <th>Name</th>
                     <th>Farbe</th>
                     <th>offiziell</th>
-                    <th></th>
+                    <th><span class="visually-hidden">Aktionen</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -26,7 +26,7 @@
                         <td>{{category.title}}</td>
                         <td class="text-nowrap"><span class="color-demo" style="--demo-color: #{{category.color}};"></span> #{{category.color}}</td>
                         <td>{% if category.is_official %}<i class="bi bi-check-circle-fill" aria-label="ja"></i>{% else %}<i class="bi bi-x-circle" aria-label="nein"></i>{% endif %}</td>
-                        <td class="text-nowrap">
+                        <td class="shrink-to-content">
                             <a href="{{ base.request.url_for("edit_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten"><i class="bi bi-pencil" aria-hidden="true"></i></a>
                             {% if categories.len() > 1 %}
                                 <a href="{{ base.request.url_for("delete_category_form", [&event_id.to_string(), &category.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen"><i class="bi bi-trash" aria-hidden="true"></i></a>

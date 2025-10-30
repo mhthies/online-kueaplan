@@ -20,6 +20,7 @@ pub mod manage_announcements;
 pub mod manage_categories;
 pub mod manage_passphrases;
 pub mod manage_rooms;
+pub mod new_passphrase;
 pub mod new_previous_date;
 pub mod previous_dates;
 pub mod rooms_list;

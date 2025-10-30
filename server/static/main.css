@@ -117,3 +117,8 @@ tr.category-row>* {
 .inner-margin-fix>:last-child{
     margin-bottom: 0;
 }
+td.shrink-to-content {
+    width: 0;
+    min-width: fit-content;
+    text-wrap: nowrap;
+}

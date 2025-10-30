@@ -1,0 +1,50 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+    <h1>Passphrasen</h1>
+    <div class="mb-3">
+        <a href="#" class="btn btn-outline-success"><i class="bi bi-plus-lg" aria-hidden="true"></i> Passphrase hinzufügen</a>
+    </div>
+    <div class="table-responsive-lg">
+        <table class="table align-middle table-hover">
+            <thead>
+                <tr>
+                    <th>Rolle</th>
+                    <th>Passphrase</th>
+                    <th><span class="visually-hidden">Aktionen</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if sorted_passphrases.is_empty() %}
+                    <tr><td colspan="6" class="text-info">– Aktuell gibt es keine Passphrasen. –</td></tr>
+                {% endif %}
+                {% for (passphrase, derivable_passphrases) in sorted_passphrases %}
+                    <tr>
+                        <td>{{Self::format_access_role(passphrase.privilege)}}</td>
+                        <td>{{Self::format_passphrase(passphrase.passphrase)}}</td>
+                        <td class="shrink-to-content">
+                            {% if passphrase.privilege.can_be_managed_online() %}
+                                <a href="#" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
+                            {% endif %}
+                            <a href="#" class="btn btn-sm btn-outline-success" title="Ableitbare Rolle hinzufügen"><i class="bi bi-plus-circle"></i></a>
+                        </td>
+                    </tr>
+                    {% for passphrase in derivable_passphrases %}
+                        <tr>
+                            <td>
+                                &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu"></i>
+                                {{Self::format_access_role(passphrase.privilege)}}
+                            </td>
+                            <td>{{Self::format_passphrase(passphrase.passphrase)}}</td>
+                            <td class="shrink-to-content">
+                                {% if passphrase.privilege.can_be_managed_online() %}
+                                    <a href="#" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

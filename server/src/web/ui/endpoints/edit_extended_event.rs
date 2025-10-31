@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, EventClockInfo, EventDayTimeSchedule, ExtendedEvent};
+use crate::data_store::models::{Event, EventClockInfo, ExtendedEvent};
 use crate::data_store::{EventFilter, EventId, StoreError};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
@@ -7,10 +7,9 @@ use crate::web::ui::base_template::{
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
 use crate::web::ui::sub_templates::form_inputs::{
-    FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize, InputType, SelectEntry,
+    FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputType, SelectEntry,
     SelectTemplate,
 };
-use crate::web::ui::validation::TimeOfDay;
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html};

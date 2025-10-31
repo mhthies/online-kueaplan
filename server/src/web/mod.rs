@@ -5,7 +5,7 @@ use crate::setup::{
     get_listen_port_from_env, get_secret_from_env,
 };
 use crate::web::http_error_logging::error_logging_middleware;
-use actix_web::{middleware, web, App, HttpServer, Responder};
+use actix_web::{middleware, web, App, HttpServer};
 use std::sync::Arc;
 
 mod api;

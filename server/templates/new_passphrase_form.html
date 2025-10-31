@@ -12,7 +12,7 @@
     <div class="mb-3">
         {{ SelectTemplate::new(form_data.access_role, "access_role", &Self::role_entries(), "Rolle/Berechtigungen", InputConfiguration::default())|safe }}
     </div>
-    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Erstellen</button>&ensp;
     <a href="{{ base.url_for_event_endpoint("manage_passphrases")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
         <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
     </a>

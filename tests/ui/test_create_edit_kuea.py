@@ -23,7 +23,7 @@ def test_create_entry(page: Page, reset_database: None):
 
         Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
         """)
-    page.get_by_role("button", name="Speichern").click()
+    page.get_by_role("button", name="Erstellen").click()
     expect(page).to_have_title(re.compile(r"06\.01\."))
 
     # TODO room
@@ -60,7 +60,7 @@ def test_create_entry_validation_error_duration(page: Page, reset_database: None
     page.get_by_role("textbox", name="von wem?").fill("Max Mustermann")
     page.get_by_role("textbox", name="Beginn").fill("13:00")
     page.get_by_role("textbox", name="Dauer").fill("1:")
-    page.get_by_role("button", name="Speichern").click()
+    page.get_by_role("button", name="Erstellen").click()
 
     error_alert = page.get_by_role("alert").filter(has_text="Eingegebene Daten sind ungültig")
     expect(error_alert).to_be_visible()

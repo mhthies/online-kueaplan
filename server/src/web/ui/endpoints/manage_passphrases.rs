@@ -1,10 +1,12 @@
-use crate::data_store::auth_token::{AccessRole, Privilege};
+use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::Passphrase;
+use crate::data_store::EventId;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
+use crate::web::ui::util::{format_access_role, format_passphrase};
 use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
@@ -64,6 +66,7 @@ async fn manage_passphrases(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Passphrases,
         },
+        event_id,
         sorted_passphrases: &sorted_passphrases,
     };
     Ok(Html::new(tmpl.render()?))
@@ -74,24 +77,6 @@ async fn manage_passphrases(
 struct ManagePassphrasesTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
+    event_id: EventId,
     sorted_passphrases: &'a PassphrasesWithDerivables<'a>,
-}
-
-impl ManagePassphrasesTemplate<'_> {
-    fn format_passphrase(passphrase: &Option<String>) -> String {
-        passphrase.as_deref().unwrap_or("").replace("\x7f", "*")
-    }
-
-    fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
-        let (icon, name, color) = match role {
-            AccessRole::User => ("person-fill", "Benutzer", "primary"),
-            AccessRole::Orga => ("clipboard", "Orga", "warning"),
-            AccessRole::Admin => ("gear-fill", "Admin", "warning"),
-            AccessRole::SharableViewLink => ("share", "Link-Abruf", "info"),
-        };
-        askama::filters::Safe(format!(
-            "<span class=\"text-{}\"><i class=\"bi bi-{}\"></i> {}</span>",
-            color, icon, name
-        ))
-    }
 }

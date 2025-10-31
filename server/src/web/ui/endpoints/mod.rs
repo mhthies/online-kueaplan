@@ -5,6 +5,7 @@ pub mod config_index;
 pub mod delete_announcement;
 pub mod delete_category;
 pub mod delete_entry;
+pub mod delete_passphrase;
 pub mod delete_room;
 pub mod edit_announcement;
 pub mod edit_category;

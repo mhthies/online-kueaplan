@@ -11,9 +11,9 @@
         <table class="table align-middle table-hover">
             <thead>
                 <tr>
-                    <th>Rolle</th>
-                    <th>Passphrase</th>
-                    <th><span class="visually-hidden">Aktionen</span></th>
+                    <th scope="col">Rolle</th>
+                    <th scope="col">Passphrase</th>
+                    <th scope="col"><span class="visually-hidden">Aktionen</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +30,7 @@
                             {% endif %}
                             <form class="d-inline-block" method="post"
                                     action="{{ base.request.url_for("new_derivable_sharable_link_passphrase", [&event_id.to_string(), &passphrase.id.to_string()])? }}">
-                                <button type="submit" class="btn btn-sm btn-success" title="Ableitbare Rolle für Link-Abruf hinzufügen">
+                                <button type="submit" class="btn btn-sm btn-success" title="Ableitbare Rolle für Abruf per Link hinzufügen">
                                     <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
                                 </button>
                             </form>

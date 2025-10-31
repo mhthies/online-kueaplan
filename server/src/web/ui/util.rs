@@ -385,14 +385,16 @@ pub fn format_passphrase(passphrase: &Option<String>) -> String {
 /// Generate HTML code for a colorful representation of an [AccessRole] on Passphrase management
 /// sites
 pub fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
-    let (icon, name, color) = match role {
-        AccessRole::User => ("person-fill", "Benutzer", "primary"),
-        AccessRole::Orga => ("clipboard", "Orga", "warning"),
-        AccessRole::Admin => ("gear-fill", "Admin", "warning"),
-        AccessRole::SharableViewLink => ("share", "Link-Abruf", "info"),
+    let (icon, color) = match role {
+        AccessRole::User => ("person-fill", "primary"),
+        AccessRole::Orga => ("clipboard", "warning"),
+        AccessRole::Admin => ("gear-fill", "warning"),
+        AccessRole::SharableViewLink => ("share", "info"),
     };
     askama::filters::Safe(format!(
         "<span class=\"text-{}\"><i class=\"bi bi-{}\"></i> {}</span>",
-        color, icon, name
+        color,
+        icon,
+        role.name()
     ))
 }

@@ -1,19 +1,21 @@
 use crate::data_store::auth_token::{AccessRole, Privilege};
-use crate::data_store::models::NewPassphrase;
+use crate::data_store::models::{NewPassphrase, Passphrase};
 use crate::data_store::{EventId, StoreError};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
+use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{
     FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
 };
 use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, InputConfiguration, SelectEntry, SelectTemplate,
 };
+use crate::web::ui::util::{format_access_role, format_passphrase};
 use crate::web::ui::{util, validation};
-use crate::web::AppState;
-use actix_web::web::{Form, Html};
+use crate::web::{time_calculation, AppState};
+use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
 use serde::Deserialize;
@@ -114,11 +116,66 @@ pub async fn new_passphrase(
         &tmpl,
         "Die Passphrase",
         req.url_for("new_passphrase_form", &[event_id.to_string()])?,
-        "edit_room_form",
+        "new_passphrase_form",
         true,
         req.url_for("manage_passphrases", &[event_id.to_string()])?,
         &req,
     )
+}
+
+#[post("/{event_id}/config/passphrases/{passphrase_id}/new_sharable_link_passphrase")]
+pub async fn new_derivable_sharable_link_passphrase(
+    path: web::Path<(EventId, i32)>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let (event_id, parent_passphrase_id) = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManagePassphrases, event_id)?;
+    let store = state.store.clone();
+    let (event, passphrases, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManagePassphrases)?;
+        Ok((
+            store.get_extended_event(&auth, event_id)?,
+            store.get_passphrases(&auth, event_id)?,
+            auth,
+        ))
+    })
+    .await??;
+
+    let _parent_passphrase = passphrases
+        .iter()
+        .filter(|p| p.id == parent_passphrase_id)
+        .next()
+        .ok_or(AppError::EntityNotFound)?;
+    let passphrase = NewPassphrase {
+        event_id,
+        passphrase: None,
+        privilege: AccessRole::SharableViewLink,
+        derivable_from_passphrase: Some(parent_passphrase_id),
+    };
+
+    web::block(move || -> Result<_, StoreError> {
+        let mut store = state.store.get_facade()?;
+        store.create_passphrase(&auth, passphrase)?;
+        Ok(())
+    })
+    .await??;
+
+    let notification = FlashMessage {
+        flash_type: FlashType::Success,
+        message: "Die ableitbare Rolle wurde erstellt.".to_string(),
+        keep_open: false,
+        button: None,
+    };
+    req.add_flash_message(notification);
+    Ok(Redirect::to(
+        req.url_for("manage_passphrases", &[event_id.to_string()])?
+            .to_string(),
+    )
+    .see_other())
 }
 
 #[derive(Debug)]

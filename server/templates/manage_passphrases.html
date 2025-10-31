@@ -28,7 +28,12 @@
                             {% if passphrase.privilege.can_be_managed_online() %}
                                 <a href="#" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
                             {% endif %}
-                            <a href="#" class="btn btn-sm btn-outline-success" title="Ableitbare Rolle hinzufügen"><i class="bi bi-plus-circle"></i></a>
+                            <form class="d-inline-block" method="post"
+                                    action="{{ base.request.url_for("new_derivable_sharable_link_passphrase", [&event_id.to_string(), &passphrase.id.to_string()])? }}">
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Ableitbare Rolle für Link-Abruf hinzufügen">
+                                    <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% for passphrase in derivable_passphrases %}

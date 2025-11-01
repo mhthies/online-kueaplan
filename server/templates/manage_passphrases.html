@@ -28,12 +28,14 @@
                             {% if passphrase.privilege.can_be_managed_online() %}
                                 <a href="{{ base.request.url_for("delete_passphrase_form", [&event_id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
                             {% endif %}
-                            <form class="d-inline-block" method="post"
-                                    action="{{ base.request.url_for("new_derivable_sharable_link_passphrase", [&event_id.to_string(), &passphrase.id.to_string()])? }}">
-                                <button type="submit" class="btn btn-sm btn-success" title="Ableitbare Rolle für Abruf per Link hinzufügen">
-                                    <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
-                                </button>
-                            </form>
+                            {% if passphrase.passphrase.is_some() %}
+                                <form class="d-inline-block" method="post"
+                                        action="{{ base.request.url_for("new_derivable_sharable_link_passphrase", [&event_id.to_string(), &passphrase.id.to_string()])? }}">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Ableitbare Rolle für Abruf per Link hinzufügen">
+                                        <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% for passphrase in derivable_passphrases %}
@@ -45,7 +47,7 @@
                             <td>{{self::format_passphrase(passphrase.passphrase)}}</td>
                             <td class="shrink-to-content">
                                 {% if passphrase.privilege.can_be_managed_online() %}
-                                <a href="{{ base.request.url_for("delete_passphrase_form", [&event_id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
+                                    <a href="{{ base.request.url_for("delete_passphrase_form", [&event_id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
                                 {% endif %}
                             </td>
                         </tr>

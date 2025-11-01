@@ -1,5 +1,5 @@
 use crate::auth_session::SessionToken;
-use crate::data_store::auth_token::Privilege;
+use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::data_store::models::{AnnouncementType, Event, EventClockInfo, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::get_effective_date;
@@ -374,4 +374,27 @@ pub fn mark_first_row_of_next_calendar_date_per_effective_date(
             found_first_row_of_current_date = true;
         }
     }
+}
+
+/// Format an obfuscated passphrase (see [crate::data_store::postgres::obfuscate_passphrase]) for
+/// displaying on Passphrase management sites.
+pub fn format_passphrase(passphrase: &Option<String>) -> String {
+    passphrase.as_deref().unwrap_or("").replace("\x7f", "*")
+}
+
+/// Generate HTML code for a colorful representation of an [AccessRole] on Passphrase management
+/// sites
+pub fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
+    let (icon, color) = match role {
+        AccessRole::User => ("person-fill", "primary"),
+        AccessRole::Orga => ("clipboard", "warning"),
+        AccessRole::Admin => ("gear-fill", "warning"),
+        AccessRole::SharableViewLink => ("share", "info"),
+    };
+    askama::filters::Safe(format!(
+        "<span class=\"text-{}\"><i class=\"bi bi-{}\"></i> {}</span>",
+        color,
+        icon,
+        role.name()
+    ))
 }

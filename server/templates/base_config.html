@@ -42,12 +42,12 @@
                                     "Bekanntmachungen",
                                     crate::data_store::auth_token::Privilege::ManageAnnouncements,
                                     crate::web::ui::base_template::ConfigNavButton::Announcements) %}
-                    {#
-                    {% call navlink("#",
+                    {% call navlink(base.url_for_event_endpoint("manage_passphrases")?,
                                     "key",
                                     "Passphrasen",
                                     crate::data_store::auth_token::Privilege::ManagePassphrases,
                                     crate::web::ui::base_template::ConfigNavButton::Passphrases) %}
+                    {#
                     {% call navlink("#",
                                     "file-earmark-fill",
                                     "Druckvorlagen",

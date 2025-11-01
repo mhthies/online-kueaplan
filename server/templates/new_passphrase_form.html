@@ -1,0 +1,27 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+<h1>
+    {{ base.page_title }}
+</h1>
+
+<form method="post" action="{{post_url()?}}" id="new_passphrase_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+    <div class="mb-3">
+        {{ FormFieldTemplate::new(form_data.passphrase, "passphrase", "Passphrase", InputConfiguration::default())|safe }}
+    </div>
+    <div class="mb-3">
+        {{ SelectTemplate::new(form_data.access_role, "access_role", &Self::role_entries(), "Rolle/Berechtigungen", InputConfiguration::default())|safe }}
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Erstellen</button>&ensp;
+    <a href="{{ base.url_for_event_endpoint("manage_passphrases")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script>
+    protectChanges(document.getElementById("new_passphrase_form"));
+</script>
+{% endblock %}

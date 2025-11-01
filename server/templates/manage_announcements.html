@@ -14,7 +14,7 @@
                     <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Datum</th>
                     <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Kategorie</th>
                     <th><i class="bi bi-eye" aria-label="Ansicht"></i> nach Ort</th>
-                    <th></th>
+                    <th><span class="visually-hidden">Aktionen</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -67,7 +67,7 @@
                                 {% endfor %}
                             {% endif %}
                         </td>
-                        <td class="text-nowrap">
+                        <td class="shrink-to-content">
                             <a href="{{ base.request.url_for("edit_announcement_form", [&event_id.to_string(), &announcement.announcement.id.to_string()])? }}"
                                class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil" aria-label="Bearbeiten"></i>

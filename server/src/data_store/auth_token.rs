@@ -231,7 +231,7 @@ impl AccessRole {
             AccessRole::User => "User",
             AccessRole::Orga => "Orga",
             AccessRole::Admin => "Admin",
-            AccessRole::SharableViewLink => "Teilbarer Link",
+            AccessRole::SharableViewLink => "Abruf per Link",
         }
     }
 

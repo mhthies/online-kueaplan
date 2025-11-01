@@ -26,7 +26,10 @@
     {% if is_new_category %}
         {{ HiddenInputTemplate::new(form_data.category_id, "category_id")?|safe }}
     {% endif %}
-    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save" aria-hidden="true"></i>
+        {% if is_new_category %}Erstellen{% else %}Speichern{% endif %}
+    </button>&ensp;
     <a href="{{ base.url_for_event_endpoint("manage_categories")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
         <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
     </a>

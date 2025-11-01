@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry,
-    PreviousDate, Room,
+    Category, Entry, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate,
+    NewEntry, PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{
@@ -70,6 +70,7 @@ async fn edit_entry_form(
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
         is_new_entry: false,
+        cloned_from_entry_id: None,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -164,6 +165,7 @@ async fn edit_entry(
         entry_id: Some(&entry_id),
         has_unsaved_changes: true,
         is_new_entry: false,
+        cloned_from_entry_id: None,
     };
 
     util::create_edit_form_response(
@@ -195,28 +197,37 @@ async fn new_entry_form(
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
     let date = query_data.date;
+    let clone_from = query_data.clone_from;
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
     let store = state.store.clone();
-    let (event, rooms, categories, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageEntries)?;
-        Ok((
-            store.get_extended_event(&auth, event_id)?,
-            store.get_rooms(&auth, event_id)?,
-            store.get_categories(&auth, event_id)?,
-            auth,
-        ))
-    })
-    .await??;
+    let (event, rooms, categories, cloned_entry, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            auth.check_privilege(event_id, Privilege::ManageEntries)?;
+            Ok((
+                store.get_extended_event(&auth, event_id)?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_categories(&auth, event_id)?,
+                clone_from
+                    .map(|cloned_entry_id| store.get_entry(&auth, cloned_entry_id))
+                    .transpose()?,
+                auth,
+            ))
+        })
+        .await??;
 
     let entry_id = Uuid::now_v7();
     let entry_date = date.unwrap_or_else(|| most_reasonable_date(&event));
-    let category_id = categories.first().ok_or(AppError::InternalError(
-        "Event does not have a single category".to_owned(),
-    ))?;
-    let form_data = EntryFormData::for_new_entry(entry_id, entry_date, category_id.id);
+    let form_data = if let Some(cloned_entry) = cloned_entry {
+        EntryFormData::for_cloned_entry(cloned_entry, entry_id, &event.clock_info)
+    } else {
+        let category_id = categories.first().ok_or(AppError::InternalError(
+            "Event does not have a single category".to_owned(),
+        ))?;
+        EntryFormData::for_new_entry(entry_id, entry_date, category_id.id)
+    };
 
     let tmpl = EditEntryFormTemplate {
         base: BaseTemplateContext {
@@ -234,6 +245,7 @@ async fn new_entry_form(
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
         is_new_entry: true,
+        cloned_from_entry_id: clone_from,
     };
 
     Ok(Html::new(tmpl.render()?))
@@ -308,6 +320,7 @@ async fn new_entry(
         entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
         is_new_entry: true,
+        cloned_from_entry_id: query_data.clone_from,
     };
 
     util::create_edit_form_response(
@@ -333,6 +346,8 @@ pub struct NewEntryQueryParams {
     /// When given, used to pre-fill the date field of the new entry and to navigate back to this
     /// date when aborting.
     pub date: Option<chrono::NaiveDate>,
+    /// When given, used to prefill the form with all data from this exiting entry
+    pub clone_from: Option<EntryId>,
 }
 
 #[derive(Template)]
@@ -346,6 +361,7 @@ struct EditEntryFormTemplate<'a> {
     entry_id: Option<&'a EntryId>,
     has_unsaved_changes: bool,
     is_new_entry: bool,
+    cloned_from_entry_id: Option<EntryId>,
 }
 
 impl<'a> EditEntryFormTemplate<'a> {
@@ -357,6 +373,7 @@ impl<'a> EditEntryFormTemplate<'a> {
                 .url_for("new_entry", &[self.event.basic_data.id.to_string()])?;
             url.set_query(Some(&serde_urlencoded::to_string(NewEntryQueryParams {
                 date: self.base.current_date,
+                clone_from: self.cloned_from_entry_id,
             })?));
             Ok(url)
         } else {
@@ -471,6 +488,17 @@ impl EntryFormData {
             day: validation::IsoDate(date).into(),
             category: validation::UuidFromList(category_id).into(),
             ..Self::default()
+        }
+    }
+
+    fn for_cloned_entry(
+        cloned_entry: FullEntry,
+        new_entry_id: EntryId,
+        event_clock_info: &EventClockInfo,
+    ) -> Self {
+        Self {
+            entry_id: new_entry_id.into(),
+            ..Self::from_full_entry(cloned_entry, event_clock_info)
         }
     }
 

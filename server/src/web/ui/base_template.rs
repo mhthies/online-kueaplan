@@ -102,6 +102,7 @@ impl<'a> BaseTemplateContext<'a> {
         url.set_query(Some(&serde_urlencoded::to_string(
             crate::web::ui::endpoints::edit_entry::NewEntryQueryParams {
                 date: self.current_date,
+                clone_from: None,
             },
         )?));
         Ok(url.to_string())

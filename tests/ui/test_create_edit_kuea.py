@@ -1,7 +1,16 @@
 import re
 from playwright.sync_api import Page, expect
 
-from . import actions
+from . import actions, helpers
+from .data import CATEGORY_SPORT, ROOM_SPORTPLAETZE, ENTRY_BEACH_VOLLEYBALL, ENTRY_SONNENAUFGANG_WANDERUNG
+
+
+def test_create_sample_data(page: Page, reset_database: None):
+    actions.login(page, 1, "orga")
+    actions.add_category(page, CATEGORY_SPORT)
+    actions.add_room(page, ROOM_SPORTPLAETZE)
+    actions.add_entry(page, ENTRY_BEACH_VOLLEYBALL)
+    actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
 
 
 def test_create_entry(page: Page, reset_database: None):
@@ -40,7 +49,7 @@ def test_create_entry(page: Page, reset_database: None):
 def test_create_entry_prefilled_date(page: Page, reset_database: None):
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("button", name="Mo 06.01.").click()  # open date dropdown
+    page.get_by_role("button", name="Datum").click()  # open date dropdown
     page.get_by_role("link", name="Do 02.01.").click()
     expect(page).to_have_title(re.compile(r"02\.01\."))
 
@@ -129,3 +138,23 @@ def test_create_entry_end_time_info_indicator(page: Page, reset_database: None):
     expect(end_time_indicator).to_have_text("Ende: ???")
 
 # TODO test parallel entries
+
+
+def test_clone_entry(page: Page, reset_database: None):
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
+    row.get_by_title("bearbeiten").click()
+    page.get_by_role("link", name="Duplizieren").click()
+    expect(page).to_have_title(re.compile("Neuer Eintrag"))
+    expect(page.get_by_role("textbox", name="Titel")).to_have_value("Sonnenaufgang-Wanderung")
+    expect(page.get_by_role("combobox", name="Tag")).to_have_value("2025-01-05")
+    page.get_by_role("combobox", name="Tag").select_option(value="2025-01-04")
+    page.get_by_role("button", name="Erstellen").click()
+    expect(page.get_by_role("alert").filter(has_text="Erfolg")).to_be_visible()
+
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="05.01.").click()
+    # Due to the carryover to the next day of the entry, crossing the day boundary, we should see both duplicates of the
+    #   entry on the 4th of January.
+    expect(page.get_by_role("cell").filter(has_text="Sonnenaufgang-Wanderung")).to_have_count(2)

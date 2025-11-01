@@ -18,7 +18,7 @@
     {% endblock %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
+<nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary" aria-label="Haupt-Navigation">
     <div class="container">
         <div class="navbar-brand" href="#">
             <img height="24" width="24" class="d-inline-block align-text-top me-2" alt="Logo" src="{{ base.url_for_static("touch-icon.png")? }}">
@@ -31,7 +31,7 @@
                     <li class="nav-item dropdown">
                         {% let date_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByDate) %}
                         <a class="nav-link {% if date_active %}active{% endif %} dropdown-toggle"
-                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Datum">
                             {% if let Some(date) = base.current_date %}
                                 {{ crate::web::ui::util::weekday_short(date) }} {{ date.format("%d.%m.") }}
                             {% else %}
@@ -57,9 +57,9 @@
                 <div class="collapse navbar-collapse justify-content-end" id="navbarToggler">
                     <ul class="navbar-nav me-auto">
                         {% let categories_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByCategory) %}
-                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("categories_list")? }}" class="nav-link {% if categories_active %}active{% endif %}" {% if categories_active %}aria-current="page"{% endif %}><i class="bi bi-grid"></i> Kategorien</a></li>
+                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("categories_list")? }}" class="nav-link {% if categories_active %}active{% endif %}" {% if categories_active %}aria-current="page"{% endif %}><i class="bi bi-grid" aria-hidden="true"></i> Kategorien</a></li>
                         {% let rooms_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::ByRoom) %}
-                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("rooms_list")? }}" class="nav-link {% if rooms_active %}active{% endif %}" {% if rooms_active %}aria-current="page"{% endif %}><i class="bi bi-geo-alt-fill"></i> Orte</a></li>
+                        <li class="nav-item"><a href="{{ base.url_for_event_endpoint("rooms_list")? }}" class="nav-link {% if rooms_active %}active{% endif %}" {% if rooms_active %}aria-current="page"{% endif %}><i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Orte</a></li>
                     </ul>
 
                     {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)

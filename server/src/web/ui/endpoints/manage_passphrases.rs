@@ -41,16 +41,20 @@ async fn manage_passphrases(
         .map(|p| (p, Vec::new()))
         .collect();
     sorted_passphrases.sort_by_key(|p| (p.0.privilege, p.0.id));
+    let mut unsorted_passphrases = Vec::new();
     for passphrase in passphrases.iter() {
         if let Some(parent_passphrase_id) = passphrase.derivable_from_passphrase {
-            let (_, ref mut parent_passphrase_children) = sorted_passphrases
+            match sorted_passphrases
                 .iter_mut()
                 .find(|(parent_passphrase, _)| parent_passphrase.id == parent_passphrase_id)
-                .ok_or(AppError::InternalError(format!(
-                    "Parent passphrase {} pass passphrase {} could not befound.",
-                    parent_passphrase_id, passphrase.id
-                )))?;
-            parent_passphrase_children.push(passphrase);
+            {
+                Some((_, ref mut parent_passphrase_children)) => {
+                    parent_passphrase_children.push(passphrase);
+                }
+                None => {
+                    unsorted_passphrases.push(passphrase);
+                }
+            }
         }
     }
 
@@ -68,6 +72,7 @@ async fn manage_passphrases(
         },
         event_id,
         sorted_passphrases: &sorted_passphrases,
+        unsorted_passphrases: &unsorted_passphrases,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -79,4 +84,5 @@ struct ManagePassphrasesTemplate<'a> {
     base_config: BaseConfigTemplateContext,
     event_id: EventId,
     sorted_passphrases: &'a PassphrasesWithDerivables<'a>,
+    unsorted_passphrases: &'a Vec<&'a Passphrase>,
 }

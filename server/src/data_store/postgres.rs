@@ -963,17 +963,25 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         // correctness of event_id is checked in DELETE statement below
         auth_token.check_privilege(the_event_id, Privilege::ManagePassphrases)?;
 
-        let affected_rows = diesel::delete(event_passphrases)
-            .filter(id.eq(passphrase_id))
-            .filter(event_id.eq(the_event_id))
-            // Admin passphrases cannot be deleted via the web UI and API
-            .filter(privilege.eq_any(AccessRole::all().filter(|x| x.can_be_managed_online())))
-            .execute(&mut self.connection)?;
-        if affected_rows > 0 {
-            Ok(())
-        } else {
-            Err(StoreError::NotExisting)
-        }
+        self.connection.transaction(|connection| {
+            diesel::update(event_passphrases)
+                .filter(event_id.eq(the_event_id))
+                .filter(derivable_from_passphrase.eq(passphrase_id))
+                .set(derivable_from_passphrase.eq(None::<i32>))
+                .execute(connection)?;
+
+            let affected_rows = diesel::delete(event_passphrases)
+                .filter(id.eq(passphrase_id))
+                .filter(event_id.eq(the_event_id))
+                // Admin passphrases cannot be deleted via the web UI and API
+                .filter(privilege.eq_any(AccessRole::all().filter(|x| x.can_be_managed_online())))
+                .execute(connection)?;
+            if affected_rows > 0 {
+                Ok(())
+            } else {
+                Err(StoreError::NotExisting)
+            }
+        })
     }
 
     fn get_passphrases(

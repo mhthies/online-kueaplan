@@ -4,7 +4,7 @@
     {% if base.has_privilege(*privilege) %}
         <li class="nav-item">
             <a class="nav-link {% if base_config.active_nav_button == index%}active{% endif %}" {% if base_config.active_nav_button == index%}aria-current="page"{% endif %} href="{{ url }}">
-                <i class="bi bi-{{icon}}"></i> {{label}}
+                <i class="bi bi-{{icon}}" aria-hidden="true"></i> {{label}}
             </a>
         </li>
     {% endif %}
@@ -15,7 +15,7 @@
 <div class="container mt-3" id="main">
     <div class="row">
         <div class="col-lg-3 mb-3 mb-lg-0">
-            <nav>
+            <nav aria-label="Konfigurationsbereich-Navigation">
                 <ul class="nav nav-pills flex-row flex-lg-column">
                     {% call navlink(base.url_for_event_endpoint("config_index")?,
                                     "gear",

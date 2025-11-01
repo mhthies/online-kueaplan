@@ -40,7 +40,7 @@ def test_create_entry(page: Page, reset_database: None):
 def test_create_entry_prefilled_date(page: Page, reset_database: None):
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("button", name="Mo 06.01.").click()  # open date dropdown
+    page.get_by_role("button", name="Datum").click()  # open date dropdown
     page.get_by_role("link", name="Do 02.01.").click()
     expect(page).to_have_title(re.compile(r"02\.01\."))
 

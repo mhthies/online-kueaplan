@@ -1,9 +1,9 @@
 use crate::cli::CliAuthTokenKey;
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
-use crate::data_store::models::{FullNewEntry, NewCategory, NewRoom};
+use crate::data_store::models;
 use crate::data_store::{get_store_from_env, KuaPlanStore};
-use kueaplan_api_types::{Category, Entry, ExtendedEvent, Room};
+use kueaplan_api_types::{Announcement, Category, Entry, ExtendedEvent, Room};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
@@ -15,6 +15,8 @@ struct SavedEvent {
     entries: Vec<Entry>,
     rooms: Vec<Room>,
     categories: Vec<Category>,
+    #[serde(default)]
+    announcements: Vec<Announcement>,
 }
 
 pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
@@ -36,17 +38,26 @@ pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
 
     let auth_token = AuthToken::create_for_cli(event_id, &auth_key);
     for room in data.rooms {
-        data_store.create_or_update_room(&auth_token, NewRoom::from_api(room, event_id))?;
+        data_store.create_or_update_room(&auth_token, models::NewRoom::from_api(room, event_id))?;
     }
     for category in data.categories {
-        data_store
-            .create_or_update_category(&auth_token, NewCategory::from_api(category, event_id))?;
+        data_store.create_or_update_category(
+            &auth_token,
+            models::NewCategory::from_api(category, event_id),
+        )?;
     }
     for entry in data.entries {
         data_store.create_or_update_entry(
             &auth_token,
-            FullNewEntry::from_api(entry, event_id),
+            models::FullNewEntry::from_api(entry, event_id),
             false,
+            None,
+        )?;
+    }
+    for announcement in data.announcements {
+        data_store.create_or_update_announcement(
+            &auth_token,
+            models::FullNewAnnouncement::from_api(announcement, event_id),
             None,
         )?;
     }

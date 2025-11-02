@@ -2,3 +2,4 @@
 /pytest.ini
 /.venv/
 /__api_client/
+/test-results

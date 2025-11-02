@@ -39,6 +39,9 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::LoadData { path } => {
             kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
+        Command::ExportEvent { event_id, path } => {
+            kueaplan_server::cli::file_io::export_event_to_file(event_id, &path)?;
+        }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
             kueaplan_server::web::serve()?;
@@ -63,8 +66,15 @@ pub struct CliArgs {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Load data from JSON file
+    /// Load event data (except for passphrases) from JSON file
     LoadData {
+        /// The path of the JSON file to read from
+        path: PathBuf,
+    },
+    /// Export full event (except for passphrases) to JSON file
+    ExportEvent {
+        /// The id of the event to be exported
+        event_id: i32,
         /// The path of the JSON file to read from
         path: PathBuf,
     },

@@ -105,7 +105,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     fn create_event(
         &mut self,
         auth_token: &GlobalAuthToken,
-        event: models::NewEvent,
+        event: models::ExtendedEvent,
     ) -> Result<i32, StoreError> {
         use schema::events::dsl::*;
         auth_token.check_privilege(Privilege::CreateEvents)?;

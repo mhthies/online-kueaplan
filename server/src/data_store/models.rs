@@ -13,6 +13,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct Event {
+    #[diesel(skip_update, skip_insertion)]
     pub id: i32,
     pub title: String,
     pub begin_date: NaiveDate,
@@ -44,24 +45,6 @@ impl From<Event> for kueaplan_api_types::Event {
     }
 }
 
-#[derive(Insertable)]
-#[diesel(table_name=super::schema::events)]
-pub struct NewEvent {
-    pub title: String,
-    pub begin_date: NaiveDate,
-    pub end_date: NaiveDate,
-}
-
-impl From<kueaplan_api_types::Event> for NewEvent {
-    fn from(value: kueaplan_api_types::Event) -> Self {
-        Self {
-            title: value.title,
-            begin_date: value.begin_date,
-            end_date: value.end_date,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct ExtendedEvent {
@@ -81,7 +64,10 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
         Ok(Self {
             basic_data: value.basic_data.into(),
             clock_info: EventClockInfo {
-                timezone: value.timezone.parse().map_err(|e| format!("{}", e))?,
+                timezone: value
+                    .timezone
+                    .parse()
+                    .map_err(|e| format!("Could not parse event's timezone: {}", e))?,
                 effective_begin_of_day: value.effective_begin_of_day,
             },
             default_time_schedule: value.default_time_schedule.into(),

@@ -7,7 +7,7 @@ pub struct CliAuthTokenKey {
 
 impl CliAuthTokenKey {
     #[allow(clippy::new_without_default)] // We always want to explicitly create these objects
-    pub fn new() -> Self {
+    pub(in crate::cli) fn new() -> Self {
         Self { _private: () }
     }
 }

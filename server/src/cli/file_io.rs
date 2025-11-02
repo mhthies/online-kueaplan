@@ -3,7 +3,7 @@ use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
 use crate::data_store::models::{FullNewEntry, NewCategory, NewRoom};
 use crate::data_store::{get_store_from_env, KuaPlanStore};
-use kueaplan_api_types::{Category, Entry, Event, Room};
+use kueaplan_api_types::{Category, Entry, ExtendedEvent, Room};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 struct SavedEvent {
-    event: Event,
+    event: ExtendedEvent,
     entries: Vec<Entry>,
     rooms: Vec<Room>,
     categories: Vec<Category>,
@@ -29,7 +29,10 @@ pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
 
     let auth_key = CliAuthTokenKey::new();
     let admin_auth_token = GlobalAuthToken::create_for_cli(&auth_key);
-    let event_id = data_store.create_event(&admin_auth_token, data.event.into())?;
+    let event_id = data_store.create_event(
+        &admin_auth_token,
+        data.event.try_into().map_err(|e| CliError::DataError(e))?,
+    )?;
 
     let auth_token = AuthToken::create_for_cli(event_id, &auth_key);
     for room in data.rooms {

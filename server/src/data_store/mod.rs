@@ -61,7 +61,7 @@ pub trait KueaPlanStoreFacade {
     fn create_event(
         &mut self,
         auth_token: &GlobalAuthToken,
-        event: models::NewEvent,
+        event: models::ExtendedEvent,
     ) -> Result<EventId, StoreError>;
     fn update_event(
         &mut self,

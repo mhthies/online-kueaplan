@@ -49,6 +49,9 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         }) => {
             kueaplan_server::cli::file_io::export_event_to_file(event_id_or_slug, &path)?;
         }
+        Command::Event(EventCommand::Create) => {
+            kueaplan_server::cli::manage_events::create_event()?;
+        }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
             kueaplan_server::web::serve()?;
@@ -98,6 +101,8 @@ enum EventCommand {
         /// The path of the JSON file to read from
         path: PathBuf,
     },
+    /// Create a new event. Basic event data is queried interactively in the terminal.
+    Create,
 }
 
 #[derive(Debug, Args)]

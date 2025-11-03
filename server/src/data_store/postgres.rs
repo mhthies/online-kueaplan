@@ -63,6 +63,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         events
             .filter(event_filter_to_sql(filter))
+            .order_by((begin_date, end_date, id))
             .select(models::Event::as_select())
             .load::<models::Event>(&mut self.connection)
             .map_err(|e| e.into())

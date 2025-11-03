@@ -36,6 +36,9 @@ fn main() {
 
 fn run_main_command(command: Command) -> Result<(), CliError> {
     match command {
+        Command::Event(EventCommand::List) => {
+            kueaplan_server::cli::manage_events::print_event_list()?;
+        }
         Command::Event(EventCommand::Import { path }) => {
             kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
@@ -77,6 +80,8 @@ enum Command {
 
 #[derive(Debug, Subcommand)]
 enum EventCommand {
+    /// List all events in the database
+    List,
     /// Load event data (except for passphrases) from JSON file
     Import {
         /// The path of the JSON file to read from

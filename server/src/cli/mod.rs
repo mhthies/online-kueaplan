@@ -1,5 +1,6 @@
 pub mod database_migration;
 pub mod file_io;
+pub mod manage_events;
 
 pub struct CliAuthTokenKey {
     _private: (),

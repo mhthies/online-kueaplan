@@ -36,10 +36,10 @@ fn main() {
 
 fn run_main_command(command: Command) -> Result<(), CliError> {
     match command {
-        Command::LoadData { path } => {
+        Command::Event(EventCommand::Import { path }) => {
             kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
-        Command::ExportEvent { event_id, path } => {
+        Command::Event(EventCommand::Export { event_id, path }) => {
             kueaplan_server::cli::file_io::export_event_to_file(event_id, &path)?;
         }
         Command::Serve => {
@@ -53,7 +53,7 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
     Ok(())
 }
 
-/// Here's my app!
+/// Online KüA-Plan HTTP server and commandline management tool
 #[derive(Debug, Parser)]
 #[clap(name = "my-app", version)]
 pub struct CliArgs {
@@ -66,22 +66,29 @@ pub struct CliArgs {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    MigrateDatabase,
+    /// Serve the KüA-Plan web application
+    Serve,
+    /// Collection of sub commands for managing Events
+    /// Execute all pending database migrations to run this version of the kueaplan
+    #[clap(subcommand)]
+    Event(EventCommand),
+}
+
+#[derive(Debug, Subcommand)]
+enum EventCommand {
     /// Load event data (except for passphrases) from JSON file
-    LoadData {
+    Import {
         /// The path of the JSON file to read from
         path: PathBuf,
     },
     /// Export full event (except for passphrases) to JSON file
-    ExportEvent {
+    Export {
         /// The id of the event to be exported
         event_id: i32,
         /// The path of the JSON file to read from
         path: PathBuf,
     },
-    /// Execute all pending database migrations to run this version of the kueaplan
-    MigrateDatabase,
-    /// Serve the KüA-Plan web application
-    Serve,
 }
 
 #[derive(Debug, Args)]

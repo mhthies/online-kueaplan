@@ -1,6 +1,7 @@
 use clap::ArgAction;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
+use kueaplan_server::cli::EventIdOrSlug;
 use kueaplan_server::cli_error::CliError;
 use log::{error, info, warn};
 use std::path::PathBuf;
@@ -42,8 +43,11 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Event(EventCommand::Import { path }) => {
             kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
-        Command::Event(EventCommand::Export { event_id, path }) => {
-            kueaplan_server::cli::file_io::export_event_to_file(event_id, &path)?;
+        Command::Event(EventCommand::Export {
+            event_id_or_slug,
+            path,
+        }) => {
+            kueaplan_server::cli::file_io::export_event_to_file(event_id_or_slug, &path)?;
         }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
@@ -89,8 +93,8 @@ enum EventCommand {
     },
     /// Export full event (except for passphrases) to JSON file
     Export {
-        /// The id of the event to be exported
-        event_id: i32,
+        /// The id or slug of the event to be exported
+        event_id_or_slug: EventIdOrSlug,
         /// The path of the JSON file to read from
         path: PathBuf,
     },

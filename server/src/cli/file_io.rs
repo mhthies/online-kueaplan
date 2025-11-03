@@ -1,4 +1,4 @@
-use crate::cli::CliAuthTokenKey;
+use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
 use crate::data_store::models;
@@ -65,9 +65,20 @@ pub fn load_event_from_file(path: &PathBuf) -> Result<(), CliError> {
     Ok(())
 }
 
-pub fn export_event_to_file(event_id: EventId, path: &PathBuf) -> Result<(), CliError> {
+pub fn export_event_to_file(
+    event_id_or_slug: EventIdOrSlug,
+    path: &PathBuf,
+) -> Result<(), CliError> {
     let data_store_pool = get_store_from_env()?;
     let mut data_store = data_store_pool.get_facade()?;
+
+    let event_id = match event_id_or_slug {
+        EventIdOrSlug::Id(event_id) => event_id,
+        EventIdOrSlug::Slug(event_slug) => {
+            let basic_event = data_store.get_event_by_slug(&event_slug)?;
+            basic_event.id
+        }
+    };
 
     let auth_key = CliAuthTokenKey::new();
     let auth_token = AuthToken::create_for_cli(event_id, &auth_key);

@@ -48,3 +48,37 @@ where
         }
     }
 }
+
+/// Ask the user interactively for a boolean value in the terminal (entered as y/n). In case of an
+/// error, the error is printed and the user is queried again and again with same prompt until the
+/// entered value is parsed successfully.
+pub fn query_user_bool(prompt: &str, default: Option<bool>) -> bool {
+    let value_help = match default {
+        Some(true) => "Y/n",
+        Some(false) => "y/N",
+        None => "y/n",
+    };
+    loop {
+        println!("{} [{}]", prompt, value_help);
+        print!("> ");
+        std::io::stdout().flush().unwrap();
+        let mut user_input = String::new();
+        match std::io::stdin().read_line(&mut user_input) {
+            Err(e) => {
+                println!("Error: {}", e);
+                continue;
+            }
+            _ => {}
+        }
+        match user_input.trim().to_lowercase().as_str() {
+            "y" => return true,
+            "n" => return false,
+            "" => match default {
+                None => {}
+                Some(default) => return default,
+            },
+            _ => {}
+        }
+        println!("Error: unknown option. Please enter 'y' or 'n'.");
+    }
+}

@@ -1,10 +1,11 @@
-use crate::cli::util::{query_user, query_user_and_check};
+use crate::cli::util::{query_user, query_user_and_check, query_user_bool};
 use crate::cli::CliAuthTokenKey;
 use crate::cli_error::CliError;
-use crate::data_store::auth_token::GlobalAuthToken;
+use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken};
 use crate::data_store::get_store_from_env;
 use crate::data_store::models::{
     Event, EventClockInfo, EventDayScheduleSection, EventDayTimeSchedule, ExtendedEvent,
+    NewPassphrase,
 };
 use crate::data_store::{EventFilter, KuaPlanStore};
 
@@ -87,7 +88,23 @@ pub fn create_event() -> Result<(), CliError> {
     };
 
     let event_id = data_store.create_event(&auth, event)?;
-    println!("New event '{}' created with id {}", title, event_id);
+    println!("\nNew event '{}' created with id {}\n", title, event_id);
+
+    let create_passphrase = query_user_bool("Create admin passphrase?", Some(true));
+    if create_passphrase {
+        let auth_token = AuthToken::create_for_cli(event_id, &auth_key);
+        let passphrase: String = query_user("Enter admin passphrase");
+        data_store.create_passphrase(
+            &auth_token,
+            NewPassphrase {
+                event_id,
+                privilege: AccessRole::Admin,
+                passphrase: Some(passphrase),
+                derivable_from_passphrase: None,
+            },
+        )?;
+        println!("New event has been created successfully.");
+    }
 
     Ok(())
 }

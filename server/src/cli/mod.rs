@@ -1,6 +1,7 @@
 pub mod database_migration;
 pub mod file_io;
 pub mod manage_events;
+pub mod manage_passphrases;
 mod util;
 
 pub struct CliAuthTokenKey {

@@ -52,6 +52,9 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Event(EventCommand::Create) => {
             kueaplan_server::cli::manage_events::create_event()?;
         }
+        Command::Passphrase(PassphraseCommand::List { event_id_or_slug }) => {
+            kueaplan_server::cli::manage_passphrases::print_passphrase_list(event_id_or_slug)?;
+        }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
             kueaplan_server::web::serve()?;
@@ -76,13 +79,16 @@ pub struct CliArgs {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Execute all pending database migrations to run this version of the kueaplan
     MigrateDatabase,
     /// Serve the KüA-Plan web application
     Serve,
     /// Collection of sub commands for managing Events
-    /// Execute all pending database migrations to run this version of the kueaplan
     #[clap(subcommand)]
     Event(EventCommand),
+    /// Collection of sub commands for managing Passphrases of events
+    #[clap(subcommand)]
+    Passphrase(PassphraseCommand),
 }
 
 #[derive(Debug, Subcommand)]
@@ -103,6 +109,20 @@ enum EventCommand {
     },
     /// Create a new event. Basic event data is queried interactively in the terminal.
     Create,
+}
+
+#[derive(Debug, Subcommand)]
+enum PassphraseCommand {
+    /// List all passphrases of the given event (by event id or event slug)
+    List {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+    },
+    // /// Create a new passphrase for the given event (by event id or event slug)
+    // Create {
+    //     /// The id or slug of the event
+    //     event_id_or_slug: EventIdOrSlug,
+    // },
 }
 
 #[derive(Debug, Args)]

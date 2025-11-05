@@ -109,6 +109,8 @@ impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
     }
 }
 
+impl<T: FormValueRepresentation> askama::filters::HtmlSafe for FormFieldTemplate<'_, T> {}
+
 #[derive(Template)]
 #[template(path = "sub_templates/form_inputs/hidden_input.html")]
 pub struct HiddenInputTemplate<'a, T: FormValueRepresentation> {
@@ -132,6 +134,8 @@ impl<'a, T: FormValueRepresentation> HiddenInputTemplate<'a, T> {
         Ok(Self { name, data })
     }
 }
+
+impl<T: FormValueRepresentation> askama::filters::HtmlSafe for HiddenInputTemplate<'_, T> {}
 
 #[derive(Serialize)]
 pub struct SelectEntry<'a> {
@@ -167,6 +171,8 @@ impl<'a, T: FormValueRepresentation> SelectTemplate<'a, T> {
     }
 }
 
+impl<T: FormValueRepresentation> askama::filters::HtmlSafe for SelectTemplate<'_, T> {}
+
 #[derive(Template)]
 #[template(path = "sub_templates/form_inputs/checkbox.html")]
 pub struct CheckboxTemplate<'a> {
@@ -191,3 +197,5 @@ impl<'a> CheckboxTemplate<'a> {
         }
     }
 }
+
+impl askama::filters::HtmlSafe for CheckboxTemplate<'_> {}

@@ -7,7 +7,7 @@
 
 <form method="post" action="{{post_url()?}}" id="edit_room_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.title, "title", "Name des Orts", InputConfiguration::builder().size(InputSize::Large).build())|safe }}
+        {{ FormFieldTemplate::new(form_data.title, "title", "Name des Orts", InputConfiguration::builder().size(InputSize::Large).build()) }}
     </div>
     <div class="mb-3">
         {{ FormFieldTemplate::new(
@@ -17,10 +17,10 @@
             InputConfiguration::builder()
                 .input_type(InputType::Textarea)
                 .info("Unterstützt Markdown")
-                .build())|safe }}
+                .build()) }}
     </div>
     {% if is_new_room %}
-        {{ HiddenInputTemplate::new(form_data.room_id, "room_id")?|safe }}
+        {{ HiddenInputTemplate::new(form_data.room_id, "room_id")? }}
     {% endif %}
     <button type="submit" class="btn btn-primary">
         <i class="bi bi-save" aria-hidden="true"></i>

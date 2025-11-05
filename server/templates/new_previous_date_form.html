@@ -58,22 +58,22 @@
           {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
         <div class="row g-3 mb-3">
             <div class="col-sm-4 col-md-2">
-                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build())|safe }}
+                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build()) }}
             </div>
             <div class="col-6 col-sm-4 col-md-2">
-                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build())|safe }}
+                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build()) }}
             </div>
             <div class="col-6 col-sm-4 col-md-2">
-                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build())|safe }}
+                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build()) }}
             </div>
             <div class="col-md-6">
-                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default())|safe }}
+                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default()) }}
             </div>
         </div>
         <div class="mb-3">
-            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar zur Verschiebung", InputConfiguration::default())|safe }}
+            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar zur Verschiebung", InputConfiguration::default()) }}
         </div>
-        {{ HiddenInputTemplate::new(form_data.previous_date_id, "previous_date_id")?|safe }}
+        {{ HiddenInputTemplate::new(form_data.previous_date_id, "previous_date_id")? }}
         <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
         <a href="{{ base.request.url_for("previous_dates_overview", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}" class="btn btn-outline-secondary allow-exit-with-changes">
             <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen

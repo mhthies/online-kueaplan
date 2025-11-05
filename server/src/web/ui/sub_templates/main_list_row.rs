@@ -173,6 +173,8 @@ impl<'a> MainListRowTemplate<'a> {
     }
 }
 
+impl askama::filters::HtmlSafe for MainListRowTemplate<'_> {}
+
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum MainEntryLinkMode {
     None,

@@ -1,14 +1,14 @@
 <label for="{{name}}Select" class="form-label">{{label}}</label>
-{% if config.suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
-<select class="form-select {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
+{% if suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
+<select class="form-select {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
         id="{{name}}Select" name="{{name}}">
 {% for entry in entries %}
     <option value="{{entry.value}}"{% if entry.value == data.string_value() %}selected{% endif %}>{{entry.text}}</option>
 {% endfor %}
 </select>
-{% if let Some(suffix) = config.suffix_text %}
+{% if let Some(suffix) = suffix_text %}
     <span class="input-group-text">{{ suffix }}</span>
     </div>
 {% endif %}
 {%- import "_utils.html" as utils %}
-{% call utils::info_and_errors(config.info, data.errors()) %}
+{% call utils::info_and_errors(info, data.errors()) %}

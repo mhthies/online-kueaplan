@@ -46,6 +46,8 @@ impl<'a> EditEntryNavbar<'a> {
     }
 }
 
+impl askama::filters::HtmlSafe for EditEntryNavbar<'_> {}
+
 #[derive(PartialEq)]
 pub enum EditEntryNavbarActiveLink {
     EditEntry,

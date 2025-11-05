@@ -65,11 +65,6 @@ impl<'a> MainListRowTemplate<'a> {
         entry_category: &'a Category,
         rooms: &'a RoomByIdWithOrder<'a>,
         clock_info: &'a EventClockInfo,
-        show_edit_links: bool,
-        show_description_links: bool,
-        date_context: Option<chrono::NaiveDate>,
-        room_context: Option<uuid::Uuid>,
-        main_entry_link_mode: MainEntryLinkMode,
     ) -> Self {
         assert_eq!(row.entry.entry.category, entry_category.id);
         Self {
@@ -78,12 +73,37 @@ impl<'a> MainListRowTemplate<'a> {
             category: entry_category,
             rooms,
             clock_info,
-            show_edit_links,
-            show_description_links,
-            date_context,
-            room_context,
-            main_entry_link_mode,
+            show_edit_links: false,
+            show_description_links: false,
+            date_context: None,
+            room_context: None,
+            main_entry_link_mode: MainEntryLinkMode::None,
         }
+    }
+
+    pub fn show_edit_links(mut self, show_links: bool) -> Self {
+        self.show_edit_links = show_links;
+        self
+    }
+
+    pub fn show_description_links(mut self, show_links: bool) -> Self {
+        self.show_description_links = show_links;
+        self
+    }
+
+    pub fn date_context(mut self, date: chrono::NaiveDate) -> Self {
+        self.date_context = Some(date);
+        self
+    }
+
+    pub fn room_context(mut self, room_id: uuid::Uuid) -> Self {
+        self.room_context = Some(room_id);
+        self
+    }
+
+    pub fn main_entry_link_mode(mut self, link_mode: MainEntryLinkMode) -> Self {
+        self.main_entry_link_mode = link_mode;
+        self
     }
 
     fn to_our_timezone(&self, timestamp: &chrono::DateTime<chrono::Utc>) -> chrono::NaiveDateTime {
@@ -172,6 +192,8 @@ impl<'a> MainListRowTemplate<'a> {
         }
     }
 }
+
+impl askama::filters::HtmlSafe for MainListRowTemplate<'_> {}
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum MainEntryLinkMode {

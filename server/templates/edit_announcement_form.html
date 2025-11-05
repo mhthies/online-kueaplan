@@ -15,37 +15,30 @@
 <form method="post" action="{{post_url()?}}" autocomplete="off"  id="edit_announcement_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="row g-3 mb-3">
         <div class="col-sm-6">
-            {{ SelectTemplate::new(form_data.announcement_type, "announcement_type", &Self::announcement_type_entries(), "Typ", InputConfiguration::default())|safe }}
+            {{ SelectTemplate::new(form_data.announcement_type, "announcement_type", &Self::announcement_type_entries(), "Typ") }}
         </div>
         <div class="col-sm-6">
-            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel", InputConfiguration::builder().input_type(InputType::Integer).build())|safe }}
+            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel").input_type(InputType::Integer) }}
         </div>
     </div>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(
-            form_data.text,
-            "text",
-            "Text",
-            InputConfiguration::builder()
-                .input_type(InputType::Textarea)
-                .info("Unterstützt Markdown")
-                .build())|safe }}
+        {{ FormFieldTemplate::new(form_data.text, "text", "Text")
+               .input_type(InputType::Textarea)
+               .info("Unterstützt Markdown")
+        }}
     </div>
     <div class="row mb-3 g-3">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    {{ CheckboxTemplate::new(form_data.show_with_days,
-                    "show_with_days",
-                    "Anzeigen im KüA-Plan nach Datum",
-                    None)|safe }}
+                    {{ CheckboxTemplate::new(form_data.show_with_days, "show_with_days", "Anzeigen im KüA-Plan nach Datum") }}
                 </div>
                 <div class="card-body row gy-3">
                     <div class="col-sm-6">
-                        {{ SelectTemplate::new(form_data.begin_date, "begin_date", &begin_date_entries(), "ab Datum", InputConfiguration::default())|safe }}
+                        {{ SelectTemplate::new(form_data.begin_date, "begin_date", &begin_date_entries(), "ab Datum") }}
                     </div>
                     <div class="col-sm-6">
-                        {{ SelectTemplate::new(form_data.end_date, "end_date", &end_date_entries(), "bis Datum", InputConfiguration::default())|safe }}
+                        {{ SelectTemplate::new(form_data.end_date, "end_date", &end_date_entries(), "bis Datum") }}
                     </div>
                 </div>
             </div>
@@ -54,31 +47,28 @@
             <div class="card">
                 <div class="card-header">
                     {{ CheckboxTemplate::new(form_data.show_with_categories,
-                    "show_with_categories",
-                    "Anzeigen im KüA-Plan nach Kategorie",
-                    None)|safe }}
+                                             "show_with_categories",
+                                             "Anzeigen im KüA-Plan nach Kategorie") }}
                 </div>
                 <div class="card-body">
-                    {{ FormFieldTemplate::new(form_data.categories, "categories", "Kategorien", InputConfiguration::builder().info("leer = alle Kategorien").build())|safe }}
+                    {{ FormFieldTemplate::new(form_data.categories, "categories", "Kategorien")
+                           .info("leer = alle Kategorien") }}
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    {{ CheckboxTemplate::new(form_data.show_with_rooms,
-                    "show_with_rooms",
-                    "Anzeigen im KüA-Plan nach Raum",
-                    None)|safe }}
+                    {{ CheckboxTemplate::new(form_data.show_with_rooms, "show_with_rooms", "Anzeigen im KüA-Plan nach Raum") }}
                 </div>
                 <div class="card-body">
-                    {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Räume", InputConfiguration::builder().info("leer = alle Räume").build())|safe }}
+                    {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Räume").info("leer = alle Räume") }}
                 </div>
             </div>
         </div>
     </div>
     {% if is_new_announcement %}
-        {{ HiddenInputTemplate::new(form_data.announcement_id, "announcement_id")?|safe }}
+        {{ HiddenInputTemplate::new(form_data.announcement_id, "announcement_id")? }}
     {% endif %}
     <button type="submit" class="btn btn-primary">
         <i class="bi bi-save" aria-hidden="true"></i>

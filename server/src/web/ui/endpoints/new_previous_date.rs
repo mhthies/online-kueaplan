@@ -11,11 +11,10 @@ use crate::web::ui::sub_templates::edit_entry_helpers::{
     EditEntryNavbar, EditEntryNavbarActiveLink,
 };
 use crate::web::ui::sub_templates::form_inputs::{
-    FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize, InputType, SelectEntry,
-    SelectTemplate,
+    FormFieldTemplate, HiddenInputTemplate, InputType, SelectEntry, SelectTemplate,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
+    styles_for_category, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
 use crate::web::ui::util::{event_days, weekday_short};
 use crate::web::ui::{util, validation};

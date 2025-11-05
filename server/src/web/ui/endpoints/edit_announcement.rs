@@ -12,8 +12,8 @@ use crate::web::ui::form_values::{
     _FormValidSimpleValidate,
 };
 use crate::web::ui::sub_templates::form_inputs::{
-    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputType,
-    SelectEntry, SelectTemplate,
+    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputType, SelectEntry,
+    SelectTemplate,
 };
 use crate::web::ui::util::{announcement_type_name, event_days};
 use crate::web::ui::{util, validation};

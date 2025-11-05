@@ -11,7 +11,7 @@
 {% block body %}
 <div class="container mt-3" id="main">
     {% for announcement in announcements %}
-        {{ AnnouncementTemplate::new(announcement.announcement)|safe }}
+        {{ AnnouncementTemplate::new(announcement.announcement) }}
     {% endfor %}
 
     <h1>
@@ -62,16 +62,11 @@
             <tbody>
                 {% for row in rows %}
                     {% let category = categories.get(row.entry.entry.category).ok_or("Category not found")? %}
-                    {{ MainListRowTemplate::new(base.request,
-                                                **row,
-                                                category,
-                                                rooms,
-                                                event.clock_info,
-                                                base.has_privilege(Privilege::ManageEntries),
-                                                true,
-                                                Some(*date),
-                                                None,
-                                                MainEntryLinkMode::ByDate)|safe }}
+                    {{ MainListRowTemplate::new(base.request, **row, category, rooms, event.clock_info)
+                           .show_edit_links(base.has_privilege(Privilege::ManageEntries))
+                           .show_description_links(true)
+                           .date_context(*date)
+                           .main_entry_link_mode(MainEntryLinkMode::ByDate) }}
                 {% endfor %}
             </tbody>
         </table>

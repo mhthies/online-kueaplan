@@ -16,6 +16,8 @@ impl<'a> AnnouncementTemplate<'a> {
     }
 }
 
+impl askama::filters::HtmlSafe for AnnouncementTemplate<'_> {}
+
 mod filters {
     pub use crate::web::ui::askama_filters::markdown;
 }

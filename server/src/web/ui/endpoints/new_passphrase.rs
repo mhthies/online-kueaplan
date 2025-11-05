@@ -9,9 +9,7 @@ use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{
     FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
 };
-use crate::web::ui::sub_templates::form_inputs::{
-    FormFieldTemplate, InputConfiguration, SelectEntry, SelectTemplate,
-};
+use crate::web::ui::sub_templates::form_inputs::{FormFieldTemplate, SelectEntry, SelectTemplate};
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};

@@ -55,6 +55,18 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Passphrase(PassphraseCommand::List { event_id_or_slug }) => {
             kueaplan_server::cli::manage_passphrases::print_passphrase_list(event_id_or_slug)?;
         }
+        Command::Passphrase(PassphraseCommand::Create { event_id_or_slug }) => {
+            kueaplan_server::cli::manage_passphrases::add_passphrase(event_id_or_slug)?;
+        }
+        Command::Passphrase(PassphraseCommand::Delete {
+            event_id_or_slug,
+            passphrase_id,
+        }) => {
+            kueaplan_server::cli::manage_passphrases::delete_passphrase(
+                event_id_or_slug,
+                passphrase_id,
+            )?;
+        }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
             kueaplan_server::web::serve()?;
@@ -118,11 +130,18 @@ enum PassphraseCommand {
         /// The id or slug of the event
         event_id_or_slug: EventIdOrSlug,
     },
-    // /// Create a new passphrase for the given event (by event id or event slug)
-    // Create {
-    //     /// The id or slug of the event
-    //     event_id_or_slug: EventIdOrSlug,
-    // },
+    /// Create a new passphrase for the given event (by event id or event slug)
+    Create {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+    },
+    /// Delete the passphrase with given id from the given event (by event id or event slug)
+    Delete {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+        /// The id of the passphrase to be deleted
+        passphrase_id: i32,
+    },
 }
 
 #[derive(Debug, Args)]

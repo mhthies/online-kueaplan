@@ -9,7 +9,7 @@
 {% block body %}
 <div class="container mt-3" id="main">
     {% for announcement in announcements %}
-        {{ AnnouncementTemplate::new(announcement.announcement)|safe }}
+        {{ AnnouncementTemplate::new(announcement.announcement) }}
     {% endfor %}
 
     <h1>

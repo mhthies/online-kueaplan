@@ -249,6 +249,18 @@ impl AccessRole {
             AccessRole::Admin | AccessRole::ServerAdmin => false,
         }
     }
+    /// If true, this role is a possible access role of a passphrase, which can be granted to web UI
+    /// users and API clients after authenticating with such a passphrase. Otherwise, the role can
+    /// only be used under special circumstances, e.g. from the command line interface.
+    pub fn can_be_granted_by_passphrase(&self) -> bool {
+        match self {
+            AccessRole::User
+            | AccessRole::Orga
+            | AccessRole::Admin
+            | AccessRole::SharableViewLink => true,
+            AccessRole::ServerAdmin => false,
+        }
+    }
 
     pub fn all() -> impl Iterator<Item = &'static AccessRole> {
         [

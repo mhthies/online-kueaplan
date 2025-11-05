@@ -896,6 +896,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         roles.sort_unstable();
         roles.dedup();
+        // special roles like [AccessRole::ServerAdmin] must never be given to web/API user
+        roles.retain(|role| role.can_be_granted_by_passphrase());
 
         Ok(AuthToken::create_for_session(the_event_id, roles))
     }
@@ -943,8 +945,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             || auth_token.has_privilege(passphrase.event_id, Privilege::ManageSecurePassphrases))
         {
             return Err(StoreError::InvalidInputData(format!(
-                "Cannot create a passphrase with access role {} via the web interface.",
-                passphrase.privilege.name()
+                "Cannot create a passphrase with access role {:?} via the web interface.",
+                passphrase.privilege
+            )));
+        }
+        if !passphrase.privilege.can_be_granted_by_passphrase() {
+            return Err(StoreError::InvalidInputData(format!(
+                "Cannot create a passphrase with special access role {:?}.",
+                passphrase.privilege
             )));
         }
 

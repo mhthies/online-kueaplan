@@ -45,16 +45,11 @@
             </thead>
             <tbody>
                 {% for row in rows %}
-                {{ MainListRowTemplate::new(base.request,
-                                            **row,
-                                            category,
-                                            rooms,
-                                            event.clock_info,
-                                            base.has_privilege(Privilege::ManageEntries),
-                                            true,
-                                            Some(**date),
-                                            None,
-                                            MainEntryLinkMode::ByCategory) }}
+                    {{ MainListRowTemplate::new(base.request, **row, category, rooms, event.clock_info)
+                           .show_edit_links(base.has_privilege(Privilege::ManageEntries))
+                           .show_description_links(true)
+                           .date_context(**date)
+                           .main_entry_link_mode(MainEntryLinkMode::ByCategory) }}
                 {% endfor %}
             </tbody>
         </table>

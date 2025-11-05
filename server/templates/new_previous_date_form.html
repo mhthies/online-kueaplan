@@ -32,18 +32,7 @@
         </tr>
         </thead>
         <tbody>
-        {{ MainListRowTemplate::new(
-               base.request,
-               &MainListRow::from_entry(entry),
-               entry_category,
-               rooms_by_id,
-               event.clock_info,
-               false,
-               false,
-               None,
-               None,
-               MainEntryLinkMode::None
-           ) }}
+            {{ MainListRowTemplate::new( base.request, &MainListRow::from_entry(entry), entry_category, rooms_by_id, event.clock_info) }}
         </tbody>
     </table>
 

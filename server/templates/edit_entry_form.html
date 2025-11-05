@@ -17,7 +17,7 @@
                entry_id.expect("For non-new entries, `entry_id` should always be known."),
                base.current_date.expect("For non-new entries, `entry_id` should always be known."),
                sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::EditEntry,
-           )|safe }}
+           ) }}
     {% endif %}
 
     {# Firefox auto-fills the form inputs with previously entered values when navigating back. It doesn't do this for

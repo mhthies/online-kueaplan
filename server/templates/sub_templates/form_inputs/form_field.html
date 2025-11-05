@@ -1,17 +1,17 @@
 <label for="{{name}}Input" class="form-label">{{label}}</label>
-{% match config.input_type %}
+{% match input_type %}
 {% when InputType::Textarea %}
     <textarea class="form-control" id="{{name}}Input" name="{{name}}" rows="8">{{data.string_value()}}</textarea>
 {% else %}
-    {% if config.suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
-    <input type="{{ config.input_type.as_html_type_attr() }}"
-           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match config.size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%} {% if config.input_type == InputType::Color %}form-control-color{% endif %}"
+    {% if suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
+    <input type="{{ input_type.as_html_type_attr() }}"
+           class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%} {% if input_type == InputType::Color %}form-control-color{% endif %}"
            id="{{name}}Input" name="{{name}}"
            value="{{data.string_value()}}">
-    {% if let Some(suffix) = config.suffix_text %}
+    {% if let Some(suffix) = suffix_text %}
         <span class="input-group-text">{{ suffix }}</span>
         </div>
     {% endif %}
 {% endmatch %}
 {%- import "_utils.html" as utils %}
-{% call utils::info_and_errors(config.info, data.errors()) %}
+{% call utils::info_and_errors(info, data.errors()) %}

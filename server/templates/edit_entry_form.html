@@ -26,29 +26,33 @@
     <form method="post" action="{{post_url()?}}" autocomplete="off" id="edit_entry_form"
           {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.title, "title", "Titel", InputConfiguration::builder().size(InputSize::Large).build()) }}
+        {{ FormFieldTemplate::new(form_data.title, "title", "Titel").size(InputSize::Large) }}
     </div>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar / Kurze Beschreibung", InputConfiguration::builder().size(InputSize::Small).info("wird unter dem Titel angezeigt").build()) }}
+        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar / Kurze Beschreibung")
+               .size(InputSize::Small)
+               .info("wird unter dem Titel angezeigt") }}
     </div>
     <div class="mb-3">
-        {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus", None) }}
+        {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus") }}
     </div>
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="mb-3">
-                {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem? / Ansprechpersonen", InputConfiguration::default()) }}
+                {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem? / Ansprechpersonen") }}
             </div>
             <div>
-                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie", InputConfiguration::builder().size(InputSize::Normal).build()) }}
+                {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie") }}
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker", Some("d.h. keine öffentliche KüA")) }}
+                {{ CheckboxTemplate::new(form_data.is_room_reservation, "is_room_reservation", "ist ein Raum-Blocker")
+                       .info("d.h. keine öffentliche KüA") }}
             </div>
             <div>
-                {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot", Some("Du sollst keine anderen KüAs neben mir haben.")) }}
+                {{ CheckboxTemplate::new(form_data.is_exclusive, "is_exclusive", "ist exklusiver Zeitslot")
+                       .info("Du sollst keine anderen KüAs neben mir haben.") }}
             </div>
         </div>
     </div>
@@ -56,23 +60,28 @@
         <div class="col-md-6">
             <div class="row g-3 mb-3">
                 <div class="col-sm-4">
-                    {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build()) }}
+                    {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag") }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build()) }}
+                    {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn")
+                           .input_type(InputType::Time) }}
                 </div>
                 <div class="col-6 col-sm-4">
-                    {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build()) }}
+                    {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer")
+                           .suffix_text("h") }}
                 </div>
             </div>
             <div class="mb-3">
-                {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit", InputConfiguration::builder().size(InputSize::Small).build()) }}
+                {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit")
+                       .size(InputSize::Small) }}
             </div>
             <div class="mb-3">
-                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default()) }}
+                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte") }}
             </div>
             <div>
-                {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort", InputConfiguration::builder().size(InputSize::Small).info("z.B. Treffpunkt").build()) }}
+                {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort")
+                       .size(InputSize::Small)
+                       .info("z.B. Treffpunkt") }}
             </div>
         </div>
         <div class="col-md-6">
@@ -97,25 +106,23 @@
         </div>
     </div>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(
-            form_data.description,
-            "description",
-            "Ausführliche Beschreibung",
-            InputConfiguration::builder()
+        {{ FormFieldTemplate::new(form_data.description, "description", "Ausführliche Beschreibung")
                 .input_type(InputType::Textarea)
                 .info("Unterstützt Markdown")
-                .build()) }}
+        }}
     </div>
     {% if !is_new_entry %}
         <div class="card mb-3">
             <div class="card-header">
                 {{ CheckboxTemplate::new(form_data.create_previous_date,
-                "create_previous_date",
-                "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen",
-                Some("Nur wirksam, wenn Zeit oder Orte geändert werden.")) }}
+                                         "create_previous_date",
+                                         "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen")
+                       .info("Nur wirksam, wenn Zeit oder Orte geändert werden.")
+                }}
             </div>
             <div class="card-body">
-                {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung", InputConfiguration::builder().size(InputSize::Small).build()) }}
+                {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung")
+                       .size(InputSize::Small) }}
             </div>
         </div>
         {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")? }}

@@ -7,7 +7,7 @@ use crate::web::ui::base_template::{
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
 use crate::web::ui::sub_templates::form_inputs::{
-    FormFieldTemplate, HiddenInputTemplate, InputConfiguration, InputSize, InputType,
+    FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
 };
 use crate::web::ui::{util, validation};
 use crate::web::AppState;

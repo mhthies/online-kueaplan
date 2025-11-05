@@ -33,79 +33,49 @@ impl InputType {
     }
 }
 
-pub struct InputConfiguration<'a> {
-    size: InputSize,
-    input_type: InputType,
-    suffix_text: Option<&'a str>,
-    info: Option<&'a str>,
-}
-
-impl Default for InputConfiguration<'_> {
-    fn default() -> Self {
-        Self {
-            size: InputSize::Normal,
-            input_type: InputType::Text,
-            suffix_text: None,
-            info: None,
-        }
-    }
-}
-
-impl<'a> InputConfiguration<'a> {
-    pub fn builder() -> InputConfigurationBuilder<'a> {
-        InputConfigurationBuilder::default()
-    }
-}
-
-#[derive(Default)]
-pub struct InputConfigurationBuilder<'a> {
-    value: InputConfiguration<'a>,
-}
-
-impl<'a> InputConfigurationBuilder<'a> {
-    pub fn size(mut self, size: InputSize) -> Self {
-        self.value.size = size;
-        self
-    }
-    pub fn input_type(mut self, input_type: InputType) -> Self {
-        self.value.input_type = input_type;
-        self
-    }
-    pub fn info<'b: 'a>(mut self, info: &'b str) -> Self {
-        self.value.info = Some(info);
-        self
-    }
-    pub fn suffix_text(mut self, suffix_text: &'a str) -> Self {
-        self.value.suffix_text = Some(suffix_text);
-        self
-    }
-    pub fn build(self) -> InputConfiguration<'a> {
-        self.value
-    }
-}
-
 #[derive(Template)]
 #[template(path = "sub_templates/form_inputs/form_field.html")]
 pub struct FormFieldTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     label: &'a str,
-    config: InputConfiguration<'a>,
+    size: InputSize,
+    input_type: InputType,
+    suffix_text: Option<&'a str>,
+    info: Option<&'a str>,
     data: &'a FormValue<T>,
 }
 
 impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
-    pub fn new(
-        data: &'a FormValue<T>,
-        name: &'a str,
-        label: &'a str,
-        config: InputConfiguration<'a>,
-    ) -> Self {
+    pub fn new(data: &'a FormValue<T>, name: &'a str, label: &'a str) -> Self {
         Self {
             name,
             label,
-            config,
+            size: InputSize::Normal,
+            input_type: InputType::Text,
+            suffix_text: None,
+            info: None,
             data,
         }
+    }
+
+    pub fn size(mut self, size: InputSize) -> Self {
+        self.size = size;
+        self
+    }
+
+    pub fn input_type(mut self, input_type: InputType) -> Self {
+        self.input_type = input_type;
+        self
+    }
+
+    pub fn suffix_text(mut self, suffix_text: &'a str) -> Self {
+        self.suffix_text = Some(suffix_text);
+        self
+    }
+
+    pub fn info(mut self, info: &'a str) -> Self {
+        self.info = Some(info);
+        self
     }
 }
 
@@ -149,7 +119,9 @@ pub struct SelectTemplate<'a, T: FormValueRepresentation> {
     name: &'a str,
     entries: &'a Vec<SelectEntry<'a>>,
     label: &'a str,
-    config: InputConfiguration<'a>,
+    size: InputSize,
+    suffix_text: Option<&'a str>,
+    info: Option<&'a str>,
     data: &'a FormValue<T>,
 }
 
@@ -159,15 +131,34 @@ impl<'a, T: FormValueRepresentation> SelectTemplate<'a, T> {
         name: &'a str,
         entries: &'a Vec<SelectEntry>,
         label: &'a str,
-        config: InputConfiguration<'a>,
     ) -> Self {
         Self {
             name,
             entries,
             label,
-            config,
+            size: InputSize::Normal,
+            suffix_text: None,
+            info: None,
             data,
         }
+    }
+
+    #[allow(dead_code)]
+    pub fn size(mut self, size: InputSize) -> Self {
+        self.size = size;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn suffix_text(mut self, suffix_text: &'a str) -> Self {
+        self.suffix_text = Some(suffix_text);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn info(mut self, info: &'a str) -> Self {
+        self.info = Some(info);
+        self
     }
 }
 
@@ -183,18 +174,18 @@ pub struct CheckboxTemplate<'a> {
 }
 
 impl<'a> CheckboxTemplate<'a> {
-    pub fn new(
-        data: &'a BoolFormValue,
-        name: &'a str,
-        label: &'a str,
-        info: Option<&'a str>,
-    ) -> Self {
+    pub fn new(data: &'a BoolFormValue, name: &'a str, label: &'a str) -> Self {
         Self {
             name,
             label,
-            info,
+            info: None,
             data,
         }
+    }
+
+    pub fn info(mut self, info: &'a str) -> Self {
+        self.info = Some(info);
+        self
     }
 }
 

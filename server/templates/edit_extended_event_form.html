@@ -12,34 +12,38 @@
 
 <form method="post" action="{{post_url()?}}" id="edit_extended_event_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.title, "title", "Name der Veranstaltung", InputConfiguration::default()) }}
+        {{ FormFieldTemplate::new(form_data.title, "title", "Name der Veranstaltung") }}
     </div>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.slug, "slug", "Kürzel der Veranstaltung", InputConfiguration::builder().info("Für Kurzlink").build()) }}
+        {{ FormFieldTemplate::new(form_data.slug, "slug", "Kürzel der Veranstaltung")
+               .info("Für Kurzlink") }}
     </div>
     <div class="row g-3 mb-3">
         <div class="col-6">
-            {{ FormFieldTemplate::new(form_data.begin_date, "begin_date", "Anfang", InputConfiguration::builder().input_type(InputType::Date).build()) }}
+            {{ FormFieldTemplate::new(form_data.begin_date, "begin_date", "Anfang")
+                   .input_type(InputType::Date) }}
         </div>
         <div class="col-6">
-            {{ FormFieldTemplate::new(form_data.end_date, "end_date", "Ende", InputConfiguration::builder().input_type(InputType::Date).build()) }}
+            {{ FormFieldTemplate::new(form_data.end_date, "end_date", "Ende")
+                   .input_type(InputType::Date) }}
         </div>
     </div>
     <div class="row g-3 mb-3">
         <div class="col-sm-6">
-            {{ FormFieldTemplate::new(form_data.timezone, "timezone", "Zeitzone", InputConfiguration::default()) }}
+            {{ FormFieldTemplate::new(form_data.timezone, "timezone", "Zeitzone") }}
         </div>
         <div class="col-sm-6">
-            {{ FormFieldTemplate::new(form_data.effective_begin_of_day, "effective_begin_of_day", "Tagesgrenze",
-                                      InputConfiguration::builder().input_type(InputType::Time).info("In lokaler Zeit gemäß eingesteller Zeitzone.").build()) }}
+            {{ FormFieldTemplate::new(form_data.effective_begin_of_day, "effective_begin_of_day", "Tagesgrenze")
+                   .input_type(InputType::Time)
+                   .info("In lokaler Zeit gemäß eingesteller Zeitzone.") }}
         </div>
     </div>
     <div class="row g-3 mb-4">
         <div class="col-sm-6">
-            {{ SelectTemplate::new(form_data.preceding_event_id, "preceding_event_id", &other_event_entries(), "Vorangehende Veranstaltung", InputConfiguration::default()) }}
+            {{ SelectTemplate::new(form_data.preceding_event_id, "preceding_event_id", &other_event_entries(), "Vorangehende Veranstaltung") }}
         </div>
         <div class="col-sm-6">
-            {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung", InputConfiguration::default()) }}
+            {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung") }}
         </div>
     </div>
     <div class="mb-3 card {% if form_data.default_time_schedule.has_errors() %}border-invalid{% endif %}">

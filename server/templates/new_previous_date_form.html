@@ -47,20 +47,20 @@
           {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
         <div class="row g-3 mb-3">
             <div class="col-sm-4 col-md-2">
-                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag", InputConfiguration::builder().size(InputSize::Normal).build()) }}
+                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag") }}
             </div>
             <div class="col-6 col-sm-4 col-md-2">
-                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn", InputConfiguration::builder().input_type(InputType::Time).build()) }}
+                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn").input_type(InputType::Time) }}
             </div>
             <div class="col-6 col-sm-4 col-md-2">
-                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer", InputConfiguration::builder().suffix_text("h").build()) }}
+                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer").suffix_text("h") }}
             </div>
             <div class="col-md-6">
-                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte", InputConfiguration::default()) }}
+                {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte") }}
             </div>
         </div>
         <div class="mb-3">
-            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar zur Verschiebung", InputConfiguration::default()) }}
+            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar zur Verschiebung") }}
         </div>
         {{ HiddenInputTemplate::new(form_data.previous_date_id, "previous_date_id")? }}
         <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;

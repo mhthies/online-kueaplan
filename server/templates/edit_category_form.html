@@ -7,21 +7,22 @@
 
 <form method="post" action="{{post_url()?}}" id="edit_category_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
     <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.title, "title", "Name der Kategorie", InputConfiguration::builder().size(InputSize::Large).build()) }}
+        {{ FormFieldTemplate::new(form_data.title, "title", "Name der Kategorie").size(InputSize::Large) }}
     </div>
     <div class="row g-3 mb-3">
         <div class="col-sm-6">
-            {{ FormFieldTemplate::new(form_data.icon, "icon", "Icon", InputConfiguration::default()) }}
+            {{ FormFieldTemplate::new(form_data.icon, "icon", "Icon") }}
         </div>
         <div class="col-sm-3 col-6">
-            {{ FormFieldTemplate::new(form_data.color, "color", "Farbe", InputConfiguration::builder().input_type(InputType::Color).build()) }}
+            {{ FormFieldTemplate::new(form_data.color, "color", "Farbe").input_type(InputType::Color) }}
         </div>
         <div class="col-sm-3 col-6">
-            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel", InputConfiguration::builder().input_type(InputType::Integer).build()) }}
+            {{ FormFieldTemplate::new(form_data.sort_key, "sort_key", "Sortier-Schlüssel").input_type(InputType::Integer) }}
         </div>
     </div>
     <div class="mb-3">
-        {{ CheckboxTemplate::new(form_data.is_official, "is_official", "ist offiziell", Some("KüAs aus dieser Kategorie werden fett dargestellt.")) }}
+        {{ CheckboxTemplate::new(form_data.is_official, "is_official", "ist offiziell")
+               .info("KüAs aus dieser Kategorie werden fett dargestellt.") }}
     </div>
     {% if is_new_category %}
         {{ HiddenInputTemplate::new(form_data.category_id, "category_id")? }}

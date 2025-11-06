@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 import secrets
+from typing import Optional
 
 import sys
 import types
@@ -21,32 +23,41 @@ def pytest_addoption(parser: pytest.Parser):
     )
 
 
-def _cargo_build_and_get_executable_path(working_directory: Path) -> str:
+def _cargo_build_and_get_executable_path(working_directory: Path) -> Optional[Path]:
     result = subprocess.run([shutil.which("cargo"), "build", "--message-format=json"], check=True,
                             cwd=working_directory, stdout=subprocess.PIPE)
     for line in result.stdout.decode(errors='replace').splitlines():
         data = json.loads(line)
         if data.get("reason") == "compiler-artifact" and data.get("executable"):
-            return data["executable"]
+            return Path(data["executable"])
+    logging.warning("Could not find kueaplan_server executable: compiler-artifact is missing in cargo's JSON output")
+    return None
 
 
-@pytest.fixture(scope="session", autouse=True)
-def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None):
-    if not request.config.getoption("--start-app"):
-        yield
-        return
+@pytest.fixture(scope="session")
+def kueaplan_server_executable() -> Optional[Path]:
     if shutil.which("cargo"):
-        executable_path = _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
+        return _cargo_build_and_get_executable_path(Path(__file__).parent.parent / "server")
     else:
         # best guess: Is already built and located at ../../target/debug/kueaplan_server
         path = (Path(__file__).parent.parent / "target" / "debug" / "kueaplan_server").resolve()
         if not path.is_file():
-            raise RuntimeError("Could not find pre-compiled kueaplan_server. Run without --start-app and execute the server manually.")
-        executable_path = str(path)
+            logging.warning("Could not find pre-compiled kueaplan_server at target/debug/kueaplan_server")
+            return None
+        return path
+
+
+@pytest.fixture(scope="session", autouse=True)
+def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]):
+    if not request.config.getoption("--start-app"):
+        yield
+        return
+    if kueaplan_server_executable is None:
+        raise RuntimeError("Could not find kueaplan_server executable. Run without --start-app and execute the server manually.")
 
     _restore_database_dump(os.environ["DATABASE_URL"], Path(__file__).parent / "database_dumps" / "minimal.sql")
 
-    cmd = [executable_path, "serve"]
+    cmd = [kueaplan_server_executable, "serve"]
     env = dict(os.environ)
     env["LISTEN_PORT"] = "9099"
     env["LISTEN_ADDRESS"] = "127.0.0.1"

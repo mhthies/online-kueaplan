@@ -63,6 +63,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         events
             .filter(event_filter_to_sql(filter))
+            .order_by((begin_date, end_date, id))
             .select(models::Event::as_select())
             .load::<models::Event>(&mut self.connection)
             .map_err(|e| e.into())
@@ -895,6 +896,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         roles.sort_unstable();
         roles.dedup();
+        // special roles like [AccessRole::ServerAdmin] must never be given to web/API user
+        roles.retain(|role| role.can_be_granted_by_passphrase());
 
         Ok(AuthToken::create_for_session(the_event_id, roles))
     }
@@ -938,10 +941,18 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         passphrase: models::NewPassphrase,
     ) -> Result<PassphraseId, StoreError> {
         auth_token.check_privilege(passphrase.event_id, Privilege::ManagePassphrases)?;
-        if !passphrase.privilege.can_be_managed_online() {
+        if !(passphrase.privilege.can_be_managed_online()
+            || auth_token.has_privilege(passphrase.event_id, Privilege::ManageSecurePassphrases))
+        {
             return Err(StoreError::InvalidInputData(format!(
-                "Cannot create a passphrase with access role {} via the web interface.",
-                passphrase.privilege.name()
+                "Cannot create a passphrase with access role {:?} via the web interface.",
+                passphrase.privilege
+            )));
+        }
+        if !passphrase.privilege.can_be_granted_by_passphrase() {
+            return Err(StoreError::InvalidInputData(format!(
+                "Cannot create a passphrase with special access role {:?}.",
+                passphrase.privilege
             )));
         }
 
@@ -974,7 +985,10 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(id.eq(passphrase_id))
                 .filter(event_id.eq(the_event_id))
                 // Admin passphrases cannot be deleted via the web UI and API
-                .filter(privilege.eq_any(AccessRole::all().filter(|x| x.can_be_managed_online())))
+                .filter(privilege.eq_any(AccessRole::all().filter(|x| {
+                    auth_token.has_privilege(the_event_id, Privilege::ManageSecurePassphrases)
+                        || x.can_be_managed_online()
+                })))
                 .execute(connection)?;
             if affected_rows > 0 {
                 Ok(())

@@ -414,7 +414,7 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 --
 
 COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id) FROM stdin;
-1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	\N	\N	\N
+1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	test	\N	\N
 \.
 
 

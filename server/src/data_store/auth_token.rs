@@ -46,7 +46,7 @@ impl AuthToken {
     pub fn create_for_cli(event_id: i32, _key: &CliAuthTokenKey) -> Self {
         AuthToken {
             event_id,
-            roles: vec![AccessRole::Admin],
+            roles: vec![AccessRole::Admin, AccessRole::ServerAdmin],
         }
     }
 
@@ -109,7 +109,7 @@ pub struct GlobalAuthToken {
 
 impl GlobalAuthToken {
     pub(crate) fn create_for_cli(_key: &CliAuthTokenKey) -> Self {
-        let roles = vec![AccessRole::Admin];
+        let roles = vec![AccessRole::Admin, AccessRole::ServerAdmin];
         GlobalAuthToken { roles }
     }
 
@@ -145,6 +145,7 @@ pub enum AccessRole {
     Orga = 2,
     Admin = 3,
     SharableViewLink = 4,
+    ServerAdmin = 5,
 }
 
 impl TryFrom<i32> for AccessRole {
@@ -204,7 +205,9 @@ impl From<AccessRole> for kueaplan_api_types::AuthorizationRole {
         match value {
             AccessRole::User => kueaplan_api_types::AuthorizationRole::Participant,
             AccessRole::Orga => kueaplan_api_types::AuthorizationRole::Orga,
-            AccessRole::Admin => kueaplan_api_types::AuthorizationRole::Admin,
+            AccessRole::Admin | AccessRole::ServerAdmin => {
+                kueaplan_api_types::AuthorizationRole::Admin
+            }
             AccessRole::SharableViewLink => {
                 kueaplan_api_types::AuthorizationRole::ParticipantSharable
             }
@@ -232,6 +235,7 @@ impl AccessRole {
             AccessRole::Orga => "Orga",
             AccessRole::Admin => "Admin",
             AccessRole::SharableViewLink => "Abruf per Link",
+            AccessRole::ServerAdmin => "Server-Admin",
         }
     }
 
@@ -242,12 +246,31 @@ impl AccessRole {
     pub fn can_be_managed_online(&self) -> bool {
         match self {
             AccessRole::User | AccessRole::Orga | AccessRole::SharableViewLink => true,
-            AccessRole::Admin => false,
+            AccessRole::Admin | AccessRole::ServerAdmin => false,
+        }
+    }
+    /// If true, this role is a possible access role of a passphrase, which can be granted to web UI
+    /// users and API clients after authenticating with such a passphrase. Otherwise, the role can
+    /// only be used under special circumstances, e.g. from the command line interface.
+    pub fn can_be_granted_by_passphrase(&self) -> bool {
+        match self {
+            AccessRole::User
+            | AccessRole::Orga
+            | AccessRole::Admin
+            | AccessRole::SharableViewLink => true,
+            AccessRole::ServerAdmin => false,
         }
     }
 
     pub fn all() -> impl Iterator<Item = &'static AccessRole> {
-        [Self::User, Self::Orga, Self::Admin, Self::SharableViewLink].iter()
+        [
+            Self::User,
+            Self::Orga,
+            Self::Admin,
+            Self::SharableViewLink,
+            Self::ServerAdmin,
+        ]
+        .iter()
     }
 }
 
@@ -263,6 +286,7 @@ pub enum Privilege {
     ManageRooms,
     EditEventDetails,
     ManagePassphrases,
+    ManageSecurePassphrases,
     CreateEvents,
     ManageAnnouncements,
     ShowKueaPlanViaLink,
@@ -289,7 +313,8 @@ impl Privilege {
             Privilege::ManageRooms => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::EditEventDetails => &[AccessRole::Admin],
             Privilege::ManagePassphrases => &[AccessRole::Admin],
-            Privilege::CreateEvents => &[AccessRole::Admin],
+            Privilege::ManageSecurePassphrases => &[AccessRole::ServerAdmin],
+            Privilege::CreateEvents => &[AccessRole::ServerAdmin],
             Privilege::ManageAnnouncements => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ShowKueaPlanViaLink => &[AccessRole::SharableViewLink],
         }

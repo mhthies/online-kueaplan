@@ -388,7 +388,7 @@ pub fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
     let (icon, color) = match role {
         AccessRole::User => ("person-fill", "primary"),
         AccessRole::Orga => ("clipboard", "warning"),
-        AccessRole::Admin => ("gear-fill", "warning"),
+        AccessRole::Admin | AccessRole::ServerAdmin => ("gear-fill", "warning"),
         AccessRole::SharableViewLink => ("share", "info"),
     };
     askama::filters::Safe(format!(

@@ -1,6 +1,7 @@
 use clap::ArgAction;
 use clap::{Args, Parser, Subcommand};
 use dotenvy::dotenv;
+use kueaplan_server::cli::EventIdOrSlug;
 use kueaplan_server::cli_error::CliError;
 use log::{error, info, warn};
 use std::path::PathBuf;
@@ -36,11 +37,35 @@ fn main() {
 
 fn run_main_command(command: Command) -> Result<(), CliError> {
     match command {
-        Command::LoadData { path } => {
+        Command::Event(EventCommand::List) => {
+            kueaplan_server::cli::manage_events::print_event_list()?;
+        }
+        Command::Event(EventCommand::Import { path }) => {
             kueaplan_server::cli::file_io::load_event_from_file(&path)?;
         }
-        Command::ExportEvent { event_id, path } => {
-            kueaplan_server::cli::file_io::export_event_to_file(event_id, &path)?;
+        Command::Event(EventCommand::Export {
+            event_id_or_slug,
+            path,
+        }) => {
+            kueaplan_server::cli::file_io::export_event_to_file(event_id_or_slug, &path)?;
+        }
+        Command::Event(EventCommand::Create) => {
+            kueaplan_server::cli::manage_events::create_event()?;
+        }
+        Command::Passphrase(PassphraseCommand::List { event_id_or_slug }) => {
+            kueaplan_server::cli::manage_passphrases::print_passphrase_list(event_id_or_slug)?;
+        }
+        Command::Passphrase(PassphraseCommand::Create { event_id_or_slug }) => {
+            kueaplan_server::cli::manage_passphrases::add_passphrase(event_id_or_slug)?;
+        }
+        Command::Passphrase(PassphraseCommand::Delete {
+            event_id_or_slug,
+            passphrase_id,
+        }) => {
+            kueaplan_server::cli::manage_passphrases::delete_passphrase(
+                event_id_or_slug,
+                passphrase_id,
+            )?;
         }
         Command::Serve => {
             kueaplan_server::cli::database_migration::check_migration_state()?;
@@ -53,7 +78,7 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
     Ok(())
 }
 
-/// Here's my app!
+/// Online KüA-Plan HTTP server and commandline management tool
 #[derive(Debug, Parser)]
 #[clap(name = "my-app", version)]
 pub struct CliArgs {
@@ -66,22 +91,57 @@ pub struct CliArgs {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Load event data (except for passphrases) from JSON file
-    LoadData {
-        /// The path of the JSON file to read from
-        path: PathBuf,
-    },
-    /// Export full event (except for passphrases) to JSON file
-    ExportEvent {
-        /// The id of the event to be exported
-        event_id: i32,
-        /// The path of the JSON file to read from
-        path: PathBuf,
-    },
     /// Execute all pending database migrations to run this version of the kueaplan
     MigrateDatabase,
     /// Serve the KüA-Plan web application
     Serve,
+    /// Collection of sub commands for managing Events
+    #[clap(subcommand)]
+    Event(EventCommand),
+    /// Collection of sub commands for managing Passphrases of events
+    #[clap(subcommand)]
+    Passphrase(PassphraseCommand),
+}
+
+#[derive(Debug, Subcommand)]
+enum EventCommand {
+    /// List all events in the database
+    List,
+    /// Load event data (except for passphrases) from JSON file
+    Import {
+        /// The path of the JSON file to read from
+        path: PathBuf,
+    },
+    /// Export full event (except for passphrases) to JSON file
+    Export {
+        /// The id or slug of the event to be exported
+        event_id_or_slug: EventIdOrSlug,
+        /// The path of the JSON file to read from
+        path: PathBuf,
+    },
+    /// Create a new event. Basic event data is queried interactively in the terminal.
+    Create,
+}
+
+#[derive(Debug, Subcommand)]
+enum PassphraseCommand {
+    /// List all passphrases of the given event (by event id or event slug)
+    List {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+    },
+    /// Create a new passphrase for the given event (by event id or event slug)
+    Create {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+    },
+    /// Delete the passphrase with given id from the given event (by event id or event slug)
+    Delete {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+        /// The id of the passphrase to be deleted
+        passphrase_id: i32,
+    },
 }
 
 #[derive(Debug, Args)]

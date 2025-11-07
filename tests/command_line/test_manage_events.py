@@ -13,7 +13,7 @@ from ..ui import actions
 def test_list_existing_event(kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
     result = subprocess.run([kueaplan_server_executable, "event", "list"], check=True, stdout=subprocess.PIPE)
     output = result.stdout.decode()
-    assert re.search(r"1\s*TestEvent\s*2025-01-01", output)
+    assert re.search(r"1\s*test\s*TestEvent\s*2025-01-01", output)
 
 
 def test_create_event(page: Page, kueaplan_server_executable: Optional[Path], reset_database: None) -> None:

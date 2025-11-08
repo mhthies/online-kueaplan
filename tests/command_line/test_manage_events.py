@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from . import util
 from ..ui import actions
@@ -80,3 +80,32 @@ def test_create_event_retry(kueaplan_server_executable_or_skip: Path) -> None:
         process.wait(1)
     finally:
         process.kill()
+
+
+def test_delete_event(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    # First create a new event to check that only one of them is deleted
+    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    try:
+        util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")
+        util.wait_for_prompt_and_type(process, "event slug", "pa25")
+        util.wait_for_prompt_and_type(process, "begin", "2025-06-06")
+        util.wait_for_prompt_and_type(process, "end", "2025-06-09")
+        util.wait_for_prompt_and_type(process, "admin passphrase", "n")
+        process.wait(1)
+    finally:
+        process.kill()
+
+    # Now, delete the `test` event
+    cmd = [kueaplan_server_executable_or_skip, "event", "delete", "test"]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    try:
+        util.wait_for_prompt_and_type(process, "enter the event's title", "TestEvent")
+        process.wait(1)
+    finally:
+        process.kill()
+
+    page.goto(f"http://localhost:9099/test")
+    expect(page.get_by_text("Not found")).to_be_visible()
+    page.goto(f"http://localhost:9099/pa25")
+    expect(page.get_by_text("Pfingsten25")).to_be_visible()

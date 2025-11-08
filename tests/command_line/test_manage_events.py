@@ -10,14 +10,14 @@ from . import util
 from ..ui import actions
 
 
-def test_list_existing_event(kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable, "event", "list"], check=True, stdout=subprocess.PIPE)
+def test_list_existing_event(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    result = subprocess.run([kueaplan_server_executable_or_skip, "event", "list"], check=True, stdout=subprocess.PIPE)
     output = result.stdout.decode()
     assert re.search(r"1\s*test\s*TestEvent\s*2025-01-01", output)
 
 
-def test_create_event(page: Page, kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    cmd = [kueaplan_server_executable, "event", "create"]
+def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")
@@ -47,8 +47,8 @@ def test_create_event(page: Page, kueaplan_server_executable: Optional[Path], re
     actions.login(page, event_id, "very-secret-passphrase")
 
 
-def test_create_event_abort(kueaplan_server_executable: Optional[Path]) -> None:
-    cmd = [kueaplan_server_executable, "event", "create"]
+def test_create_event_abort(kueaplan_server_executable_or_skip: Path) -> None:
+    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         output = util.wait_for_interactive_prompt(process.stdout)
@@ -60,8 +60,8 @@ def test_create_event_abort(kueaplan_server_executable: Optional[Path]) -> None:
         process.kill()
 
 
-def test_create_event_retry(kueaplan_server_executable: Optional[Path]) -> None:
-    cmd = [kueaplan_server_executable, "event", "create"]
+def test_create_event_retry(kueaplan_server_executable_or_skip: Path) -> None:
+    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")

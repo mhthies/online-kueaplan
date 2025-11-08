@@ -10,23 +10,23 @@ from . import util
 from ..ui import actions
 
 
-def test_list_existing_passphrases(kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable, "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE)
+def test_list_existing_passphrases(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    result = subprocess.run([kueaplan_server_executable_or_skip, "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE)
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
     assert re.search(r"\|\s*3\s*Admin\s*\*\*\*\*n", output)
     assert re.search(r"\|\s*4.*Link\s*1", output)
 
 
-def test_list_existing_passphrases_by_event_slug(kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable, "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE)
+def test_list_existing_passphrases_by_event_slug(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    result = subprocess.run([kueaplan_server_executable_or_skip, "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE)
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
     assert re.search(r"\|\s*3\s*Admin\s*\*\*\*\*n", output)
 
 
-def test_create_passphrase(page: Page, kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    cmd = [kueaplan_server_executable, "passphrase", "create", "test"]
+def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    cmd = [kueaplan_server_executable_or_skip, "passphrase", "create", "test"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         util.wait_for_prompt_and_type(process, "access role", "admin")
@@ -51,8 +51,8 @@ def test_create_passphrase(page: Page, kueaplan_server_executable: Optional[Path
     expect(page.get_by_role("textbox", name="iCal-Link")).to_be_visible()
 
 
-def test_delete_passphrase(page: Page, kueaplan_server_executable: Optional[Path], reset_database: None) -> None:
-    cmd = [kueaplan_server_executable, "passphrase", "delete", "test", "1"]
+def test_delete_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
+    cmd = [kueaplan_server_executable_or_skip, "passphrase", "delete", "test", "1"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         output = util.wait_for_interactive_prompt(process.stdout)

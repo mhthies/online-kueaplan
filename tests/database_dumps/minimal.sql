@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict ckPncSQ6HEZ2yuYGh5cv1gpbfbC4rqtD5BY5RksKqmCk54SONif02nm82wqmAld
+\restrict MMPCDctgiBePCV4mB7zREYnBrzvCMgCalRbtQ6X0kOxzQvJ9wiOZhs7SUp2aIfI
 
--- Dumped from database version 17.6
--- Dumped by pg_dump version 17.6
+-- Dumped from database version 18.0
+-- Dumped by pg_dump version 18.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -344,6 +344,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20250930103534	2025-10-03 10:43:38.47852
 20251014195940	2025-10-14 20:09:37.97214
 20251025113806	2025-10-25 14:32:23.185685
+20251108174050	2025-11-08 19:19:48.143637
 \.
 
 
@@ -666,7 +667,7 @@ ALTER TABLE ONLY public.announcement_rooms
 --
 
 ALTER TABLE ONLY public.announcements
-    ADD CONSTRAINT announcements_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
+    ADD CONSTRAINT announcements_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -674,7 +675,7 @@ ALTER TABLE ONLY public.announcements
 --
 
 ALTER TABLE ONLY public.categories
-    ADD CONSTRAINT categories_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
+    ADD CONSTRAINT categories_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -690,7 +691,7 @@ ALTER TABLE ONLY public.entries
 --
 
 ALTER TABLE ONLY public.entries
-    ADD CONSTRAINT entries_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
+    ADD CONSTRAINT entries_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -722,7 +723,7 @@ ALTER TABLE ONLY public.event_passphrases
 --
 
 ALTER TABLE ONLY public.event_passphrases
-    ADD CONSTRAINT event_passphrases_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
+    ADD CONSTRAINT event_passphrases_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -770,7 +771,7 @@ ALTER TABLE ONLY public.previous_dates
 --
 
 ALTER TABLE ONLY public.rooms
-    ADD CONSTRAINT rooms_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id);
+    ADD CONSTRAINT rooms_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
 
 
 --
@@ -785,5 +786,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ckPncSQ6HEZ2yuYGh5cv1gpbfbC4rqtD5BY5RksKqmCk54SONif02nm82wqmAld
+\unrestrict MMPCDctgiBePCV4mB7zREYnBrzvCMgCalRbtQ6X0kOxzQvJ9wiOZhs7SUp2aIfI
 

@@ -141,6 +141,22 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         }
     }
 
+    fn delete_event(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<(), StoreError> {
+        use schema::events::dsl::*;
+        auth_token.check_privilege(event_id, Privilege::DeleteEvents)?;
+        let rows = diesel::delete(events)
+            .filter(id.eq(event_id))
+            .execute(&mut self.connection)?;
+        if rows == 0 {
+            return Err(StoreError::NotExisting);
+        }
+        Ok(())
+    }
+
     fn get_entries_filtered(
         &mut self,
         auth_token: &AuthToken,

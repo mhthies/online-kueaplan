@@ -1,7 +1,7 @@
 #!/bin/env/python3
 import os
-import uuid
 import time
+import uuid
 
 import requests
 
@@ -18,16 +18,17 @@ def main():
 
     for room in rooms:
         room_id = uuidv7()
-        requests.put(f"{BASE_URL}/events/{event_id}/rooms/{room_id}",
-                     headers={
-                         "X-SESSION-TOKEN": auth_token,
-                     },
-                     json={
-                         "id": str(room_id),
-                         "title": room,
-                         "description": "",
-                     }) \
-            .raise_for_status()
+        requests.put(
+            f"{BASE_URL}/events/{event_id}/rooms/{room_id}",
+            headers={
+                "X-SESSION-TOKEN": auth_token,
+            },
+            json={
+                "id": str(room_id),
+                "title": room,
+                "description": "",
+            },
+        ).raise_for_status()
 
 
 BASE_URL = "https://kueaplan.de/api/v1"
@@ -68,8 +69,7 @@ YARD_ROOMS = [
 
 
 def uuidv7() -> uuid.UUID:
-    """
-    Generate a UUID v7.
+    """Generate a UUID v7.
 
     Polyfill, while waiting for official UUID v7 support in Python 3.14 (https://github.com/python/cpython/pull/121119).
     Source: https://github.com/python/cpython/pull/121119

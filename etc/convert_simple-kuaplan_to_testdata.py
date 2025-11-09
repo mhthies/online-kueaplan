@@ -7,10 +7,10 @@ import re
 import sys
 import uuid
 from pathlib import Path
-from typing import Optional, Any, Iterable, TypeAlias, Mapping
+from typing import Any, Iterable, Mapping, Optional, TypeAlias
 
-import yaml
 import pytz
+import yaml
 
 JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
@@ -25,7 +25,7 @@ def main() -> int:
         "entries": generate_json_entries(entries, room_map),
         "rooms": room_result,
         "categories": generate_json_categories(),
-        "event": generate_json_event(config)
+        "event": generate_json_event(config),
     }
     with OUTPUT_PATH.open("w") as f:
         json.dump(result, f, indent=2)
@@ -135,7 +135,7 @@ class KueaPlanEntry:
 
 
 def get_rooms(entry: KueaPlanEntry) -> list[str]:
-    return list(filter(lambda r: bool(r), re.split(r", | und | / ", entry.place.lstrip("Treffpunkt: "))))
+    return list(filter(lambda r: bool(r), re.split(r", | und | / ", entry.place.removeprefix("Treffpunkt: "))))
 
 
 def gather_rooms(entries: Iterable[KueaPlanEntry]) -> set[str]:
@@ -148,8 +148,9 @@ def gather_rooms(entries: Iterable[KueaPlanEntry]) -> set[str]:
 
 def generate_json_rooms(room_names: Iterable[str]) -> tuple[list[dict[str, JSON]], dict[str, uuid]]:
     room_id_mapping = {room_name: uuid.uuid4() for room_name in room_names}
-    json_output = [{"id": str(room_id), "title": room_name, "description": ""}
-                   for room_name, room_id in room_id_mapping.items()]
+    json_output = [
+        {"id": str(room_id), "title": room_name, "description": ""} for room_name, room_id in room_id_mapping.items()
+    ]
     return json_output, room_id_mapping
 
 
@@ -179,29 +180,32 @@ def generate_json_categories() -> list[dict[str, JSON]]:
     return list(CATEGORIES.values())
 
 
-def generate_json_entries(entries: Iterable[KueaPlanEntry], room_id_mapping: Mapping[str, uuid]) -> list[
-    dict[str, JSON]]:
+def generate_json_entries(
+    entries: Iterable[KueaPlanEntry], room_id_mapping: Mapping[str, uuid]
+) -> list[dict[str, JSON]]:
     result = []
     for entry in entries:
-        EST = pytz.timezone('Europe/Berlin')
+        EST = pytz.timezone("Europe/Berlin")
         begin = EST.localize(entry.begin)
         end = EST.localize(entry.end or entry.begin + datetime.timedelta(hours=1))
-        result.append({
-            "id": str(uuid.uuid4()),
-            "title": entry.title,
-            "comment": entry.comment or "",
-            "description": entry.description,
-            "begin": begin.isoformat(),
-            "end": end.isoformat(),
-            "timeComment": entry.time_comment or "",
-            "room": [str(room_id_mapping.get(room)) for room in get_rooms(entry) if room in room_id_mapping],
-            "roomComment": entry.place_comment or "",
-            "responsiblePerson": ",".join(entry.people),
-            "isRoomReservation": entry.kuea_type == KueaType.BLOCKER,
-            "isExclusive": entry.kuea_type == KueaType.PLENUM,
-            "isCancelled": entry.kuea_type == KueaType.CANCELLED,
-            "category": CATEGORIES.get(entry.kuea_type, CATEGORIES[KueaType.NORMAL])["id"],
-        })
+        result.append(
+            {
+                "id": str(uuid.uuid4()),
+                "title": entry.title,
+                "comment": entry.comment or "",
+                "description": entry.description,
+                "begin": begin.isoformat(),
+                "end": end.isoformat(),
+                "timeComment": entry.time_comment or "",
+                "room": [str(room_id_mapping.get(room)) for room in get_rooms(entry) if room in room_id_mapping],
+                "roomComment": entry.place_comment or "",
+                "responsiblePerson": ",".join(entry.people),
+                "isRoomReservation": entry.kuea_type == KueaType.BLOCKER,
+                "isExclusive": entry.kuea_type == KueaType.PLENUM,
+                "isCancelled": entry.kuea_type == KueaType.CANCELLED,
+                "category": CATEGORIES.get(entry.kuea_type, CATEGORIES[KueaType.NORMAL])["id"],
+            }
+        )
     return result
 
 
@@ -213,5 +217,6 @@ def generate_json_event(config: Any) -> JSON:
         "end_date": config["event"]["end"].isoformat(),
     }
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

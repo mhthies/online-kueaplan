@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import json
+import random
 import re
 import sys
-import random
 from typing import TypeAlias
 
 JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
@@ -41,8 +41,12 @@ def main():
         json.dump(data, f, indent=2)
 
 
-def anonymize_entry(entry: dict[str, JSON], replacement_map: dict[str, str], unchanged_names: set[str],
-                    changed_texts: list[tuple[str, str]]):
+def anonymize_entry(
+    entry: dict[str, JSON],
+    replacement_map: dict[str, str],
+    unchanged_names: set[str],
+    changed_texts: list[tuple[str, str]],
+):
     regex = re.compile("\\b(" + "|".join(replacement_map.keys()) + ")(s?)\\b")
     new_title = regex.sub(lambda m: replacement_map.get(m.group(1), ""), entry["title"])
     if new_title != entry["title"]:

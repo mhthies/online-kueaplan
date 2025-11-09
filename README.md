@@ -113,6 +113,28 @@ This command requires the configuration environment variables to be provided as 
 In particular, it uses the `DATABASE_URL` to select the Postgresql database to be migrated.
 
 
+### Event Administration
+
+Management of events is only possible via the command-line interface, not in the web UI or the REST API.
+This is also true for managing *admin* passphrases of an event, which are required to authenticated for changing an event's metadata and managing user/orga passphrases.
+
+For this purpose, the `kuealan_server` has the following additional command-line commands:
+
+| Command                                                               | Comment                                                 |
+|-----------------------------------------------------------------------|---------------------------------------------------------|
+| `kueplan_server event list`                                           |                                                         |
+| `kueplan_server event create`                                         | (interactive)                                           |
+| `kueplan_server event delete <EVENT_ID_OR_SLUG>`                      | (interactive)                                           |
+| `kueplan_server event import <PATH>`                                  | expects JSON format as exported by `event export` below |
+| `kueplan_server event export <EVENT_ID_OR_SLUG> <PATH>`               |                                                         |
+| `kueplan_server passphrase list <EVENT_ID_OR_SLUG>`                   |                                                         |
+| `kueplan_server passphrase create <EVENT_ID_OR_SLUG>`                 | (interactive)                                           |
+| `kueplan_server passphrase delete <EVENT_ID_OR_SLUG> <PASSPHRASE_ID>` | (interactive)                                           |
+
+All of these commands requires the configuration environment variables to be provided as environment or `.env` file (see above).
+In particular, they use the `DATABASE_URL` to select the Postgresql database to be migrated.
+
+
 ### Systemd Unit
 
 For production use, it is recommended to run the `kueaplan_server` as a systemd service.

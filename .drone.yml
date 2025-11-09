@@ -51,7 +51,7 @@ steps:
 
 services:
   - name: postgres
-    image: postgres:17-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: kueaplan

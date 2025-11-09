@@ -49,6 +49,18 @@ steps:
     depends_on:
       - clone
 
+  - name: python-fmt
+    image: python:3.13-slim-trixie
+    commands:
+      - pip install mypy ruff
+      - ruff check
+      - ruff format --check
+      - cd tests
+      - pip install -r requirements.txt
+      - mypy
+    depends_on:
+      - clone
+
 services:
   - name: postgres
     image: postgres:16-alpine

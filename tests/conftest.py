@@ -62,7 +62,7 @@ def kueaplan_server_executable_or_skip(kueaplan_server_executable: Optional[Path
 @pytest.fixture(scope="session", autouse=True)
 def start_kueaplan_server(
     request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]
-) -> Generator[None, None]:
+) -> Generator[None, None, None]:
     if not request.config.getoption("--start-app"):
         yield
         return

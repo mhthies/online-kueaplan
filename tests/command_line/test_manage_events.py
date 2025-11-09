@@ -1,3 +1,4 @@
+import datetime
 import re
 import subprocess
 import time
@@ -45,6 +46,9 @@ def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
         process.kill()
 
     actions.login(page, event_id, "very-secret-passphrase")
+    # After creating an event, we should be able to create an entry with the default category
+    actions.add_entry(page, actions.Entry("Test-Eintrag", datetime.date(2025, 6, 7), datetime.time(15, 0),
+                                          datetime.timedelta(minutes=90)))
 
 
 def test_create_event_abort(kueaplan_server_executable_or_skip: Path) -> None:

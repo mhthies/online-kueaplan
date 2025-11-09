@@ -6,7 +6,7 @@ from typing import Optional
 from playwright.sync_api import Page, expect
 
 
-def login(page: Page, event_id: int, passphrase: str):
+def login(page: Page, event_id: int, passphrase: str) -> None:
     page.goto(f"http://localhost:9099/ui/{event_id}")
     expect(page).to_have_title(re.compile("Login"))
     page.get_by_role("textbox", name="Passphrase").fill(passphrase)
@@ -34,7 +34,7 @@ class Entry:
     description: str = ""
 
 
-def add_entry(page: Page, entry: Entry):
+def add_entry(page: Page, entry: Entry) -> None:
     page.get_by_role("link", name="Eintrag hinzufügen").click()
     page.get_by_role("textbox", name="Titel").fill(entry.title)
     page.get_by_role("textbox", name="Kommentar / Kurze Beschreibung").fill(entry.comment)
@@ -68,7 +68,7 @@ class Room:
     description: str = ""
 
 
-def add_room(page: Page, room: Room):
+def add_room(page: Page, room: Room) -> None:
     page.get_by_role("link", name="Konfiguration").click()
     page.get_by_role("navigation", name="Konfigurationsbereich-Navigation").get_by_role("link", name="Orte").click()
     page.get_by_role("link", name="Ort hinzufügen").click()
@@ -89,7 +89,7 @@ class Category:
     is_official: bool = False
 
 
-def add_category(page: Page, category: Category):
+def add_category(page: Page, category: Category) -> None:
     page.get_by_role("link", name="Konfiguration").click()
     page.get_by_role("navigation", name="Konfigurationsbereich-Navigation").get_by_role(
         "link", name="KüA-Kategorien"

@@ -22,9 +22,11 @@ def test_get_extended_event(generated_api_client: ApiClientWrapper) -> None:
 
 
 def test_get_extended_event_errors(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     # Unauthenticated
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.get_extended_event_info(EVENT_ID)
     assert "requires authentication" in str(excinfo.value.data.message)
 
@@ -48,11 +50,13 @@ def test_update_extended_event(generated_api_client: ApiClientWrapper) -> None:
 
 
 def test_update_extended_event_errors(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     # Not authorized as orga
     generated_api_client.login(EVENT_ID, "orga")
     event_info = generated_api_client.client.get_extended_event_info(EVENT_ID)
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.update_extended_event(EVENT_ID, event_info)
     assert excinfo.value.status == 403
     assert "Authentication as Admin is required" in str(excinfo.value.data.message)
@@ -60,7 +64,7 @@ def test_update_extended_event_errors(generated_api_client: ApiClientWrapper) ->
     # Invalid timezone
     generated_api_client.login(EVENT_ID, "admin")
     event_with_invalid_timezone = event_info.model_copy(update={"timezone": "Europe/Aachen"})
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.update_extended_event(EVENT_ID, event_with_invalid_timezone)
     assert excinfo.value.status == 422
     assert "timezone" in str(excinfo.value.data.message)
@@ -68,7 +72,7 @@ def test_update_extended_event_errors(generated_api_client: ApiClientWrapper) ->
     # Begin after end
     assert event_info.end_date == datetime.date(2025, 1, 6)
     event_with_invalid_timezone = event_info.model_copy(update={"begin_date": datetime.date(2025, 1, 8)})
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.update_extended_event(EVENT_ID, event_with_invalid_timezone)
     assert excinfo.value.status == 422
     assert "begin_date" in str(excinfo.value.data.message)
@@ -78,7 +82,7 @@ def test_update_extended_event_errors(generated_api_client: ApiClientWrapper) ->
     event_with_invalid_schedule_section.default_time_schedule.sections.insert(
         2, generated_api_client.module.EventDayTimeScheduleSectionsInner(name="Vormittags", end_time="10:00:00")
     )
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.update_extended_event(EVENT_ID, event_with_invalid_schedule_section)
     assert excinfo.value.status == 422
     assert "Schedule sections" in str(excinfo.value.data.message)

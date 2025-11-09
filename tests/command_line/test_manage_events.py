@@ -10,14 +10,18 @@ from . import util
 
 
 def test_list_existing_event(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable_or_skip, "event", "list"], check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(
+        [str(kueaplan_server_executable_or_skip), "event", "list"], check=True, stdout=subprocess.PIPE
+    )
     output = result.stdout.decode()
     assert re.search(r"1\s*test\s*TestEvent\s*2025-01-01", output)
 
 
 def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
+    cmd = [str(kueaplan_server_executable_or_skip), "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
+    assert process.stdin is not None
     try:
         util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")
         util.wait_for_prompt_and_type(process, "event slug", "pa25")
@@ -26,7 +30,7 @@ def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
 
         output = util.wait_for_interactive_prompt(process.stdout)
         match = re.search(rb"created with id (\d+)", output)
-        assert match, f"'created with id \d+' not found in output '{output}'"
+        assert match, f"'created with id \\d+' not found in output {output!r}"
         event_id = int(match.group(1))
         assert "admin passphrase".encode() in output
 
@@ -52,8 +56,9 @@ def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
 
 
 def test_create_event_abort(kueaplan_server_executable_or_skip: Path) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
+    cmd = [str(kueaplan_server_executable_or_skip), "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
     try:
         output = util.wait_for_interactive_prompt(process.stdout)
         assert "event title".encode() in output
@@ -65,8 +70,10 @@ def test_create_event_abort(kueaplan_server_executable_or_skip: Path) -> None:
 
 
 def test_create_event_retry(kueaplan_server_executable_or_skip: Path) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
+    cmd = [str(kueaplan_server_executable_or_skip), "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
+    assert process.stdin is not None
     try:
         util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")
         util.wait_for_prompt_and_type(process, "event slug", "pa25")
@@ -88,7 +95,7 @@ def test_create_event_retry(kueaplan_server_executable_or_skip: Path) -> None:
 
 def test_delete_event(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
     # First create a new event to check that only one of them is deleted
-    cmd = [kueaplan_server_executable_or_skip, "event", "create"]
+    cmd = [str(kueaplan_server_executable_or_skip), "event", "create"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         util.wait_for_prompt_and_type(process, "event title", "Pfingsten25")
@@ -101,7 +108,7 @@ def test_delete_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
         process.kill()
 
     # Now, delete the `test` event
-    cmd = [kueaplan_server_executable_or_skip, "event", "delete", "test"]
+    cmd = [str(kueaplan_server_executable_or_skip), "event", "delete", "test"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     try:
         util.wait_for_prompt_and_type(process, "enter the event's title", "TestEvent")

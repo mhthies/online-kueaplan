@@ -8,13 +8,13 @@ import sys
 import time
 import types
 from pathlib import Path
-from typing import Optional
+from typing import Generator, Optional
 
 import dotenv
 import pytest
 
 
-def pytest_addoption(parser: pytest.Parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--start-app",
         action="store_true",
@@ -23,8 +23,10 @@ def pytest_addoption(parser: pytest.Parser):
 
 
 def _cargo_build_and_get_executable_path(working_directory: Path) -> Optional[Path]:
+    cargo_path = shutil.which("cargo")
+    assert cargo_path is not None
     result = subprocess.run(
-        [shutil.which("cargo"), "build", "--message-format=json"],
+        [cargo_path, "build", "--message-format=json"],
         check=True,
         cwd=working_directory,
         stdout=subprocess.PIPE,
@@ -60,7 +62,7 @@ def kueaplan_server_executable_or_skip(kueaplan_server_executable: Optional[Path
 @pytest.fixture(scope="session", autouse=True)
 def start_kueaplan_server(
     request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]
-):
+) -> Generator[None, None]:
     if not request.config.getoption("--start-app"):
         yield
         return
@@ -71,7 +73,7 @@ def start_kueaplan_server(
 
     _restore_database_dump(os.environ["DATABASE_URL"], Path(__file__).parent / "database_dumps" / "minimal.sql")
 
-    cmd = [kueaplan_server_executable, "serve"]
+    cmd = [str(kueaplan_server_executable), "serve"]
     env = dict(os.environ)
     env["LISTEN_PORT"] = "9099"
     env["LISTEN_ADDRESS"] = "127.0.0.1"
@@ -90,12 +92,12 @@ def start_kueaplan_server(
 
 
 @pytest.fixture(scope="session")
-def load_dotenv():
+def load_dotenv() -> None:
     dotenv.load_dotenv()
 
 
 @pytest.fixture(scope="function")
-def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
+def reset_database(request: pytest.FixtureRequest, load_dotenv: None) -> None:
     database_dump = request.node.get_closest_marker("database_dump")
     if database_dump is None:
         database_dump = "minimal.sql"
@@ -104,7 +106,9 @@ def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
 
 
 def _restore_database_dump(database_url: str, database_dump_path: Path) -> None:
-    result = subprocess.run([shutil.which("psql"), "-f", str(database_dump_path), database_url], capture_output=True)
+    psql_path = shutil.which("psql")
+    assert psql_path is not None
+    result = subprocess.run([psql_path, "-f", str(database_dump_path), database_url], capture_output=True)
     if result.returncode != 0:
         print(result.stderr)
         raise RuntimeError(f"Could not restore database dump. psql exited with return code {result.returncode}")
@@ -152,7 +156,7 @@ class ApiClientWrapper:
         self.module = kueaplan_api_client
         self.client = self._create_api_client()
 
-    def _create_api_client(self) -> "kueaplan_api_client.DefaultApi":
+    def _create_api_client(self) -> "kueaplan_api_client.DefaultApi":  # type: ignore  # noqa: F821
         BASE_URL = "http://localhost:9099/api/v1"
         config = self.module.Configuration(host=BASE_URL)
         client = self.module.ApiClient(config)

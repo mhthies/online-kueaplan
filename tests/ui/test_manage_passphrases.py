@@ -5,7 +5,7 @@ from playwright.sync_api import Browser, Page, expect
 from tests.ui import actions, helpers
 
 
-def test_create_new_user_passphrase(browser: Browser, reset_database: None):
+def test_create_new_user_passphrase(browser: Browser, reset_database: None) -> None:
     user_context = browser.new_context()
     user_page = user_context.new_page()
     user_page.goto("http://localhost:9099/ui/1")
@@ -29,7 +29,7 @@ def test_create_new_user_passphrase(browser: Browser, reset_database: None):
     expect(user_page.get_by_role("link", name="Eintrag hinzufügen")).not_to_be_visible()
 
 
-def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: None):
+def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "admin")
 
     page.get_by_role("link", name="Links für Kalender").click()
@@ -48,7 +48,7 @@ def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: N
     expect(page.get_by_role("textbox", name="iCal-Link")).to_be_visible()
 
 
-def test_delete_user_passphrase(browser: Browser, reset_database: None):
+def test_delete_user_passphrase(browser: Browser, reset_database: None) -> None:
     user_context = browser.new_context()
     user_page = user_context.new_page()
     actions.login(user_page, 1, "user")

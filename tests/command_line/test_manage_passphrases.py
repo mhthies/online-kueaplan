@@ -10,7 +10,7 @@ from . import util
 
 def test_list_existing_passphrases(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
     result = subprocess.run(
-        [kueaplan_server_executable_or_skip, "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE
+        [str(kueaplan_server_executable_or_skip), "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE
     )
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
@@ -22,7 +22,7 @@ def test_list_existing_passphrases_by_event_slug(
     kueaplan_server_executable_or_skip: Path, reset_database: None
 ) -> None:
     result = subprocess.run(
-        [kueaplan_server_executable_or_skip, "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE
+        [str(kueaplan_server_executable_or_skip), "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE
     )
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
@@ -30,8 +30,9 @@ def test_list_existing_passphrases_by_event_slug(
 
 
 def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "passphrase", "create", "test"]
+    cmd = [str(kueaplan_server_executable_or_skip), "passphrase", "create", "test"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
     try:
         util.wait_for_prompt_and_type(process, "access role", "admin")
         util.wait_for_prompt_and_type(process, "passphrase", "very-secret-passphrase")
@@ -56,8 +57,10 @@ def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path,
 
 
 def test_delete_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "passphrase", "delete", "test", "1"]
+    cmd = [str(kueaplan_server_executable_or_skip), "passphrase", "delete", "test", "1"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
+    assert process.stdin is not None
     try:
         output = util.wait_for_interactive_prompt(process.stdout)
         assert b"'***r'" in output

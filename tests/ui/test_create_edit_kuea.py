@@ -6,7 +6,7 @@ from . import actions, helpers
 from .data import CATEGORY_SPORT, ENTRY_BEACH_VOLLEYBALL, ENTRY_SONNENAUFGANG_WANDERUNG, ROOM_SPORTPLAETZE
 
 
-def test_create_sample_data(page: Page, reset_database: None):
+def test_create_sample_data(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     actions.add_category(page, CATEGORY_SPORT)
     actions.add_room(page, ROOM_SPORTPLAETZE)
@@ -14,7 +14,7 @@ def test_create_sample_data(page: Page, reset_database: None):
     actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
 
 
-def test_create_entry(page: Page, reset_database: None):
+def test_create_entry(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -48,7 +48,7 @@ def test_create_entry(page: Page, reset_database: None):
     expect(row.get_by_role("cell").nth(3)).to_contain_text("Max Mustermann")
 
 
-def test_create_entry_prefilled_date(page: Page, reset_database: None):
+def test_create_entry_prefilled_date(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("button", name="Datum").click()  # open date dropdown
@@ -59,7 +59,7 @@ def test_create_entry_prefilled_date(page: Page, reset_database: None):
     expect(page.get_by_role("combobox", name="Tag")).to_have_value("2025-01-02")
 
 
-def test_create_entry_validation_error_duration(page: Page, reset_database: None):
+def test_create_entry_validation_error_duration(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -83,7 +83,7 @@ def test_create_entry_validation_error_duration(page: Page, reset_database: None
     expect(duration_input.locator("../..")).to_have_text(re.compile(r"Keine gültige Dauer"))
 
 
-def test_create_entry_date_info_indicator(page: Page, reset_database: None):
+def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -107,7 +107,7 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None):
     expect(calendar_date_indicator).not_to_be_visible()
 
 
-def test_create_entry_end_time_info_indicator(page: Page, reset_database: None):
+def test_create_entry_end_time_info_indicator(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -143,7 +143,7 @@ def test_create_entry_end_time_info_indicator(page: Page, reset_database: None):
 # TODO test parallel entries
 
 
-def test_clone_entry(page: Page, reset_database: None):
+def test_clone_entry(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
     row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")

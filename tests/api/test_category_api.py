@@ -14,9 +14,11 @@ def test_list_categories(generated_api_client: ApiClientWrapper) -> None:
 
 
 def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "orga")
-    category: "kuaeplan_api_client.Category" = generated_api_client.module.Category(
+    category = kueaplan_api_client.Category(
         id=str(uuid.uuid4()),
         title="Test Category",
         icon="💡",
@@ -38,8 +40,10 @@ def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> No
 
 
 def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     event_id = 1
-    category: "kuaeplan_api_client.Category" = generated_api_client.module.Category(
+    category = kueaplan_api_client.Category(
         id=str(uuid.uuid4()),
         title="Test Category",
         icon="💡",
@@ -48,18 +52,18 @@ def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper
     )
     generated_api_client.login(event_id, "user")
     # Unauthenticated
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_category(event_id, category.id, category)
     assert "not authorized" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 403
 
     generated_api_client.login(event_id, "orga")
     # Wrong id
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_category(event_id, str(uuid.uuid4()), category)
     assert "Entity id" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
 
     # Non-existing event
-    with pytest.raises(Exception):
+    with pytest.raises(kueaplan_api_client.ApiException):
         generated_api_client.client.create_or_update_category(42, category.id, category)

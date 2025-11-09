@@ -5,7 +5,7 @@ from playwright.sync_api import Page, expect
 from . import actions
 
 
-def test_user_cannot_add_entry(page: Page, reset_database: None):
+def test_user_cannot_add_entry(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "user")
 
     expect(page.get_by_role("link", name="Eintrag hinzufügen")).not_to_be_visible()

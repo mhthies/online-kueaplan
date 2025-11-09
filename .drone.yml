@@ -19,7 +19,7 @@ steps:
       - build
 
   - name: system tests
-    image: mcr.microsoft.com/playwright/python:v1.53.0-noble
+    image: mcr.microsoft.com/playwright/python:v1.55.0-noble
     commands:
       # Java is required for openapi-generator
       - apt-get update && apt-get install -y libpq5 postgresql-client-16 openjdk-21-jre-headless

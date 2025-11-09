@@ -1,5 +1,4 @@
 import uuid
-from types import ModuleType
 
 import pytest
 
@@ -12,6 +11,7 @@ def test_list_categories(generated_api_client: ApiClientWrapper) -> None:
     result = generated_api_client.client.list_categories(EVENT_ID)
     assert len(result) == 1
     assert result[0].title == "Default"
+
 
 def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> None:
     EVENT_ID = 1
@@ -35,6 +35,7 @@ def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> No
 
     result = generated_api_client.client.list_categories(EVENT_ID)
     assert result[1] == category
+
 
 def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper) -> None:
     event_id = 1

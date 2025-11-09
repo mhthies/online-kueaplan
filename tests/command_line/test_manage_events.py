@@ -1,14 +1,12 @@
 import datetime
 import re
 import subprocess
-import time
 from pathlib import Path
-from typing import Optional
 
 from playwright.sync_api import Page, expect
 
-from . import util
 from ..ui import actions
+from . import util
 
 
 def test_list_existing_event(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
@@ -32,7 +30,7 @@ def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
         event_id = int(match.group(1))
         assert "admin passphrase".encode() in output
 
-        process.stdin.write(f"y\n".encode())
+        process.stdin.write("y\n".encode())
         process.stdin.flush()
 
         util.wait_for_prompt_and_type(process, "admin passphrase", "very-secret-passphrase")
@@ -47,8 +45,10 @@ def test_create_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
 
     actions.login(page, event_id, "very-secret-passphrase")
     # After creating an event, we should be able to create an entry with the default category
-    actions.add_entry(page, actions.Entry("Test-Eintrag", datetime.date(2025, 6, 7), datetime.time(15, 0),
-                                          datetime.timedelta(minutes=90)))
+    actions.add_entry(
+        page,
+        actions.Entry("Test-Eintrag", datetime.date(2025, 6, 7), datetime.time(15, 0), datetime.timedelta(minutes=90)),
+    )
 
 
 def test_create_event_abort(kueaplan_server_executable_or_skip: Path) -> None:
@@ -76,7 +76,7 @@ def test_create_event_retry(kueaplan_server_executable_or_skip: Path) -> None:
         assert "Error".encode() in output
         assert "invalid characters".encode() in output
         assert "begin".encode() in output
-        process.stdin.write(f"2025-06-06\n".encode())
+        process.stdin.write("2025-06-06\n".encode())
         process.stdin.flush()
 
         util.wait_for_prompt_and_type(process, "end", "2025-06-09")
@@ -109,7 +109,7 @@ def test_delete_event(page: Page, kueaplan_server_executable_or_skip: Path, rese
     finally:
         process.kill()
 
-    page.goto(f"http://localhost:9099/test")
+    page.goto("http://localhost:9099/test")
     expect(page.get_by_text("Not found")).to_be_visible()
-    page.goto(f"http://localhost:9099/pa25")
+    page.goto("http://localhost:9099/pa25")
     expect(page.get_by_text("Pfingsten25")).to_be_visible()

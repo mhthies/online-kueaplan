@@ -1,8 +1,9 @@
-
 import re
+
 from playwright.sync_api import Page, expect
 
 from . import actions
+
 
 def test_user_cannot_add_entry(page: Page, reset_database: None):
     actions.login(page, 1, "user")

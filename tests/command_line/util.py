@@ -1,15 +1,12 @@
-import os
-
 import fcntl
+import os
 import subprocess
-
 import time
 from typing import IO
 
 
 def wait_for_interactive_prompt(std_out_stream: IO[bytes], timeout: float = 1.0) -> bytes:
-    """
-    Wait up to `timeout` seconds for the process to output the interactive prompt ('\n>'). Reads and returns all
+    """Wait up to `timeout` seconds for the process to output the interactive prompt ('\n>'). Reads and returns all
     bytes from the stdout buffer up to the prompt.
     """
     make_pipe_non_blocking(std_out_stream)

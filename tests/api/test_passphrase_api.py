@@ -35,6 +35,7 @@ def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
     generated_api_client.client.create_passphrase(EVENT_ID, passphrase)
 
     import kueaplan_api_client
+
     client2 = ApiClientWrapper(kueaplan_api_client)
     client2.login(EVENT_ID, "verysecret")
 

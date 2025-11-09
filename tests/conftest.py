@@ -2,14 +2,13 @@ import json
 import logging
 import os
 import secrets
-from typing import Optional
-
-import sys
-import types
-from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
+import types
+from pathlib import Path
+from typing import Optional
 
 import dotenv
 import pytest
@@ -24,9 +23,13 @@ def pytest_addoption(parser: pytest.Parser):
 
 
 def _cargo_build_and_get_executable_path(working_directory: Path) -> Optional[Path]:
-    result = subprocess.run([shutil.which("cargo"), "build", "--message-format=json"], check=True,
-                            cwd=working_directory, stdout=subprocess.PIPE)
-    for line in result.stdout.decode(errors='replace').splitlines():
+    result = subprocess.run(
+        [shutil.which("cargo"), "build", "--message-format=json"],
+        check=True,
+        cwd=working_directory,
+        stdout=subprocess.PIPE,
+    )
+    for line in result.stdout.decode(errors="replace").splitlines():
         data = json.loads(line)
         if data.get("reason") == "compiler-artifact" and data.get("executable"):
             return Path(data["executable"])
@@ -55,12 +58,16 @@ def kueaplan_server_executable_or_skip(kueaplan_server_executable: Optional[Path
 
 
 @pytest.fixture(scope="session", autouse=True)
-def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]):
+def start_kueaplan_server(
+    request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]
+):
     if not request.config.getoption("--start-app"):
         yield
         return
     if kueaplan_server_executable is None:
-        raise RuntimeError("Could not find kueaplan_server executable. Run without --start-app and execute the server manually.")
+        raise RuntimeError(
+            "Could not find kueaplan_server executable. Run without --start-app and execute the server manually."
+        )
 
     _restore_database_dump(os.environ["DATABASE_URL"], Path(__file__).parent / "database_dumps" / "minimal.sql")
 
@@ -97,8 +104,7 @@ def reset_database(request: pytest.FixtureRequest, load_dotenv: None):
 
 
 def _restore_database_dump(database_url: str, database_dump_path: Path) -> None:
-    result = subprocess.run([shutil.which("psql"), "-f", str(database_dump_path), database_url],
-                            capture_output=True)
+    result = subprocess.run([shutil.which("psql"), "-f", str(database_dump_path), database_url], capture_output=True)
     if result.returncode != 0:
         print(result.stderr)
         raise RuntimeError(f"Could not restore database dump. psql exited with return code {result.returncode}")
@@ -112,18 +118,27 @@ def generated_api_client_module(request: pytest.FixtureRequest) -> "types.Module
     openapi_generator_executable = shutil.which("openapi-generator-cli")
     if not openapi_generator_executable:
         pytest.skip("openapi-generator-cli is not available in the PATH")
-    subprocess.run([openapi_generator_executable,
-                    "generate",
-                    "--generator-name", "python",
-                    "--output", client_path.resolve(),
-                    "--input-spec", openapi_source_path.resolve(),
-                    "--config", generator_config_path],
-                   check=True)
+    subprocess.run(
+        [
+            openapi_generator_executable,
+            "generate",
+            "--generator-name",
+            "python",
+            "--output",
+            client_path.resolve(),
+            "--input-spec",
+            openapi_source_path.resolve(),
+            "--config",
+            generator_config_path,
+        ],
+        check=True,
+    )
 
     shutil.rmtree(client_path / "kueaplan_api_client" / "test")
 
     sys.path.append(str(client_path))
     import kueaplan_api_client
+
     return kueaplan_api_client
 
 

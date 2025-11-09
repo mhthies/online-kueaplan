@@ -1,6 +1,6 @@
 import datetime
 
-from .actions import Entry, Category, Room
+from .actions import Category, Entry, Room
 
 CATEGORY_SPORT = Category(
     title="Sport",
@@ -9,9 +9,7 @@ CATEGORY_SPORT = Category(
     sort_key=30,
 )
 
-ROOM_SPORTPLAETZE = Room(
-    title="Sportplätze"
-)
+ROOM_SPORTPLAETZE = Room(title="Sportplätze")
 
 ENTRY_BEACH_VOLLEYBALL = Entry(
     title="Beach-Volleyball",
@@ -27,7 +25,7 @@ ENTRY_BEACH_VOLLEYBALL = Entry(
 ENTRY_SONNENAUFGANG_WANDERUNG = Entry(
     title="Sonnenaufgang-Wanderung",
     day=datetime.date(2025, 1, 5),
-    begin=datetime.time(5,15),
+    begin=datetime.time(5, 15),
     duration=datetime.timedelta(hours=1, minutes=30),
     comment="Minderjährige können mitgehen",
     responsible_person="Sören",

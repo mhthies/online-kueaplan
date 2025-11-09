@@ -1,8 +1,9 @@
 import re
+
 from playwright.sync_api import Page, expect
 
 from . import actions, helpers
-from .data import CATEGORY_SPORT, ROOM_SPORTPLAETZE, ENTRY_BEACH_VOLLEYBALL, ENTRY_SONNENAUFGANG_WANDERUNG
+from .data import CATEGORY_SPORT, ENTRY_BEACH_VOLLEYBALL, ENTRY_SONNENAUFGANG_WANDERUNG, ROOM_SPORTPLAETZE
 
 
 def test_create_sample_data(page: Page, reset_database: None):
@@ -31,7 +32,8 @@ def test_create_entry(page: Page, reset_database: None):
         """Wir bauen Drachen und lassen sie steigen.
 
         Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
-        """)
+        """
+    )
     page.get_by_role("button", name="Erstellen").click()
     expect(page).to_have_title(re.compile(r"06\.01\."))
 
@@ -136,6 +138,7 @@ def test_create_entry_end_time_info_indicator(page: Page, reset_database: None):
 
     duration_input.fill("abc")
     expect(end_time_indicator).to_have_text("Ende: ???")
+
 
 # TODO test parallel entries
 

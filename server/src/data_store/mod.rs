@@ -69,6 +69,9 @@ pub trait KueaPlanStoreFacade {
         event: models::ExtendedEvent,
     ) -> Result<(), StoreError>;
 
+    fn delete_event(&mut self, auth_token: &AuthToken, event_id: EventId)
+        -> Result<(), StoreError>;
+
     /// Get a filtered list of entries of the event
     ///
     /// Entries are returned in chronological order, i.e. sorted by (begin, end)

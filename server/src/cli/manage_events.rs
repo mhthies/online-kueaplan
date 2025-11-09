@@ -1,5 +1,5 @@
 use crate::cli::util::{query_user, query_user_and_check, query_user_bool};
-use crate::cli::CliAuthTokenKey;
+use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken};
 use crate::data_store::get_store_from_env;
@@ -106,5 +106,31 @@ pub fn create_event() -> Result<(), CliError> {
         println!("New event has been created successfully.");
     }
 
+    Ok(())
+}
+
+pub fn delete_event(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
+    let data_store_pool = get_store_from_env()?;
+    let mut data_store = data_store_pool.get_facade()?;
+    let event = match event_id_or_slug {
+        EventIdOrSlug::Id(event_id) => data_store.get_event(event_id)?,
+        EventIdOrSlug::Slug(event_slug) => data_store.get_event_by_slug(&event_slug)?,
+    };
+
+    let auth_key = CliAuthTokenKey::new();
+    let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
+
+    println!("The event '{}' (id={}) will be deleted with all its associated data (entries, categories, rooms, announcements).", event.title, event.id);
+    println!("Are you sure to irreversibly delete the event and all its data?");
+    query_user_and_check::<String, _, _>("To confirm deletion, enter the event's title", |input| {
+        if *input == event.title {
+            Ok(())
+        } else {
+            Err("Title not entered correctly")
+        }
+    });
+    data_store.delete_event(&auth_token, event.id)?;
+
+    println!("Success");
     Ok(())
 }

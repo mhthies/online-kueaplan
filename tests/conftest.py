@@ -47,6 +47,13 @@ def kueaplan_server_executable() -> Optional[Path]:
         return path
 
 
+@pytest.fixture(scope="session")
+def kueaplan_server_executable_or_skip(kueaplan_server_executable: Optional[Path]) -> Path:
+    if kueaplan_server_executable is None:
+        pytest.skip("kueaplan_server executable could not be found")
+    return kueaplan_server_executable
+
+
 @pytest.fixture(scope="session", autouse=True)
 def start_kueaplan_server(request: pytest.FixtureRequest, load_dotenv: None, kueaplan_server_executable: Optional[Path]):
     if not request.config.getoption("--start-app"):

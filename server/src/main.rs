@@ -52,6 +52,9 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Event(EventCommand::Create) => {
             kueaplan_server::cli::manage_events::create_event()?;
         }
+        Command::Event(EventCommand::Delete { event_id_or_slug }) => {
+            kueaplan_server::cli::manage_events::delete_event(event_id_or_slug)?;
+        }
         Command::Passphrase(PassphraseCommand::List { event_id_or_slug }) => {
             kueaplan_server::cli::manage_passphrases::print_passphrase_list(event_id_or_slug)?;
         }
@@ -80,7 +83,7 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
 
 /// Online KüA-Plan HTTP server and commandline management tool
 #[derive(Debug, Parser)]
-#[clap(name = "my-app", version)]
+#[clap(name = "kueaplan_server", version)]
 pub struct CliArgs {
     #[clap(flatten)]
     global_opts: GlobalOpts,
@@ -121,6 +124,11 @@ enum EventCommand {
     },
     /// Create a new event. Basic event data is queried interactively in the terminal.
     Create,
+    /// Delete an event with all associated data.
+    Delete {
+        /// The id or slug of the event to be deleted
+        event_id_or_slug: EventIdOrSlug,
+    },
 }
 
 #[derive(Debug, Subcommand)]

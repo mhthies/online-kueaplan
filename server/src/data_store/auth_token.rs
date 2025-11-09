@@ -288,6 +288,7 @@ pub enum Privilege {
     ManagePassphrases,
     ManageSecurePassphrases,
     CreateEvents,
+    DeleteEvents,
     ManageAnnouncements,
     ShowKueaPlanViaLink,
 }
@@ -315,6 +316,7 @@ impl Privilege {
             Privilege::ManagePassphrases => &[AccessRole::Admin],
             Privilege::ManageSecurePassphrases => &[AccessRole::ServerAdmin],
             Privilege::CreateEvents => &[AccessRole::ServerAdmin],
+            Privilege::DeleteEvents => &[AccessRole::ServerAdmin],
             Privilege::ManageAnnouncements => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ShowKueaPlanViaLink => &[AccessRole::SharableViewLink],
         }

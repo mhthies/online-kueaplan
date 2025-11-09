@@ -10,3 +10,10 @@ repos:
     rev: v1.2.1
     hooks:
       - id: fmt
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.14.4
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
+      - id: ruff-format

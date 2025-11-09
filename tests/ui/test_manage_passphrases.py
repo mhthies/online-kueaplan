@@ -1,14 +1,14 @@
 import re
 
-from playwright.sync_api import Page, expect, Browser
+from playwright.sync_api import Browser, Page, expect
 
 from tests.ui import actions, helpers
 
 
-def test_create_new_user_passphrase(browser: Browser, reset_database: None):
+def test_create_new_user_passphrase(browser: Browser, reset_database: None) -> None:
     user_context = browser.new_context()
     user_page = user_context.new_page()
-    user_page.goto(f"http://localhost:9099/ui/1")
+    user_page.goto("http://localhost:9099/ui/1")
     expect(user_page).to_have_title(re.compile("Login"))
     user_page.get_by_role("textbox", name="Passphrase").fill("test-passphrase")
     user_page.get_by_role("button", name="Zum KüA-Plan").click()
@@ -29,7 +29,7 @@ def test_create_new_user_passphrase(browser: Browser, reset_database: None):
     expect(user_page.get_by_role("link", name="Eintrag hinzufügen")).not_to_be_visible()
 
 
-def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: None):
+def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "admin")
 
     page.get_by_role("link", name="Links für Kalender").click()
@@ -48,7 +48,7 @@ def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: N
     expect(page.get_by_role("textbox", name="iCal-Link")).to_be_visible()
 
 
-def test_delete_user_passphrase(browser: Browser, reset_database: None):
+def test_delete_user_passphrase(browser: Browser, reset_database: None) -> None:
     user_context = browser.new_context()
     user_page = user_context.new_page()
     actions.login(user_page, 1, "user")
@@ -64,14 +64,16 @@ def test_delete_user_passphrase(browser: Browser, reset_database: None):
     actions_cell = helpers.get_table_cell_by_header(table_row, "Aktionen")
     actions_cell.get_by_title("Passphrase löschen").click()
     admin_page.get_by_role("button", name="Löschen").click()
-    expect(admin_page.get_by_role("alert").filter(has_text="Die Passphrase/Ableitbare Rolle wurde gelöscht.")).to_be_visible()
+    expect(
+        admin_page.get_by_role("alert").filter(has_text="Die Passphrase/Ableitbare Rolle wurde gelöscht.")
+    ).to_be_visible()
 
     user_page.reload()
     expect(user_page.get_by_text("Zugriff verweigert")).to_be_visible()
 
     user_context2 = browser.new_context()
     user_page2 = user_context2.new_page()
-    user_page2.goto(f"http://localhost:9099/ui/1")
+    user_page2.goto("http://localhost:9099/ui/1")
     expect(user_page2).to_have_title(re.compile("Login"))
     user_page2.get_by_role("textbox", name="Passphrase").fill("test-passphrase")
     user_page2.get_by_role("button", name="Zum KüA-Plan").click()

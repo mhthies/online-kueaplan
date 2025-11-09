@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-A script for migrating each of the database dumps in the database_dumps/ directory by
+"""A script for migrating each of the database dumps in the database_dumps/ directory by
 * loading the dump into the test database
 * running `diesel migration run` against the test database
 * recreating the database dump from the test database.
@@ -17,10 +16,9 @@ Preliminaries:
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
-
-import sys
 
 
 def main() -> int:
@@ -33,12 +31,12 @@ def main() -> int:
         for dump in dumps:
             print(f"> loading {dump.name} ...", file=sys.stderr)
             load_dump(dump, database_url)
-            print(f"> migrating ...", file=sys.stderr)
+            print("> migrating ...", file=sys.stderr)
             migrate_database(diesel_workdir, database_url)
             print(f"> dumping into {dump.name} ...", file=sys.stderr)
             save_dump(dump, database_url)
     except subprocess.CalledProcessError as e:
-        print(f"Failed to execute command '{" ".join(e.cmd)}' (exit code: {e.returncode})", file=sys.stderr)
+        print(f"Failed to execute command '{' '.join(e.cmd)}' (exit code: {e.returncode})", file=sys.stderr)
         return 1
     except CommandNotAvailableException as e:
         print(str(e), file=sys.stderr)
@@ -49,16 +47,20 @@ def main() -> int:
 def get_database_url() -> Optional[str]:
     try:
         import dotenv
+
         dotenv.load_dotenv()
     except ImportError:
-        print("'python-dotenv' package is not available in this Python environment. Ignoring .env files.",
-              file=sys.stderr)
+        print(
+            "'python-dotenv' package is not available in this Python environment. Ignoring .env files.", file=sys.stderr
+        )
     try:
         return os.environ["DATABASE_URL"]
     except KeyError:
-        print("'DATABASE_URL' environment variable is not set.\n"
-              "        Please set it to the test database connection URL, e.g. postgres://user:password@localhost/kueaplan-test",
-              file=sys.stderr)
+        print(
+            "'DATABASE_URL' environment variable is not set.\n"
+            "        Please set it to the test database connection URL, e.g. postgres://user:password@localhost/kueaplan-test",
+            file=sys.stderr,
+        )
         return None
 
 
@@ -72,8 +74,9 @@ def load_dump(dump_path: Path, database_url: str) -> None:
 
 
 def migrate_database(diesel_workdir: Path, database_url: str) -> None:
-    subprocess.run([get_command_path("diesel"), "migration", "run", "--database-url", database_url], check=True,
-                   cwd=diesel_workdir)
+    subprocess.run(
+        [get_command_path("diesel"), "migration", "run", "--database-url", database_url], check=True, cwd=diesel_workdir
+    )
 
 
 def save_dump(dump_path: Path, database_url: str) -> None:

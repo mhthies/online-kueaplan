@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from types import ModuleType
 
 import pytest
 
@@ -8,9 +7,11 @@ from tests.conftest import ApiClientWrapper
 
 
 def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "orga")
-    announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(
+    announcement = kueaplan_api_client.Announcement(
         id=str(uuid.uuid4()),
         announcementType="info",
         show_with_days=True,
@@ -38,10 +39,13 @@ def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -
     result = generated_api_client.client.list_announcements(EVENT_ID)
     assert result[0] == announcement
 
+
 def test_change_announcement(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "orga")
-    announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(
+    announcement = kueaplan_api_client.Announcement(
         id=str(uuid.uuid4()),
         announcementType="info",
         show_with_days=True,
@@ -51,19 +55,26 @@ def test_change_announcement(generated_api_client: ApiClientWrapper) -> None:
     )
     generated_api_client.client.create_or_update_announcement(EVENT_ID, announcement.id, announcement)
 
-    generated_api_client.client.change_announcement(EVENT_ID, announcement.id, generated_api_client.module.AnnouncementPatch(
-        sort_key=5,
-        text="Now, the Announcement text is shorter.",
-    ))
+    generated_api_client.client.change_announcement(
+        EVENT_ID,
+        announcement.id,
+        generated_api_client.module.AnnouncementPatch(
+            sort_key=5,
+            text="Now, the Announcement text is shorter.",
+        ),
+    )
 
     result = generated_api_client.client.list_announcements(EVENT_ID)
     assert result[0].sort_key == 5
-    assert result[0].show_with_days == True
+    assert result[0].show_with_days
     assert result[0].text == "Now, the Announcement text is shorter."
 
+
 def test_create_or_update_announcement_errors(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     event_id = 1
-    announcement: "kuaeplan_api_client.Announcement" = generated_api_client.module.Announcement(
+    announcement = kueaplan_api_client.Announcement(
         id=str(uuid.uuid4()),
         announcementType="info",
         text="This is an important Announcement!",
@@ -71,18 +82,18 @@ def test_create_or_update_announcement_errors(generated_api_client: ApiClientWra
     )
     generated_api_client.login(event_id, "user")
     # Unauthenticated
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_announcement(event_id, announcement.id, announcement)
     assert "not authorized" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 403
 
     generated_api_client.login(event_id, "orga")
     # Wrong id
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_announcement(event_id, str(uuid.uuid4()), announcement)
     assert "Entity id" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
 
     # Non-existing event
-    with pytest.raises(Exception):
+    with pytest.raises(kueaplan_api_client.ApiException):
         generated_api_client.client.create_or_update_announcement(42, announcement.id, announcement)

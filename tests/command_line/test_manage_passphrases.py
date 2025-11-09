@@ -1,33 +1,38 @@
 import re
 import subprocess
-import time
 from pathlib import Path
-from typing import Optional
 
 from playwright.sync_api import Page, expect
 
-from . import util
 from ..ui import actions
+from . import util
 
 
 def test_list_existing_passphrases(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable_or_skip, "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE)
+    result = subprocess.run(
+        [str(kueaplan_server_executable_or_skip), "passphrase", "list", "1"], check=True, stdout=subprocess.PIPE
+    )
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
     assert re.search(r"\|\s*3\s*Admin\s*\*\*\*\*n", output)
     assert re.search(r"\|\s*4.*Link\s*1", output)
 
 
-def test_list_existing_passphrases_by_event_slug(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    result = subprocess.run([kueaplan_server_executable_or_skip, "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE)
+def test_list_existing_passphrases_by_event_slug(
+    kueaplan_server_executable_or_skip: Path, reset_database: None
+) -> None:
+    result = subprocess.run(
+        [str(kueaplan_server_executable_or_skip), "passphrase", "list", "test"], check=True, stdout=subprocess.PIPE
+    )
     output = result.stdout.decode()
     assert re.search(r"TestEvent", output)
     assert re.search(r"\|\s*3\s*Admin\s*\*\*\*\*n", output)
 
 
 def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "passphrase", "create", "test"]
+    cmd = [str(kueaplan_server_executable_or_skip), "passphrase", "create", "test"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
     try:
         util.wait_for_prompt_and_type(process, "access role", "admin")
         util.wait_for_prompt_and_type(process, "passphrase", "very-secret-passphrase")
@@ -52,8 +57,10 @@ def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path,
 
 
 def test_delete_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [kueaplan_server_executable_or_skip, "passphrase", "delete", "test", "1"]
+    cmd = [str(kueaplan_server_executable_or_skip), "passphrase", "delete", "test", "1"]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    assert process.stdout is not None
+    assert process.stdin is not None
     try:
         output = util.wait_for_interactive_prompt(process.stdout)
         assert b"'***r'" in output
@@ -70,7 +77,7 @@ def test_delete_passphrase(page: Page, kueaplan_server_executable_or_skip: Path,
         process.wait(1)
         process.kill()
 
-    page.goto(f"http://localhost:9099/ui/1")
+    page.goto("http://localhost:9099/ui/1")
     expect(page).to_have_title(re.compile("Login"))
     page.get_by_role("textbox", name="Passphrase").fill("user")
     page.get_by_role("button", name="Zum KüA-Plan").click()

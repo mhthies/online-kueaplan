@@ -1,15 +1,12 @@
-import os
-
 import fcntl
+import os
 import subprocess
-
 import time
-from typing import IO
+from typing import IO, cast
 
 
 def wait_for_interactive_prompt(std_out_stream: IO[bytes], timeout: float = 1.0) -> bytes:
-    """
-    Wait up to `timeout` seconds for the process to output the interactive prompt ('\n>'). Reads and returns all
+    """Wait up to `timeout` seconds for the process to output the interactive prompt ('\n>'). Reads and returns all
     bytes from the stdout buffer up to the prompt.
     """
     make_pipe_non_blocking(std_out_stream)
@@ -32,7 +29,9 @@ def make_pipe_non_blocking(pipe: IO) -> None:
 
 
 def wait_for_prompt_and_type(process: subprocess.Popen, expected_prompt: str, enter_input: str) -> None:
-    output = wait_for_interactive_prompt(process.stdout)
+    assert process.stdout is not None
+    assert process.stdin is not None
+    output = wait_for_interactive_prompt(cast(IO[bytes], process.stdout))
     assert expected_prompt.encode() in output
     process.stdin.write(f"{enter_input}\n".encode())
     process.stdin.flush()

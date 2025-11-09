@@ -25,16 +25,17 @@ def test_list_passphrases(generated_api_client: ApiClientWrapper) -> None:
 
 
 def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
+    import kueaplan_api_client
+
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "admin")
-    passphrase: "kuaeplan_api_client.Passphrase" = generated_api_client.module.Passphrase(
+    passphrase = kueaplan_api_client.Passphrase(
         passphrase="verysecret",
         derivable_from_passphrase=None,
         role="orga",
     )
     generated_api_client.client.create_passphrase(EVENT_ID, passphrase)
 
-    import kueaplan_api_client
     client2 = ApiClientWrapper(kueaplan_api_client)
     client2.login(EVENT_ID, "verysecret")
 
@@ -42,7 +43,7 @@ def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
     assert "orga" in [a.role for a in authorization_info.authorization]
 
     # Check that orga privileges are granted, by creating a new category
-    category: "kuaeplan_api_client.Category" = client2.module.Category(
+    category = kueaplan_api_client.Category(
         id=str(uuid.uuid4()),
         title="Test Category",
         icon="💡",

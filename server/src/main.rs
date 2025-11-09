@@ -83,7 +83,7 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
 
 /// Online KüA-Plan HTTP server and commandline management tool
 #[derive(Debug, Parser)]
-#[clap(name = "my-app", version)]
+#[clap(name = "kueaplan_server", version)]
 pub struct CliArgs {
     #[clap(flatten)]
     global_opts: GlobalOpts,

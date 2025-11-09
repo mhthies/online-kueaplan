@@ -3,3 +3,4 @@
 /.venv/
 /__api_client/
 /test-results
+__pycache__/

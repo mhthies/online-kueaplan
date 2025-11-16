@@ -76,7 +76,7 @@ pub trait KueaPlanStoreFacade {
         &mut self,
         auth_token: &GlobalAuthToken,
         data: models::EventWithContents,
-    ) -> Result<(), StoreError>;
+    ) -> Result<EventId, StoreError>;
 
     /// Get a filtered list of entries of the event
     ///

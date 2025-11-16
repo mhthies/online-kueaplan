@@ -62,7 +62,9 @@ pub fn load_event_from_file(path: &PathBuf, generate_new_uuids: bool) -> Result<
             .collect(),
     };
 
-    data_store.import_event_with_contents(&admin_auth_token, store_data)?;
+    let event_id = data_store.import_event_with_contents(&admin_auth_token, store_data)?;
+
+    println!("Event imported successfully with id {}.", event_id);
 
     Ok(())
 }

@@ -161,7 +161,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         &mut self,
         auth_token: &GlobalAuthToken,
         data: models::EventWithContents,
-    ) -> Result<(), StoreError> {
+    ) -> Result<EventId, StoreError> {
         self.connection.transaction(|connection| {
             let event_id = {
                 use schema::events::dsl::*;
@@ -221,7 +221,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 )?;
             }
 
-            Ok(())
+            Ok(event_id)
         })
     }
 

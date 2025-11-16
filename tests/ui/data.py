@@ -1,6 +1,6 @@
 import datetime
 
-from .actions import Category, Entry, Room
+from .actions import Announcement, AnnouncementType, Category, Entry, Room
 
 CATEGORY_SPORT = Category(
     title="Sport",
@@ -30,4 +30,13 @@ ENTRY_SONNENAUFGANG_WANDERUNG = Entry(
     comment="Minderjährige können mitgehen",
     responsible_person="Sören",
     room_comment="Treffpunkt: Orgabüro",
+)
+
+ANNOUNCEMENT_SPORTPLATZ_NASS = Announcement(
+    text="Achtung: Auf dem Sportplatz ist es nass und rutschig. Bitte aufpassen.",
+    type=AnnouncementType.WARNING,
+    show_with_days=True,
+    begin_date=datetime.date(2025, 1, 4),
+    show_with_rooms=True,
+    rooms=["Sportplätze"],
 )

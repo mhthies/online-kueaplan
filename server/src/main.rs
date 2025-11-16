@@ -40,8 +40,8 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Event(EventCommand::List) => {
             kueaplan_server::cli::manage_events::print_event_list()?;
         }
-        Command::Event(EventCommand::Import { path }) => {
-            kueaplan_server::cli::file_io::load_event_from_file(&path)?;
+        Command::Event(EventCommand::Import { path, keep_uuids }) => {
+            kueaplan_server::cli::file_io::load_event_from_file(&path, !keep_uuids)?;
         }
         Command::Event(EventCommand::Export {
             event_id_or_slug,
@@ -114,6 +114,12 @@ enum EventCommand {
     Import {
         /// The path of the JSON file to read from
         path: PathBuf,
+        /// Keep the entries', previous dates', rooms', categories' and announcements' UUIDs,
+        /// instead of generating new ones. This may cause conflicts with existing data, when the
+        /// file has been exported from this server's database or when it is imported multiple
+        /// times.
+        #[clap(long)]
+        keep_uuids: bool,
     },
     /// Export full event (except for passphrases) to JSON file
     Export {

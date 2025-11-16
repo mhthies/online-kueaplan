@@ -5,7 +5,7 @@ from pathlib import Path
 from playwright.sync_api import Page, expect
 
 from ..ui import actions
-from . import util
+from . import cli_actions, util
 
 
 def test_list_existing_passphrases(kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
@@ -30,22 +30,7 @@ def test_list_existing_passphrases_by_event_slug(
 
 
 def test_create_passphrase(page: Page, kueaplan_server_executable_or_skip: Path, reset_database: None) -> None:
-    cmd = [str(kueaplan_server_executable_or_skip), "passphrase", "create", "test"]
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    assert process.stdout is not None
-    try:
-        util.wait_for_prompt_and_type(process, "access role", "admin")
-        util.wait_for_prompt_and_type(process, "passphrase", "very-secret-passphrase")
-        util.wait_for_prompt_and_type(process, "derivable passphrase for link-sharing", "y")
-        process.wait(1)
-        final_output = process.stdout.read()
-        assert b"Success" in final_output
-        if process.returncode:
-            raise subprocess.CalledProcessError(process.returncode, cmd)
-    finally:
-        process.terminate()
-        process.wait(1)
-        process.kill()
+    cli_actions.create_passphrase(kueaplan_server_executable_or_skip, "test", "admin", "very-secret-passphrase")
 
     actions.login(page, 1, "very-secret-passphrase")
     page.get_by_role("link", name="Konfiguration").click()

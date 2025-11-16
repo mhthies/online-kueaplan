@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+import enum
 import re
 from typing import Optional
 
@@ -103,6 +104,57 @@ def add_category(page: Page, category: Category) -> None:
         page.get_by_role("spinbutton", name="Sortier-Schlüssel").fill(str(category.sort_key))
     if category.is_official:
         page.get_by_role("checkbox", name="ist offiziell").check()
+    page.get_by_role("button", name="Erstellen").click()
+    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
+    expect(success_alert).to_be_visible()
+    success_alert.get_by_role("button", name="Close").click()
+
+
+class AnnouncementType(enum.Enum):
+    INFO = "Information"
+    WARNING = "Warnung"
+
+
+@dataclasses.dataclass
+class Announcement:
+    text: str
+    type: AnnouncementType = AnnouncementType.INFO
+    sort_key: int = 0
+    show_with_days: bool = False
+    begin_date: Optional[datetime.date] = None
+    end_date: Optional[datetime.date] = None
+    show_with_rooms: bool = False
+    rooms: list[str] = dataclasses.field(default_factory=lambda: [])
+    show_with_categories: bool = False
+    categories: list[str] = dataclasses.field(default_factory=lambda: [])
+
+
+def add_announcement(page: Page, announcement: Announcement) -> None:
+    page.get_by_role("link", name="Konfiguration").click()
+    page.get_by_role("navigation", name="Konfigurationsbereich-Navigation").get_by_role(
+        "link", name="Bekanntmachungen"
+    ).click()
+    page.get_by_role("link", name="Bekanntmachung hinzufügen").click()
+    page.get_by_role("combobox", name="Typ").select_option(label=announcement.type.value)
+    page.get_by_role("spinbutton", name="Sortier-Schlüssel").fill(str(announcement.sort_key))
+    page.get_by_role("textbox", name="Text").fill(announcement.text)
+    if announcement.show_with_days:
+        page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Datum").check()
+    if announcement.begin_date is not None:
+        page.get_by_role("combobox", name="ab Datum").select_option(label=announcement.begin_date.strftime("%d.%m."))
+    if announcement.end_date is not None:
+        page.get_by_role("combobox", name="bis Datum").select_option(label=announcement.end_date.strftime("%d.%m."))
+    if announcement.show_with_categories:
+        page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Kategorie").check()
+    for room in announcement.categories:
+        page.get_by_role("combobox", name="Kategorien").fill(room)
+        page.get_by_role("option", name=room).click()
+    if announcement.show_with_rooms:
+        page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Raum").check()
+    for room in announcement.rooms:
+        page.get_by_role("combobox", name="Räume").fill(room)
+        page.get_by_role("option", name=room).click()
+
     page.get_by_role("button", name="Erstellen").click()
     success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
     expect(success_alert).to_be_visible()

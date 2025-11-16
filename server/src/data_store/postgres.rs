@@ -157,6 +157,74 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         Ok(())
     }
 
+    fn import_event_with_contents(
+        &mut self,
+        auth_token: &GlobalAuthToken,
+        data: models::EventWithContents,
+    ) -> Result<(), StoreError> {
+        self.connection.transaction(|connection| {
+            let event_id = {
+                use schema::events::dsl::*;
+                auth_token.check_privilege(Privilege::CreateEvents)?;
+
+                diesel::insert_into(events)
+                    .values(data.event)
+                    .returning(id)
+                    .get_result::<EventId>(connection)?
+            };
+
+            let mut rooms = data.rooms;
+            for room in rooms.iter_mut() {
+                room.event_id = event_id;
+            }
+            diesel::insert_into(schema::rooms::table)
+                .values(rooms)
+                .execute(connection)?;
+
+            let mut categories = data.categories;
+            for category in categories.iter_mut() {
+                category.event_id = event_id;
+            }
+            diesel::insert_into(schema::categories::table)
+                .values(categories)
+                .execute(connection)?;
+
+            for full_entry in data.entries {
+                let mut entry = full_entry.entry;
+                let entry_id = entry.id;
+                entry.event_id = event_id;
+                diesel::insert_into(schema::entries::table)
+                    .values(entry)
+                    .execute(connection)?;
+                update_entry_rooms(entry_id, &full_entry.room_ids, connection)?;
+                for previous_date in full_entry.previous_dates {
+                    update_or_insert_previous_date(&previous_date, entry_id, connection)?;
+                }
+            }
+
+            for full_announcement in data.announcements {
+                let mut announcement = full_announcement.announcement;
+                let announcement_id = announcement.id;
+                announcement.event_id = event_id;
+                diesel::insert_into(schema::announcements::table)
+                    .values(announcement)
+                    .execute(connection)?;
+                update_announcement_categories(
+                    announcement_id,
+                    &full_announcement.category_ids,
+                    connection,
+                )?;
+                update_announcement_rooms(
+                    announcement_id,
+                    &full_announcement.room_ids,
+                    connection,
+                )?;
+            }
+
+            Ok(())
+        })
+    }
+
     fn get_entries_filtered(
         &mut self,
         auth_token: &AuthToken,

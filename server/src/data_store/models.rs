@@ -875,3 +875,11 @@ impl NewPassphrase {
         }
     }
 }
+
+pub struct EventWithContents {
+    pub event: ExtendedEvent,
+    pub rooms: Vec<NewRoom>,
+    pub categories: Vec<NewCategory>,
+    pub entries: Vec<FullNewEntry>,
+    pub announcements: Vec<FullNewAnnouncement>,
+}

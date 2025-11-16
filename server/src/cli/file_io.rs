@@ -1,6 +1,7 @@
 use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AuthToken, GlobalAuthToken};
+use crate::data_store::models::EventWithContents;
 use crate::data_store::{get_store_from_env, EntryFilter, KuaPlanStore};
 use crate::data_store::{models, CategoryId, RoomId};
 use kueaplan_api_types::{Announcement, Category, Entry, ExtendedEvent, Room};
@@ -22,7 +23,6 @@ struct SavedEvent {
 }
 
 pub fn load_event_from_file(path: &PathBuf, generate_new_uuids: bool) -> Result<(), CliError> {
-    // TODO logging instead of propagating error
     let data_store_pool = get_store_from_env()?;
     let mut data_store = data_store_pool.get_facade()?;
 
@@ -38,36 +38,31 @@ pub fn load_event_from_file(path: &PathBuf, generate_new_uuids: bool) -> Result<
 
     let auth_key = CliAuthTokenKey::new();
     let admin_auth_token = GlobalAuthToken::create_for_cli(&auth_key);
-    let event_id = data_store.create_event(
-        &admin_auth_token,
-        data.event.try_into().map_err(|e| CliError::DataError(e))?,
-    )?;
+    let store_data = EventWithContents {
+        event: data.event.try_into().map_err(|e| CliError::DataError(e))?,
+        rooms: data
+            .rooms
+            .into_iter()
+            .map(|r| models::NewRoom::from_api(r, -1))
+            .collect(),
+        categories: data
+            .categories
+            .into_iter()
+            .map(|c| models::NewCategory::from_api(c, -1))
+            .collect(),
+        entries: data
+            .entries
+            .into_iter()
+            .map(|e| models::FullNewEntry::from_api(e, -1))
+            .collect(),
+        announcements: data
+            .announcements
+            .into_iter()
+            .map(|a| models::FullNewAnnouncement::from_api(a, -1))
+            .collect(),
+    };
 
-    let auth_token = AuthToken::create_for_cli(event_id, &auth_key);
-    for room in data.rooms {
-        data_store.create_or_update_room(&auth_token, models::NewRoom::from_api(room, event_id))?;
-    }
-    for category in data.categories {
-        data_store.create_or_update_category(
-            &auth_token,
-            models::NewCategory::from_api(category, event_id),
-        )?;
-    }
-    for entry in data.entries {
-        data_store.create_or_update_entry(
-            &auth_token,
-            models::FullNewEntry::from_api(entry, event_id),
-            false,
-            None,
-        )?;
-    }
-    for announcement in data.announcements {
-        data_store.create_or_update_announcement(
-            &auth_token,
-            models::FullNewAnnouncement::from_api(announcement, event_id),
-            None,
-        )?;
-    }
+    data_store.import_event_with_contents(&admin_auth_token, store_data)?;
 
     Ok(())
 }

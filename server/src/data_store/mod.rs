@@ -20,7 +20,6 @@ use crate::cli_error::CliError::UnexpectedStoreError;
 use crate::data_store::auth_token::Privilege;
 use crate::setup;
 use auth_token::{AuthToken, GlobalAuthToken};
-use chrono::Utc;
 use std::fmt::{Debug, Display, Formatter};
 
 pub mod auth_token;
@@ -318,54 +317,6 @@ impl EntryFilter {
         EntryFilterBuilder {
             result: Self::default(),
         }
-    }
-
-    /// Checks if a given entry matches the filter
-    ///
-    /// Usually, filtering should be done by the database. This function can be used for separate
-    /// checks of individual entries in software.
-    pub fn matches(&self, entry: &models::FullEntry) -> bool {
-        if let Some(categories) = &self.categories {
-            if !categories.contains(&entry.entry.category) {
-                return false;
-            }
-        }
-        if self.matches_times_and_rooms(entry.entry.begin, entry.entry.end, &entry.room_ids) {
-            return true;
-        }
-        if entry.previous_dates.iter().any(|pd| {
-            self.matches_times_and_rooms(pd.previous_date.begin, pd.previous_date.end, &pd.room_ids)
-        }) {
-            return true;
-        }
-        false
-    }
-
-    fn matches_times_and_rooms(
-        &self,
-        begin: chrono::DateTime<Utc>,
-        end: chrono::DateTime<Utc>,
-        room_ids: &[RoomId],
-    ) -> bool {
-        if let Some(after) = self.after {
-            if after > end || after == end && self.after_inclusive {
-                return false;
-            }
-        }
-        if let Some(before) = self.before {
-            if before < begin || before == begin && self.before_inclusive {
-                return false;
-            }
-        }
-        if let Some(rooms) = &self.rooms {
-            if !rooms.iter().any(|r| room_ids.contains(r)) {
-                return false;
-            }
-        }
-        if self.no_room && !room_ids.is_empty() {
-            return false;
-        }
-        true
     }
 }
 

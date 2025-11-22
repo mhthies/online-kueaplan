@@ -167,6 +167,5 @@ pub enum ConfigNavButton {
     Categories,
     Rooms,
     Passphrases,
-    PrintTemplates,
     Announcements,
 }

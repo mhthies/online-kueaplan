@@ -219,6 +219,7 @@ impl From<Result<(), StoreError>> for FormSubmitResult {
 /// * the rendered `form_template` with an appropriate flash message in case of
 ///   [FormSubmitResult::ValidationError]
 /// * an [AppError] in case of any [FormSubmitResult::UnexpectedError]
+#[allow(clippy::too_many_arguments)]
 pub fn create_edit_form_response(
     result: FormSubmitResult,
     form_template: impl Template,

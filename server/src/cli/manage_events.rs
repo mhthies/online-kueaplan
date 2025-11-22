@@ -58,7 +58,7 @@ pub fn create_event() -> Result<(), CliError> {
             title: title.clone(),
             begin_date,
             end_date,
-            slug: (!slug.is_empty()).then(|| slug),
+            slug: (!slug.is_empty()).then_some(slug),
         },
         clock_info: EventClockInfo {
             timezone: chrono_tz::Tz::Europe__Berlin,

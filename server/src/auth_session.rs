@@ -101,7 +101,7 @@ impl SessionToken {
         if binary_data.len() < tag_len + timestamp_len {
             return Err(SessionError::InvalidTokenStructure);
         }
-        if (binary_data.len() - tag_len - timestamp_len) % passphrase_id_len != 0 {
+        if !(binary_data.len() - tag_len - timestamp_len).is_multiple_of(passphrase_id_len) {
             return Err(SessionError::InvalidTokenStructure);
         }
         let msg = &binary_data[tag_len..];

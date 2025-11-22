@@ -165,7 +165,7 @@ impl ExtendedEventFormData {
         let default_time_schedule = default_time_schedule?;
 
         if let Err(e) = default_time_schedule.0.validate(effective_begin_of_day.0) {
-            self.default_time_schedule.add_error(e.into());
+            self.default_time_schedule.add_error(e);
             return None;
         }
 
@@ -203,15 +203,11 @@ impl From<ExtendedEvent> for ExtendedEventFormData {
             )
             .into(),
             preceding_event_id: validation::MaybeEmpty(
-                value
-                    .preceding_event_id
-                    .map(|i| validation::Int32FromList(i)),
+                value.preceding_event_id.map(validation::Int32FromList),
             )
             .into(),
             subsequent_event_id: validation::MaybeEmpty(
-                value
-                    .subsequent_event_id
-                    .map(|i| validation::Int32FromList(i)),
+                value.subsequent_event_id.map(validation::Int32FromList),
             )
             .into(),
         }

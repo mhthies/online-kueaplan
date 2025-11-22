@@ -37,8 +37,7 @@ async fn delete_passphrase_form(
 
     let passphrase = passphrases
         .iter()
-        .filter(|p| p.id == passphrase_id)
-        .next()
+        .find(|p| p.id == passphrase_id)
         .ok_or(AppError::EntityNotFound)?;
     if !passphrase.privilege.can_be_managed_online() {
         return Err(AppError::InvalidData(
@@ -51,8 +50,7 @@ async fn delete_passphrase_form(
         .map(|parent_passphrase_id| {
             passphrases
                 .iter()
-                .filter(|p| p.id == parent_passphrase_id)
-                .next()
+                .find(|p| p.id == parent_passphrase_id)
                 .ok_or(AppError::EntityNotFound)
         })
         .transpose()?;

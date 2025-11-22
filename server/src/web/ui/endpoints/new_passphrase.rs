@@ -140,8 +140,7 @@ pub async fn new_derivable_sharable_link_passphrase(
 
     let _parent_passphrase = passphrases
         .iter()
-        .filter(|p| p.id == parent_passphrase_id)
-        .next()
+        .find(|p| p.id == parent_passphrase_id)
         .ok_or(AppError::EntityNotFound)?;
     let passphrase = NewPassphrase {
         event_id,
@@ -237,7 +236,7 @@ impl NewPassphraseFormTemplate<'_> {
         AccessRole::all()
             .filter(|r| r.can_be_managed_online())
             .map(|r| SelectEntry {
-                value: i32::from(r.clone()).to_string().into(),
+                value: i32::from(*r).to_string().into(),
                 text: r.name().into(),
             })
             .collect()

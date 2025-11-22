@@ -39,7 +39,7 @@ pub fn load_event_from_file(path: &PathBuf, generate_new_uuids: bool) -> Result<
     let auth_key = CliAuthTokenKey::new();
     let admin_auth_token = GlobalAuthToken::create_for_cli(&auth_key);
     let store_data = EventWithContents {
-        event: data.event.try_into().map_err(|e| CliError::DataError(e))?,
+        event: data.event.try_into().map_err(CliError::DataError)?,
         rooms: data
             .rooms
             .into_iter()
@@ -144,7 +144,7 @@ fn regenerate_uuids(event_data: &mut SavedEvent) -> Result<(), CliError> {
             )))?;
         for entry_room in entry.room.iter_mut() {
             *entry_room = *room_id_map
-                .get(&entry_room)
+                .get(entry_room)
                 .ok_or(CliError::DataError(format!(
                     "Room {} of entry {} does not exist",
                     entry_room, entry.id
@@ -154,7 +154,7 @@ fn regenerate_uuids(event_data: &mut SavedEvent) -> Result<(), CliError> {
             for previous_date_room in previous_date.room.iter_mut() {
                 *previous_date_room =
                     *room_id_map
-                        .get(&previous_date_room)
+                        .get(previous_date_room)
                         .ok_or(CliError::DataError(format!(
                             "Room {} of previous date {} of entry {} does not exist",
                             previous_date_room, previous_date.id, entry.id
@@ -168,20 +168,19 @@ fn regenerate_uuids(event_data: &mut SavedEvent) -> Result<(), CliError> {
         for announcement_category in announcement.categories.iter_mut() {
             *announcement_category =
                 *category_id_map
-                    .get(&announcement_category)
+                    .get(announcement_category)
                     .ok_or(CliError::DataError(format!(
                         "Category {} of announcement {} does not exist",
                         announcement_category, announcement.id
                     )))?;
         }
         for announcement_room in announcement.rooms.iter_mut() {
-            *announcement_room =
-                *room_id_map
-                    .get(&announcement_room)
-                    .ok_or(CliError::DataError(format!(
-                        "Room {} of announcement {} does not exist",
-                        announcement_room, announcement.id
-                    )))?;
+            *announcement_room = *room_id_map
+                .get(announcement_room)
+                .ok_or(CliError::DataError(format!(
+                    "Room {} of announcement {} does not exist",
+                    announcement_room, announcement.id
+                )))?;
         }
         announcement.id = Uuid::now_v7();
     }

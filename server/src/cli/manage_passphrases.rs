@@ -101,13 +101,13 @@ pub fn delete_passphrase(
     let auth_key = CliAuthTokenKey::new();
     let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
     let passphrases = data_store.get_passphrases(&auth_token, event.id)?;
-    let passphrase = passphrases
-        .iter()
-        .filter(|p| p.id == passphrase_id)
-        .next()
-        .ok_or(CliError::DataError(
-            "Passphrase with given id does not exist".to_string(),
-        ))?;
+    let passphrase =
+        passphrases
+            .iter()
+            .find(|p| p.id == passphrase_id)
+            .ok_or(CliError::DataError(
+                "Passphrase with given id does not exist".to_string(),
+            ))?;
 
     if passphrase.passphrase.is_some() {
         println!(

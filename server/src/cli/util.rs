@@ -26,12 +26,9 @@ where
         print!("> ");
         std::io::stdout().flush().unwrap();
         let mut user_input = String::new();
-        match std::io::stdin().read_line(&mut user_input) {
-            Err(e) => {
-                println!("Error: {}", e);
-                continue;
-            }
-            _ => {}
+        if let Err(e) = std::io::stdin().read_line(&mut user_input) {
+            println!("Error: {}", e);
+            continue;
         }
         let value = match user_input.trim().parse() {
             Ok(value) => value,
@@ -63,12 +60,9 @@ pub fn query_user_bool(prompt: &str, default: Option<bool>) -> bool {
         print!("> ");
         std::io::stdout().flush().unwrap();
         let mut user_input = String::new();
-        match std::io::stdin().read_line(&mut user_input) {
-            Err(e) => {
-                println!("Error: {}", e);
-                continue;
-            }
-            _ => {}
+        if let Err(e) = std::io::stdin().read_line(&mut user_input) {
+            println!("Error: {}", e);
+            continue;
         }
         match user_input.trim().to_lowercase().as_str() {
             "y" => return true,

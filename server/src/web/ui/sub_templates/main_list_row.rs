@@ -128,7 +128,7 @@ impl<'a> MainListRowTemplate<'a> {
                 .merged_rooms
                 .iter()
                 .filter(|id| !self.row.includes_entry || !self.row.entry.room_ids.contains(id))
-                .map(|r| *r),
+                .copied(),
         )
     }
 

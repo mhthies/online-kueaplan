@@ -157,9 +157,7 @@ impl<'a> MainListTemplate<'a> {
     }
 
     fn preceding_event_link_data(&self) -> Option<(&'a Event, chrono::NaiveDate)> {
-        if self.preceding_event.is_none() {
-            return None;
-        }
+        self.preceding_event?;
         let preceding_event = self.preceding_event.unwrap();
         if self.date >= preceding_event.begin_date && self.date <= preceding_event.end_date {
             return Some((preceding_event, self.date));
@@ -171,9 +169,7 @@ impl<'a> MainListTemplate<'a> {
     }
 
     fn subsequent_event_link_data(&self) -> Option<(&'a Event, chrono::NaiveDate)> {
-        if self.subsequent_event.is_none() {
-            return None;
-        }
+        self.subsequent_event?;
         let subsequent_event = self.subsequent_event.unwrap();
         if self.date >= subsequent_event.begin_date && self.date <= subsequent_event.end_date {
             return Some((subsequent_event, self.date));

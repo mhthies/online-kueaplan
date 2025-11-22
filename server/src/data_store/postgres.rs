@@ -128,7 +128,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         event
             .default_time_schedule
             .validate(event.clock_info.effective_begin_of_day)
-            .map_err(|e| StoreError::InvalidInputData(e))?;
+            .map_err(StoreError::InvalidInputData)?;
 
         let result = diesel::update(events)
             .filter(id.eq(event.basic_data.id))
@@ -445,7 +445,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             auth_token.check_privilege(current_event_id, Privilege::ManageEntries)?;
 
             if let Some(room_ids) = entry_data.room_ids.as_ref() {
-                update_entry_rooms(entry_id, &room_ids, connection)?;
+                update_entry_rooms(entry_id, room_ids, connection)?;
             }
             diesel::update(entries)
                 .filter(id.eq(entry_id))
@@ -907,10 +907,10 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             auth_token.check_privilege(current_event_id, Privilege::ManageAnnouncements)?;
 
             if let Some(room_ids) = announcement_data.room_ids.as_ref() {
-                update_announcement_rooms(announcement_id, &room_ids, connection)?;
+                update_announcement_rooms(announcement_id, room_ids, connection)?;
             }
             if let Some(room_ids) = announcement_data.room_ids.as_ref() {
-                update_announcement_categories(announcement_id, &room_ids, connection)?;
+                update_announcement_categories(announcement_id, room_ids, connection)?;
             }
             diesel::update(announcements)
                 .filter(id.eq(announcement_id))

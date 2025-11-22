@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, Entry, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate,
-    NewEntry, PreviousDate, Room,
+    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry,
+    PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{

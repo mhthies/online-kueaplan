@@ -206,11 +206,22 @@ impl From<Result<(), StoreError>> for FormSubmitResult {
 /// Helper function for generating the HTTP response in [edit_entry()].
 ///
 /// Together with the [FormSubmitResult] helper type, this function helps keeping the code of
-/// edit_entry() more readable. Without these tricks we'd have error message creation functions
-/// scattered all over the code.
+/// edit_entry() and similar functions more readable. Without these tricks we'd have error message
+/// creation functions scattered all over the code.
+///
+/// Depending on the `result`, the function either creates
+/// * a redirect to the `success_redirect` with an appropriate flash message, in case of
+///   [FormSubmitResult::Success]
+/// * the rendered `form_template` with a flash message linking to `form_url`, in case of
+///   [FormSubmitResult::ConcurrentEditConflict]
+/// * the rendered `form_template` with a flash message allowing to resubmit the form `form_name`,
+///   in case of [FormSubmitResult::TransactionConflict]
+/// * the rendered `form_template` with an appropriate flash message in case of
+///   [FormSubmitResult::ValidationError]
+/// * an [AppError] in case of any [FormSubmitResult::UnexpectedError]
 pub fn create_edit_form_response(
     result: FormSubmitResult,
-    tmpl: impl Template,
+    form_template: impl Template,
     name_of_thing: &'static str,
     form_url: url::Url,
     form_name: &'static str,
@@ -243,7 +254,7 @@ pub fn create_edit_form_response(
                 button: None,
             });
             Ok(Either::Right(
-                HttpResponse::UnprocessableEntity().body(tmpl.render()?),
+                HttpResponse::UnprocessableEntity().body(form_template.render()?),
             ))
         }
         FormSubmitResult::ConcurrentEditConflict => {
@@ -255,7 +266,9 @@ pub fn create_edit_form_response(
                     form_url: form_url.to_string(),
                 }),
             });
-            Ok(Either::Right(HttpResponse::Conflict().body(tmpl.render()?)))
+            Ok(Either::Right(
+                HttpResponse::Conflict().body(form_template.render()?),
+            ))
         }
         FormSubmitResult::TransactionConflict => {
             request.add_flash_message(FlashMessage {
@@ -266,7 +279,7 @@ pub fn create_edit_form_response(
                 button: Some(FlashMessageActionButton::SubmitForm { form_id: form_name.to_string() }),
             });
             Ok(Either::Right(
-                HttpResponse::ServiceUnavailable().body(tmpl.render()?),
+                HttpResponse::ServiceUnavailable().body(form_template.render()?),
             ))
         }
         FormSubmitResult::UnexpectedError(e) => Err(e),

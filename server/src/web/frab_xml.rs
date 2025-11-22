@@ -343,6 +343,7 @@ struct XmlPerson<'a> {
 // #[derive(Default, Serialize)]
 // struct XmlAttachments;
 
+#[allow(clippy::type_complexity)]
 fn group_entries_by_date_and_room<'a>(
     entries: &'a Vec<FullEntry>,
     rooms_by_id: &'a BTreeMap<RoomId, &'a Room>,

@@ -37,7 +37,7 @@ steps:
     image: rust:latest
     commands:
       - rustup component add clippy
-      - cargo clippy --all-targets --all-features
+      - cargo clippy --all-targets --all-features -- --deny warnings
     depends_on:
       - rust test
 

@@ -359,6 +359,7 @@ impl EntryFilterBuilder {
     }
 
     /// Add filter to only include entries that don't have a room assigned
+    #[allow(dead_code)]
     pub fn without_room(mut self) -> Self {
         self.result.no_room = true;
         self

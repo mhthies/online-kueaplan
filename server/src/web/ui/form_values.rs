@@ -191,6 +191,7 @@ impl BoolFormValue {
         self.value
     }
 
+    #[allow(dead_code)]
     pub fn add_error(&mut self, error: String) {
         self.errors.push(error)
     }

@@ -956,6 +956,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .select(id)
             .filter(event_id.eq(the_event_id))
             .filter(passphrase.eq(the_passphrase))
+            .filter(valid_from.is_null().or(valid_from.le(diesel::dsl::now)))
+            .filter(valid_until.is_null().or(valid_until.ge(diesel::dsl::now)))
             .load::<i32>(&mut self.connection)?;
         if !passphrase_ids.is_empty() {
             session_token.add_authorization(passphrase_ids[0]);
@@ -976,6 +978,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .select(privilege)
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))
+            .filter(valid_from.is_null().or(valid_from.le(diesel::dsl::now)))
+            .filter(valid_until.is_null().or(valid_until.ge(diesel::dsl::now)))
             .load::<AccessRole>(&mut self.connection)?;
 
         roles.sort_unstable();

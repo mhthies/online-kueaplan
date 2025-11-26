@@ -843,6 +843,9 @@ pub struct Passphrase {
     pub privilege: AccessRole,
     pub passphrase: Option<String>,
     pub derivable_from_passphrase: Option<PassphraseId>,
+    pub comment: String,
+    pub valid_from: Option<DateTime<Utc>>,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 impl From<Passphrase> for kueaplan_api_types::Passphrase {
@@ -863,6 +866,9 @@ pub struct NewPassphrase {
     pub passphrase: Option<String>,
     pub privilege: AccessRole,
     pub derivable_from_passphrase: Option<PassphraseId>,
+    pub comment: String,
+    pub valid_from: Option<DateTime<Utc>>,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 impl NewPassphrase {
@@ -872,6 +878,9 @@ impl NewPassphrase {
             passphrase: passphrase.passphrase,
             privilege: passphrase.role.into(),
             derivable_from_passphrase: passphrase.derivable_from_passphrase,
+            comment: "".to_string(),
+            valid_from: None,
+            valid_until: None,
         }
     }
 }

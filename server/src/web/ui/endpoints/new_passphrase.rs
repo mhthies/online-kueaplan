@@ -147,6 +147,10 @@ pub async fn new_derivable_sharable_link_passphrase(
         passphrase: None,
         privilege: AccessRole::SharableViewLink,
         derivable_from_passphrase: Some(parent_passphrase_id),
+        // TODO add form to ask user for these values
+        comment: "".to_string(),
+        valid_from: None,
+        valid_until: None,
     };
 
     web::block(move || -> Result<_, StoreError> {
@@ -214,6 +218,10 @@ impl NewPassphraseFormData {
             passphrase: Some(passphrase?.0),
             privilege: access_role?.0,
             derivable_from_passphrase: None,
+            // TODO add form fields
+            comment: "".to_string(),
+            valid_from: None,
+            valid_until: None,
         })
     }
 }

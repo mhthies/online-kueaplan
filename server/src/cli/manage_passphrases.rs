@@ -66,6 +66,10 @@ pub fn add_passphrase(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
             passphrase: Some(passphrase),
             privilege: access_role.0,
             derivable_from_passphrase: None,
+            // TODO ask user
+            comment: "".to_string(),
+            valid_from: None,
+            valid_until: None,
         },
     )?;
     println!("Success. New passphrase id: {}", new_passphrase_id);
@@ -80,6 +84,10 @@ pub fn add_passphrase(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
                 passphrase: None,
                 privilege: AccessRole::SharableViewLink,
                 derivable_from_passphrase: Some(new_passphrase_id),
+                comment: "".to_string(),
+                // TODO use validity from above
+                valid_from: None,
+                valid_until: None,
             },
         )?;
         println!("Success.");

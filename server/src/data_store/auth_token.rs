@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 pub struct AuthToken {
     event_id: i32,
     roles: Vec<AccessRole>,
+    expired_roles: Vec<AccessRole>,
 }
 
 impl AuthToken {
@@ -33,8 +34,16 @@ impl AuthToken {
     /// [crate::data_store::KueaPlanStoreFacade::get_auth_token_for_session]
     /// after checking the validity of the client's authenticated passphrase ids and their implied
     /// user roles!
-    pub(super) fn create_for_session(event_id: i32, roles: Vec<AccessRole>) -> Self {
-        AuthToken { event_id, roles }
+    pub(super) fn create_for_session(
+        event_id: i32,
+        roles: Vec<AccessRole>,
+        expired_roles: Vec<AccessRole>,
+    ) -> Self {
+        AuthToken {
+            event_id,
+            roles,
+            expired_roles,
+        }
     }
 
     /// Create a new AuthToken for a command line interface functionality.
@@ -47,6 +56,7 @@ impl AuthToken {
         AuthToken {
             event_id,
             roles: vec![AccessRole::Admin, AccessRole::ServerAdmin],
+            expired_roles: vec![],
         }
     }
 
@@ -75,9 +85,15 @@ impl AuthToken {
         if self.has_privilege(event_id, privilege) {
             Ok(())
         } else {
+            let role_present_but_expired = event_id == self.event_id
+                && privilege
+                    .qualifying_roles()
+                    .iter()
+                    .any(|role| self.expired_roles.contains(role));
             Err(StoreError::PermissionDenied {
                 required_privilege: privilege,
                 event_id: Some(event_id),
+                privilege_expired: role_present_but_expired,
             })
         }
     }
@@ -127,6 +143,7 @@ impl GlobalAuthToken {
             Err(StoreError::PermissionDenied {
                 required_privilege: privilege,
                 event_id: None,
+                privilege_expired: false,
             })
         }
     }

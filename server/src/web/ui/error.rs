@@ -23,6 +23,7 @@ pub enum AppError {
         required_privilege: Privilege,
         event_id: EventId,
         session_error: Option<SessionError>,
+        privilege_expired: bool,
     },
     ConcurrentEditConflict,
     TransactionConflict,
@@ -48,14 +49,17 @@ impl From<StoreError> for AppError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
+                privilege_expired,
             } => Self::PermissionDenied {
                 required_privilege,
                 event_id,
                 session_error: None,
+                privilege_expired,
             },
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: None,
+                ..
             } => Self::InternalError(format!(
                 "Global privilege {:?} required.",
                 required_privilege
@@ -126,10 +130,11 @@ impl Display for AppError {
                 required_privilege,
                 event_id: _,
                 session_error,
+                privilege_expired,
             } => {
                 write!(
                     f,
-                    "Client is not authorized to perform this action. Authentication as {} is required",
+                    "Client is not authorized to perform this action. Authentication as {} is required.",
                     required_privilege
                         .qualifying_roles()
                         .iter()
@@ -137,6 +142,9 @@ impl Display for AppError {
                         .collect::<Vec<String>>()
                         .join(" or ")
                 )?;
+                if *privilege_expired {
+                    write!(f, " Authentication has expired.")?;
+                }
                 if let Some(session_error) = session_error {
                     write!(
                         f,

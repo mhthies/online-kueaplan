@@ -62,7 +62,10 @@ fn get_api_service() -> actix_web::Scope {
 pub enum APIError {
     NotExisting,
     AlreadyExisting,
-    PermissionDenied { required_privilege: Privilege },
+    PermissionDenied {
+        required_privilege: Privilege,
+        privilege_expired: bool,
+    },
     NoSessionToken,
     InvalidSessionToken,
     AuthenticationFailed,
@@ -81,14 +84,15 @@ impl Display for APIError {
             Self::AlreadyExisting => {
                 f.write_str("Element already exists")?;
             },
-            Self::PermissionDenied{required_privilege} => {
-                write!(f, "Client is not authorized to perform this action. Authentication as {} is required",
+            Self::PermissionDenied{required_privilege, privilege_expired} => {
+                write!(f, "Client is not authorized to perform this action. Authentication as {} is required.{}",
                        required_privilege
                            .qualifying_roles()
                            .iter()
                            .map(|role| role.name().to_owned())
                            .collect::<Vec<String>>()
-                           .join(" or "))?
+                           .join(" or "),
+                       if *privilege_expired { " The previous authentication for one of these roles has expired." } else { "" })?;
             },
             Self::NoSessionToken => {
                 f.write_str("This action requires authentication, but client did not send authentication session token.")?
@@ -138,9 +142,7 @@ impl ResponseError for APIError {
         match self {
             Self::NotExisting => StatusCode::NOT_FOUND,
             Self::AlreadyExisting => StatusCode::CONFLICT,
-            Self::PermissionDenied {
-                required_privilege: _,
-            } => StatusCode::FORBIDDEN,
+            Self::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
             Self::AuthenticationFailed => StatusCode::FORBIDDEN,
@@ -177,7 +179,11 @@ impl From<StoreError> for APIError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: _,
-            } => Self::PermissionDenied { required_privilege },
+                privilege_expired,
+            } => Self::PermissionDenied {
+                required_privilege,
+                privilege_expired,
+            },
             StoreError::InvalidInputData(e) => Self::InvalidData(e),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",

@@ -96,6 +96,7 @@ impl From<StoreError> for CliError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
+                ..
             } => Self::UnexpectedStoreError(format!(
                 "Missing data_store privilege: {:?} for event {}",
                 required_privilege, event_id
@@ -103,6 +104,7 @@ impl From<StoreError> for CliError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: None,
+                ..
             } => Self::UnexpectedStoreError(format!(
                 "Missing global data_store privilege: {:?}",
                 required_privilege

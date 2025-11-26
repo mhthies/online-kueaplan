@@ -450,6 +450,9 @@ pub enum StoreError {
     PermissionDenied {
         required_privilege: Privilege,
         event_id: Option<EventId>,
+        /// The client had been authorized for a role granting the required privilege, but the
+        /// authorization has expired.
+        privilege_expired: bool,
     },
     /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
     /// SQL constraint. See string description for details.
@@ -510,12 +513,21 @@ impl std::fmt::Display for StoreError {
             Self::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
+                privilege_expired: false,
             } => {
                 write!(f, "Client is not authorized to perform this action. {:?} privilege on event {} required.", required_privilege, event_id)
+            },
+            Self::PermissionDenied {
+                required_privilege,
+                event_id: Some(event_id),
+                privilege_expired: true,
+            } => {
+                write!(f, "Client is no longer authorized to perform this action. {:?} privilege on event {} has expired.", required_privilege, event_id)
             }
             Self::PermissionDenied {
                 required_privilege,
                 event_id: None,
+                ..
             } => {
                 write!(f, "Client is not authorized to perform this action. Global {:?} privilege required.", required_privilege)
             }

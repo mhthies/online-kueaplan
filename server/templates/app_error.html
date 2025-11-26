@@ -50,12 +50,15 @@
             ({{admin_name}}
             &lt;<a href="mailto:{{admin_name}} &lt;{{admin_email}}&gt;">{{admin_email}}</a>&gt;):
         </p>
-    {% when AppError::PermissionDenied { required_privilege, event_id, session_error } %}
+    {% when AppError::PermissionDenied { required_privilege, event_id, session_error, privilege_expired } %}
         {% if *required_privilege == Privilege::ShowKueaPlan %}
             <p>
                 Damit der KüA-Plan nur anwesenden Teilnehmer*innen auf der Akademie zugänglich ist, wird er durch eine Passphrase geschützt.
                 Bitte folge dem folgenden Link zum Login-Formular, um die Passphrase einzugeben und Zugriff zu erhalten.
             </p>
+            {% if privilege_expired %}
+                <p>Dein bereits bestehender Login ist leider nicht mehr gültig.</p>
+            {% endif %}
         {% else %}
             <p>
                 Für den Zugriff auf diese Seite musst du dich als
@@ -63,6 +66,9 @@
                 authentifizieren.
                 Bitte folge dem folgenden Link zum Login-Formular und gib eine passende Passphrase mit diesen Zugriffsberechtigungen ein.
             </p>
+            {% if privilege_expired %}
+                <p>Dein bereits bestehender Login für eine dieser Rollen ist nicht mehr gültig.</p>
+            {% endif %}
         {% endif %}
         {% if let Some(session_error) = session_error %}
             <p>

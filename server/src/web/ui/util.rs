@@ -89,6 +89,7 @@ pub fn extract_session_token(
                 required_privilege: for_privilege,
                 event_id: for_event_id,
                 session_error: None,
+                privilege_expired: false,
             })?
             .value(),
         &app_state.secret,
@@ -98,6 +99,7 @@ pub fn extract_session_token(
         required_privilege: for_privilege,
         event_id: for_event_id,
         session_error: Some(session_error),
+        privilege_expired: false,
     })
 }
 

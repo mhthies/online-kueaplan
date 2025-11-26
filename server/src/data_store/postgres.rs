@@ -7,6 +7,7 @@ use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
 use diesel::dsl::exists;
 use diesel::expression::AsExpression;
+use diesel::internal::operators_macro::FieldAliasMapper;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -974,20 +975,38 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<AuthToken, StoreError> {
         use schema::event_passphrases::dsl::*;
 
-        let mut roles = event_passphrases
-            .select(privilege)
+        let mut data = event_passphrases
+            .select((privilege, valid_from, valid_until))
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))
-            .filter(valid_from.is_null().or(valid_from.le(diesel::dsl::now)))
-            .filter(valid_until.is_null().or(valid_until.ge(diesel::dsl::now)))
-            .load::<AccessRole>(&mut self.connection)?;
+            .load::<(
+                AccessRole,
+                Option<chrono::DateTime<chrono::Utc>>,
+                Option<chrono::DateTime<chrono::Utc>>,
+            )>(&mut self.connection)?;
 
+        let now = chrono::Utc::now();
+        let mut roles = Vec::new();
+        let mut expired_roles = Vec::new();
+        for (role, begin, end) in data {
+            if begin.is_none_or(|b| b <= now) && end.is_none_or(|e| e >= now) {
+                roles.push(role);
+            } else {
+                expired_roles.push(role);
+            }
+        }
         roles.sort_unstable();
         roles.dedup();
+        expired_roles.sort_unstable();
+        expired_roles.dedup();
         // special roles like [AccessRole::ServerAdmin] must never be given to web/API user
         roles.retain(|role| role.can_be_granted_by_passphrase());
 
-        Ok(AuthToken::create_for_session(the_event_id, roles))
+        Ok(AuthToken::create_for_session(
+            the_event_id,
+            roles,
+            expired_roles,
+        ))
     }
 
     fn create_reduced_session_token(

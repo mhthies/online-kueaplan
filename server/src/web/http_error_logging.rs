@@ -30,6 +30,7 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                     required_privilege,
                     event_id: _,
                     session_error,
+                    privilege_expired,
                 } => {
                     if let Some(session_error) = session_error {
                         warn!(
@@ -44,7 +45,7 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                         );
                     } else {
                         warn!(
-                            "HTTP {} permission denied at <{}>. Client: <{}> Requires privilege: {:?}",
+                            "HTTP {} permission denied at <{}>. Client: <{}> Requires privilege: {:?}{}",
                             response.response().status(),
                             response.request().uri(),
                             response
@@ -52,7 +53,8 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                                 .connection_info()
                                 .realip_remote_addr()
                                 .unwrap_or("unknown"),
-                            required_privilege
+                            required_privilege,
+                            if *privilege_expired { ". Privilege has expired." } else { "" }
                         );
                     }
                 }
@@ -77,9 +79,12 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
             }
         } else if let Some(api_error) = error.as_error::<APIError>() {
             match api_error {
-                APIError::PermissionDenied { required_privilege } => {
+                APIError::PermissionDenied {
+                    required_privilege,
+                    privilege_expired,
+                } => {
                     warn!(
-                        "HTTP {} permission denied at <{}>. Client: <{}> Requires privilege: {:?}",
+                        "HTTP {} permission denied at <{}>. Client: <{}> Requires privilege: {:?}{}",
                         response.response().status(),
                         response.request().uri(),
                         response
@@ -87,7 +92,8 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                             .connection_info()
                             .realip_remote_addr()
                             .unwrap_or("unknown"),
-                        required_privilege
+                        required_privilege,
+                        if *privilege_expired { "privilege has expired" } else { "" },
                     );
                 }
                 APIError::NoSessionToken => {

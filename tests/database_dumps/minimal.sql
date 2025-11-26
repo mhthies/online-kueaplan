@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict MMPCDctgiBePCV4mB7zREYnBrzvCMgCalRbtQ6X0kOxzQvJ9wiOZhs7SUp2aIfI
+\restrict B6Q7yjAqmvdX6vtZalcMvFPjeVRFqJoe28rIq0Yxr7xa2WCfweDwLEPSdYvjNYf
 
--- Dumped from database version 18.0
--- Dumped by pg_dump version 18.0
+-- Dumped from database version 18.1
+-- Dumped by pg_dump version 18.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -210,7 +210,10 @@ CREATE TABLE public.event_passphrases (
     event_id integer NOT NULL,
     privilege integer NOT NULL,
     passphrase character varying,
-    derivable_from_passphrase integer
+    derivable_from_passphrase integer,
+    comment character varying DEFAULT ''::character varying NOT NULL,
+    valid_from timestamp with time zone,
+    valid_until timestamp with time zone
 );
 
 
@@ -345,6 +348,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20251014195940	2025-10-14 20:09:37.97214
 20251025113806	2025-10-25 14:32:23.185685
 20251108174050	2025-11-08 19:19:48.143637
+20251126174535	2025-11-29 16:32:57.400042
 \.
 
 
@@ -401,12 +405,12 @@ COPY public.entry_rooms (entry_id, room_id) FROM stdin;
 -- Data for Name: event_passphrases; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_from_passphrase) FROM stdin;
-1	1	1	user	\N
-2	1	2	orga	\N
-3	1	3	admin	\N
-4	1	4	\N	1
-5	1	4	\N	2
+COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_from_passphrase, comment, valid_from, valid_until) FROM stdin;
+1	1	1	user	\N		\N	\N
+2	1	2	orga	\N		\N	\N
+3	1	3	admin	\N		\N	\N
+4	1	4	\N	1		\N	\N
+5	1	4	\N	2		\N	\N
 \.
 
 
@@ -786,5 +790,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MMPCDctgiBePCV4mB7zREYnBrzvCMgCalRbtQ6X0kOxzQvJ9wiOZhs7SUp2aIfI
+\unrestrict B6Q7yjAqmvdX6vtZalcMvFPjeVRFqJoe28rIq0Yxr7xa2WCfweDwLEPSdYvjNYf
 

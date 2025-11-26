@@ -83,6 +83,9 @@ diesel::table! {
         privilege -> Int4,
         passphrase -> Nullable<Varchar>,
         derivable_from_passphrase -> Nullable<Int4>,
+        comment -> Varchar,
+        valid_from -> Nullable<Timestamptz>,
+        valid_until -> Nullable<Timestamptz>,
     }
 }
 

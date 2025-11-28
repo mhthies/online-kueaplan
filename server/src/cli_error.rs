@@ -87,6 +87,7 @@ impl From<StoreError> for CliError {
                 Self::UnexpectedStoreError("Concurrent transaction conflict".to_string())
             }
             StoreError::NotExisting => Self::DataError("Item not existing".to_string()),
+            StoreError::NotValid => Self::DataError("Item not valid".to_string()),
             StoreError::ConflictEntityExists => {
                 Self::DataError("Conflicting entity exists".to_string())
             }

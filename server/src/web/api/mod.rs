@@ -68,7 +68,9 @@ pub enum APIError {
     },
     NoSessionToken,
     InvalidSessionToken,
-    AuthenticationFailed,
+    AuthenticationFailed {
+        passphrase_expired: bool,
+    },
     InvalidJson(actix_web::error::JsonPayloadError),
     InvalidData(String),
     EntityIdMissmatch,
@@ -100,8 +102,11 @@ impl Display for APIError {
             Self::InvalidSessionToken => {
                 f.write_str("This action requires authentication, but client authentication session given by the client is not valid.")?
             },
-            Self::AuthenticationFailed => {
-                f.write_str("Authentication with the given passphrase failed.")?
+            Self::AuthenticationFailed{passphrase_expired} => {
+                f.write_str("Authentication with the given passphrase failed.")?;
+                if *passphrase_expired {
+                    f.write_str(" The passphrase is not yet or no longer valid.")?;
+                }
             }
             Self::InternalError(s) => {
                 f.write_str("Internal error: ")?;
@@ -145,7 +150,7 @@ impl ResponseError for APIError {
             Self::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
-            Self::AuthenticationFailed => StatusCode::FORBIDDEN,
+            Self::AuthenticationFailed { .. } => StatusCode::FORBIDDEN,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidJson(e) => match e {
                 JsonPayloadError::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -174,6 +179,7 @@ impl From<StoreError> for APIError {
             )),
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::NotExisting,
+            StoreError::NotValid => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
             StoreError::ConcurrentEditConflict => Self::ConcurrentEditConflict,
             StoreError::PermissionDenied {

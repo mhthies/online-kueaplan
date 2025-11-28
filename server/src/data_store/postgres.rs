@@ -7,7 +7,6 @@ use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
 use diesel::dsl::exists;
 use diesel::expression::AsExpression;
-use diesel::internal::operators_macro::FieldAliasMapper;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -953,19 +952,32 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError> {
         use schema::event_passphrases::dsl::*;
-        let passphrase_ids = event_passphrases
-            .select(id)
+        let passphrase_ids_and_validity = event_passphrases
+            .select((id, valid_from, valid_until))
             .filter(event_id.eq(the_event_id))
             .filter(passphrase.eq(the_passphrase))
-            .filter(valid_from.is_null().or(valid_from.le(diesel::dsl::now)))
-            .filter(valid_until.is_null().or(valid_until.ge(diesel::dsl::now)))
-            .load::<i32>(&mut self.connection)?;
-        if !passphrase_ids.is_empty() {
-            session_token.add_authorization(passphrase_ids[0]);
-            Ok(())
-        } else {
-            Err(StoreError::NotExisting)
+            .load::<(
+                i32,
+                Option<chrono::DateTime<chrono::Utc>>,
+                Option<chrono::DateTime<chrono::Utc>>,
+            )>(&mut self.connection)?;
+        if passphrase_ids_and_validity.is_empty() {
+            return Err(StoreError::NotExisting);
         }
+
+        let now = chrono::Utc::now();
+        let valid_passphrases: Vec<i32> = passphrase_ids_and_validity
+            .into_iter()
+            .filter(|(_pid, begin, end)| {
+                begin.is_none_or(|b| b <= now) && end.is_none_or(|e| e >= now)
+            })
+            .map(|(pid, _, _)| pid)
+            .collect();
+        if valid_passphrases.is_empty() {
+            return Err(StoreError::NotValid);
+        }
+        session_token.add_authorization(valid_passphrases[0]);
+        Ok(())
     }
 
     fn get_auth_token_for_session(
@@ -975,7 +987,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<AuthToken, StoreError> {
         use schema::event_passphrases::dsl::*;
 
-        let mut data = event_passphrases
+        let data = event_passphrases
             .select((privilege, valid_from, valid_until))
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))

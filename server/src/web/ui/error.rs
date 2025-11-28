@@ -42,6 +42,7 @@ impl From<StoreError> for AppError {
             }
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::EntityNotFound,
+            StoreError::NotValid => Self::EntityNotFound,
             StoreError::ConflictEntityExists => {
                 Self::InternalError("Conflicting entity exists".to_owned())
             }

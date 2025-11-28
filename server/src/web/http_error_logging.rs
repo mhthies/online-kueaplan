@@ -119,15 +119,20 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                             .unwrap_or("unknown"),
                     );
                 }
-                APIError::AuthenticationFailed => {
+                APIError::AuthenticationFailed { passphrase_expired } => {
                     warn!(
-                        "HTTP {} authentication failed. Client: <{}>",
+                        "HTTP {} authentication failed. Client: <{}>{}",
                         response.response().status(),
                         response
                             .request()
                             .connection_info()
                             .realip_remote_addr()
                             .unwrap_or("unknown"),
+                        if *passphrase_expired {
+                            ". Passphrase is not yet valid or has expired."
+                        } else {
+                            ""
+                        }
                     );
                 }
                 APIError::NotExisting

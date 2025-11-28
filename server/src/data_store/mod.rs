@@ -438,6 +438,8 @@ pub enum StoreError {
     TransactionConflict,
     /// The requested entity does not exist
     NotExisting,
+    /// The requested entity exists but is not usable, because it is not yet or no longer valid.
+    NotValid,
     /// The entity could not be created because it already exists, but cannot be updated with the
     /// provided data.
     ConflictEntityExists,
@@ -508,6 +510,7 @@ impl std::fmt::Display for StoreError {
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::TransactionConflict => f.write_str("Database transaction could not be commited due to a conflicting concurrent transaction"),
             Self::NotExisting => f.write_str("Database record does not exist."),
+            Self::NotValid => f.write_str("Database record exists but is not valid."),
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::ConcurrentEditConflict => f.write_str("Updating the entity has been rejected, because the change is not based on the latest version."),
             Self::PermissionDenied {
@@ -536,7 +539,7 @@ impl std::fmt::Display for StoreError {
             }
             StoreError::InvalidDataInDatabase(e) => {
                 write!(f, "Data queried from database could not be deserialized: {}", e)
-            }
+            },
         }
     }
 }

@@ -855,6 +855,9 @@ impl From<Passphrase> for kueaplan_api_types::Passphrase {
             passphrase: value.passphrase,
             derivable_from_passphrase: value.derivable_from_passphrase,
             role: value.privilege.into(),
+            comment: value.comment,
+            valid_from: value.valid_from,
+            valid_until: value.valid_until,
         }
     }
 }
@@ -878,9 +881,9 @@ impl NewPassphrase {
             passphrase: passphrase.passphrase,
             privilege: passphrase.role.into(),
             derivable_from_passphrase: passphrase.derivable_from_passphrase,
-            comment: "".to_string(),
-            valid_from: None,
-            valid_until: None,
+            comment: passphrase.comment,
+            valid_from: passphrase.valid_from,
+            valid_until: passphrase.valid_until,
         }
     }
 }

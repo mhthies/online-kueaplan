@@ -24,6 +24,22 @@
             "description": "The access role granted by activating this passphrase. Corresponds to the roles shown in Authorization Information.",
             "type": "string",
             "enum": ["participant", "orga", "admin", "participant-sharable"]
+        },
+        "comment": {
+            "description": "An internal comment, only visible to the admins. It can be used to document the purpose of the passphrase, when multiple passphrases for the same role are used.",
+            "type": "string"
+        },
+        "validFrom": {
+            "description": "If present and not null, the passphrase is only valid after this point in time.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+        },
+        "validUntil": {
+            "description": "If present and not null, the passphrase is only valid before this point in time. Afterwards, uses can no longer authenticate with this passphrase and existing sessions will lose the privileges granted by this passphrase. Users are informed about the expired passphrase by a specific error message. To revoke privileges in a graceful way, this can be set to a point in the past.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
         }
     },
     "required": ["passphrase", "derivableFromPassphrase" ,"role"]

@@ -288,4 +288,10 @@ pub struct Passphrase {
     )]
     pub derivable_from_passphrase: Option<i32>,
     pub role: AuthorizationRole,
+    #[serde(default)]
+    pub comment: String,
+    #[serde(default, rename = "validFrom")]
+    pub valid_from: Option<DateTime<Utc>>,
+    #[serde(default, rename = "validUntil")]
+    pub valid_until: Option<DateTime<Utc>>,
 }

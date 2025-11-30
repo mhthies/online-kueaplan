@@ -888,7 +888,7 @@ impl NewPassphrase {
     }
 }
 
-#[derive(Clone, AsChangeset)]
+#[derive(Clone, Default, AsChangeset)]
 #[diesel(table_name=super::schema::event_passphrases)]
 pub struct PassphrasePatch {
     pub comment: Option<String>,

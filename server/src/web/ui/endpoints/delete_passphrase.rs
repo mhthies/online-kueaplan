@@ -2,7 +2,7 @@ use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::data_store::models::Passphrase;
 use crate::data_store::{EventId, StoreError};
 use crate::web::ui::base_template::{
-    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -66,7 +66,7 @@ async fn delete_passphrase_form(
             event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
-            active_main_nav_button: None,
+            active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Passphrases,

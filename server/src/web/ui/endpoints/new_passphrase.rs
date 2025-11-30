@@ -303,8 +303,10 @@ impl NewPassphraseFormData {
         let access_role = self.access_role.validate();
         let passphrase = self.passphrase.validate();
         let comment = self.comment.validate();
-        let valid_from = validate_optional_datetime_local_value(&mut self.valid_from, timezone);
-        let valid_until = validate_optional_datetime_local_value(&mut self.valid_until, timezone);
+        let valid_from =
+            util::validate_optional_datetime_local_value(&mut self.valid_from, timezone);
+        let valid_until =
+            util::validate_optional_datetime_local_value(&mut self.valid_until, timezone);
 
         Some(NewPassphrase {
             event_id: 0,
@@ -336,8 +338,10 @@ impl NewDerivablePassphraseFormData {
 
     fn validate(&mut self, timezone: &chrono_tz::Tz) -> Option<NewPassphrase> {
         let comment = self.comment.validate();
-        let valid_from = validate_optional_datetime_local_value(&mut self.valid_from, timezone);
-        let valid_until = validate_optional_datetime_local_value(&mut self.valid_until, timezone);
+        let valid_from =
+            util::validate_optional_datetime_local_value(&mut self.valid_from, timezone);
+        let valid_until =
+            util::validate_optional_datetime_local_value(&mut self.valid_until, timezone);
 
         Some(NewPassphrase {
             event_id: 0,
@@ -348,27 +352,6 @@ impl NewDerivablePassphraseFormData {
             valid_from: valid_from?,
             valid_until: valid_until?,
         })
-    }
-}
-
-fn validate_optional_datetime_local_value<T: chrono::TimeZone>(
-    value: &mut FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
-    local_timezone: &T,
-) -> Option<Option<chrono::DateTime<chrono::Utc>>> {
-    let local_datetime = value.validate()?;
-    if let Some(local_datetime) = local_datetime.0 {
-        let utc_datetime = local_timezone
-            .from_local_datetime(&local_datetime.0)
-            .latest()
-            .map(|v| v.to_utc());
-        if let Some(utc_datetime) = utc_datetime {
-            Some(Some(utc_datetime))
-        } else {
-            value.add_error("This point in time does not exist in the local timezone.".to_owned());
-            None
-        }
-    } else {
-        Some(None)
     }
 }
 

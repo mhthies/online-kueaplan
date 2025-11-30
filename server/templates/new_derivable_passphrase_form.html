@@ -1,0 +1,44 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+<h1>
+    {{ base.page_title }}
+</h1>
+
+<form method="post" action="{{post_url()?}}" id="new_derivable_passphrase_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+    <div class="card mb-3">
+        <div class="card-body">
+            {{self::format_access_role(parent_passphrase.privilege)}}
+            / {{self::format_passphrase(parent_passphrase.passphrase)}}
+            {% if !parent_passphrase.comment.is_empty() %}
+                ({{parent_passphrase.comment}})
+            {% endif %}<br>
+            &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu"></i>
+            {{self::format_access_role(new_access_role)}}
+        </div>
+    </div>
+    <!-- TODO new_access_role -->
+    <div class="mb-3">
+        {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar").info("z.B. vorgesehene Nutzung dieser Passphrase, wenn es mehrere Passphrasen für diese Rolle gibt.") }}
+    </div>
+    <div class="mb-3 row gy-3">
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.valid_from, "valid_from", "gültig ab").input_type(InputType::DateTimeLocal) }}
+        </div>
+        <div class="col-sm-6">
+            {{ FormFieldTemplate::new(form_data.valid_until, "valid_until", "gültig bis").input_type(InputType::DateTimeLocal) }}
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Erstellen</button>&ensp;
+    <a href="{{ base.url_for_event_endpoint("manage_passphrases")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+        <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+    </a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script>
+    protectChanges(document.getElementById("new_passphrase_form"));
+</script>
+{% endblock %}

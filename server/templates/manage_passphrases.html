@@ -33,12 +33,11 @@
                                 <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
                             {% endif %}
                             {% if passphrase.passphrase.is_some() %}
-                                <form class="d-inline-block" method="post"
-                                        action="{{ base.request.url_for("new_derivable_sharable_link_passphrase", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}">
-                                    <button type="submit" class="btn btn-sm btn-success" title="Ableitbare Rolle für Abruf per Link hinzufügen">
-                                        <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
-                                    </button>
-                                </form>
+                                <a href="{{ base.request.url_for("new_derivable_sharable_link_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}"
+                                    class="btn btn-sm btn-outline-success"
+                                    title="Ableitbare Rolle für Abruf per Link hinzufügen">
+                                    <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
+                                </a>
                             {% endif %}
                         </td>
                     </tr>

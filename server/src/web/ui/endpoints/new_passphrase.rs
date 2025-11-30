@@ -1,23 +1,22 @@
 use crate::data_store::auth_token::{AccessRole, Privilege};
-use crate::data_store::models::NewPassphrase;
+use crate::data_store::models::{NewPassphrase, Passphrase};
 use crate::data_store::{EventId, StoreError};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
-use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{
     FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
 };
 use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, InputType, SelectEntry, SelectTemplate,
 };
+use crate::web::ui::util::{format_access_role, format_passphrase};
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
-use actix_web::web::{Form, Html, Redirect};
+use actix_web::web::{Form, Html};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
-use chrono::TimeZone;
 use serde::Deserialize;
 
 #[get("/{event_id}/config/passphrases/new")]
@@ -123,8 +122,8 @@ pub async fn new_passphrase(
     )
 }
 
-#[post("/{event_id}/config/passphrases/{passphrase_id}/new_sharable_link_passphrase")]
-pub async fn new_derivable_sharable_link_passphrase(
+#[get("/{event_id}/config/passphrases/{passphrase_id}/new_sharable_link_passphrase")]
+pub async fn new_derivable_sharable_link_passphrase_form(
     path: web::Path<(EventId, i32)>,
     state: web::Data<AppState>,
     req: HttpRequest,
@@ -133,48 +132,130 @@ pub async fn new_derivable_sharable_link_passphrase(
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManagePassphrases, event_id)?;
     let store = state.store.clone();
-    let (passphrases, auth) = web::block(move || -> Result<_, AppError> {
+    let (event, passphrases, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         auth.check_privilege(event_id, Privilege::ManagePassphrases)?;
-        Ok((store.get_passphrases(&auth, event_id)?, auth))
+        Ok((
+            store.get_extended_event(&auth, event_id)?,
+            store.get_passphrases(&auth, event_id)?,
+            auth,
+        ))
     })
     .await??;
 
-    let _parent_passphrase = passphrases
+    let parent_passphrase = passphrases
         .iter()
         .find(|p| p.id == parent_passphrase_id)
         .ok_or(AppError::EntityNotFound)?;
-    let passphrase = NewPassphrase {
+
+    let form_data = NewDerivablePassphraseFormData::new();
+    let new_access_role = AccessRole::SharableViewLink;
+    let title = format!("Neue Ableitbare Rolle für {}", new_access_role.name());
+
+    let tmpl = NewDerivablePassphraseFormTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: &title,
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: None,
+            auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::Configuration),
+        },
+        base_config: BaseConfigTemplateContext {
+            active_nav_button: ConfigNavButton::Passphrases,
+        },
+        form_data: &form_data,
         event_id,
-        passphrase: None,
-        privilege: AccessRole::SharableViewLink,
-        derivable_from_passphrase: Some(parent_passphrase_id),
-        // TODO add form to ask user for these values
-        comment: "".to_string(),
-        valid_from: None,
-        valid_until: None,
+        parent_passphrase,
+        new_access_role,
+        has_unsaved_changes: false,
     };
 
-    web::block(move || -> Result<_, StoreError> {
-        let mut store = state.store.get_facade()?;
-        store.create_passphrase(&auth, passphrase)?;
-        Ok(())
+    Ok(Html::new(tmpl.render()?))
+}
+
+#[post("/{event_id}/config/passphrases/{passphrase_id}/new_sharable_link_passphrase")]
+pub async fn new_derivable_sharable_link_passphrase(
+    path: web::Path<(EventId, i32)>,
+    state: web::Data<AppState>,
+    data: Form<NewDerivablePassphraseFormData>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let (event_id, parent_passphrase_id) = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManagePassphrases, event_id)?;
+    let store = state.store.clone();
+    let (passphrases, event, auth) = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        auth.check_privilege(event_id, Privilege::ManagePassphrases)?;
+        Ok((
+            store.get_passphrases(&auth, event_id)?,
+            store.get_extended_event(&auth, event_id)?,
+            auth,
+        ))
     })
     .await??;
 
-    let notification = FlashMessage {
-        flash_type: FlashType::Success,
-        message: "Die ableitbare Rolle wurde erstellt.".to_string(),
-        keep_open: false,
-        button: None,
+    let parent_passphrase = passphrases
+        .iter()
+        .find(|p| p.id == parent_passphrase_id)
+        .ok_or(AppError::EntityNotFound)?;
+    let mut form_data = data.into_inner();
+    let new_access_role = AccessRole::SharableViewLink;
+    let passphrase = form_data.validate(&event.clock_info.timezone);
+
+    let result: util::FormSubmitResult = if let Some(mut passphrase) = passphrase {
+        passphrase.event_id = event_id;
+        passphrase.derivable_from_passphrase = Some(parent_passphrase_id);
+        passphrase.privilege = new_access_role;
+
+        let auth_clone = auth.clone();
+        web::block(move || -> Result<_, StoreError> {
+            let mut store = state.store.get_facade()?;
+            store.create_passphrase(&auth_clone, passphrase)?;
+            Ok(())
+        })
+        .await?
+        .into()
+    } else {
+        util::FormSubmitResult::ValidationError
     };
-    req.add_flash_message(notification);
-    Ok(Redirect::to(
-        req.url_for("manage_passphrases", &[event_id.to_string()])?
-            .to_string(),
+
+    let title = format!("Neue Ableitbare Rolle für {}", new_access_role.name());
+    let tmpl = NewDerivablePassphraseFormTemplate {
+        base: BaseTemplateContext {
+            request: &req,
+            page_title: &title,
+            event: AnyEventData::ExtendedEvent(&event),
+            current_date: None,
+            auth_token: Some(&auth),
+            active_main_nav_button: Some(MainNavButton::Configuration),
+        },
+        base_config: BaseConfigTemplateContext {
+            active_nav_button: ConfigNavButton::Passphrases,
+        },
+        form_data: &form_data,
+        event_id,
+        parent_passphrase,
+        new_access_role,
+        has_unsaved_changes: false,
+    };
+
+    util::create_edit_form_response(
+        result,
+        &tmpl,
+        "Die ableitbare Rolle",
+        req.url_for(
+            "new_derivable_sharable_link_passphrase_form",
+            &[event_id.to_string(), parent_passphrase_id.to_string()],
+        )?,
+        "new_derivable_passphrase_form",
+        true,
+        req.url_for("manage_passphrases", &[event_id.to_string()])?,
+        &req,
     )
-    .see_other())
 }
 
 #[derive(Debug)]
@@ -237,6 +318,39 @@ impl NewPassphraseFormData {
     }
 }
 
+#[derive(Deserialize)]
+struct NewDerivablePassphraseFormData {
+    comment: FormValue<String>,
+    valid_from: FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
+    valid_until: FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
+}
+
+impl NewDerivablePassphraseFormData {
+    fn new() -> Self {
+        Self {
+            comment: Default::default(),
+            valid_from: Default::default(),
+            valid_until: Default::default(),
+        }
+    }
+
+    fn validate(&mut self, timezone: &chrono_tz::Tz) -> Option<NewPassphrase> {
+        let comment = self.comment.validate();
+        let valid_from = validate_optional_datetime_local_value(&mut self.valid_from, timezone);
+        let valid_until = validate_optional_datetime_local_value(&mut self.valid_until, timezone);
+
+        Some(NewPassphrase {
+            event_id: 0,
+            passphrase: None,
+            privilege: AccessRole::SharableViewLink,
+            derivable_from_passphrase: None,
+            comment: comment?,
+            valid_from: valid_from?,
+            valid_until: valid_until?,
+        })
+    }
+}
+
 fn validate_optional_datetime_local_value<T: chrono::TimeZone>(
     value: &mut FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
     local_timezone: &T,
@@ -280,5 +394,33 @@ impl NewPassphraseFormTemplate<'_> {
                 text: r.name().into(),
             })
             .collect()
+    }
+}
+
+#[derive(Template)]
+#[template(path = "new_derivable_passphrase_form.html")]
+struct NewDerivablePassphraseFormTemplate<'a> {
+    base: BaseTemplateContext<'a>,
+    base_config: BaseConfigTemplateContext,
+    form_data: &'a NewDerivablePassphraseFormData,
+    event_id: EventId,
+    parent_passphrase: &'a Passphrase,
+    new_access_role: AccessRole,
+    has_unsaved_changes: bool,
+}
+
+impl NewDerivablePassphraseFormTemplate<'_> {
+    fn post_url(&self) -> Result<String, AppError> {
+        Ok(self
+            .base
+            .request
+            .url_for(
+                "new_derivable_sharable_link_passphrase",
+                &[
+                    &self.event_id.to_string(),
+                    &self.parent_passphrase.id.to_string(),
+                ],
+            )?
+            .to_string())
     }
 }

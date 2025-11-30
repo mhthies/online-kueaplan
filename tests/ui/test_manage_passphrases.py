@@ -41,7 +41,8 @@ def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: N
     table_row = helpers.get_table_row_by_column_value(page, "Rolle", "Admin")
     expect(table_row).to_be_visible()
     actions_cell = helpers.get_table_cell_by_header(table_row, "Aktionen")
-    actions_cell.get_by_role("button").and_(actions_cell.get_by_title("Abruf per Link hinzufügen")).click()
+    actions_cell.get_by_role("link").and_(actions_cell.get_by_title("Abruf per Link hinzufügen")).click()
+    page.get_by_role("button", name="Erstellen").click()
     expect(page.get_by_role("alert").filter(has_text="Erfolg")).to_be_visible()
 
     page.get_by_role("link", name="Links für Kalender").click()

@@ -81,6 +81,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::new_passphrase::new_passphrase)
         .service(endpoints::new_passphrase::new_derivable_sharable_link_passphrase_form)
         .service(endpoints::new_passphrase::new_derivable_sharable_link_passphrase)
+        .service(endpoints::edit_passphrase::edit_passphrase_form)
+        .service(endpoints::edit_passphrase::edit_passphrase)
         .service(endpoints::delete_passphrase::delete_passphrase_form)
         .service(endpoints::delete_passphrase::delete_passphrase)
         .service(endpoints::calendar_link_overview::calendar_link_overview)

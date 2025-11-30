@@ -30,6 +30,7 @@
                         <td>{{passphrase.comment}}</td>
                         <td class="shrink-to-content">
                             {% if passphrase.privilege.can_be_managed_online() %}
+                                <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Passphrase bearbeiten"><i class="bi bi-pencil"></i></a>
                                 <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
                             {% endif %}
                             {% if passphrase.passphrase.is_some() %}
@@ -52,6 +53,7 @@
                             <td>{{passphrase.comment}}</td>
                             <td class="shrink-to-content">
                                 {% if passphrase.privilege.can_be_managed_online() %}
+                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Ableitbare Rolle bearbeiten"><i class="bi bi-pencil"></i></a>
                                     <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
                                 {% endif %}
                             </td>
@@ -71,6 +73,7 @@
                             <td>{{passphrase.comment}}</td>
                             <td class="shrink-to-content">
                                 {% if passphrase.privilege.can_be_managed_online() %}
+                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Ableitbare Rolle bearbeiten"><i class="bi bi-pencil"></i></a>
                                     <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
                                 {% endif %}
                             </td>

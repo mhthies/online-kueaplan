@@ -13,8 +13,8 @@ use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
 use actix_web::{Either, HttpRequest, HttpResponse};
 use askama::Template;
+use chrono::Datelike;
 use chrono::Weekday;
-use chrono::{Datelike, TimeZone};
 
 #[allow(clippy::identity_op)] // We want to explicitly state that it's "1" year
 pub const SESSION_COOKIE_MAX_AGE: std::time::Duration =

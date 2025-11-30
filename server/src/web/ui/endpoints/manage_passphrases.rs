@@ -1,6 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::Passphrase;
-use crate::data_store::EventId;
+use crate::data_store::models::{ExtendedEvent, Passphrase};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -70,7 +69,7 @@ async fn manage_passphrases(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Passphrases,
         },
-        event_id,
+        event: &event,
         sorted_passphrases: &sorted_passphrases,
         unsorted_passphrases: &unsorted_passphrases,
     };
@@ -82,7 +81,24 @@ async fn manage_passphrases(
 struct ManagePassphrasesTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
-    event_id: EventId,
+    event: &'a ExtendedEvent,
     sorted_passphrases: &'a PassphrasesWithDerivables<'a>,
     unsorted_passphrases: &'a Vec<&'a Passphrase>,
+}
+
+impl ManagePassphrasesTemplate<'_> {
+    fn format_datetime_or_infinity(
+        &self,
+        timestamp: &Option<chrono::DateTime<chrono::Utc>>,
+    ) -> String {
+        timestamp
+            .map(|timestamp| {
+                timestamp
+                    .with_timezone(&self.event.clock_info.timezone)
+                    .naive_local()
+                    .format("%d.%m.%Y %H:%M:%S%.f")
+                    .to_string()
+            })
+            .unwrap_or("∞".to_owned())
+    }
 }

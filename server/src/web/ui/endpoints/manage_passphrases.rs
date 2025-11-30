@@ -96,7 +96,7 @@ impl ManagePassphrasesTemplate<'_> {
                 timestamp
                     .with_timezone(&self.event.clock_info.timezone)
                     .naive_local()
-                    .format("%d.%m.%Y %H:%M:%S%.f")
+                    .format("%d.%m.%Y %H:%M:%S")
                     .to_string()
             })
             .unwrap_or("∞".to_owned())

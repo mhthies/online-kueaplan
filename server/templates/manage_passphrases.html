@@ -26,7 +26,7 @@
                     <tr>
                         <td>{{self::format_access_role(passphrase.privilege)}}</td>
                         <td>{{self::format_passphrase(passphrase.passphrase)}}</td>
-                        <td>{{format_datetime_or_infinity(passphrase.valid_from)}} – {{format_datetime_or_infinity(passphrase.valid_until)}}</td>
+                        <td>{{format_datetime_or_infinity(passphrase.valid_from)}} – {{format_datetime_or_infinity(passphrase.valid_until)}}</td>
                         <td>{{passphrase.comment}}</td>
                         <td class="shrink-to-content">
                             {% if passphrase.privilege.can_be_managed_online() %}

@@ -410,7 +410,7 @@ pub fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
         AccessRole::SharableViewLink => ("share", "info"),
     };
     askama::filters::Safe(format!(
-        "<span class=\"text-{}\"><i class=\"bi bi-{}\"></i> {}</span>",
+        "<span class=\"text-{} text-nowrap\"><i class=\"bi bi-{}\"></i> {}</span>",
         color,
         icon,
         role.name()

@@ -9,12 +9,15 @@ use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{
     FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
 };
-use crate::web::ui::sub_templates::form_inputs::{FormFieldTemplate, SelectEntry, SelectTemplate};
+use crate::web::ui::sub_templates::form_inputs::{
+    FormFieldTemplate, InputType, SelectEntry, SelectTemplate,
+};
 use crate::web::ui::{util, validation};
 use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
+use chrono::TimeZone;
 use serde::Deserialize;
 
 #[get("/{event_id}/config/passphrases/new")]
@@ -76,7 +79,7 @@ pub async fn new_passphrase(
     .await??;
 
     let mut form_data = data.into_inner();
-    let passphrase = form_data.validate();
+    let passphrase = form_data.validate(&event.clock_info.timezone);
 
     let result: util::FormSubmitResult = if let Some(mut passphrase) = passphrase {
         passphrase.event_id = event_id;
@@ -199,6 +202,9 @@ impl ValidateFromFormInput for AccessRoleValue {
 struct NewPassphraseFormData {
     access_role: FormValue<AccessRoleValue>,
     passphrase: FormValue<validation::NonEmptyString>,
+    comment: FormValue<String>,
+    valid_from: FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
+    valid_until: FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
 }
 
 impl NewPassphraseFormData {
@@ -206,22 +212,42 @@ impl NewPassphraseFormData {
         Self {
             access_role: AccessRoleValue(AccessRole::User).into(),
             passphrase: Default::default(),
+            comment: Default::default(),
+            valid_from: Default::default(),
+            valid_until: Default::default(),
         }
     }
 
-    fn validate(&mut self) -> Option<NewPassphrase> {
+    fn validate(&mut self, timezone: &chrono_tz::Tz) -> Option<NewPassphrase> {
         let access_role = self.access_role.validate();
         let passphrase = self.passphrase.validate();
+        let comment = self.comment.validate();
+        let valid_from = self.valid_from.validate();
+        let valid_until = self.valid_until.validate();
+
+        let valid_from = valid_from?.0.map(|local| {
+            timezone
+                .from_local_datetime(&local.0)
+                .latest()
+                .map(|v| v.to_utc())
+                .unwrap_or(local.0.and_utc())
+        });
+        let valid_until = valid_until?.0.map(|local| {
+            timezone
+                .from_local_datetime(&local.0)
+                .latest()
+                .map(|v| v.to_utc())
+                .unwrap_or(local.0.and_utc())
+        });
 
         Some(NewPassphrase {
             event_id: 0,
             passphrase: Some(passphrase?.0),
             privilege: access_role?.0,
             derivable_from_passphrase: None,
-            // TODO add form fields
-            comment: "".to_string(),
-            valid_from: None,
-            valid_until: None,
+            comment: comment?,
+            valid_from,
+            valid_until,
         })
     }
 }

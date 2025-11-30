@@ -268,6 +268,13 @@ pub trait KueaPlanStoreFacade {
         passphrase: models::NewPassphrase,
     ) -> Result<PassphraseId, StoreError>;
 
+    fn patch_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase_id: PassphraseId,
+        passphrase_data: models::PassphrasePatch,
+    ) -> Result<(), StoreError>;
+
     fn delete_passphrase(
         &mut self,
         auth_token: &AuthToken,

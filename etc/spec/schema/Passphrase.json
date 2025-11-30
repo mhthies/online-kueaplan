@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://kuaplan.de/meta/schema/NewPassphrase.json",
+    "$id": "https://kuaplan.de/meta/schema/Passphrase.json",
     "title": "Authentication Passphrase",
     "description": "Configuration of a Passphrase (authentication token), granting a specific access role to users which provide it",
     "type": "object",

@@ -1082,6 +1082,30 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         Ok(result)
     }
 
+    fn patch_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase_id: PassphraseId,
+        passphrase_data: models::PassphrasePatch,
+    ) -> Result<(), StoreError> {
+        use schema::event_passphrases::dsl::*;
+
+        self.connection.transaction(|connection| {
+            let current_event_id = event_passphrases
+                .select(event_id)
+                .filter(id.eq(passphrase_id))
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(current_event_id, Privilege::ManagePassphrases)?;
+
+            diesel::update(event_passphrases)
+                .filter(id.eq(passphrase_id))
+                .set(passphrase_data)
+                .execute(connection)?;
+            Ok(())
+        })
+    }
+
     fn delete_passphrase(
         &mut self,
         auth_token: &AuthToken,

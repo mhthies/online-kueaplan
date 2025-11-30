@@ -55,6 +55,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_announcement::delete_announcement)
         .service(endpoints_passphrase::list_passphrases)
         .service(endpoints_passphrase::create_passphrase)
+        .service(endpoints_passphrase::change_passphrase)
         .service(endpoints_passphrase::delete_passphrase)
 }
 

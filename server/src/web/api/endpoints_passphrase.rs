@@ -1,7 +1,8 @@
 use crate::data_store::models::NewPassphrase;
+use crate::data_store::{EventId, PassphraseId};
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
-use actix_web::{delete, get, post, web, HttpResponse, Responder};
+use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 
 #[get("/events/{event_id}/passphrases")]
 async fn list_passphrases(
@@ -59,6 +60,29 @@ async fn create_passphrase(
         ..passphrase
     };
     Ok(web::Json(passphrase))
+}
+
+#[patch("/events/{event_id}/passphrases/{passphrase_id}")]
+async fn change_passphrase(
+    path: web::Path<(EventId, PassphraseId)>,
+    data: web::Json<kueaplan_api_types::PassphrasePatch>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let (event_id, passphrase_id) = path.into_inner();
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
+    let passphrase = data.into_inner();
+    web::block(move || -> Result<_, APIError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        Ok(store.patch_passphrase(&auth, passphrase_id, passphrase.into())?)
+    })
+    .await??;
+
+    Ok(HttpResponse::NoContent())
 }
 
 #[delete("/events/{event_id}/passphrases/{passphrase_id}")]

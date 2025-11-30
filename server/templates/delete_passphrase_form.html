@@ -16,6 +16,10 @@
             {{self::format_access_role(parent_passphrase.privilege)}}
             / {{self::format_passphrase(parent_passphrase.passphrase)}})
         {% endif %}
+        {% if !passphrase.comment.is_empty() %}
+            <br>
+            ({{passphrase.comment}})
+        {% endif %}
     </div>
 </div>
 

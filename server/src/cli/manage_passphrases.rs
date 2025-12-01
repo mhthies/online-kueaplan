@@ -2,7 +2,7 @@ use crate::cli::util::{query_user, query_user_bool};
 use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AccessRole, AuthToken};
-use crate::data_store::models::NewPassphrase;
+use crate::data_store::models::{Event, NewPassphrase, Passphrase};
 use crate::data_store::KuaPlanStore;
 use crate::data_store::{get_store_from_env, PassphraseId};
 use std::str::FromStr;
@@ -138,27 +138,9 @@ pub fn delete_passphrase(
                 "Passphrase with given id does not exist".to_string(),
             ))?;
 
-    if passphrase.passphrase.is_some() {
-        println!(
-            "Deleting passphrase '{}' for role {:?} on {}",
-            passphrase.passphrase.as_ref().unwrap().replace("\x7f", "*"),
-            passphrase.privilege,
-            event.title
-        );
-    } else if passphrase.derivable_from_passphrase.is_some() {
-        println!(
-            "Deleting passphrase {}, derivable from {}, for role {:?} on {}",
-            passphrase.id,
-            passphrase.derivable_from_passphrase.unwrap(),
-            passphrase.privilege,
-            event.title
-        );
-    } else {
-        println!(
-            "Deleting passphrase {}, for role {:?} on {}",
-            passphrase.id, passphrase.privilege, event.title
-        );
-    }
+    print!("Deleting ");
+    write_passphrase_id(std::io::stdout(), &event, passphrase).unwrap();
+    println!();
 
     let confirm = query_user_bool(
         "Do you want to delete this passphrase and invalidate all sessions?",
@@ -168,6 +150,36 @@ pub fn delete_passphrase(
         data_store.delete_passphrase(&auth_token, event.id, passphrase_id)?;
     }
 
+    Ok(())
+}
+
+#[allow(unused_must_use)]
+fn write_passphrase_id(
+    mut w: impl std::io::Write,
+    event: &Event,
+    passphrase: &Passphrase,
+) -> std::io::Result<()> {
+    if passphrase.passphrase.is_some() {
+        write!(
+            w,
+            "passphrase '{}'",
+            passphrase.passphrase.as_ref().unwrap().replace("\x7f", "*")
+        )?;
+    } else if passphrase.derivable_from_passphrase.is_some() {
+        write!(w, "passphrase {}", passphrase.id)?;
+    }
+    if passphrase.derivable_from_passphrase.is_some() {
+        write!(
+            w,
+            ", derivable from {}",
+            passphrase.derivable_from_passphrase.unwrap()
+        )?;
+    }
+    write!(w, ", for role {:?}", passphrase.privilege)?;
+    if !passphrase.comment.is_empty() {
+        write!(w, " ({})", passphrase.comment)?;
+    }
+    write!(w, " on {}", event.title)?;
     Ok(())
 }
 

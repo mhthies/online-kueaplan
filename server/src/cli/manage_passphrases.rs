@@ -2,7 +2,7 @@ use crate::cli::util::{query_user, query_user_bool};
 use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AccessRole, AuthToken};
-use crate::data_store::models::{Event, NewPassphrase, Passphrase};
+use crate::data_store::models::{Event, NewPassphrase, Passphrase, PassphrasePatch};
 use crate::data_store::KuaPlanStore;
 use crate::data_store::{get_store_from_env, PassphraseId};
 use std::str::FromStr;
@@ -148,6 +148,113 @@ pub fn delete_passphrase(
     );
     if confirm {
         data_store.delete_passphrase(&auth_token, event.id, passphrase_id)?;
+    }
+
+    Ok(())
+}
+
+pub fn edit_passphrase(
+    event_id_or_slug: EventIdOrSlug,
+    passphrase_id: PassphraseId,
+) -> Result<(), CliError> {
+    let data_store_pool = get_store_from_env()?;
+    let mut data_store = data_store_pool.get_facade()?;
+
+    let event = match event_id_or_slug {
+        EventIdOrSlug::Id(event_id) => data_store.get_event(event_id)?,
+        EventIdOrSlug::Slug(event_slug) => data_store.get_event_by_slug(&event_slug)?,
+    };
+    let auth_key = CliAuthTokenKey::new();
+    let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
+    let passphrases = data_store.get_passphrases(&auth_token, event.id)?;
+    let passphrase =
+        passphrases
+            .iter()
+            .find(|p| p.id == passphrase_id)
+            .ok_or(CliError::DataError(
+                "Passphrase with given id does not exist".to_string(),
+            ))?;
+
+    print!("Editing ");
+    write_passphrase_id(std::io::stdout(), &event, passphrase).unwrap();
+    println!();
+
+    let edit_comment = query_user_bool("Edit the comment?", Some(false));
+    let comment: String = if edit_comment {
+        query_user("Comment about designated usage")
+    } else {
+        passphrase.comment.clone()
+    };
+    let edit_valid_from = query_user_bool("Edit validity begin?", Some(false));
+    let valid_from = if edit_valid_from {
+        query_user::<IsoDateTime>(
+            "Passphrase is valid from (YYYY-MM-DD hh:mm:ssZ; empty value for no limit)",
+        )
+        .0
+    } else {
+        passphrase.valid_from
+    };
+    let edit_valid_until = query_user_bool("Edit validity end?", Some(false));
+    let valid_until = if edit_valid_until {
+        query_user::<IsoDateTime>(
+            "Passphrase is valid until (YYYY-MM-DD hh:mm:ssZ; empty value for no limit)",
+        )
+        .0
+    } else {
+        passphrase.valid_until
+    };
+
+    data_store.patch_passphrase(
+        &auth_token,
+        passphrase_id,
+        PassphrasePatch {
+            comment: Some(comment),
+            valid_from: Some(valid_from),
+            valid_until: Some(valid_until),
+        },
+    )?;
+    Ok(())
+}
+
+pub fn invalidate_passphrase(
+    event_id_or_slug: EventIdOrSlug,
+    passphrase_id: PassphraseId,
+) -> Result<(), CliError> {
+    let data_store_pool = get_store_from_env()?;
+    let mut data_store = data_store_pool.get_facade()?;
+
+    let event = match event_id_or_slug {
+        EventIdOrSlug::Id(event_id) => data_store.get_event(event_id)?,
+        EventIdOrSlug::Slug(event_slug) => data_store.get_event_by_slug(&event_slug)?,
+    };
+    let auth_key = CliAuthTokenKey::new();
+    let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
+    let passphrases = data_store.get_passphrases(&auth_token, event.id)?;
+    let passphrase =
+        passphrases
+            .iter()
+            .find(|p| p.id == passphrase_id)
+            .ok_or(CliError::DataError(
+                "Passphrase with given id does not exist".to_string(),
+            ))?;
+
+    print!("Invalidating ");
+    write_passphrase_id(std::io::stdout(), &event, passphrase).unwrap();
+    println!();
+
+    let confirm = query_user_bool(
+        "Do you want to modify the passphrase to be invalid from now on?",
+        None,
+    );
+    if confirm {
+        data_store.patch_passphrase(
+            &auth_token,
+            passphrase_id,
+            PassphrasePatch {
+                valid_until: Some(Some(chrono::Utc::now())),
+                ..Default::default()
+            },
+        )?;
     }
 
     Ok(())

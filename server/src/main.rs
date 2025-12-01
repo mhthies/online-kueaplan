@@ -61,11 +61,29 @@ fn run_main_command(command: Command) -> Result<(), CliError> {
         Command::Passphrase(PassphraseCommand::Create { event_id_or_slug }) => {
             kueaplan_server::cli::manage_passphrases::add_passphrase(event_id_or_slug)?;
         }
+        Command::Passphrase(PassphraseCommand::Edit {
+            event_id_or_slug,
+            passphrase_id,
+        }) => {
+            kueaplan_server::cli::manage_passphrases::edit_passphrase(
+                event_id_or_slug,
+                passphrase_id,
+            )?;
+        }
         Command::Passphrase(PassphraseCommand::Delete {
             event_id_or_slug,
             passphrase_id,
         }) => {
             kueaplan_server::cli::manage_passphrases::delete_passphrase(
+                event_id_or_slug,
+                passphrase_id,
+            )?;
+        }
+        Command::Passphrase(PassphraseCommand::Invalidate {
+            event_id_or_slug,
+            passphrase_id,
+        }) => {
+            kueaplan_server::cli::manage_passphrases::invalidate_passphrase(
                 event_id_or_slug,
                 passphrase_id,
             )?;
@@ -149,11 +167,27 @@ enum PassphraseCommand {
         /// The id or slug of the event
         event_id_or_slug: EventIdOrSlug,
     },
+    /// Change comment or validity of the passphrase with given id from the given event (by event id
+    /// or event slug)
+    Edit {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+        /// The id of the passphrase to be edited
+        passphrase_id: i32,
+    },
     /// Delete the passphrase with given id from the given event (by event id or event slug)
     Delete {
         /// The id or slug of the event
         event_id_or_slug: EventIdOrSlug,
         /// The id of the passphrase to be deleted
+        passphrase_id: i32,
+    },
+    /// Invalidate the passphrase with given id from the given event, i.e. set its valid_until
+    /// timestamp to the current time.
+    Invalidate {
+        /// The id or slug of the event
+        event_id_or_slug: EventIdOrSlug,
+        /// The id of the passphrase to be invalidated
         passphrase_id: i32,
     },
 }

@@ -32,6 +32,6 @@ def wait_for_prompt_and_type(process: subprocess.Popen, expected_prompt: str, en
     assert process.stdout is not None
     assert process.stdin is not None
     output = wait_for_interactive_prompt(cast(IO[bytes], process.stdout))
-    assert expected_prompt.encode() in output
+    assert expected_prompt.encode() in output, f"prompt '{expected_prompt}' not found in {output!r}"
     process.stdin.write(f"{enter_input}\n".encode())
     process.stdin.flush()

@@ -74,6 +74,11 @@ pub fn add_passphrase(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
 
     let access_role: PassphraseAccessRoleEntry = query_user("Enter access role");
     let passphrase: String = query_user("Enter passphrase");
+    let comment: String = query_user("Comment about designated usage");
+    let valid_until = query_user::<IsoDateTime>(
+        "Passphrase is valid until (YYYY-MM-DD hh:mm:ssZ; empty value for no limit)",
+    )
+    .0;
 
     let auth_key = CliAuthTokenKey::new();
     let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
@@ -84,10 +89,9 @@ pub fn add_passphrase(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
             passphrase: Some(passphrase),
             privilege: access_role.0,
             derivable_from_passphrase: None,
-            // TODO ask user
-            comment: "".to_string(),
+            comment,
             valid_from: None,
-            valid_until: None,
+            valid_until,
         },
     )?;
     println!("Success. New passphrase id: {}", new_passphrase_id);
@@ -103,9 +107,8 @@ pub fn add_passphrase(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
                 privilege: AccessRole::SharableViewLink,
                 derivable_from_passphrase: Some(new_passphrase_id),
                 comment: "".to_string(),
-                // TODO use validity from above
                 valid_from: None,
-                valid_until: None,
+                valid_until,
             },
         )?;
         println!("Success.");
@@ -179,5 +182,20 @@ impl FromStr for PassphraseAccessRoleEntry {
             "a" | "admin" => Ok(Self(AccessRole::Admin)),
             _ => Err("Unknown access role. Must be 'user', 'orga' or 'admin'."),
         }
+    }
+}
+
+struct IsoDateTime(Option<chrono::DateTime<chrono::Utc>>);
+
+impl FromStr for IsoDateTime {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Ok(Self(None));
+        }
+        Ok(Self(Some(s.parse().map_err(|e| {
+            format!("Could not parse as RFC3339 timestamp: {e}")
+        })?)))
     }
 }

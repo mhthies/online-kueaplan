@@ -23,7 +23,16 @@ pub fn print_passphrase_list(event_id_or_slug: EventIdOrSlug) -> Result<(), CliE
     let mut table = comfy_table::Table::new();
     table
         .load_preset(comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED)
-        .set_header(vec!["id", "role", "passphrase", "derivable from"])
+        .set_header(vec![
+            "id",
+            "role",
+            "passphrase",
+            "derivable from",
+            "comment",
+            "valid from",
+            "valid until",
+        ])
+        .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
         .add_rows(passphrases.into_iter().map(|passphrase| {
             [
                 passphrase.id.to_string(),
@@ -36,6 +45,15 @@ pub fn print_passphrase_list(event_id_or_slug: EventIdOrSlug) -> Result<(), CliE
                     .derivable_from_passphrase
                     .map(|pid| pid.to_string())
                     .unwrap_or("".to_string()),
+                passphrase.comment,
+                passphrase
+                    .valid_from
+                    .map(|v| v.to_string())
+                    .unwrap_or("∞".to_owned()),
+                passphrase
+                    .valid_until
+                    .map(|v| v.to_string())
+                    .unwrap_or("∞".to_owned()),
             ]
         }));
 

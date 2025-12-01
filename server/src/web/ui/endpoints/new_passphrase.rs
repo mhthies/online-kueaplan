@@ -399,7 +399,7 @@ impl NewDerivablePassphraseFormTemplate<'_> {
             .request
             .url_for(
                 "new_derivable_sharable_link_passphrase",
-                &[
+                [
                     &self.event_id.to_string(),
                     &self.parent_passphrase.id.to_string(),
                 ],

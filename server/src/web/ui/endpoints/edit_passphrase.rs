@@ -40,7 +40,7 @@ pub async fn edit_passphrase_form(
     let (passphrase, parent_passphrase) =
         find_passphrase_and_check_privilege(&passphrases, passphrase_id)?;
     let form_data =
-        EditPassphraseFormData::for_existing_passphrase(&passphrase, &event.clock_info.timezone);
+        EditPassphraseFormData::for_existing_passphrase(passphrase, &event.clock_info.timezone);
 
     let tmpl = EditPassphraseFormTemplate {
         base: BaseTemplateContext {
@@ -190,14 +190,12 @@ impl EditPassphraseFormData {
             valid_from: validation::MaybeEmpty(
                 passphrase
                     .valid_from
-                    .clone()
                     .map(|t| validation::DateTimeLocal(t.with_timezone(timezone).naive_local())),
             )
             .into(),
             valid_until: validation::MaybeEmpty(
                 passphrase
                     .valid_until
-                    .clone()
                     .map(|t| validation::DateTimeLocal(t.with_timezone(timezone).naive_local())),
             )
             .into(),
@@ -238,7 +236,7 @@ impl EditPassphraseFormTemplate<'_> {
             .request
             .url_for(
                 "edit_passphrase",
-                &[&self.event_id.to_string(), &self.passphrase.id.to_string()],
+                [&self.event_id.to_string(), &self.passphrase.id.to_string()],
             )?
             .to_string())
     }

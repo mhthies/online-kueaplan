@@ -57,7 +57,7 @@ async fn main_list_by_room(
         .iter()
         .find(|c| c.id == room_id)
         .ok_or(AppError::EntityNotFound)?;
-    let title = format!("Kategorie {}", room.title);
+    let title = format!("Ort {}", room.title);
     let mut rows = generate_filtered_merged_list_entries(&entries, &room.id);
     mark_first_row_of_next_calendar_date_per_effective_date(&mut rows, &event.clock_info);
     let tmpl = MainListByRoomTemplate {

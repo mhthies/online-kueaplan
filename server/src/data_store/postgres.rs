@@ -952,17 +952,32 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError> {
         use schema::event_passphrases::dsl::*;
-        let passphrase_ids = event_passphrases
-            .select(id)
+        let passphrase_ids_and_validity = event_passphrases
+            .select((id, valid_from, valid_until))
             .filter(event_id.eq(the_event_id))
             .filter(passphrase.eq(the_passphrase))
-            .load::<i32>(&mut self.connection)?;
-        if !passphrase_ids.is_empty() {
-            session_token.add_authorization(passphrase_ids[0]);
-            Ok(())
-        } else {
-            Err(StoreError::NotExisting)
+            .load::<(
+                i32,
+                Option<chrono::DateTime<chrono::Utc>>,
+                Option<chrono::DateTime<chrono::Utc>>,
+            )>(&mut self.connection)?;
+        if passphrase_ids_and_validity.is_empty() {
+            return Err(StoreError::NotExisting);
         }
+
+        let now = chrono::Utc::now();
+        let valid_passphrases: Vec<i32> = passphrase_ids_and_validity
+            .into_iter()
+            .filter(|(_pid, begin, end)| {
+                begin.is_none_or(|b| b <= now) && end.is_none_or(|e| e >= now)
+            })
+            .map(|(pid, _, _)| pid)
+            .collect();
+        if valid_passphrases.is_empty() {
+            return Err(StoreError::NotValid);
+        }
+        session_token.add_authorization(valid_passphrases[0]);
+        Ok(())
     }
 
     fn get_auth_token_for_session(
@@ -972,18 +987,38 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<AuthToken, StoreError> {
         use schema::event_passphrases::dsl::*;
 
-        let mut roles = event_passphrases
-            .select(privilege)
+        let data = event_passphrases
+            .select((privilege, valid_from, valid_until))
             .filter(event_id.eq(the_event_id))
             .filter(id.eq_any(session_token.get_passphrase_ids()))
-            .load::<AccessRole>(&mut self.connection)?;
+            .load::<(
+                AccessRole,
+                Option<chrono::DateTime<chrono::Utc>>,
+                Option<chrono::DateTime<chrono::Utc>>,
+            )>(&mut self.connection)?;
 
+        let now = chrono::Utc::now();
+        let mut roles = Vec::new();
+        let mut expired_roles = Vec::new();
+        for (role, begin, end) in data {
+            if begin.is_none_or(|b| b <= now) && end.is_none_or(|e| e >= now) {
+                roles.push(role);
+            } else {
+                expired_roles.push(role);
+            }
+        }
         roles.sort_unstable();
         roles.dedup();
+        expired_roles.sort_unstable();
+        expired_roles.dedup();
         // special roles like [AccessRole::ServerAdmin] must never be given to web/API user
         roles.retain(|role| role.can_be_granted_by_passphrase());
 
-        Ok(AuthToken::create_for_session(the_event_id, roles))
+        Ok(AuthToken::create_for_session(
+            the_event_id,
+            roles,
+            expired_roles,
+        ))
     }
 
     fn create_reduced_session_token(
@@ -1045,6 +1080,30 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .returning(schema::event_passphrases::id)
             .get_result::<PassphraseId>(&mut self.connection)?;
         Ok(result)
+    }
+
+    fn patch_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase_id: PassphraseId,
+        passphrase_data: models::PassphrasePatch,
+    ) -> Result<(), StoreError> {
+        use schema::event_passphrases::dsl::*;
+
+        self.connection.transaction(|connection| {
+            let current_event_id = event_passphrases
+                .select(event_id)
+                .filter(id.eq(passphrase_id))
+                .first::<EventId>(connection)?;
+
+            auth_token.check_privilege(current_event_id, Privilege::ManagePassphrases)?;
+
+            diesel::update(event_passphrases)
+                .filter(id.eq(passphrase_id))
+                .set(passphrase_data)
+                .execute(connection)?;
+            Ok(())
+        })
     }
 
     fn delete_passphrase(

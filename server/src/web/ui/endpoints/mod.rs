@@ -11,6 +11,7 @@ pub mod edit_announcement;
 pub mod edit_category;
 pub mod edit_entry;
 pub mod edit_extended_event;
+pub mod edit_passphrase;
 pub mod edit_room;
 pub mod events_list;
 pub mod index;

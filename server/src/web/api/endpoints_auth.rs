@@ -62,7 +62,12 @@ async fn authorize(
             store
                 .authenticate_with_passphrase(event_id, &body.passphrase, &mut session_token)
                 .map_err(|e| match e {
-                    StoreError::NotExisting => APIError::AuthenticationFailed,
+                    StoreError::NotExisting => APIError::AuthenticationFailed {
+                        passphrase_expired: false,
+                    },
+                    StoreError::NotValid => APIError::AuthenticationFailed {
+                        passphrase_expired: true,
+                    },
                     e => e.into(),
                 })?;
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;

@@ -13,6 +13,8 @@ def create_passphrase(
     try:
         util.wait_for_prompt_and_type(process, "access role", role)
         util.wait_for_prompt_and_type(process, "passphrase", passphrase)
+        util.wait_for_prompt_and_type(process, "Comment", "")
+        util.wait_for_prompt_and_type(process, "valid until", "")
         util.wait_for_prompt_and_type(
             process, "derivable passphrase for link-sharing", "y" if derivable_link_passphrase else "n"
         )

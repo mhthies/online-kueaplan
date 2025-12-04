@@ -268,6 +268,13 @@ pub trait KueaPlanStoreFacade {
         passphrase: models::NewPassphrase,
     ) -> Result<PassphraseId, StoreError>;
 
+    fn patch_passphrase(
+        &mut self,
+        auth_token: &AuthToken,
+        passphrase_id: PassphraseId,
+        passphrase_data: models::PassphrasePatch,
+    ) -> Result<(), StoreError>;
+
     fn delete_passphrase(
         &mut self,
         auth_token: &AuthToken,
@@ -438,6 +445,8 @@ pub enum StoreError {
     TransactionConflict,
     /// The requested entity does not exist
     NotExisting,
+    /// The requested entity exists but is not usable, because it is not yet or no longer valid.
+    NotValid,
     /// The entity could not be created because it already exists, but cannot be updated with the
     /// provided data.
     ConflictEntityExists,
@@ -450,6 +459,9 @@ pub enum StoreError {
     PermissionDenied {
         required_privilege: Privilege,
         event_id: Option<EventId>,
+        /// The client had been authorized for a role granting the required privilege, but the
+        /// authorization has expired.
+        privilege_expired: bool,
     },
     /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
     /// SQL constraint. See string description for details.
@@ -505,17 +517,27 @@ impl std::fmt::Display for StoreError {
             Self::QueryError(e) => write!(f, "Error while executing database query: {}", e),
             Self::TransactionConflict => f.write_str("Database transaction could not be commited due to a conflicting concurrent transaction"),
             Self::NotExisting => f.write_str("Database record does not exist."),
+            Self::NotValid => f.write_str("Database record exists but is not valid."),
             Self::ConflictEntityExists => f.write_str("Database record exists already."),
             Self::ConcurrentEditConflict => f.write_str("Updating the entity has been rejected, because the change is not based on the latest version."),
             Self::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
+                privilege_expired: false,
             } => {
                 write!(f, "Client is not authorized to perform this action. {:?} privilege on event {} required.", required_privilege, event_id)
+            },
+            Self::PermissionDenied {
+                required_privilege,
+                event_id: Some(event_id),
+                privilege_expired: true,
+            } => {
+                write!(f, "Client is no longer authorized to perform this action. {:?} privilege on event {} has expired.", required_privilege, event_id)
             }
             Self::PermissionDenied {
                 required_privilege,
                 event_id: None,
+                ..
             } => {
                 write!(f, "Client is not authorized to perform this action. Global {:?} privilege required.", required_privilege)
             }
@@ -524,7 +546,7 @@ impl std::fmt::Display for StoreError {
             }
             StoreError::InvalidDataInDatabase(e) => {
                 write!(f, "Data queried from database could not be deserialized: {}", e)
-            }
+            },
         }
     }
 }

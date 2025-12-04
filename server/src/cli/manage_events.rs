@@ -114,6 +114,9 @@ pub fn create_event() -> Result<(), CliError> {
                 privilege: AccessRole::Admin,
                 passphrase: Some(passphrase),
                 derivable_from_passphrase: None,
+                comment: "Initial admin passphrase".to_string(),
+                valid_from: None,
+                valid_until: None,
             },
         )?;
         println!("New passphrase has been created successfully.");

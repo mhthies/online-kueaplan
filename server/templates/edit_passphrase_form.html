@@ -5,12 +5,22 @@
     {{ base.page_title }}
 </h1>
 
-<form method="post" action="{{post_url()?}}" id="new_passphrase_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
-    <div class="mb-3">
-        {{ FormFieldTemplate::new(form_data.passphrase, "passphrase", "Passphrase") }}
-    </div>
-    <div class="mb-3">
-        {{ SelectTemplate::new(form_data.access_role, "access_role", &Self::role_entries(), "Rolle/Berechtigungen") }}
+<form method="post" action="{{post_url()?}}" id="edit_passphrase_form" {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+    <div class="card mb-3">
+        <div class="card-header">Zu bearbeitende {% if passphrase.passphrase.is_some() %}Passphrase{% else %}ableitbare Rolle{% endif %}</div>
+        <div class="card-body">
+            {{self::format_access_role(passphrase.privilege)}}
+            / {{self::format_passphrase(passphrase.passphrase)}}
+            {% if let Some(parent_passphrase) = parent_passphrase %}
+                (ableitbar von
+                {{self::format_access_role(parent_passphrase.privilege)}}
+                / {{self::format_passphrase(parent_passphrase.passphrase)}})
+            {% endif %}
+            {% if !passphrase.comment.is_empty() %}
+                <br>
+                ({{passphrase.comment}})
+            {% endif %}
+        </div>
     </div>
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar").info("z.B. vorgesehene Nutzung dieser Passphrase, wenn es mehrere Passphrasen für diese Rolle gibt.") }}
@@ -23,7 +33,7 @@
             {{ FormFieldTemplate::new(form_data.valid_until, "valid_until", "gültig bis").input_type(InputType::DateTimeLocal) }}
         </div>
     </div>
-    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Erstellen</button>&ensp;
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save" aria-hidden="true"></i> Speichern</button>&ensp;
     <a href="{{ base.url_for_event_endpoint("manage_passphrases")? }}" class="btn btn-outline-secondary allow-exit-with-changes">
         <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
     </a>

@@ -275,6 +275,27 @@ impl ValidateFromFormInput for SimpleTimestampMicroseconds {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct DateTimeLocal(pub chrono::NaiveDateTime);
+
+impl FormValueRepresentation for DateTimeLocal {
+    fn into_form_value_string(self) -> String {
+        self.0.to_string()
+    }
+}
+
+impl ValidateFromFormInput for DateTimeLocal {
+    fn from_form_value(value: &'_ str) -> Result<Self, String> {
+        // See https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Date_and_time_formats#time_strings
+        Ok(Self(
+            chrono::NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.f")
+                .or_else(|_| chrono::NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S"))
+                .or_else(|_| chrono::NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M"))
+                .map_err(|e| format!("Could not parse as as ISO-formatted datetime value: {e}"))?,
+        ))
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct ColorHexString(pub String);
 
 impl FormValueRepresentation for ColorHexString {
@@ -331,8 +352,14 @@ impl ValidateFromFormInput for Int32 {
     }
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq)]
 pub struct MaybeEmpty<T>(pub Option<T>);
+
+impl<T> Default for MaybeEmpty<T> {
+    fn default() -> Self {
+        Self(None)
+    }
+}
 
 impl<T: FormValueRepresentation + PartialEq> FormValueRepresentation for MaybeEmpty<T> {
     fn into_form_value_string(self) -> String {

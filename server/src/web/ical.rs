@@ -30,6 +30,7 @@ async fn ical(
                 required_privilege: Privilege::ShowKueaPlan,
                 event_id,
                 session_error: Some(session_error),
+                privilege_expired: false,
             })?;
 
     let (event, entries, rooms, categories) = web::block(move || -> Result<_, AppError> {

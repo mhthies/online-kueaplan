@@ -16,17 +16,21 @@
             {{self::format_access_role(parent_passphrase.privilege)}}
             / {{self::format_passphrase(parent_passphrase.passphrase)}})
         {% endif %}
+        {% if !passphrase.comment.is_empty() %}
+            <br>
+            ({{passphrase.comment}})
+        {% endif %}
     </div>
 </div>
 
 <div class="card border-danger mb-3">
     <div class="card-body">
-        <form class="row" method="post" action="{{ base.request.url_for("delete_passphrase", [event_id.to_string(), passphrase.id.to_string()])? }}">
+        <form class="row align-items-center mb-3" method="post" action="{{ base.request.url_for("delete_passphrase", [event_id.to_string(), passphrase.id.to_string()])? }}">
             <div class="col-md-auto mb-2 mb-md-0">
                 <button type="submit" class="btn btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Löschen</button>
             </div>
             <div class="col-md text-secondary">
-                Diese {% if passphrase.passphrase.is_some() %}Passphrase{% else %}ableitbare Rolle{% endif %} vollständig löschen.
+                Diese {% if passphrase.passphrase.is_some() %}Passphrase{% else %}ableitbare Rolle{% endif %} vollständig und endgültig löschen.
                 {% if passphrase.passphrase.is_some() %}
                     Die Passphrase kann nicht mehr zum Login verwendet werden.
                 {%endif%}
@@ -34,6 +38,31 @@
                 {% if passphrase.privilege == AccessRole::SharableViewLink %}
                     Alle Links, die mit dieser Rolle erstellt wurden, werden ungültig.
                 {% endif %}
+            </div>
+        </form>
+        <form class="row align-items-center" method="post" action="{{ base.request.url_for("invalidate_passphrase", [event_id.to_string(), passphrase.id.to_string()])? }}">
+            <div class="col-md-auto mb-2 mb-md-0">
+                <button type="submit" class="btn btn-primary" {% if is_already_invalid() %}disabled{% endif %}>
+                    <i class="bi bi-x-circle" aria-hidden="true"></i> Ungültig machen
+                </button>
+            </div>
+            <div class="col-md text-secondary">
+                <p>
+                    Den Gültigkeitszeitraum {% if passphrase.passphrase.is_some() %}dieser Passphrase{% else %}dieser ableitbaren Rolle{% endif %} so ändern, dass sie ab sofort ungültig ist.
+                    {% if passphrase.passphrase.is_some() %}
+                        Die Passphrase kann nicht mehr zum Login verwendet werden.
+                        Benutzer werden darauf hingewiesen, dass die Passphrase nicht mehr gültig ist.
+                    {%endif%}
+                </p>
+                <p>
+                    Alle Benutzer, die zurzeit mit dieser Passphrase/Rolle eingeloggt sind, erhalten beim Zugriff auf die Seite eine Fehlermeldung, die darauf hinweist, dass ihre Authentifizierung nicht mehr gültig ist.
+                    {% if passphrase.privilege == AccessRole::SharableViewLink %}
+                        Alle Links, die mit dieser Rolle erstellt wurden, werden ungültig.
+                    {% endif %}
+                </p>
+                <p>
+                    Die Änderung kann durch eine erneute Anpassung des Gültigkeitszeitraums rückgängig gemacht werden.
+                </p>
             </div>
         </form>
     </div>

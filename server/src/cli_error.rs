@@ -87,6 +87,7 @@ impl From<StoreError> for CliError {
                 Self::UnexpectedStoreError("Concurrent transaction conflict".to_string())
             }
             StoreError::NotExisting => Self::DataError("Item not existing".to_string()),
+            StoreError::NotValid => Self::DataError("Item not valid".to_string()),
             StoreError::ConflictEntityExists => {
                 Self::DataError("Conflicting entity exists".to_string())
             }
@@ -96,6 +97,7 @@ impl From<StoreError> for CliError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: Some(event_id),
+                ..
             } => Self::UnexpectedStoreError(format!(
                 "Missing data_store privilege: {:?} for event {}",
                 required_privilege, event_id
@@ -103,6 +105,7 @@ impl From<StoreError> for CliError {
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: None,
+                ..
             } => Self::UnexpectedStoreError(format!(
                 "Missing global data_store privilege: {:?}",
                 required_privilege

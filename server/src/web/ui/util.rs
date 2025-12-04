@@ -5,7 +5,9 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
+use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
 use crate::web::ui::sub_templates::main_list_row::MainListRow;
+use crate::web::ui::validation;
 use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
@@ -89,6 +91,7 @@ pub fn extract_session_token(
                 required_privilege: for_privilege,
                 event_id: for_event_id,
                 session_error: None,
+                privilege_expired: false,
             })?
             .value(),
         &app_state.secret,
@@ -98,6 +101,7 @@ pub fn extract_session_token(
         required_privilege: for_privilege,
         event_id: for_event_id,
         session_error: Some(session_error),
+        privilege_expired: false,
     })
 }
 
@@ -406,9 +410,30 @@ pub fn format_access_role(role: &AccessRole) -> askama::filters::Safe<String> {
         AccessRole::SharableViewLink => ("share", "info"),
     };
     askama::filters::Safe(format!(
-        "<span class=\"text-{}\"><i class=\"bi bi-{}\"></i> {}</span>",
+        "<span class=\"text-{} text-nowrap\"><i class=\"bi bi-{}\"></i> {}</span>",
         color,
         icon,
         role.name()
     ))
+}
+
+pub fn validate_optional_datetime_local_value<T: chrono::TimeZone>(
+    value: &mut FormValue<validation::MaybeEmpty<validation::DateTimeLocal>>,
+    local_timezone: &T,
+) -> Option<Option<chrono::DateTime<chrono::Utc>>> {
+    let local_datetime = value.validate()?;
+    if let Some(local_datetime) = local_datetime.0 {
+        let utc_datetime = local_timezone
+            .from_local_datetime(&local_datetime.0)
+            .latest()
+            .map(|v| v.to_utc());
+        if let Some(utc_datetime) = utc_datetime {
+            Some(Some(utc_datetime))
+        } else {
+            value.add_error("This point in time does not exist in the local timezone.".to_owned());
+            None
+        }
+    } else {
+        Some(None)
+    }
 }

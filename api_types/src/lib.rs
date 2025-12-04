@@ -288,4 +288,24 @@ pub struct Passphrase {
     )]
     pub derivable_from_passphrase: Option<i32>,
     pub role: AuthorizationRole,
+    #[serde(default)]
+    pub comment: String,
+    #[serde(default, rename = "validFrom")]
+    pub valid_from: Option<DateTime<Utc>>,
+    #[serde(default, rename = "validUntil")]
+    pub valid_until: Option<DateTime<Utc>>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PassphrasePatch {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "validFrom")]
+    pub valid_from: Option<Option<DateTime<Utc>>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "validUntil"
+    )]
+    pub valid_until: Option<Option<DateTime<Utc>>>,
 }

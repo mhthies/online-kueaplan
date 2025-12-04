@@ -72,7 +72,7 @@
       "400": {"$ref": "../components/badJSONError.json"},
       "403": {"$ref": "../components/authorizationError.json"},
       "404": {
-        "description": "The entry with given entryId does not exist in the event with given eventId or the entry with the given do not exist; so creating/updating an entry there is not possible.",
+        "description": "The entry to be updated does not exist or is not part of the event with given eventId.",
         "content": {
           "application/json": {
             "schema": {"$ref": "../schema/Error.json"}

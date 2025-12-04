@@ -843,6 +843,9 @@ pub struct Passphrase {
     pub privilege: AccessRole,
     pub passphrase: Option<String>,
     pub derivable_from_passphrase: Option<PassphraseId>,
+    pub comment: String,
+    pub valid_from: Option<DateTime<Utc>>,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 impl From<Passphrase> for kueaplan_api_types::Passphrase {
@@ -852,6 +855,9 @@ impl From<Passphrase> for kueaplan_api_types::Passphrase {
             passphrase: value.passphrase,
             derivable_from_passphrase: value.derivable_from_passphrase,
             role: value.privilege.into(),
+            comment: value.comment,
+            valid_from: value.valid_from,
+            valid_until: value.valid_until,
         }
     }
 }
@@ -863,6 +869,9 @@ pub struct NewPassphrase {
     pub passphrase: Option<String>,
     pub privilege: AccessRole,
     pub derivable_from_passphrase: Option<PassphraseId>,
+    pub comment: String,
+    pub valid_from: Option<DateTime<Utc>>,
+    pub valid_until: Option<DateTime<Utc>>,
 }
 
 impl NewPassphrase {
@@ -872,6 +881,27 @@ impl NewPassphrase {
             passphrase: passphrase.passphrase,
             privilege: passphrase.role.into(),
             derivable_from_passphrase: passphrase.derivable_from_passphrase,
+            comment: passphrase.comment,
+            valid_from: passphrase.valid_from,
+            valid_until: passphrase.valid_until,
+        }
+    }
+}
+
+#[derive(Clone, Default, AsChangeset)]
+#[diesel(table_name=super::schema::event_passphrases)]
+pub struct PassphrasePatch {
+    pub comment: Option<String>,
+    pub valid_from: Option<Option<DateTime<Utc>>>,
+    pub valid_until: Option<Option<DateTime<Utc>>>,
+}
+
+impl From<kueaplan_api_types::PassphrasePatch> for PassphrasePatch {
+    fn from(value: kueaplan_api_types::PassphrasePatch) -> Self {
+        Self {
+            comment: value.comment,
+            valid_from: value.valid_from,
+            valid_until: value.valid_until,
         }
     }
 }

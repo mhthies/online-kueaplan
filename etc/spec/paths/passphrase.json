@@ -1,4 +1,41 @@
 {
+  "patch": {
+    "operationId": "changePassphrase",
+    "summary": "Change selected attributes of a passphrase (authentication token).",
+    "parameters": [
+      {"$ref": "../components/eventId.json"},
+      {"$ref": "../components/passphraseId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {"$ref": "../schema/PassphrasePatch.json"}
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "204": {
+        "description": "Changing the passphrase was successful."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "404": {
+        "description": "The passphrase to be updated does not exist or is not part of the event with given eventId.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  },
   "delete": {
     "operationId": "deletePassphrase",
     "summary": "Delete an authentication passphrase.",

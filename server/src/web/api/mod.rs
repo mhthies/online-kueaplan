@@ -55,6 +55,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_announcement::delete_announcement)
         .service(endpoints_passphrase::list_passphrases)
         .service(endpoints_passphrase::create_passphrase)
+        .service(endpoints_passphrase::change_passphrase)
         .service(endpoints_passphrase::delete_passphrase)
 }
 
@@ -62,10 +63,15 @@ fn get_api_service() -> actix_web::Scope {
 pub enum APIError {
     NotExisting,
     AlreadyExisting,
-    PermissionDenied { required_privilege: Privilege },
+    PermissionDenied {
+        required_privilege: Privilege,
+        privilege_expired: bool,
+    },
     NoSessionToken,
     InvalidSessionToken,
-    AuthenticationFailed,
+    AuthenticationFailed {
+        passphrase_expired: bool,
+    },
     InvalidJson(actix_web::error::JsonPayloadError),
     InvalidData(String),
     EntityIdMissmatch,
@@ -81,14 +87,15 @@ impl Display for APIError {
             Self::AlreadyExisting => {
                 f.write_str("Element already exists")?;
             },
-            Self::PermissionDenied{required_privilege} => {
-                write!(f, "Client is not authorized to perform this action. Authentication as {} is required",
+            Self::PermissionDenied{required_privilege, privilege_expired} => {
+                write!(f, "Client is not authorized to perform this action. Authentication as {} is required.{}",
                        required_privilege
                            .qualifying_roles()
                            .iter()
                            .map(|role| role.name().to_owned())
                            .collect::<Vec<String>>()
-                           .join(" or "))?
+                           .join(" or "),
+                       if *privilege_expired { " The previous authentication for one of these roles has expired." } else { "" })?;
             },
             Self::NoSessionToken => {
                 f.write_str("This action requires authentication, but client did not send authentication session token.")?
@@ -96,8 +103,11 @@ impl Display for APIError {
             Self::InvalidSessionToken => {
                 f.write_str("This action requires authentication, but client authentication session given by the client is not valid.")?
             },
-            Self::AuthenticationFailed => {
-                f.write_str("Authentication with the given passphrase failed.")?
+            Self::AuthenticationFailed{passphrase_expired} => {
+                f.write_str("Authentication with the given passphrase failed.")?;
+                if *passphrase_expired {
+                    f.write_str(" The passphrase is not yet or no longer valid.")?;
+                }
             }
             Self::InternalError(s) => {
                 f.write_str("Internal error: ")?;
@@ -138,12 +148,10 @@ impl ResponseError for APIError {
         match self {
             Self::NotExisting => StatusCode::NOT_FOUND,
             Self::AlreadyExisting => StatusCode::CONFLICT,
-            Self::PermissionDenied {
-                required_privilege: _,
-            } => StatusCode::FORBIDDEN,
+            Self::PermissionDenied { .. } => StatusCode::FORBIDDEN,
             Self::NoSessionToken => StatusCode::FORBIDDEN,
             Self::InvalidSessionToken => StatusCode::FORBIDDEN,
-            Self::AuthenticationFailed => StatusCode::FORBIDDEN,
+            Self::AuthenticationFailed { .. } => StatusCode::FORBIDDEN,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidJson(e) => match e {
                 JsonPayloadError::ContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -172,12 +180,17 @@ impl From<StoreError> for APIError {
             )),
             StoreError::TransactionConflict => Self::TransactionConflict,
             StoreError::NotExisting => Self::NotExisting,
+            StoreError::NotValid => Self::NotExisting,
             StoreError::ConflictEntityExists => Self::AlreadyExisting,
             StoreError::ConcurrentEditConflict => Self::ConcurrentEditConflict,
             StoreError::PermissionDenied {
                 required_privilege,
                 event_id: _,
-            } => Self::PermissionDenied { required_privilege },
+                privilege_expired,
+            } => Self::PermissionDenied {
+                required_privilege,
+                privilege_expired,
+            },
             StoreError::InvalidInputData(e) => Self::InvalidData(e),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",

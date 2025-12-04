@@ -75,50 +75,68 @@ async fn login(
 
     let store = state.store.clone();
     let expected_privilege = query_data.privilege;
-    let (event, extended_event, login_success, privilege_unlocked, session_token, auth) =
-        web::block(move || -> Result<_, AppError> {
-            let mut store = store.get_facade()?;
-            let event = store.get_event(event_id)?;
-            let login_result = match store.authenticate_with_passphrase(
+    let (
+        event,
+        extended_event,
+        login_success,
+        passphrase_expired,
+        privilege_unlocked,
+        session_token,
+        auth,
+    ) = web::block(move || -> Result<_, AppError> {
+        let mut store = store.get_facade()?;
+        let event = store.get_event(event_id)?;
+        let (login_result, passphrase_expired) = match store.authenticate_with_passphrase(
+            event_id,
+            &data.passphrase,
+            &mut session_token,
+        ) {
+            Ok(()) => (true, false),
+            Err(StoreError::NotExisting) => (false, false),
+            Err(StoreError::NotValid) => (false, true),
+            Err(e) => return Err(e.into()),
+        };
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        let extended_event = if auth.has_privilege(event_id, Privilege::ShowKueaPlan) {
+            Some(store.get_extended_event(&auth, event_id)?)
+        } else {
+            None
+        };
+        Ok((
+            event,
+            extended_event,
+            login_result,
+            passphrase_expired,
+            auth.has_privilege(
                 event_id,
-                &data.passphrase,
-                &mut session_token,
-            ) {
-                Ok(()) => true,
-                Err(StoreError::NotExisting) => false,
-                Err(e) => return Err(e.into()),
-            };
-            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-            let extended_event = if auth.has_privilege(event_id, Privilege::ShowKueaPlan) {
-                Some(store.get_extended_event(&auth, event_id)?)
-            } else {
-                None
-            };
-            Ok((
-                event,
-                extended_event,
-                login_result,
-                auth.has_privilege(
-                    event_id,
-                    expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
-                ),
-                session_token,
-                auth,
-            ))
-        })
-        .await??;
+                expected_privilege.unwrap_or(Privilege::ShowKueaPlan),
+            ),
+            session_token,
+            auth,
+        ))
+    })
+    .await??;
     if !login_success {
         warn!(
-            "HTTP 422 authentication failed. Client: <{}>",
+            "HTTP 422 authentication failed. Client: <{}>{}",
             req.connection_info()
                 .realip_remote_addr()
                 .unwrap_or("unknown"),
+            if passphrase_expired {
+                ". Passphrase is not yet valid or has expired."
+            } else {
+                ""
+            }
         );
     }
 
     if !login_success || !privilege_unlocked {
         let error = if !login_success {
-            "Ungültige Passphrase."
+            if passphrase_expired {
+                "Die Passphrase ist nicht mehr (oder noch nicht) gültig."
+            } else {
+                "Ungültige Passphrase."
+            }
         } else {
             "Diese Passphrase schaltet nicht den gewünschten Zugriff frei."
         };

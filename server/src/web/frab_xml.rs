@@ -31,6 +31,7 @@ async fn frab_xml(
                 required_privilege: Privilege::ShowKueaPlan,
                 event_id,
                 session_error: Some(session_error),
+                privilege_expired: false,
             })?;
 
     let url_for_event = |event_id: &EventId| {

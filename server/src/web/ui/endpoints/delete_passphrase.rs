@@ -1,8 +1,8 @@
 use crate::data_store::auth_token::{AccessRole, Privilege};
-use crate::data_store::models::Passphrase;
+use crate::data_store::models::{Passphrase, PassphrasePatch};
 use crate::data_store::{EventId, StoreError};
 use crate::web::ui::base_template::{
-    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton,
+    AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
@@ -66,7 +66,7 @@ async fn delete_passphrase_form(
             event: AnyEventData::ExtendedEvent(&event),
             current_date: None,
             auth_token: Some(&auth),
-            active_main_nav_button: None,
+            active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Passphrases,
@@ -111,6 +111,45 @@ async fn delete_passphrase(
     .see_other())
 }
 
+#[post("/{event_id}/config/passphrases/{passphrase_id}/invalidate")]
+async fn invalidate_passphrase(
+    path: web::Path<(EventId, i32)>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let (event_id, passphrase_id) = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
+
+    web::block(move || -> Result<_, StoreError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        store.patch_passphrase(
+            &auth,
+            passphrase_id,
+            PassphrasePatch {
+                valid_until: Some(Some(chrono::Utc::now())),
+                ..Default::default()
+            },
+        )?;
+        Ok(())
+    })
+    .await??;
+
+    let notification = FlashMessage {
+        flash_type: FlashType::Success,
+        message: "Die Passphrase/Ableitbare Rolle wurde ungültig gemacht.".to_string(),
+        keep_open: false,
+        button: None,
+    };
+    req.add_flash_message(notification);
+    Ok(Redirect::to(
+        req.url_for("manage_passphrases", &[event_id.to_string()])?
+            .to_string(),
+    )
+    .see_other())
+}
+
 #[derive(Template)]
 #[template(path = "delete_passphrase_form.html")]
 struct DeletePassphraseTemplate<'a> {
@@ -119,4 +158,12 @@ struct DeletePassphraseTemplate<'a> {
     event_id: EventId,
     passphrase: &'a Passphrase,
     parent_passphrase: Option<&'a Passphrase>,
+}
+
+impl<'a> DeletePassphraseTemplate<'a> {
+    fn is_already_invalid(&self) -> bool {
+        self.passphrase
+            .valid_until
+            .is_some_and(|valid_until| valid_until < chrono::Utc::now())
+    }
 }

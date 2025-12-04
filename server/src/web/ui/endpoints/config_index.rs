@@ -1,4 +1,5 @@
 use crate::data_store::auth_token::Privilege;
+use crate::data_store::models::ExtendedEvent;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -38,6 +39,7 @@ async fn config_index(
         base_config: BaseConfigTemplateContext {
             active_nav_button: ConfigNavButton::Overview,
         },
+        event: &event,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -47,4 +49,19 @@ async fn config_index(
 struct ConfigIndexTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
+    event: &'a ExtendedEvent,
+}
+
+impl ConfigIndexTemplate<'_> {
+    fn get_shortlink(&self) -> Option<String> {
+        self.event.basic_data.slug.as_ref().and_then(|slug| {
+            Some(
+                self.base
+                    .request
+                    .url_for("event_redirect_by_slug", [slug])
+                    .ok()?
+                    .to_string(),
+            )
+        })
+    }
 }

@@ -1,5 +1,21 @@
 {% extends "base_config.html" %}
 
 {% block config_content %}
-    <h1>Konfiguration</h1>
+    <h1>Konfigurations-Bereich</h1>
+
+    <p class="h3 mt-3">{{event.basic_data.title}}</p>
+    <p class="text-secondary">
+        {{event.basic_data.begin_date.format("%d.%m.%Y")}} – {{event.basic_data.end_date.format("%d.%m.%Y")}}
+    </p>
+    <p>
+        {% if let Some(slug) = event.basic_data.slug %}
+            Kürzel: {{ slug }}<br>
+        {% endif %}
+        Tagesgrenze: {{event.clock_info.effective_begin_of_day.format("%H:%M")}} Uhr
+    </p>
+    {% if let Some(short_link) = get_shortlink() %}
+        <p>
+            Kurzlink: <a href="{{short_link}}">{{short_link}}</a>
+        </p>
+    {% endif %}
 {% endblock %}

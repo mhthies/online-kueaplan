@@ -11,6 +11,13 @@
                 </div>
             {% endif %}
 
+            <div class="list-group mb-3">
+                <a href="{{ base.url_for_event_endpoint("main_list_without_room")? }}" class="list-group-item list-group-item-action fst-italic">
+                    <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                    KüAs ohne Raum
+                </a>
+            </div>
+
             {% if rooms.is_empty() %}
                 <div class="alert alert-info mt-4">
                     <i class="bi bi-info-circle" aria-hidden="true"></i>

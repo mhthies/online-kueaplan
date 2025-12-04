@@ -37,6 +37,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::categories_list::categories_list)
         .service(endpoints::main_list_by_category::main_list_by_category)
         .service(endpoints::rooms_list::rooms_list)
+        .service(endpoints::main_list_without_room::main_list_without_room)
         .service(endpoints::main_list_by_room::main_list_by_room)
         .service(endpoints::auth::login_form)
         .service(endpoints::auth::login)

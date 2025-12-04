@@ -18,6 +18,7 @@ pub mod index;
 pub mod main_list;
 pub mod main_list_by_category;
 pub mod main_list_by_room;
+pub mod main_list_without_room;
 pub mod manage_announcements;
 pub mod manage_categories;
 pub mod manage_passphrases;

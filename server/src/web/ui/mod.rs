@@ -88,6 +88,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_passphrase::delete_passphrase)
         .service(endpoints::delete_passphrase::invalidate_passphrase)
         .service(endpoints::calendar_link_overview::calendar_link_overview)
+        .service(endpoints::print_templates::print_link_and_passphrase)
+        .service(endpoints::print_templates::event_ui_link_qr_code)
         .default_service(web::to(not_found_handler))
         .app_data(
             web::QueryConfig::default()

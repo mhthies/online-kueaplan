@@ -1,0 +1,19 @@
+{% extends "base_config.html" %}
+
+{% block config_content %}
+<div class="text-center">
+    <div class="alert alert-info d-print-none text-start">
+        <i class="bi bi-info-circle"></i>
+        Diese Seite kann direkt als Aushang ausgedruckt werden. Einfach die normale Druck-Funktion des Web-Browsers (meist <kbd>Strg</kbd>+<kbd>P</kbd>) verwenden.
+    </div>
+    <h1>Online-KüA-Plan</h1>
+    <h2>{{ event.basic_data.title }}</h2>
+
+    <img src="{{ base.url_for_event_endpoint("event_ui_link_qr_code")? }}" style="width: 65%; max-height: 75vh;" />
+    <p class="fs-3">
+        {{ get_ui_link()? }}
+    </p>
+
+    {# TODO passphrase #}
+</div>
+{% endblock %}

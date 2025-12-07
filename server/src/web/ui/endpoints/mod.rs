@@ -26,5 +26,6 @@ pub mod manage_rooms;
 pub mod new_passphrase;
 pub mod new_previous_date;
 pub mod previous_dates;
+pub mod print_templates;
 pub mod rooms_list;
 pub mod ui_api;

@@ -14,6 +14,10 @@
             <div class="list-group mb-3">
                 <a href="{{ base.url_for_event_endpoint("main_list_without_room")? }}" class="list-group-item list-group-item-action fst-italic">
                     <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                    <span class="float-end badge rounded-pill {% if entries_without_room_count == 0 %}text-bg-secondary{% else %}text-bg-light{% endif %} ms-2" title="Anzahl Einträge">
+                        {{ entries_without_room_count }}
+                        <span class="visually-hidden">Einträge</span>
+                    </span>
                     KüAs ohne Raum
                 </a>
             </div>
@@ -26,8 +30,13 @@
             {% else %}
                 <div class="list-group">
                     {% for room in rooms %}
+                        {% let entry_count = *entry_counts.get(room.id).unwrap_or(&0) %}
                         <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="list-group-item list-group-item-action">
                             <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                            <span class="float-end badge rounded-pill {% if entry_count == 0 %}text-bg-secondary{% else %}text-bg-light{% endif %} ms-2" title="Anzahl Einträge">
+                                {{entry_count}}
+                                <span class="visually-hidden">Einträge</span>
+                            </span>
                             {{room.title}}
                         </a>
                     {% endfor %}

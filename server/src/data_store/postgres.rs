@@ -5,7 +5,6 @@ use super::{
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
-use diesel::dsl::exists;
 use diesel::expression::AsExpression;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -528,6 +527,63 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
+    fn get_entry_count_by_category(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<(CategoryId, i64)>, StoreError> {
+        use diesel::dsl::{count_star, not};
+        use schema::entries::dsl::*;
+
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
+        Ok(entries
+            .filter(event_id.eq(the_event_id))
+            .filter(not(deleted))
+            .filter(not(is_cancelled))
+            .group_by(category)
+            .select((category, count_star()))
+            .load::<(CategoryId, i64)>(&mut self.connection)?)
+    }
+
+    fn get_entry_count_by_room(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<(RoomId, i64)>, StoreError> {
+        use diesel::dsl::{count_star, not};
+        use schema::entries::dsl::*;
+
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
+        Ok(entries
+            .inner_join(schema::entry_rooms::table)
+            .filter(event_id.eq(the_event_id))
+            .filter(not(deleted))
+            .filter(not(is_cancelled))
+            .group_by(schema::entry_rooms::room_id)
+            .select((schema::entry_rooms::room_id, count_star()))
+            .load::<(RoomId, i64)>(&mut self.connection)?)
+    }
+
+    fn get_entry_count_without_room(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<i64, StoreError> {
+        use diesel::dsl::{count_star, exists, not};
+        use schema::entries::dsl::*;
+
+        auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
+        Ok(entries
+            .filter(event_id.eq(the_event_id))
+            .filter(not(deleted))
+            .filter(not(is_cancelled))
+            .filter(not(exists(
+                schema::entry_rooms::table.filter(schema::entry_rooms::entry_id.eq(id)),
+            )))
+            .select(count_star())
+            .first::<i64>(&mut self.connection)?)
+    }
+
     fn get_rooms(
         &mut self,
         auth_token: &AuthToken,
@@ -592,6 +648,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         replace_with_rooms: &[RoomId],
         replace_with_room_comment: &str,
     ) -> Result<(), StoreError> {
+        use diesel::dsl::exists;
         use schema::rooms::dsl::*;
 
         // The correctness of the given event_id is checked in the DELETE statement below

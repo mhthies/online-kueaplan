@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::Room;
-use crate::data_store::EventId;
+use crate::data_store::{EventId, RoomId};
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -8,6 +8,7 @@ use crate::web::AppState;
 use actix_web::web::Html;
 use actix_web::{get, web, HttpRequest, Responder};
 use askama::Template;
+use std::collections::BTreeMap;
 
 #[get("/{event_id}/rooms")]
 async fn rooms_list(
@@ -18,17 +19,20 @@ async fn rooms_list(
     let event_id = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
-    let (event, rooms, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = state.store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ShowKueaPlan)?;
-        Ok((
-            store.get_extended_event(&auth, event_id)?,
-            store.get_rooms(&auth, event_id)?,
-            auth,
-        ))
-    })
-    .await??;
+    let (event, rooms, entry_counts, entries_without_room_count, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            auth.check_privilege(event_id, Privilege::ShowKueaPlan)?;
+            Ok((
+                store.get_extended_event(&auth, event_id)?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_entry_count_by_room(&auth, event_id)?,
+                store.get_entry_count_without_room(&auth, event_id)?,
+                auth,
+            ))
+        })
+        .await??;
 
     let tmpl = RoomsListTemplate {
         base: BaseTemplateContext {
@@ -41,6 +45,11 @@ async fn rooms_list(
         },
         event_id,
         rooms: &rooms,
+        entry_counts: entry_counts
+            .iter()
+            .map(|(id, count)| (*id, *count as u64))
+            .collect(),
+        entries_without_room_count: entries_without_room_count as u64,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -51,4 +60,6 @@ struct RoomsListTemplate<'a> {
     base: BaseTemplateContext<'a>,
     event_id: EventId,
     rooms: &'a Vec<Room>,
+    entry_counts: BTreeMap<RoomId, u64>,
+    entries_without_room_count: u64,
 }

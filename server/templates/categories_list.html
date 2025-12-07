@@ -13,10 +13,15 @@
 
             <div class="list-group">
                 {% for category in categories %}
+                    {% let entry_count = *entry_counts.get(category.id).unwrap_or(&0) %}
                     <a href="{{ base.request.url_for("main_list_by_category", [event_id.to_string(), category.id.to_string()])? }}" class="list-group-item list-group-item-action category-row {% if category.is_official %}fw-semibold{% endif %}"
                        style="{{ CategoryColors::from_base_color_hex(category.color)?.as_css() }}">
                         <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
-                        <span class="float-end d-inline-block" aria-hidden="true">{{category.icon}}</span>
+                        <span class="float-end badge rounded-pill {% if entry_count == 0 %}text-bg-secondary{% else %}text-bg-light{% endif %} ms-2" title="Anzahl Einträge">
+                            {{ entry_count }}
+                            <span class="visually-hidden">Einträge</span>
+                        </span>
+                        <span class="float-end d-inline-block ms-2" aria-hidden="true">{{category.icon}}</span>
                         {{category.title}}
                     </a>
                 {% endfor %}

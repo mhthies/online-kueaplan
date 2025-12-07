@@ -58,14 +58,7 @@
         <hr class="mb-5 mt-5 d-print-none"/>
         <h2 style="page-break-before: always;">Beschreibungen</h2>
         {% for entry in entries_with_descriptions %}
-            <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>
-            <p>
-                {{ to_our_timezone(entry.entry.begin).format("%d.%m. %H:%M") -}}
-                {% if !entry.room_ids.is_empty() %} • {% endif -%}
-                {% for room in rooms.iter_rooms_by_id_ordered(entry.room_ids.iter()) %}{{ room.title }}{% if !loop.last %}, {% endif %}{% endfor -%}
-                {% if !entry.entry.responsible_person.is_empty() %} • von {{ entry.entry.responsible_person }}{% endif %}
-            </p>
-            {{ entry.entry.description|markdown }}
+            {{ EntryDescriptionTemplate::new(entry, rooms, event.clock_info.timezone) }}
         {% endfor %}
     {% endif %}
 </div>

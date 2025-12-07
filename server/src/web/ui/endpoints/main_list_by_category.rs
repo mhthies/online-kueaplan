@@ -5,6 +5,7 @@ use crate::web::time_calculation::current_effective_date;
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
+use crate::web::ui::sub_templates::main_list_helpers::EntryDescriptionTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
@@ -105,7 +106,6 @@ impl MainListByCategoryTemplate<'_> {
 
 /// Filters for the rinja template
 mod filters {
-    pub use crate::web::ui::askama_filters::markdown;
     use crate::web::ui::util;
 
     pub fn weekday(

@@ -9,6 +9,7 @@ use crate::web::time_calculation::{
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
+use crate::web::ui::sub_templates::main_list_helpers::EntryDescriptionTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
     styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
 };
@@ -183,7 +184,6 @@ impl<'a> MainListTemplate<'a> {
 
 /// Filters for the askama template
 mod filters {
-    pub use crate::web::ui::askama_filters::markdown;
     use crate::web::ui::util;
 
     pub fn weekday(

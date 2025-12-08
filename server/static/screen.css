@@ -118,3 +118,8 @@ table.kuealist .aside-container .table-aside-buttons {
 #main * {
     scroll-margin-top: 60px;
 }
+
+/* sizing of QR code for print templates on screen */
+.print-qrcode {
+    max-width: 400px;
+}

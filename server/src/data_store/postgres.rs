@@ -1216,6 +1216,22 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         }
         Ok(passphrases)
     }
+    fn get_full_user_passphrases(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<models::Passphrase>, StoreError> {
+        use schema::event_passphrases::dsl::*;
+        auth_token.check_privilege(the_event_id, Privilege::ManagePassphrases)?;
+
+        let passphrases = event_passphrases
+            .select(models::Passphrase::as_select())
+            .filter(event_id.eq(the_event_id))
+            .filter(passphrase.is_not_null())
+            .filter(privilege.eq(AccessRole::User))
+            .load::<models::Passphrase>(&mut self.connection)?;
+        Ok(passphrases)
+    }
 }
 
 fn update_entry_rooms(

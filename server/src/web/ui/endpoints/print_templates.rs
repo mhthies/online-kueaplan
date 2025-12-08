@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, ExtendedEvent, Passphrase};
+use crate::data_store::models::{ExtendedEvent, Passphrase};
 use crate::data_store::EventId;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
@@ -21,11 +21,16 @@ pub async fn print_link_and_passphrase(
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
     let session_token =
-        util::extract_session_token(&state, &req, Privilege::ShowConfigArea, event_id)?;
-    let (event, auth) = web::block(move || -> Result<_, AppError> {
+        util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
+    let (event, passphrases, auth) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok((store.get_extended_event(&auth, event_id)?, auth))
+        let event = store.get_extended_event(&auth, event_id)?;
+        let passphrases = auth
+            .has_privilege(event_id, Privilege::ManagePassphrases)
+            .then(|| store.get_full_user_passphrases(&auth, event_id))
+            .transpose()?;
+        Ok((event, passphrases, auth))
     })
     .await??;
 
@@ -42,6 +47,7 @@ pub async fn print_link_and_passphrase(
             active_nav_button: ConfigNavButton::PrintTemplates,
         },
         event: &event,
+        passphrases: passphrases.as_ref(),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -52,6 +58,7 @@ struct PrintLinkAndPassphraseTemplate<'a> {
     base: BaseTemplateContext<'a>,
     base_config: BaseConfigTemplateContext,
     event: &'a ExtendedEvent,
+    passphrases: Option<&'a Vec<Passphrase>>,
 }
 
 impl PrintLinkAndPassphraseTemplate<'_> {
@@ -65,6 +72,20 @@ impl PrintLinkAndPassphraseTemplate<'_> {
                 .request
                 .url_for("event_index", [&self.event.basic_data.id.to_string()])?
         };
+        Ok(url.to_string())
+    }
+
+    fn admin_login_url(&self) -> Result<String, AppError> {
+        let mut url = self
+            .base
+            .request
+            .url_for("login_form", [&self.event.basic_data.id.to_string()])?;
+        url.set_query(Some(&serde_urlencoded::to_string(
+            super::auth::LoginQueryData {
+                privilege: Some(Privilege::ManagePassphrases),
+                redirect_to: Some(self.base.request.full_url().to_string()),
+            },
+        )?));
         Ok(url.to_string())
     }
 }

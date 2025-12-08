@@ -308,7 +308,19 @@ pub trait KueaPlanStoreFacade {
         passphrase_id: PassphraseId,
     ) -> Result<(), StoreError>;
 
+    /// List all passphrases of the event, for management purposes. Requires
+    /// [Privilege::ManagePassphrases]. Actual passphrase text is obfuscated (only final sixth of
+    /// the letters visible).
     fn get_passphrases(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<models::Passphrase>, StoreError>;
+
+    /// List all passphrases for role 'User' with a passphrase text of the event.
+    /// In contrast to [get_passphrases()] the passphrase text is not obfucated. This is intended
+    /// for usage in print templates. Still, the [Privilege::ManagePassphrases] is required.
+    fn get_full_user_passphrases(
         &mut self,
         auth_token: &AuthToken,
         event_id: EventId,

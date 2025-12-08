@@ -122,3 +122,9 @@ td.shrink-to-content {
     min-width: fit-content;
     text-wrap: nowrap;
 }
+
+/* sizing of QR code for print templates */
+.print-qrcode {
+    width: 65%;
+    max-height: 75vh;"
+}

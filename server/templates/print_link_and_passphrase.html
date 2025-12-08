@@ -9,11 +9,63 @@
     <h1>Online-KüA-Plan</h1>
     <h2>{{ event.basic_data.title }}</h2>
 
-    <img src="{{ base.url_for_event_endpoint("event_ui_link_qr_code")? }}" style="width: 65%; max-height: 75vh;" />
+    <img src="{{ base.url_for_event_endpoint("event_ui_link_qr_code")? }}" class="print-qrcode" />
     <p class="fs-3">
         {{ get_ui_link()? }}
     </p>
-
-    {# TODO passphrase #}
+    {% if let Some(passphrases) = passphrases %}
+        {% if !passphrases.is_empty() %}
+            <div class="mt-5">
+                <div class="form-check text-info d-inline-block d-print-none">
+                    <input class="form-check-input" type="checkbox" value="" id="show-passphrase-checkbox">
+                    <label class="form-check-label" for="show-passphrase-checkbox">
+                        Passphrase anzeigen
+                    </label>
+                </div>
+                <div id="passphrase-display" class="d-none">
+                    <p class="fs-3">Passphrase für den KüA-Plan:</p>
+                    <div class="fs-1 mb-3">
+                        <span id="passphrase-display-text">{{passphrases[0].passphrase.as_ref().expect("This part should only exist if there is at least one passphrase")}}</span>
+                        {% if passphrases.len() > 1 %}
+                            <div class="dropdown d-inline-block d-print-none">
+                                <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                        aria-expanded="false" title="Passphrase auswählen"></button>
+                                <ul class="dropdown-menu">
+                                    {% for passphrase in passphrases %}
+                                        <li><a href="#" class="dropdown-item passphrase-display-option">{{passphrase.passphrase.as_ref().unwrap()}}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <p class="fs-3">Bitte die Passphrase <u>nicht</u> online<br>(z.B. in Telegram-Gruppen) weitergeben.</p>
+                </div>
+            </div>
+            <script>
+                function updatePassphraseVisibility(checkbox) {
+                    if (checkbox.checked) {
+                        document.getElementById("passphrase-display").classList.remove("d-none");
+                    } else {
+                        document.getElementById("passphrase-display").classList.add("d-none");
+                    }
+                }
+                const checkbox = document.getElementById("show-passphrase-checkbox");
+                checkbox.addEventListener("change", (ev) => updatePassphraseVisibility(ev.currentTarget));
+                updatePassphraseVisibility(checkbox);
+                for (const link of document.getElementsByClassName("passphrase-display-option")) {
+                    link.addEventListener("click", (ev) => {
+                        document.getElementById("passphrase-display-text").innerText = ev.currentTarget.innerText;
+                        return false;
+                    });
+                }
+            </script>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info d-print-none text-start mt-5">
+            <i class="bi bi-info-circle"></i>
+            Admins dieser Veranstaltung können hier auch die Passphrase anzeigen lassen, um sie mit auf den Aushang zu drucken.
+            <a href="{{ admin_login_url()? }}">Zum Admin-Login…</a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

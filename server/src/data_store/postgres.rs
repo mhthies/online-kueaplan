@@ -1037,6 +1037,46 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         Ok(())
     }
 
+    fn drop_access_role(
+        &mut self,
+        the_event_id: i32,
+        access_role: AccessRole,
+        session_token: &mut SessionToken,
+    ) -> Result<(), StoreError> {
+        use schema::event_passphrases::dsl::*;
+        let passphrase_ids = event_passphrases
+            .select(id)
+            .filter(event_id.eq(the_event_id))
+            .filter(privilege.eq(access_role))
+            .load::<i32>(&mut self.connection)?;
+
+        for passphrase_id in passphrase_ids {
+            session_token.remove_authorization(passphrase_id);
+        }
+
+        Ok(())
+    }
+
+    fn list_all_access_roles(
+        &mut self,
+        session_token: &SessionToken,
+    ) -> Result<Vec<(EventId, AccessRole)>, StoreError> {
+        use schema::event_passphrases::dsl::*;
+
+        let mut roles = event_passphrases
+            .filter(id.eq_any(session_token.get_passphrase_ids()))
+            .filter(valid_from.le(diesel::dsl::now))
+            .filter(valid_until.ge(diesel::dsl::now))
+            .select((event_id, privilege))
+            .load::<(EventId, AccessRole)>(&mut self.connection)?;
+
+        roles.sort_unstable();
+        roles.dedup();
+        roles.retain(|(_event, role)| role.can_be_granted_by_passphrase());
+
+        Ok(roles)
+    }
+
     fn get_auth_token_for_session(
         &mut self,
         session_token: &SessionToken,

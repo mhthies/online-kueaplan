@@ -17,7 +17,7 @@
 use crate::auth_session::SessionToken;
 use crate::cli_error::CliError;
 use crate::cli_error::CliError::UnexpectedStoreError;
-use crate::data_store::auth_token::Privilege;
+use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::setup;
 use auth_token::{AuthToken, GlobalAuthToken};
 use std::fmt::{Debug, Display, Formatter};
@@ -266,6 +266,20 @@ pub trait KueaPlanStoreFacade {
         passphrase: &str,
         session_token: &mut SessionToken,
     ) -> Result<(), StoreError>;
+
+    /// Remove all passphrase ids which grant the given `access_role` for `event_id` from the
+    /// given `session_token`. This results in "logging out" from the event (only the given role).
+    fn drop_access_role(
+        &mut self,
+        event_id: i32,
+        access_role: AccessRole,
+        session_token: &mut SessionToken,
+    ) -> Result<(), StoreError>;
+
+    fn list_all_access_roles(
+        &mut self,
+        session_token: &SessionToken,
+    ) -> Result<Vec<(EventId, AccessRole)>, StoreError>;
 
     /// Get an [AuthToken] instance for a client, representing the client's access roles
     fn get_auth_token_for_session(

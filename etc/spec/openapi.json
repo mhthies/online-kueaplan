@@ -29,7 +29,8 @@
     "/events/{eventId}/announcements/{announcementId}": {"$ref": "./paths/announcement.json"},
     "/events/{eventId}/passphrases": {"$ref": "./paths/passphrases.json"},
     "/events/{eventId}/passphrases/{passphraseId}": {"$ref": "./paths/passphrase.json"},
-    "/events/{eventId}/updates": {"$ref": "./paths/updates.json"}
+    "/events/{eventId}/updates": {"$ref": "./paths/updates.json"},
+    "/auth": {"$ref": "./paths/globalAuth.json"}
   },
   "components": {
     "parameters": {

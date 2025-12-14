@@ -1,0 +1,24 @@
+{
+  "get": {
+    "operationId": "checkAllEventsAuthorization",
+    "summary": "Check the current authorized roles with the given session token at all events.",
+    "security": [
+      {},
+      {"sessionTokenAuth": []}
+    ],
+    "responses": {
+      "200": {
+        "description": "Current authorization information.",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/AllEventsAuthorizationInfo.json"}
+          }
+        }
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

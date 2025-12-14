@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/AllEventsAuthorizationInfo.json",
+    "title": "All Events' Authorization Information",
+    "description": "List of authorized roles (e.g. of a specific user/client) for the KüA-Plan, grouped by event",
+    "type": "object",
+    "properties": {
+        "events": {
+            "type": "array",
+            "items": {
+                "$ref": "AuthorizationInfo.json"
+            }
+        }
+    },
+    "required": ["events"]
+}

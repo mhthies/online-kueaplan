@@ -1065,8 +1065,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
 
         let mut roles = event_passphrases
             .filter(id.eq_any(session_token.get_passphrase_ids()))
-            .filter(valid_from.le(diesel::dsl::now))
-            .filter(valid_until.ge(diesel::dsl::now))
+            .filter(valid_from.is_null().or(valid_from.le(diesel::dsl::now)))
+            .filter(valid_until.is_null().or(valid_until.ge(diesel::dsl::now)))
             .select((event_id, privilege))
             .load::<(EventId, AccessRole)>(&mut self.connection)?;
 

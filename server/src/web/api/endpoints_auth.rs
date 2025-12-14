@@ -26,7 +26,10 @@ async fn check_authorization(
     } else {
         vec![]
     };
-    let authorization_info: AuthorizationInfo = AuthorizationInfo { authorization };
+    let authorization_info = AuthorizationInfo {
+        event_id,
+        authorization,
+    };
     Ok(web::Json(authorization_info))
 }
 
@@ -76,7 +79,10 @@ async fn authorize(
         .await??
     };
     Ok(web::Json(AuthorizeResponse {
-        authorization_info: AuthorizationInfo { authorization },
+        authorization_info: AuthorizationInfo {
+            event_id,
+            authorization,
+        },
         session_token: session_token.as_string(&state.secret),
     }))
 }

@@ -3,8 +3,49 @@ use crate::data_store::StoreError;
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
 use actix_web::{get, post, web, Responder};
-use kueaplan_api_types::AuthorizationInfo;
+use kueaplan_api_types::{AllEventsAuthorizationInfo, Authorization, AuthorizationInfo};
 use serde::{Deserialize, Serialize};
+
+#[get("/auth")]
+async fn check_all_events_authorization(
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let session_token = session_token_header
+        .map(|token_header| token_header.into_inner().session_token(&state.secret))
+        .transpose()?;
+    let mut raw_authorization_list = if let Some(token) = session_token {
+        web::block(move || -> Result<_, APIError> {
+            let mut store = state.store.get_facade()?;
+            Ok(store.list_all_access_roles(&token)?)
+        })
+        .await??
+    } else {
+        vec![]
+    };
+    raw_authorization_list.sort();
+    let events: Vec<AuthorizationInfo> =
+        raw_authorization_list
+            .into_iter()
+            .fold(vec![], |mut accum, (event_id, role)| {
+                match accum.last_mut() {
+                    Some(current_entry) if current_entry.event_id == event_id => {
+                        current_entry
+                            .authorization
+                            .push(Authorization { role: role.into() });
+                    }
+                    _ => {
+                        accum.push(AuthorizationInfo {
+                            event_id,
+                            authorization: vec![Authorization { role: role.into() }],
+                        });
+                    }
+                };
+                accum
+            });
+
+    Ok(web::Json(AllEventsAuthorizationInfo { events }))
+}
 
 #[get("/events/{eventId}/auth")]
 async fn check_authorization(

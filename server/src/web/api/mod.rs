@@ -30,6 +30,7 @@ fn get_api_service() -> actix_web::Scope {
         web::JsonConfig::default().error_handler(|err, _req| APIError::InvalidJson(err).into());
     web::scope("/api/v1")
         .app_data(json_config)
+        .service(endpoints_auth::check_all_events_authorization)
         .service(endpoints_auth::check_authorization)
         .service(endpoints_event::list_events)
         .service(endpoints_event::get_event_info)

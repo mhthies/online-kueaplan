@@ -277,6 +277,11 @@ pub struct AuthorizationInfo {
     pub authorization: Vec<Authorization>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct AllEventsAuthorizationInfo {
+    pub events: Vec<AuthorizationInfo>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Passphrase {
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -3,7 +3,9 @@ use crate::data_store::StoreError;
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
 use actix_web::{get, post, web, Responder};
-use kueaplan_api_types::{AllEventsAuthorizationInfo, Authorization, AuthorizationInfo};
+use kueaplan_api_types::{
+    AllEventsAuthorizationInfo, Authorization, AuthorizationInfo, AuthorizationRole,
+};
 use serde::{Deserialize, Serialize};
 
 #[get("/auth")]
@@ -114,6 +116,43 @@ async fn authorize(
                     },
                     e => e.into(),
                 })?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            Ok((auth.list_api_access_roles(), session_token))
+        })
+        .await??
+    };
+    Ok(web::Json(AuthorizeResponse {
+        authorization_info: AuthorizationInfo {
+            event_id,
+            authorization,
+        },
+        session_token: session_token.as_string(&state.secret),
+    }))
+}
+
+#[derive(Deserialize)]
+struct DropAccessRoleRequest {
+    role: AuthorizationRole,
+}
+
+#[post("/events/{eventId}/dropAccessRole")]
+async fn drop_access_role(
+    path: web::Path<i32>,
+    body: web::Json<DropAccessRoleRequest>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let event_id = path.into_inner();
+    let session_token = session_token_header
+        .map(|token_header| token_header.into_inner().session_token(&state.secret))
+        .transpose()?
+        .unwrap_or_else(SessionToken::new);
+    let store = state.store.clone();
+    let (authorization, session_token) = {
+        web::block(move || -> Result<_, APIError> {
+            let mut session_token = session_token;
+            let mut store = store.get_facade()?;
+            store.drop_access_role(event_id, body.role.into(), &mut session_token)?;
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
             Ok((auth.list_api_access_roles(), session_token))
         })

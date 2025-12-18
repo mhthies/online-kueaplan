@@ -41,6 +41,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::main_list_by_room::main_list_by_room)
         .service(endpoints::auth::login_form)
         .service(endpoints::auth::login)
+        .service(endpoints::auth::logout_all)
         .service(endpoints::edit_entry::edit_entry_form)
         .service(endpoints::edit_entry::edit_entry)
         .service(endpoints::edit_entry::new_entry_form)

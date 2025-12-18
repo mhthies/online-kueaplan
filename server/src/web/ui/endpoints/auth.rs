@@ -228,3 +228,36 @@ struct LoginFormTemplate<'a> {
 struct LoginFormData {
     passphrase: String,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct LogoutQueryData {
+    pub redirect_to: Option<String>,
+}
+
+#[post("/logout")]
+async fn logout_all(
+    req: HttpRequest,
+    query_data: Query<LogoutQueryData>,
+) -> Result<impl Responder, AppError> {
+    let mut response = HttpResponse::SeeOther();
+    let mut cookie = actix_web::cookie::Cookie::new(SESSION_COOKIE_NAME, "");
+    cookie.set_path("/");
+    cookie.make_removal();
+    response.cookie(cookie);
+    req.add_flash_message(FlashMessage {
+        flash_type: FlashType::Success,
+        message: "Login-Daten wurden bereinigt.".to_owned(),
+        keep_open: false,
+        button: None,
+    });
+    Ok(response
+        .append_header((
+            header::LOCATION,
+            if let Some(ref redirect_to) = query_data.redirect_to {
+                redirect_to.clone()
+            } else {
+                req.url_for_static("events_list")?.to_string()
+            },
+        ))
+        .finish())
+}

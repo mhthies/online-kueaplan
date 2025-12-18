@@ -32,6 +32,8 @@ fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
         .service(endpoints::events_list::events_list)
+        .service(endpoints::list_own_roles::list_own_roles)
+        .service(endpoints::list_own_roles::logout_role)
         .service(endpoints::index::event_index)
         .service(endpoints::main_list::main_list)
         .service(endpoints::categories_list::categories_list)

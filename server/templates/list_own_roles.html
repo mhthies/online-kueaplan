@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-3 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1>Login-Status</h1>
+            {% if let Some(session_error) = session_error %}
+                <div class="alert alert-danger mt-3" role="alert">
+                    <p>
+                        <i class="bi-exclamation-circle-fill"></i>
+                        Dein Login-Status kann nicht gelesen werden, da die gespeicherten Login-Daten in deinem Browser fehlerhaft sind.
+                        Fehlermeldung: {{ session_error.get_description() }}
+                    </p>
+                    <p class="mb-0">
+                        Bitte verwende den folgendne Butten, um deine Login-Daten zu bereinigen und logge dich anschließend neu ein.
+                    </p>
+                </div>
+            {% endif %}
+
+            <div class="d-flex flex-column flex-md-row justify-content-start align-items-center gap-2 mt-3 mb-3">
+                <form class="flex-shrink-0" method="post" action="{{ logout_all_url()? }}">
+                    <button class="btn btn-danger"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout aus allen</button>
+                </form>
+                <div class="text-secondary">Aus allen Veranstaltungen (mit allen Berechtigungen) ausloggen / Login-Daten bereinigen.</div>
+            </div>
+            <h2>Login nach Veranstaltungen</h2>
+            {% if access_roles_by_event.is_empty() %}
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                    Du bist aktuell für keine Veranstaltung im KüA-Plan eingeloggt.
+                </div>
+                <a href="{{ base.request.url_for_static("events_list")? }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Zur Veranstaltungsübersicht
+                </a>
+            {% else %}
+                <table class="table">
+                    <tr>
+                        <th scope="col">Veranstaltung</th>
+                        <th scope="col">Berechtigung</th>
+                        <th scope="col"><span class="visually-hidden">Aktionen</span></th>
+                    </tr>
+                    {% for (event_id, roles) in access_roles_by_event %}
+                        <tr>
+                            <td rowspan="{{ roles.len() }}"><a href="{{ base.request.url_for("event_index", [event_id.to_string()])? }}">{{ get_event_title(**event_id) }}</a></td>
+                        {% for role in roles %}
+                            {% if !loop.first %}</tr><tr>{% endif %}
+                            <td>{{ self::format_access_role(role) }}</td>
+                            <td class="shrink-to-content">
+                                <form class="d-inline" method="post" action="{{ base.request.url_for_static("logout_role")? }}">
+                                    <input type="hidden" name="event_id" value="{{ event_id.to_string() }}" />
+                                    <input type="hidden" name="role" value="{{ serde_variant::to_variant_name(role)? }}" />
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Aus dieser Rolle ausloggen"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></button>
+                                </form>
+                            </td>
+                        {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

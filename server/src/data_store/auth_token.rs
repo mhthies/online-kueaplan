@@ -153,7 +153,17 @@ impl GlobalAuthToken {
 ///
 /// Each role qualifies for a set of [Privileges]. See [Privilege::qualifying_roles].
 #[derive(
-    Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug, diesel::AsExpression, diesel::FromSqlRow,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Clone,
+    Copy,
+    Debug,
+    diesel::AsExpression,
+    diesel::FromSqlRow,
+    Serialize,
+    Deserialize,
 )]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]

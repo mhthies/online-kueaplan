@@ -205,7 +205,7 @@ async fn login(
     }
 }
 
-fn create_session_cookie<'b>(
+pub fn create_session_cookie<'b>(
     session_token: SessionToken,
     secret: &str,
 ) -> actix_web::cookie::Cookie<'b> {

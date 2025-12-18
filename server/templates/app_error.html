@@ -72,18 +72,8 @@
         {% endif %}
         {% if let Some(session_error) = session_error %}
             <p>
-                Deine bereits eingegebenen Passphrasen konnten leider nicht geladen werden.
-                Grund dafür ist, dass
-                {% match session_error %}
-                    {% when crate::auth_session::SessionError::InvalidTokenEncoding %}
-                        der Session-Token ungültig ist (ungültiges base64-Encoding).
-                    {% when crate::auth_session::SessionError::InvalidTokenStructure %}
-                        der Session-Token ungültig ist (ungültige Länge).
-                    {% when crate::auth_session::SessionError::SignatureVerificationFailed %}
-                        der Session-Token ungültig ist (Signatur-Prüfung fehlgeschlagen).
-                    {% when crate::auth_session::SessionError::ExpiredToken %}
-                        der Session-Token nicht mehr gültig ist.
-                {% endmatch %}
+                Deine bereits eingegebenen Passphrasen konnten leider nicht geladen werden, da die in deinem Browser gespeicherten Login-Daten fehlerhaft sind.
+                Grund dafür: {{ session_error.get_description() }}
             </p>
         {% endif %}
         <p>

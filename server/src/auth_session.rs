@@ -154,6 +154,21 @@ pub enum SessionError {
     ExpiredToken,
 }
 
+impl SessionError {
+    pub fn get_description(&self) -> &'static str {
+        match self {
+            Self::InvalidTokenEncoding => {
+                "Der Session-Token ist ungültig (ungültiges base64-Encoding)."
+            }
+            Self::InvalidTokenStructure => "Der Session-Token ist ungültig (ungültige Länge).",
+            Self::SignatureVerificationFailed => {
+                "Der Session-Token ist ungültig (Signatur-Prüfung fehlgeschlagen)."
+            }
+            Self::ExpiredToken => "Der Session-Token ist nicht mehr gültig.",
+        }
+    }
+}
+
 impl From<base64::DecodeError> for SessionError {
     fn from(_value: DecodeError) -> Self {
         SessionError::InvalidTokenEncoding

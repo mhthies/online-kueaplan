@@ -204,4 +204,14 @@ impl AppErrorTemplate<'_> {
         )?));
         Ok(url.to_string())
     }
+
+    fn logout_all_url(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let mut url = self.base.request.url_for_static("logout_all")?;
+        url.set_query(Some(&serde_urlencoded::to_string(
+            super::endpoints::auth::LogoutQueryData {
+                redirect_to: Some(self.url.to_string()),
+            },
+        )?));
+        Ok(url.to_string())
+    }
 }

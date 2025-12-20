@@ -272,7 +272,14 @@ pub struct Authorization {
 
 #[derive(Serialize, Deserialize)]
 pub struct AuthorizationInfo {
+    #[serde(rename = "eventId")]
+    pub event_id: i32,
     pub authorization: Vec<Authorization>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AllEventsAuthorizationInfo {
+    pub events: Vec<AuthorizationInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

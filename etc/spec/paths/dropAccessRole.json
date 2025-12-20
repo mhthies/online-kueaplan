@@ -1,0 +1,58 @@
+{
+  "post": {
+    "operationId": "dropAccessRole",
+    "summary": "Create a new session token, inheriting all privileges from the current session token, except for the given access role on the given event.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["participant", "orga", "admin", "participant-sharable"],
+                "description": "The access role which shall be removed from the session token (if present)."
+              }
+            },
+            "required": ["role"]
+          }
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "200": {
+        "description": "Creating new session token successful.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {"$ref": "../schema/AuthorizationInfo.json"},
+                {
+                  "type": "object",
+                  "properties": {
+                    "sessionToken": {
+                      "type": "string",
+                      "description": "The new session token, with the specified role removed from the granted privileges."
+                    }
+                  },
+                  "required": ["sessionToken"]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

@@ -17,6 +17,7 @@
     "/events": {"$ref": "./paths/events.json"},
     "/events/{eventId}": {"$ref": "./paths/event.json"},
     "/events/{eventId}/auth": {"$ref": "./paths/auth.json"},
+    "/events/{eventId}/dropAccessRole": {"$ref": "./paths/dropAccessRole.json"},
     "/events/{eventId}/extended": {"$ref": "./paths/eventExtended.json"},
     "/events/{eventId}/rooms": {"$ref": "./paths/rooms.json"},
     "/events/{eventId}/rooms/{roomId}": {"$ref": "./paths/room.json"},
@@ -29,7 +30,8 @@
     "/events/{eventId}/announcements/{announcementId}": {"$ref": "./paths/announcement.json"},
     "/events/{eventId}/passphrases": {"$ref": "./paths/passphrases.json"},
     "/events/{eventId}/passphrases/{passphraseId}": {"$ref": "./paths/passphrase.json"},
-    "/events/{eventId}/updates": {"$ref": "./paths/updates.json"}
+    "/events/{eventId}/updates": {"$ref": "./paths/updates.json"},
+    "/auth": {"$ref": "./paths/globalAuth.json"}
   },
   "components": {
     "parameters": {

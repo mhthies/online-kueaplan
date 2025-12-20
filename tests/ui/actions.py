@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 
 
 def login(page: Page, event_id: int, passphrase: str) -> None:
-    page.goto(f"http://localhost:9099/ui/{event_id}")
+    page.goto(f"http://localhost:9099/ui/{event_id}/login")
     expect(page).to_have_title(re.compile("Login"))
     page.get_by_role("textbox", name="Passphrase").fill(passphrase)
     page.get_by_role("button", name="Zum KüA-Plan").click()

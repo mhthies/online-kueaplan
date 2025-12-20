@@ -5,6 +5,10 @@
     "description": "List of authorized roles (e.g. of a specific user/client) for the KüA-Plan of a given event.",
     "type": "object",
     "properties": {
+        "eventId": {
+            "type": "integer",
+            "description": "The unique identifier of the KüA plan's event, this authorization info applies to."
+        },
         "authorization": {
             "type": "array",
             "items": {
@@ -19,5 +23,5 @@
             }
         }
     },
-    "required": ["authorization"]
+    "required": ["eventId", "authorization"]
 }

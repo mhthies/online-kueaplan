@@ -38,6 +38,12 @@ impl SessionToken {
         self.authorized_passphrases.push(passphrase_id)
     }
 
+    /// Remove a passphrase from the authenticated passphrases list, stored in this SessionToken, in
+    /// order to drop the associated access role.
+    pub fn remove_authorization(&mut self, passphrase_id: PassphraseId) {
+        self.authorized_passphrases.retain(|v| *v != passphrase_id);
+    }
+
     /// Get the list of database ids of passphrases stored in the SessionToken.
     pub fn get_passphrase_ids(&self) -> &[PassphraseId] {
         &self.authorized_passphrases
@@ -146,6 +152,21 @@ pub enum SessionError {
     InvalidTokenStructure,
     SignatureVerificationFailed,
     ExpiredToken,
+}
+
+impl SessionError {
+    pub fn get_description(&self) -> &'static str {
+        match self {
+            Self::InvalidTokenEncoding => {
+                "Der Session-Token ist ungültig (ungültiges base64-Encoding)."
+            }
+            Self::InvalidTokenStructure => "Der Session-Token ist ungültig (ungültige Länge).",
+            Self::SignatureVerificationFailed => {
+                "Der Session-Token ist ungültig (Signatur-Prüfung fehlgeschlagen)."
+            }
+            Self::ExpiredToken => "Der Session-Token ist nicht mehr gültig.",
+        }
+    }
 }
 
 impl From<base64::DecodeError> for SessionError {

@@ -22,8 +22,8 @@ pub mod validation;
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(
         get_ui_service()
-            .wrap(from_fn(flash_middleware))
-            .wrap(from_fn(error_page_middleware)),
+            .wrap(from_fn(error_page_middleware))
+            .wrap(from_fn(flash_middleware)),
     );
     cfg.service(get_ui_api_service());
 }
@@ -32,6 +32,8 @@ fn get_ui_service() -> actix_web::Scope {
     web::scope("/ui")
         .service(static_resources)
         .service(endpoints::events_list::events_list)
+        .service(endpoints::list_own_roles::list_own_roles)
+        .service(endpoints::list_own_roles::logout_role)
         .service(endpoints::index::event_index)
         .service(endpoints::main_list::main_list)
         .service(endpoints::categories_list::categories_list)
@@ -41,6 +43,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::main_list_by_room::main_list_by_room)
         .service(endpoints::auth::login_form)
         .service(endpoints::auth::login)
+        .service(endpoints::auth::logout_all)
         .service(endpoints::edit_entry::edit_entry_form)
         .service(endpoints::edit_entry::edit_entry)
         .service(endpoints::edit_entry::new_entry_form)

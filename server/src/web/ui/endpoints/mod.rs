@@ -15,6 +15,7 @@ pub mod edit_passphrase;
 pub mod edit_room;
 pub mod events_list;
 pub mod index;
+pub mod list_own_roles;
 pub mod main_list;
 pub mod main_list_by_category;
 pub mod main_list_by_room;

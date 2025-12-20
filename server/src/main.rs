@@ -20,8 +20,8 @@ fn main() {
         },
     );
     env_logger::Builder::from_env(env).init();
-    if dotenv_result.is_err() {
-        warn!("Could not read .env file: {}", dotenv_result.unwrap_err());
+    if let Err(e) = dotenv_result {
+        warn!("Could not read .env file: {e}");
     }
 
     info!(

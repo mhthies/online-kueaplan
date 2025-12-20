@@ -1,3 +1,4 @@
+import re
 from re import Pattern
 
 from playwright.sync_api import Locator, Page
@@ -32,3 +33,14 @@ def get_table_cell_by_header(table_row: Locator, header_text: str | Pattern[str]
         "node => { let i = 0; while((node = node.previousElementSibling) != null) i++; return i; }"
     )
     return table_row.locator(f"xpath=//td[{header_index + 1}]")
+
+
+def assert_small_font(locator: Locator) -> None:
+    """Asserts that the element located by the locator has a smaller font size than normal"""
+    font_weight = locator.evaluate("el => window.getComputedStyle(el).getPropertyValue('font-size')")
+    font_weight_value = float(re.match(r"(\d+(\.\d+)?)px", font_weight).group(1))
+    body_font_weight = locator.page.evaluate(
+        "() => window.getComputedStyle(document.body).getPropertyValue('font-size')"
+    )
+    body_font_weight_value = float(re.match(r"(\d+(\.\d+)?)px", body_font_weight).group(1))
+    assert font_weight_value < body_font_weight_value

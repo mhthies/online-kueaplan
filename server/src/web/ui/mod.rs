@@ -22,8 +22,8 @@ pub mod validation;
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
     cfg.service(
         get_ui_service()
-            .wrap(from_fn(flash_middleware))
-            .wrap(from_fn(error_page_middleware)),
+            .wrap(from_fn(error_page_middleware))
+            .wrap(from_fn(flash_middleware)),
     );
     cfg.service(get_ui_api_service());
 }

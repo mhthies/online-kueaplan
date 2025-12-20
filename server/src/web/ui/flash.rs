@@ -162,7 +162,6 @@ pub async fn flash_middleware(
     let mut response = next.call(req).await?;
 
     let flashes = response.request().extensions_mut().remove::<Flashes>();
-    // TODO only clear flashes when response was not an Err
     if let Some(flashes) = flashes {
         let cookie = flashes.into_cookie();
         let val = HeaderValue::from_str(&cookie.to_string())?;

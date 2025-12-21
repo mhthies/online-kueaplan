@@ -23,7 +23,7 @@ def test_empty_category_notification(page: Page, reset_database: None) -> None:
     expect(page.get_by_text(re.compile(r"keine KüAs in der Kategorie .*? geplant"))).to_be_visible()
 
 
-def test_main_list_entry(page: Page, reset_database: None) -> None:
+def test_main_list_entry_attributes(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     actions.add_category(page, data.CATEGORY_SPORT)
     actions.add_room(page, data.ROOM_SPORTPLAETZE)
@@ -52,3 +52,48 @@ def test_main_list_entry(page: Page, reset_database: None) -> None:
     room_comment = room_col.get_by_text("Beach-Volleyball-Feld")
     expect(room_comment).to_be_visible()
     helpers.assert_small_font(room_comment)
+
+    page.get_by_role("link", name="Orte").click()
+    page.get_by_role("link", name="Sportplätze").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+
+    page.get_by_role("link", name="Kategorien").click()
+    page.get_by_role("link", name="Sport").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+
+    page.get_by_role("link", name="Kategorien").click()
+    page.get_by_role("link", name="Default").click()
+    expect(page.get_by_text("Beach-Volleyball")).not_to_be_visible()
+
+
+def test_main_list_entry_correct_pages_and_carry(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_SONNENAUFGANG_WANDERUNG)
+
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Sa 04.01.").click()
+    expect(page.get_by_text("Sonnenaufgang-Wanderung")).not_to_be_visible()
+
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="So 05.01.").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
+    expect(row).to_be_visible()
+    expect(row).not_to_contain_text("Übertrag vom Vortag")
+
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Mo 06.01.").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
+    expect(row).to_be_visible()
+    expect(row).to_contain_text("Übertrag vom Vortag")
+
+    page.get_by_role("link", name="Kategorien").click()
+    page.get_by_role("link", name="Default").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
+    expect(row).to_be_visible()
+
+    page.get_by_role("link", name="Orte").click()
+    page.get_by_role("link", name="KüAs ohne Ort").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
+    expect(row).to_be_visible()

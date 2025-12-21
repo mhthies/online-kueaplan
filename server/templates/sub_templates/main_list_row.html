@@ -28,7 +28,7 @@
         <td></td>
         <td class="text-secondary text-nowrap">
             <i class="bi bi-calendar-event-fill" aria-hidden="true" title="Kalenderdatum"></i>
-            {{ row.entry.entry.begin.format("%d.%m.") }} 00:00
+            {{ to_our_timezone(row.entry.entry.begin).format("%d.%m.") }} 00:00
         </td>
         <td colspan="2"></td>
     </tr>

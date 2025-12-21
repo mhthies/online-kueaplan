@@ -97,3 +97,14 @@ def test_main_list_entry_correct_pages_and_carry(page: Page, reset_database: Non
     page.get_by_role("link", name="KüAs ohne Ort").click()
     row = helpers.get_table_row_by_column_value(page, "Was?", "Sonnenaufgang-Wanderung")
     expect(row).to_be_visible()
+
+
+def test_main_list_order(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_WEST_COAST_SWING)
+    actions.add_entry(page, data.ENTRY_AKROBATIK)
+    actions.add_entry(page, data.ENTRY_TANZABEND)
+    expect(page).to_have_title(re.compile(r"03\.01\."))
+    expect(
+        page.locator("xpath=//td[1]").or_(page.get_by_title("Kalenderdatum").locator("xpath=ancestor-or-self::td"))
+    ).to_contain_text(["Akrobatik", "Tanzabend", "04.01. 00:00", "West Coast Swing"])

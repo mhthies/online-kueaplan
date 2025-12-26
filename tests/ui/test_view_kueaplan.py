@@ -108,3 +108,29 @@ def test_main_list_order(page: Page, reset_database: None) -> None:
     expect(
         page.locator("xpath=//td[1]").or_(page.get_by_title("Kalenderdatum").locator("xpath=ancestor-or-self::td"))
     ).to_contain_text(["Akrobatik", "Tanzabend", "04.01. 00:00", "West Coast Swing"])
+
+
+def test_main_list_description(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_LOREM_IPSUM)
+
+    # Check presence of headings
+    expect(page.get_by_role("heading")).to_contain_text(
+        ["Beschreibungen", "Lorem Ipsum dolor sit amet", "Vulputate qui blandit praesent", "Ullamcorper lobortis"]
+    )
+
+    # Check heading levels
+    expect(page.get_by_role("heading", name="Beschreibungen")).to_have_js_property("tagName", "H2")
+    expect(page.get_by_role("heading", name="Lorem Ipsum dolor sit amet")).to_have_js_property("tagName", "H3")
+    expect(page.get_by_role("heading", name="Vulputate qui blandit praesent")).to_have_js_property("tagName", "H4")
+
+    # Check further Markdown formatting
+    section = page.get_by_role("heading", name="Lorem Ipsum dolor sit amet").locator("xpath=ancestor-or-self::section")
+    expect(section.get_by_role("listitem").first).to_have_text("At vero eos et accusam")
+    link = section.get_by_role("link", name="dolore eu feugiat nulla facilisis")
+    expect(link).to_be_visible()
+    expect(link).to_have_attribute("href", "https://example.com")
+
+    # Check presence of meta data above description
+    metadata_paragraph = section.get_by_text("von incognita")
+    expect(metadata_paragraph).to_contain_text("04.01. 14:00")

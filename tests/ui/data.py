@@ -22,6 +22,36 @@ ENTRY_BEACH_VOLLEYBALL = Entry(
     rooms=["Sportplätze"],
     room_comment="Beach-Volleyball-Feld",
 )
+ENTRY_LOREM_IPSUM = Entry(
+    title="Lorem Ipsum dolor sit amet",
+    day=datetime.date(2025, 1, 4),
+    begin=datetime.time(14, 0),
+    duration=datetime.timedelta(hours=1),
+    comment="Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
+    responsible_person="incognita",
+    room_comment="Quis aute iure reprehenderit in voluptate velit esse.",
+    description="""
+Vulputate qui blandit praesent
+==============================
+
+Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum [dolore eu feugiat \
+nulla facilisis](https://example.com) at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum \
+zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, \
+sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat:
+
+* At vero eos et accusam
+* Justo duo dolores et ea rebum
+* consetetur sadipscing elitr.
+
+
+Ullamcorper lobortis
+--------------------
+Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo \
+consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore \
+eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril \
+delenit augue duis dolore te feugait nulla facilisi.
+""",
+)
 ENTRY_SONNENAUFGANG_WANDERUNG = Entry(
     title="Sonnenaufgang-Wanderung",
     day=datetime.date(2025, 1, 5),

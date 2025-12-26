@@ -108,6 +108,7 @@ impl MainListByCategoryTemplate<'_> {
 mod filters {
     use crate::web::ui::util;
 
+    #[askama::filter_fn]
     pub fn weekday(
         date: &chrono::NaiveDate,
         _: &dyn askama::Values,

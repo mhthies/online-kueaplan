@@ -115,6 +115,7 @@ mod filters {
     pub use crate::web::ui::askama_filters::markdown;
     use crate::web::ui::util;
 
+    #[askama::filter_fn]
     pub fn weekday(
         date: &chrono::NaiveDate,
         _: &dyn askama::Values,

@@ -14,4 +14,4 @@
     {% endif %}
 {% endmatch %}
 {%- import "_utils.html" as utils %}
-{% call utils::info_and_errors(info, data.errors()) %}
+{{ utils::info_and_errors(info, data.errors()) }}

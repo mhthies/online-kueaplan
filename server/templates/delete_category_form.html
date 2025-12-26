@@ -52,14 +52,14 @@
                     {% else %}
                         <ul class="list-group list-group-flush">
                             {% if category_entries.len() > 5 %}
-                                {% call entry_preview_row(category_entries[0]) %}
-                                {% call entry_preview_row(category_entries[1]) %}
+                                {{ entry_preview_row(category_entries[0]) }}
+                                {{ entry_preview_row(category_entries[1]) }}
                                 <li class="list-group-item">…</li>
-                                {% call entry_preview_row(category_entries[category_entries.len()-2]) %}
-                                {% call entry_preview_row(category_entries[category_entries.len()-1]) %}
+                                {{ entry_preview_row(category_entries[category_entries.len()-2]) }}
+                                {{ entry_preview_row(category_entries[category_entries.len()-1]) }}
                             {% else %}
                                 {% for entry in category_entries %}
-                                    {% call entry_preview_row(entry) %}
+                                    {{ entry_preview_row(entry) }}
                                 {% endfor %}
                             {% endif %}
                         </ul>

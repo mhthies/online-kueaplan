@@ -105,7 +105,7 @@
     </td>
     <td class="kuea-time">
         {% if row.includes_entry %}
-            {% call format_begin_end(entry.begin, entry.end) %}
+            {{ format_begin_end(entry.begin, entry.end) }}
             {% if row.merged_times.len() > 1 %}
                 <span class="visually-hidden">Zuvor geplante Zeiten:</span>
                 <span class="text-decoration-line-through">
@@ -113,7 +113,7 @@
         {% endif %}
         {% for (begin, end) in row.merged_times if (**begin, **end) != (entry.begin, entry.end) || !row.includes_entry %}
             {% if row.includes_entry || !loop.first %}<br>{% endif %}
-            {% call format_begin_end(**begin, **end) %}
+            {{ format_begin_end(**begin, **end) }}
             {% if !loop.last %},{% endif %}
         {% endfor %}
         {% if row.includes_entry && row.merged_times.len() > 1 %}

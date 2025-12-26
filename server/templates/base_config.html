@@ -17,41 +17,41 @@
         <div class="col-lg-3 mb-3 mb-lg-0" id="config-navigation">
             <nav aria-label="Konfigurationsbereich-Navigation">
                 <ul class="nav nav-pills flex-row flex-lg-column">
-                    {% call navlink(base.url_for_event_endpoint("config_index")?,
-                                    "gear",
-                                    "Übersicht",
-                                    crate::data_store::auth_token::Privilege::ShowConfigArea,
-                                    crate::web::ui::base_template::ConfigNavButton::Overview) %}
-                    {% call navlink(base.url_for_event_endpoint("edit_extended_event_form")?,
-                                    "sliders",
-                                    "Veranstaltungs-Metadaten",
-                                    crate::data_store::auth_token::Privilege::EditEventDetails,
-                                    crate::web::ui::base_template::ConfigNavButton::EventConfig) %}
-                    {% call navlink(base.url_for_event_endpoint("manage_categories")?,
-                                    "grid",
-                                    "KüA-Kategorien",
-                                    crate::data_store::auth_token::Privilege::ManageCategories,
-                                    crate::web::ui::base_template::ConfigNavButton::Categories) %}
-                    {% call navlink(base.url_for_event_endpoint("manage_rooms")?,
-                                    "geo-alt-fill",
-                                    "Orte",
-                                    crate::data_store::auth_token::Privilege::ManageRooms,
-                                    crate::web::ui::base_template::ConfigNavButton::Rooms) %}
-                    {% call navlink(base.url_for_event_endpoint("manage_announcements")?,
-                                    "chat-right-heart",
-                                    "Bekanntmachungen",
-                                    crate::data_store::auth_token::Privilege::ManageAnnouncements,
-                                    crate::web::ui::base_template::ConfigNavButton::Announcements) %}
-                    {% call navlink(base.url_for_event_endpoint("manage_passphrases")?,
-                                    "key",
-                                    "Passphrasen",
-                                    crate::data_store::auth_token::Privilege::ManagePassphrases,
-                                    crate::web::ui::base_template::ConfigNavButton::Passphrases) %}
-                    {% call navlink(base.url_for_event_endpoint("print_link_and_passphrase")?,
-                                    "file-earmark-fill",
-                                    "Druckvorlagen",
-                                    crate::data_store::auth_token::Privilege::ShowConfigArea,
-                                    crate::web::ui::base_template::ConfigNavButton::PrintTemplates) %}
+                    {{ navlink(base.url_for_event_endpoint("config_index")?,
+                               "gear",
+                               "Übersicht",
+                               crate::data_store::auth_token::Privilege::ShowConfigArea,
+                               crate::web::ui::base_template::ConfigNavButton::Overview) }}
+                    {{ navlink(base.url_for_event_endpoint("edit_extended_event_form")?,
+                               "sliders",
+                               "Veranstaltungs-Metadaten",
+                               crate::data_store::auth_token::Privilege::EditEventDetails,
+                               crate::web::ui::base_template::ConfigNavButton::EventConfig) }}
+                    {{ navlink(base.url_for_event_endpoint("manage_categories")?,
+                               "grid",
+                               "KüA-Kategorien",
+                               crate::data_store::auth_token::Privilege::ManageCategories,
+                               crate::web::ui::base_template::ConfigNavButton::Categories) }}
+                    {{ navlink(base.url_for_event_endpoint("manage_rooms")?,
+                               "geo-alt-fill",
+                               "Orte",
+                               crate::data_store::auth_token::Privilege::ManageRooms,
+                               crate::web::ui::base_template::ConfigNavButton::Rooms) }}
+                    {{ navlink(base.url_for_event_endpoint("manage_announcements")?,
+                               "chat-right-heart",
+                               "Bekanntmachungen",
+                               crate::data_store::auth_token::Privilege::ManageAnnouncements,
+                               crate::web::ui::base_template::ConfigNavButton::Announcements) }}
+                    {{ navlink(base.url_for_event_endpoint("manage_passphrases")?,
+                               "key",
+                               "Passphrasen",
+                               crate::data_store::auth_token::Privilege::ManagePassphrases,
+                               crate::web::ui::base_template::ConfigNavButton::Passphrases) }}
+                    {{ navlink(base.url_for_event_endpoint("print_link_and_passphrase")?,
+                               "file-earmark-fill",
+                               "Druckvorlagen",
+                               crate::data_store::auth_token::Privilege::ShowConfigArea,
+                               crate::web::ui::base_template::ConfigNavButton::PrintTemplates) }}
                 </ul>
             </nav>
         </div>

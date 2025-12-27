@@ -1,7 +1,8 @@
 <div class="alert alert-{{self::announcement_type_color(*announcement.announcement_type)}} d-flex flex-row">
     <div>
         <i class="bi bi-{{self::announcement_type_icon(*announcement.announcement_type)}}"
-           title="{{self::announcement_type_name(*announcement.announcement_type)}}"></i>
+           title="{{self::announcement_type_name(*announcement.announcement_type)}}">
+            <span class="visually-hidden">{{self::announcement_type_name(*announcement.announcement_type)}}</span></i>
     </div>
     <div class="flex-grow-1 inner-margin-fix ms-3">
         {{announcement.text|markdown}}

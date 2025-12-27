@@ -63,7 +63,7 @@ def test_delete_user_passphrase(browser: Browser, reset_database: None) -> None:
     table_row = helpers.get_table_row_by_column_value(admin_page, "Rolle", "User")
     expect(table_row).to_be_visible()
     actions_cell = helpers.get_table_cell_by_header(table_row, "Aktionen")
-    actions_cell.get_by_title("Passphrase löschen").click()
+    actions_cell.get_by_role("link", name="Passphrase löschen").click()
     admin_page.get_by_role("button", name="Löschen").click()
     expect(
         admin_page.get_by_role("alert").filter(has_text="Die Passphrase/Ableitbare Rolle wurde gelöscht.")
@@ -96,7 +96,7 @@ def test_invalidate_user_passphrase(browser: Browser, reset_database: None) -> N
     table_row = helpers.get_table_row_by_column_value(admin_page, "Rolle", "User")
     expect(table_row).to_be_visible()
     actions_cell = helpers.get_table_cell_by_header(table_row, "Aktionen")
-    actions_cell.get_by_title("Passphrase löschen").click()
+    actions_cell.get_by_role("link", name="Passphrase löschen").click()
     admin_page.get_by_role("button", name="Ungültig machen").click()
     expect(
         admin_page.get_by_role("alert").filter(has_text="Die Passphrase/Ableitbare Rolle wurde ungültig gemacht.")

@@ -28,6 +28,7 @@
         <td></td>
         <td class="text-secondary text-nowrap">
             <i class="bi bi-calendar-event-fill" aria-hidden="true" title="Kalenderdatum"></i>
+            <span class="visually-hidden">Neuer Kalenderatag: </span>
             {{ to_our_timezone(row.entry.entry.begin).format("%d.%m.") }} 00:00
         </td>
         <td colspan="2"></td>
@@ -52,7 +53,7 @@
             <span class="visually-hidden">Verschoben: </span>
         {% endif %}
         {% if !category.icon.is_empty() %}
-            <div class="d-inline-block float-end ms-2" title="Kategorie {{category.title}}">{{ category.icon }}</div>
+            <div class="d-inline-block float-end ms-2" title="Kategorie {{category.title}}" aria-label="Kategorie {{category.title}}">{{ category.icon }}</div>
         {% endif %}
         <span class="content">{{ entry.title }}</span>
         {% if row.includes_entry && show_edit_links %}
@@ -63,7 +64,7 @@
             </div>
         {% endif %}
         {% if row.includes_entry && show_description_links && !entry.description.is_empty() %}
-            <a href="#entry-desc-{{ entry.id.to_string() }}" title="Zur Beschreibung"><i class="bi-blockquote-left"></i></a>
+            <a href="#entry-desc-{{ entry.id.to_string() }}" title="Zur Beschreibung" aria-label="Springe zur Beschreibung"><i class="bi-blockquote-left" aria-hidden="true"></i></a>
         {% endif %}
         {% if row.includes_entry && !entry.comment.is_empty() %}
             <div class="comment mt-1">{{ entry.comment }}</div>

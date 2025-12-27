@@ -23,7 +23,7 @@
                         <td class="shrink-to-content">
                             <a href="{{ base.request.url_for("edit_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil" aria-label="Bearbeiten"></i></a>
                             <a href="{{ base.request.url_for("delete_room_form", [&event_id.to_string(), &room.id.to_string()])? }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" aria-label="Löschen"></i></a>
-                            <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="ms-1" title="Einträge an diesem Ort"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
+                            <a href="{{ base.request.url_for("main_list_by_room", [event_id.to_string(), room.id.to_string()])? }}" class="ms-1" title="Einträge an diesem Ort" aria-label="Einträge an diesem Ort"><i class="bi bi-list-ul" aria-hidden="true"></i></a>
                         </td>
                     </tr>
                 {% endfor %}

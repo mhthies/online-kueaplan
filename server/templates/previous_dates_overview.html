@@ -71,7 +71,7 @@
                         <td class="shrink-to-content">
                             <form class="d-inline-block" method="post"
                                   action="{{ base.request.url_for("delete_previous_date", [event.basic_data.id.to_string(), entry.entry.id.to_string(), previous_date.previous_date.id.to_string()])? }}">
-                                <button type="submit" class="btn btn-sm btn-danger" title="Diesen vorherigen Termin aus dem KüA-Plan löschen">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Löschen" aria-label="Diesen vorherigen Termin aus dem KüA-Plan löschen">
                                     <i class="bi bi-trash" aria-hidden="true"></i></button>
                             </form>
                         </td>

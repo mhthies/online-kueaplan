@@ -48,3 +48,12 @@ def assert_small_font(locator: Locator) -> None:
     assert body_font_weight_match is not None
     body_font_weight_value = float(body_font_weight_match.group(1))
     assert font_weight_value < body_font_weight_value
+
+
+def assert_is_line_through(locator: Locator) -> None:
+    assert locator.locator("xpath=ancestor-or-self::*").evaluate_all("""
+        (elements) => elements.some(
+            (e) => (
+                getComputedStyle(e)
+                .getPropertyValue('text-decoration-line')
+                == 'line-through'))""")

@@ -10,6 +10,9 @@ CATEGORY_SPORT = Category(
 )
 
 ROOM_SPORTPLAETZE = Room(title="Sportplätze")
+ROOM_PELIKANHALLE = Room(title="Pelikanhalle")
+ROOM_SEMINARRAUM = Room(title="Seminarraum Pelikanhalle")
+
 
 ENTRY_BEACH_VOLLEYBALL = Entry(
     title="Beach-Volleyball",

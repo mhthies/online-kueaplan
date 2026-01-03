@@ -56,6 +56,7 @@ def test_previous_date_not_merged(page: Page, reset_database: None) -> None:
     row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
     expect(row).to_have_count(2)
     entry_anchor = row.last.locator("xpath=(./td)[1]").get_attribute("id")
+    assert entry_anchor is not None
     move_link = row.first.get_by_role("link", name="14:30")
     expect(move_link).to_be_visible()
     assert not helpers.is_line_through(move_link)
@@ -122,3 +123,46 @@ def test_previous_date_room_list(page: Page, reset_database: None) -> None:
     expect(row).to_contain_text("14:30")
     expect(row).not_to_contain_text("13:30")
     expect(row).not_to_contain_text("Wegen schlechten Wetters in der Halle")
+
+
+def test_remove_previous_date(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_room(page, data.ROOM_SPORTPLAETZE)
+    actions.add_room(page, data.ROOM_PELIKANHALLE)
+    actions.add_category(page, data.CATEGORY_SPORT)
+    actions.add_entry(page, data.ENTRY_BEACH_VOLLEYBALL)
+
+    move_beach_volleyball_to_pelikanhalle_at_1430(page)
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+    expect(row).to_contain_text(re.compile(r"Zuvor geplante Orte", re.DOTALL))
+    expect(row).to_contain_text(re.compile(r"Zuvor geplante Zeiten", re.DOTALL))
+
+    row.get_by_role("link", name="Eintrag bearbeiten").click()
+    page.get_by_role("link", name="Vorherige Termine").click()
+
+    previous_dates_table = page.get_by_role("table").and_(
+        page.get_by_role("heading", name="Vorherige Termine").locator("xpath=following::*")
+    )
+    expect(previous_dates_table).to_be_visible()
+    # There should be only one none-header row in the table, so we should be fine with this approach
+    previous_date_row = previous_dates_table.get_by_role("row").last
+    expect(helpers.get_table_cell_by_header(previous_date_row, "Wann?")).to_contain_text("13:30")
+    expect(helpers.get_table_cell_by_header(previous_date_row, "Wo?")).to_have_text("Sportplätze")
+    expect(helpers.get_table_cell_by_header(previous_date_row, "Kommentar zur Verschiebung")).to_have_text(
+        "Wegen schlechten Wetters in der Halle"
+    )
+    helpers.get_table_cell_by_header(previous_date_row, "Aktionen").get_by_role(
+        "button", name="Diesen vorherigen Termin aus dem KüA-Plan löschen"
+    ).click()
+    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
+    expect(success_alert).to_be_visible()
+    success_alert.get_by_role("button", name="Close").click()
+
+    page.get_by_role("link", name="Zurück").click()
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+    expect(row).not_to_contain_text(re.compile(r"Zuvor geplante Orte", re.DOTALL))
+    expect(row).not_to_contain_text(re.compile(r"Zuvor geplante Zeiten", re.DOTALL))

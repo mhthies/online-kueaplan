@@ -4,7 +4,9 @@ from re import Pattern
 from playwright.sync_api import Locator, Page
 
 
-def get_table_row_by_column_value(page: Page, header_text: str | Pattern[str], value: str | Pattern[str]) -> Locator:
+def get_table_row_by_column_value(
+    page: Locator | Page, header_text: str | Pattern[str], value: str | Pattern[str]
+) -> Locator:
     """Create a Playwright Locator, looking for a table row with the `value` in the column labeled with `header_text`
 
     The function looks up the matching header's index and creates a locator for a table row containing the desired value

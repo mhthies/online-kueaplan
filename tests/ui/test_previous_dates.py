@@ -166,3 +166,39 @@ def test_remove_previous_date(page: Page, reset_database: None) -> None:
     expect(row).to_be_visible()
     expect(row).not_to_contain_text(re.compile(r"Zuvor geplante Orte", re.DOTALL))
     expect(row).not_to_contain_text(re.compile(r"Zuvor geplante Zeiten", re.DOTALL))
+
+
+def test_manually_add_previous_date(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_room(page, data.ROOM_SPORTPLAETZE)
+    actions.add_room(page, data.ROOM_PELIKANHALLE)
+    actions.add_category(page, data.CATEGORY_SPORT)
+    actions.add_entry(page, data.ENTRY_BEACH_VOLLEYBALL)
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    row.get_by_role("link", name="Eintrag bearbeiten").click()
+    page.get_by_role("link", name="Vorherige Termine").click()
+    page.get_by_role("link", name="Vorherigen Termin hinzufügen").click()
+    expect(page.get_by_role("heading", name="Neuer Vorheriger Termin")).to_be_visible()
+    page.get_by_role("combobox", name="Tag").select_option(label="03.01. (Fr)")
+    # Time, duration and rooms should be prefilled to the same time as the current entry (13:30, 2h, Sportplätze)
+    page.get_by_role("textbox", name="Kommentar zur Verschiebung").fill("Morgen wird das Wetter bestimmt besser")
+    page.get_by_role("button", name="Speichern").click()
+
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Fr 03.01.").click()
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+    title = row.get_by_text("Beach-Volleyball")
+    expect(title).to_be_visible()
+    assert helpers.is_line_through(title)
+    expect(row).to_contain_text("Morgen wird das Wetter bestimmt besser")
+    move_link = row.get_by_role("link", name="04.01. 13:30 Uhr")
+    expect(move_link).to_be_visible()
+    move_link.click()
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_be_visible()
+    entry_anchor = row.last.locator("xpath=(./td)[1]").get_attribute("id")
+    # The link should have brought us directly to the anchor of the entry
+    expect(page).to_have_url(re.compile(rf".*#{re.escape(entry_anchor)}"))

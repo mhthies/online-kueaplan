@@ -50,8 +50,8 @@ def assert_small_font(locator: Locator) -> None:
     assert font_weight_value < body_font_weight_value
 
 
-def assert_is_line_through(locator: Locator) -> None:
-    assert locator.locator("xpath=ancestor-or-self::*").evaluate_all("""
+def is_line_through(locator: Locator) -> bool:
+    return locator.locator("xpath=ancestor-or-self::*").evaluate_all("""
         (elements) => elements.some(
             (e) => (
                 getComputedStyle(e)

@@ -58,6 +58,7 @@ def test_previous_date_not_merged(page: Page, reset_database: None) -> None:
     entry_anchor = row.last.locator("xpath=(./td)[1]").get_attribute("id")
     move_link = row.first.get_by_role("link", name="14:30")
     expect(move_link).to_be_visible()
+    assert not helpers.is_line_through(move_link)
     expect(move_link).to_have_attribute("href", re.compile(rf".*#{re.escape(entry_anchor)}"))
 
     room = row.first.get_by_text("Sportplätze")
@@ -77,3 +78,47 @@ def test_previous_date_not_merged(page: Page, reset_database: None) -> None:
     expect(row.last).to_contain_text("14:30")
     expect(row.last).not_to_contain_text("13:30")
     expect(row.last).not_to_contain_text("Wegen schlechten Wetters in der Halle")
+
+
+def test_previous_date_room_list(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_room(page, data.ROOM_SPORTPLAETZE)
+    actions.add_room(page, data.ROOM_PELIKANHALLE)
+    actions.add_category(page, data.CATEGORY_SPORT)
+    actions.add_entry(page, data.ENTRY_BEACH_VOLLEYBALL)
+    actions.add_entry(page, data.ENTRY_LOREM_IPSUM)
+
+    move_beach_volleyball_to_pelikanhalle_at_1430(page)
+
+    page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Orte").click()
+    page.get_by_role("link", name="Sportplätze").click()
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+
+    title = row.get_by_text("Beach-Volleyball")
+    expect(title).to_be_visible()
+    assert helpers.is_line_through(title)
+    room = row.get_by_text("Sportplätze")
+    expect(room).to_be_visible()
+    assert helpers.is_line_through(room)
+    expect(helpers.get_table_cell_by_header(row.first, "Wo?")).not_to_contain_text("Pelikanhalle")
+    time = row.get_by_text("13:30")
+    expect(time).to_be_visible()
+    assert helpers.is_line_through(time)
+    expect(helpers.get_table_cell_by_header(row.first, "Wann?")).not_to_contain_text("14:30")
+    move_comment = row.get_by_text("Wegen schlechten Wetters in der Halle")
+    expect(move_comment).to_be_visible()
+    assert not helpers.is_line_through(move_comment)
+    move_info = row.get_by_text("Verschoben auf 14:30 Uhr nach Pelikanhalle")
+    expect(move_info).to_be_visible()
+    assert not helpers.is_line_through(move_info)
+
+    page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Orte").click()
+    page.get_by_role("link", name="Pelikanhalle").click()
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
+    expect(row).to_contain_text("Pelikanhalle")
+    expect(row).not_to_contain_text("Sportplätze")
+    expect(row).to_contain_text("14:30")
+    expect(row).not_to_contain_text("13:30")
+    expect(row).not_to_contain_text("Wegen schlechten Wetters in der Halle")

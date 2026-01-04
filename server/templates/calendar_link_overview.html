@@ -3,7 +3,7 @@
 {% block body %}
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <h1>{{ base.page_title }}</h1>
             {% if shareable_session_token.is_some() %}
                 <div class="mb-3">
@@ -50,6 +50,41 @@
                     </div>
                     <div class="form-text">
                         <i class="bi bi-info-circle" aria-hidden="true"></i> Entspricht dem XML-Zeitplan-Format der Konferenz-Planungs-Tools <em>frab</em>, <em>pretalx</em> und <em>Pentabarf</em> (u.a. bekannt vom Chaos Communication Congress, der Gulasch-Programmier-Nacht und der FrOSCon) und kann mit kompatiblen Apps verwendet werden, z.B. <a href="https://wilmer.gaa.st/main.php/giggity.html">Giggity</a>.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h2 class="h3">JSON-API</h2>
+                    <p>
+                        Um die KüA-Plan-Daten in selbst-entwickelte Anwendungen zu integrieren, nutze die JSON-API.
+                        Hier sind die relevanten Endpoints beispielhaft als cURL-Aufrufe dargestellt.
+                        Eine OpenAPI-Spezifikation ist ebenfalls verfügbar.
+                    </p>
+                    <pre><code>{# -#}
+<span class="text-secondary"># KüA-Plan-Einträge</span>
+curl \
+    -H <span class="text-success">"X-SESSION-TOKEN: {{shareable_session_token.as_ref().ok_or(AppError::InternalError("Kein Shareable Session Token".to_owned()))?}}"</span> \
+    <span class="text-success">"{{ base.url_for_event_endpoint("list_entries")? }}"</span>
+<span class="text-secondary"># Orte</span>
+curl \
+    -H <span class="text-success">"X-SESSION-TOKEN: {{shareable_session_token.as_ref().ok_or(AppError::InternalError("Kein Shareable Session Token".to_owned()))?}}"</span> \
+    <span class="text-success">"{{ base.url_for_event_endpoint("list_rooms")? }}"</span>
+<span class="text-secondary"># KüA-Kategorien</span>
+curl \
+    -H <span class="text-success">"X-SESSION-TOKEN: {{shareable_session_token.as_ref().ok_or(AppError::InternalError("Kein Shareable Session Token".to_owned()))?}}"</span> \
+    <span class="text-success">"{{ base.url_for_event_endpoint("list_categories")? }}"</span>
+<span class="text-secondary"># Bekanntmachungen</span>
+curl \
+    -H <span class="text-success">"X-SESSION-TOKEN: {{shareable_session_token.as_ref().ok_or(AppError::InternalError("Kein Shareable Session Token".to_owned()))?}}"</span> \
+    <span class="text-success">"{{ base.url_for_event_endpoint("list_announcements")? }}"</span>
+<span class="text-secondary"># Meta-Daten der Veranstaltung</span>
+curl \
+    -H <span class="text-success">"X-SESSION-TOKEN: {{shareable_session_token.as_ref().ok_or(AppError::InternalError("Kein Shareable Session Token".to_owned()))?}}"</span> \
+    <span class="text-success">"{{ base.url_for_event_endpoint("get_extended_event_info")? }}"</span>
+                    {#- #}</code></pre>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        Der <code>/entries</code>-Endpoint unterstützt dieselben Filter-Optionen wie der iCal-Endpoint (s.o.).
+                        Zusätzlich kann mit <code>&after={YYYY-mm-ddTHH:MM:SS+XX:XX}</code> und <code>&before={YYYY-mm-ddTHH:MM:SS+XX:XX}</code> auf KüAs gefiltert werden, die in einem bestimmten Zeitraum stattfinden (Achtung: Zeitzonen-Offset und URL-Encoding der RFC3339-Timestamps beachten).
                     </div>
                 </div>
             {% else %}

@@ -21,7 +21,8 @@
                         "pattern": "\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?",
                         "description": "End of this section. Interpreted as local time in the event's timezone. Must be `null` in the last section. When it is equal to the event's `effectiveBeginOfDay`, this section gathers only the ongoing entries from previous event days."
                     }
-                }
+                },
+                "required": ["name", "endTime"]
             },
             "minItems": 1
         }

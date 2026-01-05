@@ -200,5 +200,6 @@ def test_manually_add_previous_date(page: Page, reset_database: None) -> None:
     row = helpers.get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
     expect(row).to_be_visible()
     entry_anchor = row.last.locator("xpath=(./td)[1]").get_attribute("id")
+    assert entry_anchor is not None
     # The link should have brought us directly to the anchor of the entry
     expect(page).to_have_url(re.compile(rf".*#{re.escape(entry_anchor)}"))

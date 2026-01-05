@@ -50,7 +50,7 @@
                                 <form class="d-inline" method="post" action="{{ base.request.url_for_static("logout_role")? }}">
                                     <input type="hidden" name="event_id" value="{{ event_id.to_string() }}" />
                                     <input type="hidden" name="role" value="{{ serde_variant::to_variant_name(role)? }}" />
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Aus dieser Rolle ausloggen"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></button>
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Aus dieser Rolle ausloggen" aria-label="Aus dieser Rolle ausloggen"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></button>
                                 </form>
                             </td>
                         {% endfor %}

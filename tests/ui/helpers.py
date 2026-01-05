@@ -4,7 +4,9 @@ from re import Pattern
 from playwright.sync_api import Locator, Page
 
 
-def get_table_row_by_column_value(page: Page, header_text: str | Pattern[str], value: str | Pattern[str]) -> Locator:
+def get_table_row_by_column_value(
+    page: Locator | Page, header_text: str | Pattern[str], value: str | Pattern[str]
+) -> Locator:
     """Create a Playwright Locator, looking for a table row with the `value` in the column labeled with `header_text`
 
     The function looks up the matching header's index and creates a locator for a table row containing the desired value
@@ -48,3 +50,12 @@ def assert_small_font(locator: Locator) -> None:
     assert body_font_weight_match is not None
     body_font_weight_value = float(body_font_weight_match.group(1))
     assert font_weight_value < body_font_weight_value
+
+
+def is_line_through(locator: Locator) -> bool:
+    return locator.locator("xpath=ancestor-or-self::*").evaluate_all("""
+        (elements) => elements.some(
+            (e) => (
+                getComputedStyle(e)
+                .getPropertyValue('text-decoration-line')
+                == 'line-through'))""")

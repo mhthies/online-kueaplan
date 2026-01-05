@@ -224,11 +224,23 @@ This can be used to check the specification's syntax and semantics.
 For generating an API documentation in HTML format, the command in `etc/spec/gendocs.sh` can be used.
 
 
-### Code formatting
+### Code formatting and linters
 
 - Rust code must be properly formatted, using rustfmt's default settings.
   Run `cargo fmt` to fix formatting before committing!
+- All Python code must be properly formatted, using ruff's formatter, with the settings specified in [ruff.toml](ruff.toml).
+  Run `ruff format` in the repository root to ensure proper formatting of all Python files before committing!
 - All files should be free of trailing whitespace and end with a single line-feed.
+- Rust code must pass linting with `clippy` without any errors or warnings.
+  Run `cargo clippy --all-targets --all-features -- --deny warnings` to check for issues.
+- All Python code must pass ruff linting, according to the config in [ruff.toml](ruff.toml).
+  The system tests in `tests/` must pass MyPy typechecking, according to the config in [tests/mypy.ini](tests/mypy.ini).
+  Run the following commands to check for issues:
+  ```bash
+  ruff check
+  cd tests
+  uv run mypy
+  ```
 
 
 #### pre-commit Framework for Git Hooks

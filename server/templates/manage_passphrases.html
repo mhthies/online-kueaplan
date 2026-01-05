@@ -30,13 +30,14 @@
                         <td>{{passphrase.comment}}</td>
                         <td class="shrink-to-content">
                             {% if passphrase.privilege.can_be_managed_online() %}
-                                <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Passphrase bearbeiten"><i class="bi bi-pencil"></i></a>
-                                <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Passphrase löschen"><i class="bi bi-trash"></i></a>
+                                <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten" aria-label="Passphrase bearbeiten"><i class="bi bi-pencil"></i></a>
+                                <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen" aria-label="Passphrase löschen"><i class="bi bi-trash"></i></a>
                             {% endif %}
                             {% if passphrase.passphrase.is_some() %}
                                 <a href="{{ base.request.url_for("new_derivable_sharable_link_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}"
                                     class="btn btn-sm btn-outline-success"
-                                    title="Ableitbare Rolle für Abruf per Link hinzufügen">
+                                    title="Ableitbare Rolle für Abruf per Link hinzufügen"
+                                    aria-label="Ableitbare Rolle für Abruf per Link hinzufügen">
                                     <i class="bi bi-plus-circle"></i> <i class="bi bi-share"></i>
                                 </a>
                             {% endif %}
@@ -45,7 +46,7 @@
                     {% for passphrase in derivable_passphrases %}
                         <tr>
                             <td>
-                                &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu"></i>
+                                &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu"><span class="visually-hidden">ableitbar zu</span></i>
                                 {{self::format_access_role(passphrase.privilege)}}
                             </td>
                             <td>{{self::format_passphrase(passphrase.passphrase)}}</td>
@@ -53,8 +54,8 @@
                             <td>{{passphrase.comment}}</td>
                             <td class="shrink-to-content">
                                 {% if passphrase.privilege.can_be_managed_online() %}
-                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Ableitbare Rolle bearbeiten"><i class="bi bi-pencil"></i></a>
-                                    <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
+                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten" aria-label="Ableitbare Rolle bearbieten"><i class="bi bi-pencil"></i></a>
+                                    <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen" aria-label="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
                                 {% endif %}
                             </td>
                         </tr>
@@ -65,7 +66,7 @@
                     {% for passphrase in unsorted_passphrases %}
                         <tr>
                             <td>
-                                &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar von irgendwas"></i>
+                                &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar von irgendwas"><span class="visually-hidden">ableitbar von irgendwas</span></i>
                                 {{self::format_access_role(passphrase.privilege)}}
                             </td>
                             <td>{{self::format_passphrase(passphrase.passphrase)}}</td>
@@ -73,8 +74,8 @@
                             <td>{{passphrase.comment}}</td>
                             <td class="shrink-to-content">
                                 {% if passphrase.privilege.can_be_managed_online() %}
-                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Ableitbare Rolle bearbeiten"><i class="bi bi-pencil"></i></a>
-                                    <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
+                                    <a href="{{ base.request.url_for("edit_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-primary" title="Bearbeiten" aria-label="Ableitbare Rolle bearbieten"><i class="bi bi-pencil"></i></a>
+                                    <a href="{{ base.request.url_for("delete_passphrase_form", [&event.basic_data.id.to_string(), &passphrase.id.to_string()])? }}" class="btn btn-sm btn-outline-danger" title="Löschen" aria-label="Ableitbare Rolle löschen"><i class="bi bi-trash"></i></a>
                                 {% endif %}
                             </td>
                         </tr>

@@ -100,5 +100,5 @@
     <a href="{{link_to_time_constrained_list(after_time)?}}">nur ab {{ after_time.format("%H:%M") }}</a>
     {% if !loop.last %} | {% endif %}
 {% endfor %}
-<br>
+{% if !footer_constrained_link_times.is_empty() %}<br>{% endif %}
 {% endblock %}

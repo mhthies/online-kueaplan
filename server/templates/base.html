@@ -90,23 +90,23 @@
 </nav>
 {% block body %}
 {% endblock %}
-<footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
+<footer class="border-top text-center small text-secondary p-2 mt-4 mb-2 d-print-none">
     {% block footer_extra_text %}{% endblock %}
-    online-kueaplan v{{ crate::get_version() }}
-    | <a href="{{ base.request.url_for_static("about_page")? }}">Über diese Seite</a>
     {% if base.get_basic_event().is_some()
        && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
-        | <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a>
+        <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a> |
     {% endif %}
     {% if base.get_basic_event().is_some()
         && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan)
         && !base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
-        | <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a>
+        <a href="{{ base.url_for_event_endpoint("config_index")? }}">zum Konfigurations-Bereich</a> |
     {% endif %}
-    | <a href="{{ base.request.url_for("list_own_roles", [""])? }}">
-        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}Logout{% else %}Login-Status{% endif %}
+    <a href="{{ base.request.url_for_static("list_own_roles")? }}">
+        {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}Logout{% else %}Login-Status{% endif -%}
     </a>
-    | Style: <a href="#" id="themeSwitch"><i class="bi bi-circle-half"></i></a>
+    | Style: <a href="#" id="themeSwitch"><i class="bi bi-circle-half"></i></a><br>
+    online-kueaplan v{{ crate::get_version() }}
+    | <a href="{{ base.request.url_for_static("about_page")? }}">über diese Seite</a>
 </footer>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}

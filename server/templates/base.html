@@ -93,6 +93,7 @@
 <footer class="border-top text-center small text-secondary p-2 mt-3 mb-2 d-print-none">
     {% block footer_extra_text %}{% endblock %}
     online-kueaplan v{{ crate::get_version() }}
+    | <a href="{{ base.request.url_for_static("about_page")? }}">Über diese Seite</a>
     {% if base.get_basic_event().is_some()
        && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
         | <a href="{{ base.url_for_event_endpoint("calendar_link_overview")? }}">Links für Kalender-Apps</a>

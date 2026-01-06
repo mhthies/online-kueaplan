@@ -221,6 +221,9 @@ This software can be used, modified and published under the terms of the GNU Aff
 
 SPDX-Identifier: AGPL-3.0-or-later
 
+When contributing to this software or forking this software, make sure to adapt the `NOTICE` file and the `about.html` template accordingly.
+You should keep intact the existing copyright notices. 
+
 
 ## Development
 

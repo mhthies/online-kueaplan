@@ -1,3 +1,4 @@
+pub mod about;
 pub mod auth;
 pub mod calendar_link_overview;
 pub mod categories_list;

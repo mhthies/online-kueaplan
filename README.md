@@ -215,6 +215,13 @@ bantime = 3600
 findtime = 3600
 ```
 
+## License
+
+This software can be used, modified and published under the terms of the GNU Affero General Public License 3.0.
+
+SPDX-Identifier: AGPL-3.0-or-later
+
+
 ## Development
 
 ### API Spec

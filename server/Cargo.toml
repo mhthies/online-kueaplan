@@ -1,5 +1,6 @@
 [package]
 name = "kueaplan_server"
+license = "AGPL-3"
 version = "2.0.0"
 edition = "2021"
 

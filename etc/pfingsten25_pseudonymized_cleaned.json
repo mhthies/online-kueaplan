@@ -1,0 +1,1420 @@
+{
+    "event": {
+        "id": -1,
+        "title": "Pfingsten25",
+        "beginDate": "2025-06-06",
+        "endDate": "2025-06-09",
+        "timezone": "Europe/Berlin",
+        "effectiveBeginOfDay": "05:30:00",
+        "defaultTimeSchedule": {
+            "sections": [
+                {"name": "vom Vortag", "endTime": "05:30:00"},
+                {"name": "Morgens", "endTime": "12:00:00"},
+                {"name": "Mittags", "endTime": "18:00:00"},
+                {"name": "Abends", "endTime": null}
+            ]
+        }
+    },
+    "entries": [
+        {
+            "id": "019736d8-1cbb-7371-972d-9cb178e01b7e",
+            "title": "Gel\u00e4ndef\u00fchrung",
+            "room": [],
+            "roomComment": "Treffpunkt: Vor der Pelikanhalle",
+            "begin": "2025-06-06T15:00:00Z",
+            "end": "2025-06-06T15:00:00Z",
+            "responsiblePerson": "",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "019736d9-1d85-7bb3-8ac1-334593a0db9c",
+            "title": "Gel\u00e4ndef\u00fchrung",
+            "room": [],
+            "roomComment": "Treffpunkt: Vor der Pelikanhalle",
+            "begin": "2025-06-06T16:00:00Z",
+            "end": "2025-06-06T16:00:00Z",
+            "responsiblePerson": "",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "019736d9-8faf-77e0-9ed4-b8f4fcd2ed3c",
+            "title": "Gel\u00e4ndef\u00fchrung",
+            "room": [],
+            "roomComment": "Treffpunkt: Vor der Pelikanhalle",
+            "begin": "2025-06-06T17:00:00Z",
+            "end": "2025-06-06T17:00:00Z",
+            "responsiblePerson": "",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01972cb7-e672-7583-8bf7-4b9776d65026",
+            "title": "Vertrauenspersonen Briefing (geschlossen)",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-06T17:00:00Z",
+            "end": "2025-06-06T17:45:00Z",
+            "responsiblePerson": "Vertrauenspersonenkoordination (Gizem Schumann)",
+            "isRoomReservation": true,
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "019736d9-e947-7973-88ac-0dd0c17cc6d0",
+            "title": "Gel\u00e4ndef\u00fchrung",
+            "room": [],
+            "roomComment": "Treffpunkt: Vor der Pelikanhalle",
+            "begin": "2025-06-06T18:00:00Z",
+            "end": "2025-06-06T18:00:00Z",
+            "responsiblePerson": "",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01973176-9e2f-79e1-bc6d-5e1f3e3b5ede",
+            "title": "Er\u00f6ffnungsplenum",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-06T18:25:00Z",
+            "end": "2025-06-06T19:00:00Z",
+            "responsiblePerson": "Orgas",
+            "isExclusive": true,
+            "category": "01972b06-9979-7783-8c19-e2b970b91957",
+            "previousDates": []
+        },
+        {
+            "id": "01972cb1-9fd9-7ac1-b770-e7c7e19ba99a",
+            "title": "Kennenlernabend ",
+            "description": "Es wird wieder einen Kennenlernabend geben. Egal ob alte Hasen oder komplette Neulinge, jeder ist willkommen. Direkt im Anschluss ans Plenum hier in der Pelikanhalle. Wir bitten alle Leute die nicht daran teilnehmen, sich dann leise zur\u00fcckzuziehen und insbesondere auf der Empore nicht in laute Gespr\u00e4che zu verfallen. Verantwortlich sind dieses Mal Arman Eggert, Manuela Rademacher und Maren Wessels",
+            "room": [
+                "01972b67-a2fc-7004-bd19-023117b21c09",
+                "01972b67-a141-7972-b7d0-8094b11cb914",
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-06T19:00:00Z",
+            "end": "2025-06-06T21:00:00Z",
+            "timeComment": "Direkt nach dem Er\u00f6ffnungsplenum",
+            "responsiblePerson": "Kennenlern-Team",
+            "category": "0197414e-f57e-7cd1-ba71-2314b8ddf514",
+            "previousDates": []
+        },
+        {
+            "id": "01972caa-6f9d-7231-b6bb-44400c627b45",
+            "title": "Dokuteamtreffen",
+            "description": "Das Dokuteam trifft sich zur Planung f\u00fcr die Pfingstakademie. Interessierte, die gegebenenfalls sogar etwas Ahnung von Text- und Bildredaktion haben, sind ebenfalls gerne gesehen.",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "begin": "2025-06-06T20:30:00Z",
+            "end": "2025-06-06T22:00:00Z",
+            "responsiblePerson": "Dokuteam",
+            "category": "0197414d-ec45-7621-9e9b-1002cd3abd73",
+            "previousDates": []
+        },
+        {
+            "id": "01974070-db57-7872-87e5-8e0230a1b673",
+            "title": "Traditioneller Tanzabend",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-06T21:00:00Z",
+            "end": "2025-06-07T00:00:00Z",
+            "timeComment": "Nach den Kennenlernenspielen",
+            "responsiblePerson": "Selma Hartung",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "0197475b-2a19-7731-9a2e-8284fff188e4",
+            "title": "Meditation",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-06T23:30:00Z",
+            "end": "2025-06-07T00:00:00Z",
+            "responsiblePerson": "Jannis Schiemann",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01973c3a-fb1c-7150-9a09-d558feb1d9f8",
+            "title": "Lauf-K\u00fcA",
+            "description": "Wer nach zu langer Zeit unter Wasser nach Luft schnappen muss, der kann das bei der morgendlichen Lauf-K\u00fcA tun. Wir treffen uns samstags und sonntags um 06:55 Uhr auf dem CdErnhof und jagen euch (ganz lieb und nett) den Eisenberg hoch und wieder runter. Das dauert so etwa 25 Minuten. Das Tempo richtet sich nach der langsamsten Person, wir haben aber auch Pl\u00e4ne, um schnellen L\u00e4ufer:innen die Luft zu rauben. Danach ist noch genug Zeit, um zu Duschen oder gar richtig Schwimmen zu gehen. Wir freun uns, Schaun wir mal was wird. Was wird. Flavio und Eneas",
+            "room": [],
+            "roomComment": "Treffpunkt: CdErnhof",
+            "begin": "2025-06-07T04:55:00Z",
+            "end": "2025-06-07T05:25:00Z",
+            "responsiblePerson": "Eneas Schiemann und Flavio Blume ",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "0197414c-8853-7231-afbc-65004bf1c164",
+            "title": "Treffen der Geheime-Dinge-Beauftragten",
+            "room": [
+                "01972b67-afdc-79d6-9160-a508a3e39d98"
+            ],
+            "roomComment": "im Keller",
+            "begin": "2025-06-07T10:50:00Z",
+            "end": "2025-06-07T11:00:00Z",
+            "responsiblePerson": "Orgas",
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "0197414a-061b-7852-b6ae-d0f541282ece",
+            "title": "Akademiefoto + Kursfotos",
+            "room": [
+                "01972b67-a4a6-70b1-8806-21593173dd6b",
+                "01972b67-a581-795d-85ce-4508471fcddb"
+            ],
+            "roomComment": "wegen Regen vermutlich *in* der Pelikanhalle",
+            "begin": "2025-06-07T11:00:00Z",
+            "end": "2025-06-07T11:20:00Z",
+            "timeComment": "Bitte p\u00fcnktlich!",
+            "responsiblePerson": "Orgas",
+            "isExclusive": true,
+            "category": "01972b06-9979-7783-8c19-e2b970b91957",
+            "previousDates": []
+        },
+        {
+            "id": "01974664-d973-7100-b1f9-9bd3f37c9560",
+            "title": "JGW-Foto",
+            "comment": "alle die sich zu JGW zugeh\u00f6rig f\u00fchlen",
+            "description": "Alle ehemaligen von JGW-Akademien, alle die aktiv bei JGW sind oder sich sonst dem JGW verbunden f\u00fchlen sind herzlich eingeladen mit oder mit ohne JGW-Merch ein Foto zu machen.",
+            "room": [
+                "01972b67-a581-795d-85ce-4508471fcddb"
+            ],
+            "begin": "2025-06-07T11:20:00Z",
+            "end": "2025-06-07T11:30:00Z",
+            "timeComment": "nach dem Akademiefoto",
+            "responsiblePerson": "Lea Aigner & Yi\u011fit Jentsch",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "019740af-3049-7b61-a1d8-81be894fb5e6",
+            "title": "Chor",
+            "description": "Die St\u00fccke hei\u00dfen \u201eInnsbruck ich muss dich lassen\u201c (Heinrich Isaac) und \u201eAber bitte mit Sahne\u201c (Udo J\u00fcrgens, Arr. Esila Seiler).",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-07T11:20:00Z",
+            "end": "2025-06-07T12:45:00Z",
+            "responsiblePerson": "Miriam A\u00dfmann und Esila Seiler",
+            "category": "01972b0a-48bc-78e3-b291-99c3372bcf2d",
+            "previousDates": []
+        },
+        {
+            "id": "0197420f-b793-7be3-9777-159cfa233981",
+            "title": "Tango Argentino",
+            "description": "Liebe Wassertropfen,\r\n\r\nwer sich so geschmeidig wie ein Bach und auch rei\u00dfend wie ein Fluss bewegen m\u00f6chte, kann am Samstagmittag 13-15Uhr in der Pelikanhalle Tango Argentino tanzen. Die erste Stunde ist insbesondere an Personen gerichtet, die den Tango zum ersten Mal kennen lernen wollen. In der zweiten Stunde geht die K\u00fcA einfach weiter, sie ist aber auch als Einstieg f\u00fcr Leute geeignet, die bereits Tango getanzt haben. Wassertropfen k\u00f6nnen alleine (oder gemeinsam) erscheinen und sich vor Ort der Koh\u00e4sion* hingeben. Wir werden w\u00e4hrend der K\u00fcA mehrmals die Tanzpartner*innen wechseln.\r\n\r\nFlie\u00dfende Gr\u00fc\u00dfe\r\nKonstantinos & Philippa\r\n\r\n*Dabei kommt es nur zu so viel K\u00f6rperkontakt wie gew\u00fcnscht. Das kann gar keine Ber\u00fchrung, Ber\u00fchrung an den H\u00e4nden oder eine Umarmung sein.",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-07T11:20:00Z",
+            "end": "2025-06-07T13:00:00Z",
+            "responsiblePerson": "Konstantinos & Philippa",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "0197423a-ae8a-7db1-808b-463c225826e6",
+            "title": "N\u00e4gel lackieren \ud83d\udc85 ",
+            "description": "Bringe gerne eigenen Nagellack mit oder probiere neue Farben von anderen Leuten.\r\n\r\nAuch wenn du noch nie Nagellack benutzt hast und das im \u201eSafer Space\u201c CdE-Aka ausprobieren magst, bist du herzlich willkommen!",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "roomComment": "Bei gutem Wetter ggf. drau\u00dfen vor dem Speisesaal",
+            "begin": "2025-06-07T11:30:00Z",
+            "end": "2025-06-07T12:30:00Z",
+            "responsiblePerson": "Cinar Pieper",
+            "category": "0197414e-5171-7c63-8cfb-0e311f7fabba",
+            "previousDates": []
+        },
+        {
+            "id": "01974792-e87f-72b2-a022-af88387b4776",
+            "title": "Acroyoga",
+            "description": "Eine Kombination von Akrobatik und Yoga.\r\nF\u00fcr Anf\u00e4nger (und alle anderen). Es wird viel K\u00f6rperkontakt im Rahmen der \u00dcbungen geben.",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "roomComment": "Eine H\u00e4lfte der Halle",
+            "begin": "2025-06-07T11:30:00Z",
+            "end": "2025-06-07T13:00:00Z",
+            "responsiblePerson": "Arina Wulf und Juliano Martin",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974792-c60a-71f2-a264-336f607982e8",
+            "title": "Fu\u00dfball",
+            "room": [
+                "01972b67-a440-7b11-af42-5527119ff215"
+            ],
+            "roomComment": "oberhalb des CdErn-Hofs",
+            "begin": "2025-06-07T11:30:00Z",
+            "end": "2025-06-07T13:00:00Z",
+            "responsiblePerson": "Mohamed",
+            "isCancelled": true,
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "0197476f-5e9b-7d21-a638-3ec168d2d685",
+            "title": "Dokubeauftragtentreffen",
+            "room": [
+                "01972b67-b41a-7e3d-a9c8-a53fb977ab11"
+            ],
+            "begin": "2025-06-07T16:45:00Z",
+            "end": "2025-06-07T17:00:00Z",
+            "responsiblePerson": "C\u00e4cilie",
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "01974a2b-f694-7813-a17a-f9d9d6022494",
+            "title": "Jugger ",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-07T17:00:00Z",
+            "end": "2025-06-07T19:00:00Z",
+            "responsiblePerson": "",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01972c4f-7950-7a20-997a-8263d0381109",
+            "title": "Aktiventreffen",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-07T17:00:00Z",
+            "end": "2025-06-07T19:00:00Z",
+            "responsiblePerson": "Vorstand",
+            "category": "0197414d-ec45-7621-9e9b-1002cd3abd73",
+            "previousDates": []
+        },
+        {
+            "id": "01974613-1129-70d1-8dfe-985a6f548d93",
+            "title": "Wir lesen Keilschrift! (sie ist sehr gut)",
+            "comment": "Keine Vorkenntnisse n\u00f6tig",
+            "room": [
+                "01972b67-afdc-79d6-9160-a508a3e39d98"
+            ],
+            "begin": "2025-06-07T17:15:00Z",
+            "end": "2025-06-07T18:45:00Z",
+            "responsiblePerson": "Lorenzo",
+            "category": "01972b0b-7027-7ab0-b797-27cc32b3d44f",
+            "previousDates": []
+        },
+        {
+            "id": "01974add-a076-79c1-9b6d-c771e14dbdf8",
+            "title": "Prototypen Testspielen",
+            "comment": "2 Prototypen: einer mit 4 Spielenden, einer mit 2-6; Dauer pro Spiel etwa 30 minuten",
+            "room": [
+                "01972b67-acf5-74e4-b78b-f2f56647cac1"
+            ],
+            "begin": "2025-06-07T17:30:00Z",
+            "end": "2025-06-07T18:30:00Z",
+            "responsiblePerson": "Kurs Gesellschaftsspieleentwicklung",
+            "category": "01972b09-dc71-70e0-912c-6f97e8c3cd4a",
+            "previousDates": []
+        },
+        {
+            "id": "0197455c-4267-7633-80e3-fc911b296fc2",
+            "title": "Stretching",
+            "room": [
+                "01972b67-a1b2-7220-a08e-4cec6b3b074e"
+            ],
+            "begin": "2025-06-07T17:30:00Z",
+            "end": "2025-06-07T18:45:00Z",
+            "responsiblePerson": "Alp Butz und Ernst Philip Walter",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974a71-2db2-7173-8b11-8e63a84d646e",
+            "title": "Literaturabend",
+            "comment": "Deadline f\u00fcr Einreichungen: 18:30 Uhr",
+            "room": [
+                "01972b67-a647-7eab-9463-fc6778431ee3"
+            ],
+            "begin": "2025-06-07T18:00:00Z",
+            "end": "2025-06-07T18:00:00Z",
+            "responsiblePerson": "Galileo und Eren",
+            "category": "01972b0b-7027-7ab0-b797-27cc32b3d44f",
+            "previousDates": []
+        },
+        {
+            "id": "01974a70-bce0-71c2-a9c4-9cd4fb18bd2b",
+            "title": "Rotationsersatz Slowfox",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-07T18:00:00Z",
+            "end": "2025-06-07T19:00:00Z",
+            "responsiblePerson": "Mark G\u00f6bel",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "01974641-2c0f-7d40-9a4c-9b67625c10e6",
+            "title": "Jonglage & Poi",
+            "comment": "f\u00fcr Alle, auch Anf\u00e4nger",
+            "room": [
+                "01972b67-a581-795d-85ce-4508471fcddb",
+                "01972b67-a647-7eab-9463-fc6778431ee3"
+            ],
+            "roomComment": "(bei gutem Wetter drau\u00dfen, bei schlechtem Wetter drinnen)",
+            "begin": "2025-06-07T18:00:00Z",
+            "end": "2025-06-07T19:30:00Z",
+            "responsiblePerson": "Meztli",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "019746ba-d752-71a1-ad7a-85607a502ca4",
+            "title": "Ninja-Burger (Rollenspiel)",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "begin": "2025-06-07T18:00:00Z",
+            "end": "2025-06-07T20:00:00Z",
+            "responsiblePerson": "Jamie ",
+            "category": "01972b09-dc71-70e0-912c-6f97e8c3cd4a",
+            "previousDates": []
+        },
+        {
+            "id": "01974a2d-f58a-7b60-ba07-1acc6e753dfa",
+            "title": "Madonna, Konzert, Feminismus",
+            "comment": "Kurzer Vortrag + Diskussion + Sichtung der Celebration Tour (2024)",
+            "room": [
+                "01972b67-b04b-741c-ae9d-23f72a29c024"
+            ],
+            "begin": "2025-06-07T18:00:00Z",
+            "end": "2025-06-07T21:00:00Z",
+            "responsiblePerson": "Mats Hagen ",
+            "category": "0197a29a-ee5f-7460-9fed-6e68fce8b512",
+            "previousDates": []
+        },
+        {
+            "id": "01974565-5570-70f2-b95f-953d169917c6",
+            "title": "Vortrag \u201cDeeplearning im Luftfahrtsektor\u201d",
+            "room": [
+                "01972b67-acf5-74e4-b78b-f2f56647cac1"
+            ],
+            "begin": "2025-06-07T19:00:00Z",
+            "end": "2025-06-07T19:40:00Z",
+            "responsiblePerson": "Henriette Sack",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "019740b5-f22f-77b0-a4a1-e20974bea8f4",
+            "title": "Tanzabend (Standard/Latein)",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-07T19:00:00Z",
+            "end": "2025-06-07T21:00:00Z",
+            "responsiblePerson": "Asmin Oppermann",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": [
+                {
+                    "id": "019749da-2ced-79a1-93ad-4c5434e2bf2c",
+                    "begin": "2025-06-07T19:00:00Z",
+                    "end": "2025-06-07T22:00:00Z",
+                    "comment": "tauscht mit Volleyball",
+                    "room": [
+                        "01972b67-a141-7972-b7d0-8094b11cb914"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "01973c28-88cf-7d13-af39-69abd66744d8",
+            "title": "Wise Crowds Consulting - Orgateamfindung",
+            "description": "Du bist auf einer CdE Akademie? Gl\u00fcckwunsch, du erf\u00fcllst alle notwendigen Kriterien, um am Wise Crowds Consulting teilnehmen zu k\u00f6nnen! Wir werden in einer gro\u00dfen Runde den Vorstand und das Akademieteam beraten, wie wir den Prozess der Orgateamfindung neu gestalten und verbessern k\u00f6nnen. Daf\u00fcr brauchen wir ganz viele Menschen mit noch mehr verschiedenen Denkweisen und Ideen. Kommt also zahlreich zum Aktiventreffen und bleibt danach noch ein Weilchen l\u00e4nger da. Wir starten 10 min nach dem Aktiventreffen.",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-07T19:10:00Z",
+            "end": "2025-06-07T20:40:00Z",
+            "timeComment": "10 Minuten nach Aktiventreffen",
+            "responsiblePerson": "Bertalan Jankowski",
+            "category": "0197414d-ec45-7621-9e9b-1002cd3abd73",
+            "previousDates": []
+        },
+        {
+            "id": "0197a28f-3236-7b21-8451-0f93e558159c",
+            "title": "Vortrag \u201cautonomous driving in the modern age\u201d",
+            "room": [
+                "01972b67-acf5-74e4-b78b-f2f56647cac1"
+            ],
+            "begin": "2025-06-07T19:40:00Z",
+            "end": "2025-06-07T20:00:00Z",
+            "responsiblePerson": "Henriette Sack",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "019749b3-c24a-78c0-8e32-108d4b3cfa27",
+            "title": "Reserviert f\u00fcr den Fall einer Zeltevakuierung",
+            "comment": "Wird gegebenfalls beim Abendessen kommuniziert",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "begin": "2025-06-07T20:00:00Z",
+            "end": "2025-06-08T06:00:00Z",
+            "responsiblePerson": "",
+            "isRoomReservation": true,
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "019746b5-54e4-71e2-b3ac-6bf26365b9fd",
+            "title": "Volleyball",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-07T21:00:00Z",
+            "end": "2025-06-07T23:00:00Z",
+            "timeComment": "Open End",
+            "responsiblePerson": "Magnus Lindner",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": [
+                {
+                    "id": "019749da-fd51-75b2-a5b9-6f78362ce848",
+                    "begin": "2025-06-07T17:30:00Z",
+                    "end": "2025-06-07T19:00:00Z",
+                    "comment": "tauscht mit Tanzen",
+                    "room": [
+                        "01972b67-a141-7972-b7d0-8094b11cb914"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "01974b67-c6fe-7763-b478-e5796881484d",
+            "title": "Tango Argentino - Tanzabend",
+            "comment": "gerne auch mit kleiner Einf\u00fchrung",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-07T21:00:00Z",
+            "end": "2025-06-08T00:00:00Z",
+            "timeComment": "open end",
+            "responsiblePerson": "Konstantinos",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "01973c3d-1f56-7f42-a0c4-a44aae51fdd3",
+            "title": "Lauf-K\u00fcA",
+            "description": "Wer nach zu langer Zeit unter Wasser nach Luft schnappen muss, der kann das bei der morgendlichen Lauf-K\u00fcA tun. Wir treffen uns samstags und sonntags um 06:55 Uhr auf dem CdErnhof und jagen euch (ganz lieb und nett) den Eisenberg hoch und wieder runter. Das dauert so etwa 25 Minuten. Das Tempo richtet sich nach der langsamsten Person, wir haben aber auch Pl\u00e4ne, um schnellen L\u00e4ufer:innen die Luft zu rauben. Danach ist noch genug Zeit, um zu Duschen oder gar richtig Schwimmen zu gehen. Wir freun uns, Schaun wir mal was wird. Was wird. Flavio und Eneas",
+            "room": [],
+            "roomComment": "Treffpunkt: CdErnhof",
+            "begin": "2025-06-08T04:55:00Z",
+            "end": "2025-06-08T05:25:00Z",
+            "responsiblePerson": "Eneas Schiemann und Flavio Blume",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974b60-cbd7-7682-89f1-12856ea5c256",
+            "title": "Gymnastik vor und im Wasser",
+            "comment": "etwas Yoga, etwas Gymnastik und wenn wir warm sind ab in den See!",
+            "room": [
+                "01972b67-a3d3-7434-ad09-66bbb4103b15"
+            ],
+            "roomComment": "Bei Regen in der Pelikanhalle",
+            "begin": "2025-06-08T05:00:00Z",
+            "end": "2025-06-08T05:50:00Z",
+            "responsiblePerson": "Mahir Tillmann",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974b38-d419-7021-807d-f175f919cff0",
+            "title": "10 Hampelm\u00e4nner machen",
+            "room": [
+                "01974b39-cf8e-7811-9a1d-1c8504e6777b"
+            ],
+            "begin": "2025-06-08T06:15:00Z",
+            "end": "2025-06-08T06:20:00Z",
+            "responsiblePerson": "Jean Stumpf",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974afd-6c53-7c52-bb9f-bc102f8df1a3",
+            "title": "Orga-Mittagessen",
+            "comment": "kommt mit Essen von euren H\u00f6fen vorbei",
+            "room": [
+                "01972b67-afdc-79d6-9160-a508a3e39d98"
+            ],
+            "begin": "2025-06-08T10:15:00Z",
+            "end": "2025-06-08T11:00:00Z",
+            "responsiblePerson": "Orgas",
+            "category": "0197414d-ec45-7621-9e9b-1002cd3abd73",
+            "previousDates": []
+        },
+        {
+            "id": "01974ae1-af0d-7080-869d-450d0636db61",
+            "title": "\u00dcberweisungen mit Karte",
+            "comment": "Die bargeldlose Alternative zur offenen Kasse",
+            "room": [
+                "01972b67-b61a-705c-9df1-d1e139366b38"
+            ],
+            "roomComment": "Bei gutem Wetter vor dem Hau\u00df",
+            "begin": "2025-06-08T10:50:00Z",
+            "end": "2025-06-08T11:35:00Z",
+            "responsiblePerson": "Marc (Finanzorga)",
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "019749d7-902a-7133-bb90-44705e7246cf",
+            "title": "Strampeln im Dunkeln - Strategie sich vorm Spinnen zu dr\u00fccken",
+            "description": "\r\n\"F\u00fchlt ihr euch auch manchmal so, als ob ihr euch abrackert, aber ihr\r\nnicht von der Stelle kommt? Seid ihr von der Atmosph\u00e4re um euch herum\r\n\u00fcberw\u00e4ltigt? Versteht ihr nicht, was passiert und unter euch geht\r\ngef\u00fchlt alles nur im Kreis?\r\n\r\nDann k\u00f6nnte es sein, dass ihr gerade in einem Cycling- oder\r\nSpinning-Kurs seid, der Lieblingssportart diverser Insta-Bubbles.\r\n\r\n\r\n\r\nIn diesem \u00fcberhaupt nicht ernstzunehmenden Vortrag erz\u00e4hle ich, wie ich\r\nversuchte mich dem Cycling zu wiedersetzen, was ich erlebte als ich es\r\ndann gegen meinen Willen trotzdem probierte und warum ich das nie\r\nwieder erleben will. Alles getreu dem Motto: Ich habe es getan, damit\r\nihr es nicht machen m\u00fcsst.\"\r\n",
+            "room": [
+                "01972b67-b04b-741c-ae9d-23f72a29c024"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T11:45:00Z",
+            "responsiblePerson": "Daniele R\u00f6\u00dfler",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "01974c03-5929-7d92-a704-1e94da1e4227",
+            "title": "Autonomous driving in the modern age",
+            "room": [
+                "01972b67-acf5-74e4-b78b-f2f56647cac1"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T11:45:00Z",
+            "responsiblePerson": "Henriette Sack",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "01974b38-c386-7160-bfdc-9d6f826264b5",
+            "title": "Keep talking and nobody explodes",
+            "room": [
+                "01972b67-b3ab-7383-b846-0d04b3066d9a"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T12:00:00Z",
+            "responsiblePerson": "Arina Ahlers",
+            "category": "01972b09-dc71-70e0-912c-6f97e8c3cd4a",
+            "previousDates": []
+        },
+        {
+            "id": "01974ec5-390d-7d10-86f0-82d35815863b",
+            "title": "Regenbogen-K\u00fcA \ud83c\udf08",
+            "comment": "Queeres Treffen f\u00fcr alle offen",
+            "room": [
+                "01972b67-a647-7eab-9463-fc6778431ee3"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T12:00:00Z",
+            "timeComment": "gerne p\u00fcnktlich",
+            "responsiblePerson": "Leona Heim",
+            "category": "0197414e-f57e-7cd1-ba71-2314b8ddf514",
+            "previousDates": []
+        },
+        {
+            "id": "01972da6-7dc3-7950-afb8-0d3d23dfe22e",
+            "title": "Vertrauenspersonen Debriefing (geschlossen)",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T12:00:00Z",
+            "responsiblePerson": "Vertrauenspersonenkoordination (Gizem Schumann) ",
+            "isRoomReservation": true,
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "0197477e-2326-7bc0-8638-c308ccc3a0d4",
+            "title": "Deutsche Geb\u00e4rdensprache",
+            "description": "Grundlagen f\u00fcr Anf\u00e4nger. Wer auf der WinterAka (Oberwesel 24/25, 2. H\u00e4lfte) schon bei der K\u00fcA dabei war, ist herzlich willkommen und kann noch etwas mehr lernen.",
+            "room": [
+                "01972b67-a368-7094-b7e3-fc190bc5400a"
+            ],
+            "roomComment": "Bevorzugt Amphitheater, bei Regen im Seminarraum Krankenstation",
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T12:00:00Z",
+            "responsiblePerson": "Ali Wehner",
+            "category": "01972b0b-7027-7ab0-b797-27cc32b3d44f",
+            "previousDates": [
+                {
+                    "id": "01974f34-fce4-72e0-ae42-a3a37278938f",
+                    "begin": "2025-06-08T11:00:00Z",
+                    "end": "2025-06-08T12:00:00Z",
+                    "room": [
+                        "01972b67-a28c-7fee-8658-a305a67cfb96",
+                        "01972b67-a4a6-70b1-8806-21593173dd6b"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "019740b1-9d34-7fe3-a6f0-3c89d699e59e",
+            "title": "Chor",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T12:50:00Z",
+            "responsiblePerson": "Miriam A\u00dfmann und Esila Seiler",
+            "category": "01972b0a-48bc-78e3-b291-99c3372bcf2d",
+            "previousDates": []
+        },
+        {
+            "id": "01974744-3a41-7611-a953-2f3274135603",
+            "title": "Technikaufbau Bunter Abend",
+            "comment": "Interessierte willkommen!",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "responsiblePerson": "Robert Kleiner",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "0197408a-b883-79d0-a2f6-4f3e5bc4ae32",
+            "title": "Midgard bei Dion",
+            "comment": "Bei Interesse, bitte vorher einmal bei Dion melden. 5-6 Spieler.",
+            "room": [
+                "01972b67-b5b5-7917-81ad-2a153b98868e"
+            ],
+            "begin": "2025-06-08T11:00:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "responsiblePerson": "Dion Sachse",
+            "category": "01972b09-dc71-70e0-912c-6f97e8c3cd4a",
+            "previousDates": []
+        },
+        {
+            "id": "019749f9-8f17-70b0-9c2b-6af63fd35596",
+            "title": "Pfingstaka: smash or pass",
+            "comment": "Wir finden ein Kursthema f\u00fcr die n\u00e4chste Pfingstakademie",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-08T11:30:00Z",
+            "end": "2025-06-08T12:00:00Z",
+            "timeComment": "offenes Ende",
+            "responsiblePerson": "Malak & Caleuche",
+            "category": "0197414e-f57e-7cd1-ba71-2314b8ddf514",
+            "previousDates": []
+        },
+        {
+            "id": "01974727-83cf-78d2-a5dc-05e71d4be1d6",
+            "title": "Bring your own Kreativprojekt",
+            "room": [
+                "01972b67-a647-7eab-9463-fc6778431ee3"
+            ],
+            "roomComment": "bei gutem Wetter drau\u00dfen",
+            "begin": "2025-06-08T11:30:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "responsiblePerson": "Ali Hofmann",
+            "category": "0197414e-5171-7c63-8cfb-0e311f7fabba",
+            "previousDates": []
+        },
+        {
+            "id": "01974ca7-210b-7a32-aabc-44f4ec6c128b",
+            "title": "Pilates",
+            "room": [
+                "01972b67-a1b2-7220-a08e-4cec6b3b074e"
+            ],
+            "roomComment": "(muss ggf. unterbrochen werden, falls Empore f\u00fcr Technikaufbau gebraucht wird)",
+            "begin": "2025-06-08T12:00:00Z",
+            "end": "2025-06-08T12:45:00Z",
+            "responsiblePerson": "Ernst Philip Walter und Alp Butz",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974ea2-258f-7852-8a4d-cdffe1cd6a82",
+            "title": "Krisenmanagement Debriefing",
+            "room": [
+                "0197a2a4-0f5b-7262-be57-67508338faae"
+            ],
+            "begin": "2025-06-08T12:00:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "responsiblePerson": "Krisenmanagement, Gero Oppermann",
+            "isRoomReservation": true,
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "01974c26-028c-7290-8560-f4e158ec07a1",
+            "title": "Morse, Lormen oder Fingeralphabet lern K\u00fcA",
+            "description": "Falls du jemals ein neues Alphabet oder eine neue Sprache lernen wolltest, komme gerne vorbei.",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "roomComment": "Da wo vorher die Deutsche Geb\u00e4rdersprache war",
+            "begin": "2025-06-08T12:00:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "responsiblePerson": "Jannis Schiemann, Esra Heine, Leonel Brandl",
+            "category": "01972b0b-7027-7ab0-b797-27cc32b3d44f",
+            "previousDates": []
+        },
+        {
+            "id": "019745ca-bc17-71b1-b6cb-23f85fe4c4e4",
+            "title": "Vortreffen Bergakademie",
+            "room": [
+                "01972b67-afdc-79d6-9160-a508a3e39d98"
+            ],
+            "begin": "2025-06-08T12:00:00Z",
+            "end": "2025-06-08T13:00:00Z",
+            "timeComment": "eher k\u00fcrzer",
+            "responsiblePerson": "George Kilian",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01974c61-80ca-70e0-939f-df7436348c39",
+            "title": "Wir gehen aufs obere Fu\u00dfballfeld und schreien laut, weil sich das gut anf\u00fchlt.",
+            "room": [
+                "01972b67-a440-7b11-af42-5527119ff215"
+            ],
+            "roomComment": "Treffpunkt auf dem L\u00f6scherhof, wir gehen dann gemeinsam zu Fu\u00dfballfeld",
+            "begin": "2025-06-08T12:05:00Z",
+            "end": "2025-06-08T12:25:00Z",
+            "responsiblePerson": "Galileo ",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01974745-c72a-78e3-a75f-ee363d5180e0",
+            "title": "Generalprobe Bunter Abend",
+            "comment": "Stellprobe f\u00fcr alle mit Beitr\u00e4gen",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-08T17:00:00Z",
+            "end": "2025-06-08T18:00:00Z",
+            "responsiblePerson": "Ahmad P\u00fctz",
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "01974c4d-1c47-76b1-8c95-9e77f45c2d1f",
+            "title": "Kurzvortrag: Sind BWLer Arschl\u00f6cher?",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-08T17:05:00Z",
+            "end": "2025-06-08T17:15:00Z",
+            "responsiblePerson": "Giulia L\u00f6we",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "01974c4e-ab66-7921-88a2-da4a5829cb49",
+            "title": "Sind BWLer Arschl\u00f6cher? Extended",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-08T17:15:00Z",
+            "end": "2025-06-08T18:00:00Z",
+            "responsiblePerson": "Giulia L\u00f6we",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "019749fa-a532-7a81-8457-8437389ed66a",
+            "title": "Bunter Abend",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-08T18:30:00Z",
+            "end": "2025-06-08T18:30:00Z",
+            "responsiblePerson": "",
+            "isExclusive": true,
+            "category": "0197a29a-ee5f-7460-9fed-6e68fce8b512",
+            "previousDates": []
+        },
+        {
+            "id": "01975071-001b-76f2-a493-723c90118765",
+            "title": "Ein Blatt Papier aufheben",
+            "room": [],
+            "begin": "2025-06-08T19:15:00Z",
+            "end": "2025-06-08T19:15:00Z",
+            "timeComment": "W\u00e4hrend der Pause des Bunten Abends",
+            "responsiblePerson": "Gizem Schumann",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "019749b5-253a-7942-9dc3-774a959b157a",
+            "title": "Reserviert f\u00fcr den Fall einer Zeltevakuierung",
+            "comment": "Wir gegebenfalls beim Abendessen kommuniziert",
+            "room": [
+                "01972b67-a28c-7fee-8658-a305a67cfb96"
+            ],
+            "begin": "2025-06-08T20:00:00Z",
+            "end": "2025-06-09T06:00:00Z",
+            "responsiblePerson": "",
+            "isRoomReservation": true,
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01975079-76de-7022-8eff-4c2c874d42c4",
+            "title": "Boote falten",
+            "comment": "aus Acrylpapier",
+            "room": [
+                "01972b67-b41a-7e3d-a9c8-a53fb977ab11"
+            ],
+            "begin": "2025-06-08T20:30:00Z",
+            "end": "2025-06-08T21:00:00Z",
+            "timeComment": "nach dem bunten Abend",
+            "responsiblePerson": "Albert",
+            "category": "0197414e-5171-7c63-8cfb-0e311f7fabba",
+            "previousDates": []
+        },
+        {
+            "id": "019749f6-01b2-7722-8d77-8189c6aab353",
+            "title": "Ernstes Bodo Wartke Lied",
+            "comment": "Nicht in meinem Namen - CW: Leid und unterschiedliche Trigger/Probleme ",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-08T20:30:00Z",
+            "end": "2025-06-08T21:00:00Z",
+            "timeComment": "Nach dem bunten Abend",
+            "responsiblePerson": "Luan Engel",
+            "category": "0197a29a-ee5f-7460-9fed-6e68fce8b512",
+            "previousDates": []
+        },
+        {
+            "id": "01974ed3-4f97-71b1-a618-a475bf2e0a21",
+            "title": "Disco",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-08T20:30:00Z",
+            "end": "2025-06-08T23:30:00Z",
+            "timeComment": "nach dem Bunten Abend",
+            "responsiblePerson": "",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "01974f3f-838e-7a02-b61d-aa66dcd43827",
+            "title": "Tango Argentino",
+            "room": [
+                "01972b67-a990-7048-bc24-c20a49d5a426"
+            ],
+            "begin": "2025-06-08T20:30:00Z",
+            "end": "2025-06-09T00:30:00Z",
+            "timeComment": "Nach dem Bunten Abend",
+            "responsiblePerson": "Konstantinos",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        },
+        {
+            "id": "01975041-208f-71c0-a45c-01d6be8b5524",
+            "title": "Ich \u00fcbe meinen Chemie-Vortrag",
+            "comment": "\u201eThe Effect of Moon Lighting on Atomic Orbital Hybridization\u201c",
+            "room": [
+                "01972b67-a647-7eab-9463-fc6778431ee3"
+            ],
+            "begin": "2025-06-08T21:00:00Z",
+            "end": "2025-06-08T21:30:00Z",
+            "timeComment": "nach dem Bunten Abend",
+            "responsiblePerson": "Frederik Abdullah",
+            "category": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "previousDates": []
+        },
+        {
+            "id": "01974b35-8285-7061-ab39-c198edbd64f1",
+            "title": "Karaokeabend",
+            "room": [
+                "01972b67-a21d-7915-b24b-b75efc30121d"
+            ],
+            "begin": "2025-06-08T21:00:00Z",
+            "end": "2025-06-09T01:00:00Z",
+            "timeComment": "Nach \"Ernstes Bodo Wartke Lied\" - Open End",
+            "responsiblePerson": "Arina Ahlers",
+            "category": "01972b0a-48bc-78e3-b291-99c3372bcf2d",
+            "previousDates": []
+        },
+        {
+            "id": "0197502e-c2eb-7593-9bbf-ebac68f6a755",
+            "title": "Sonnenaufgangs (Ultimate-) Frisbee mitten in der Nacht",
+            "room": [
+                "01972b67-a440-7b11-af42-5527119ff215"
+            ],
+            "roomComment": "Treffpunkt: Vor der Pelikanhalle",
+            "begin": "2025-06-08T23:23:00Z",
+            "end": "2025-06-09T00:40:00Z",
+            "responsiblePerson": "Esra, Jannis und Antonio",
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "01974ed5-3e2e-7cb1-aca1-7fc63890cd2c",
+            "title": "Fu\u00dfball",
+            "comment": "Wegen der Lichttechnik in der Pelikanhalle leider nicht m\u00f6glich",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-09T00:00:00Z",
+            "end": "2025-06-09T01:30:00Z",
+            "timeComment": "nach der Disco",
+            "responsiblePerson": "Mohamed & Enie",
+            "isCancelled": true,
+            "category": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "previousDates": []
+        },
+        {
+            "id": "0197521d-a742-70c2-9434-d17b26a1c4fb",
+            "title": "Kartenz\u00e4hl-K\u00fcA",
+            "comment": "\ud83d\ude44",
+            "room": [
+                "01972b67-b3ab-7383-b846-0d04b3066d9a"
+            ],
+            "begin": "2025-06-09T01:00:00Z",
+            "end": "2025-06-09T01:02:00Z",
+            "responsiblePerson": "Baran Schreck",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01975215-6f6a-7d70-8dc0-d85b02a689ee",
+            "title": "Spaziergang zum Sonnenaufgang ",
+            "comment": "Wir schauen uns den Sonnenaufgang an",
+            "room": [],
+            "roomComment": "Treffpunkt: CdErnhof",
+            "begin": "2025-06-09T02:50:00Z",
+            "end": "2025-06-09T03:30:00Z",
+            "responsiblePerson": "Frida",
+            "category": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "previousDates": []
+        },
+        {
+            "id": "01974ed6-9a8b-7e02-901c-548b2a71730a",
+            "title": "Aufr\u00e4umen",
+            "room": [],
+            "begin": "2025-06-09T05:00:00Z",
+            "end": "2025-06-09T07:30:00Z",
+            "responsiblePerson": "",
+            "isExclusive": true,
+            "category": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "previousDates": []
+        },
+        {
+            "id": "01974fb8-d2e3-7f93-8586-1936ea8d6d42",
+            "title": "Abschiedsplenum",
+            "room": [
+                "01972b67-a141-7972-b7d0-8094b11cb914"
+            ],
+            "begin": "2025-06-09T08:00:00Z",
+            "end": "2025-06-09T08:30:00Z",
+            "responsiblePerson": "Orgas",
+            "isExclusive": true,
+            "category": "01972b06-9979-7783-8c19-e2b970b91957",
+            "previousDates": []
+        },
+        {
+            "id": "01974f33-8a87-7842-bcc7-832aa9cca3ee",
+            "title": "Westcoast Swing Tanzen",
+            "room": [
+                "01972b67-a4a6-70b1-8806-21593173dd6b"
+            ],
+            "begin": "2025-06-09T08:30:00Z",
+            "end": "2025-06-09T10:30:00Z",
+            "timeComment": "Nach dem Abschlussplenum",
+            "responsiblePerson": "Joleen",
+            "category": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "previousDates": []
+        }
+    ],
+    "rooms": [
+        {
+            "id": "01972b67-a4a6-70b1-8806-21593173dd6b",
+            "title": "Amphitheater/Flaggen",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a3d3-7434-ad09-66bbb4103b15",
+            "title": "Badesee",
+            "description": ""
+        },
+        {
+            "id": "0197a2a4-0f5b-7262-be57-67508338faae",
+            "title": "Bibliothek",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a5e3-7878-8563-8349793fd8da",
+            "title": "Boulderwand",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a71c-75d7-8228-d593adbd1ac7",
+            "title": "Buchwaldhof Feuerstelle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a786-7d56-bcb1-6a7b6bf3da83",
+            "title": "Buchwaldhof Haus 1",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a7e7-733b-afc2-e25277205b75",
+            "title": "Buchwaldhof Haus 2",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a854-7d3c-a9a9-465be794c486",
+            "title": "Buchwaldhof Haus 3",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a8c1-780f-aad8-de0487c1a686",
+            "title": "Buchwaldhof Haus 4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a6b4-76ac-93b3-cda5e732f9d0",
+            "title": "Buchwaldhof Hof",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a924-72fb-b5f6-5eb63dcb82af",
+            "title": "Buchwaldhof Ob\u00c4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a647-7eab-9463-fc6778431ee3",
+            "title": "Buchwaldhof Speisesaal",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b47e-76d7-aa7d-5c4d594a0d04",
+            "title": "CdErnhof Feuerstelle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b4e3-78b0-948e-811a216b7730",
+            "title": "CdErnhof Haus 1",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b54a-7d9f-be04-43e1bfb7b769",
+            "title": "CdErnhof Haus 2",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b5b5-7917-81ad-2a153b98868e",
+            "title": "CdErnhof Haus 3",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b61a-705c-9df1-d1e139366b38",
+            "title": "CdErnhof Haus 4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b41a-7e3d-a9c8-a53fb977ab11",
+            "title": "CdErnhof Hof",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b684-74a6-ad91-9c99c8d17b9d",
+            "title": "CdErnhof Orgab\u00fcro",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b3ab-7383-b846-0d04b3066d9a",
+            "title": "CdErnhof Speisesaal",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a2fc-7004-bd19-023117b21c09",
+            "title": "Dorfkrug",
+            "description": ""
+        },
+        {
+            "id": "01972b67-adca-7e48-95e9-8d3fd949e5cb",
+            "title": "Lischerthof Feuerstelle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-ae38-72a2-b546-1dbe1c14299a",
+            "title": "Lischerthof Haus 1",
+            "description": ""
+        },
+        {
+            "id": "01972b67-aea5-74c7-8bf6-cb084bf023b9",
+            "title": "Lischerthof Haus 2",
+            "description": ""
+        },
+        {
+            "id": "01972b67-af07-76df-ae28-67efb6ccde0a",
+            "title": "Lischerthof Haus 3",
+            "description": ""
+        },
+        {
+            "id": "01972b67-af70-7292-8602-a06412f0070e",
+            "title": "Lischerthof Haus 4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-ad5f-7f54-9f42-89fe586c8ba2",
+            "title": "Lischerthof Hof",
+            "description": ""
+        },
+        {
+            "id": "01972b67-afdc-79d6-9160-a508a3e39d98",
+            "title": "Lischerthof Ob\u00c4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-acf5-74e4-b78b-f2f56647cac1",
+            "title": "Lischerthof Speisesaal",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b127-7bae-b8f2-8491aa2aea21",
+            "title": "L\u00f6scherhof Feuerstelle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b192-7777-8aa4-1436cdca21c4",
+            "title": "L\u00f6scherhof Haus 1",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b1fc-71f6-8431-ea770be0a15e",
+            "title": "L\u00f6scherhof Haus 2",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b26a-72c1-b975-920c0eeacd41",
+            "title": "L\u00f6scherhof Haus 3",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b2d1-7cf5-85ba-aafba045054f",
+            "title": "L\u00f6scherhof Haus 4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b0b8-7d95-abd3-8360c720ede9",
+            "title": "L\u00f6scherhof Hof",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b33d-7b6f-beb3-b7b83c80902f",
+            "title": "L\u00f6scherhof Ob\u00c4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-b04b-741c-ae9d-23f72a29c024",
+            "title": "L\u00f6scherhof Speisesaal",
+            "description": ""
+        },
+        {
+            "id": "01974b39-cf8e-7811-9a1d-1c8504e6777b",
+            "title": "Niedrigseilgarten ",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a141-7972-b7d0-8094b11cb914",
+            "title": "Pelikanhalle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a1b2-7220-a08e-4cec6b3b074e",
+            "title": "Pelikanhalle Empore",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a28c-7fee-8658-a305a67cfb96",
+            "title": "Seminarraum Krankenstation",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a21d-7915-b24b-b75efc30121d",
+            "title": "Seminarraum Pelikanhalle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a516-7dbc-857e-5eb8bf698857",
+            "title": "Spielplatz",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a440-7b11-af42-5527119ff215",
+            "title": "Sportpl\u00e4tze",
+            "description": ""
+        },
+        {
+            "id": "01972b67-aa72-7c17-b984-a67680acfea2",
+            "title": "Steinsgebisshof Feuerstelle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-aadb-7109-abee-63fac75185e6",
+            "title": "Steinsgebisshof Haus 1",
+            "description": ""
+        },
+        {
+            "id": "01972b67-ab49-78ce-8d82-3e9454572c92",
+            "title": "Steinsgebisshof Haus 2",
+            "description": ""
+        },
+        {
+            "id": "01972b67-abbd-7e85-a03b-943115cf54e5",
+            "title": "Steinsgebisshof Haus 3",
+            "description": ""
+        },
+        {
+            "id": "01972b67-ac28-742e-a4b7-e276b1c6c2db",
+            "title": "Steinsgebisshof Haus 4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-aa02-719e-b188-1e6a15c68b71",
+            "title": "Steinsgebisshof Hof",
+            "description": ""
+        },
+        {
+            "id": "01972b67-ac92-7f97-86e0-51d8964bf1f2",
+            "title": "Steinsgebisshof Ob\u00c4",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a990-7048-bc24-c20a49d5a426",
+            "title": "Steinsgebisshof Speisesaal",
+            "description": ""
+        },
+        {
+            "id": "01972da8-1c67-7f60-8b08-e586b64cf35f",
+            "title": "To Be Decided",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a581-795d-85ce-4508471fcddb",
+            "title": "vor der Pelikanhalle",
+            "description": ""
+        },
+        {
+            "id": "01972b67-a368-7094-b7e3-fc190bc5400a",
+            "title": "Werkraum",
+            "description": ""
+        }
+    ],
+    "categories": [
+        {
+            "id": "01972b06-044c-7722-8d6e-5cfbe6319092",
+            "title": "K\u00fcA, allgemein",
+            "icon": "",
+            "color": "99aabb",
+            "sort_key": -10
+        },
+        {
+            "id": "01972b0b-7027-7ab0-b797-27cc32b3d44f",
+            "title": "Literatur & Sprache",
+            "icon": "\ud83d\udcd6",
+            "color": "20c1b0",
+            "sort_key": 8
+        },
+        {
+            "id": "0197414e-5171-7c63-8cfb-0e311f7fabba",
+            "title": "Kreatives",
+            "icon": "\ud83c\udfa8",
+            "color": "3eff68",
+            "sort_key": 9
+        },
+        {
+            "id": "01972b0a-48bc-78e3-b291-99c3372bcf2d",
+            "title": "Musizieren",
+            "icon": "\ud83c\udfb5",
+            "color": "33d17a",
+            "sort_key": 12
+        },
+        {
+            "id": "019746fb-99be-7041-aad8-6485cb05dd48",
+            "title": "Tanzen",
+            "icon": "\ud83d\udc83",
+            "color": "1c71d8",
+            "sort_key": 13
+        },
+        {
+            "id": "01972b08-d445-7f52-88a8-c9424c38dc63",
+            "title": "Sport",
+            "icon": "\u26bd",
+            "color": "1c71d8",
+            "sort_key": 14
+        },
+        {
+            "id": "01972b09-dc71-70e0-912c-6f97e8c3cd4a",
+            "title": "Spiele",
+            "icon": "\u265f\ufe0f",
+            "color": "f5c211",
+            "sort_key": 15
+        },
+        {
+            "id": "0197414e-f57e-7cd1-ba71-2314b8ddf514",
+            "title": "Gespr\u00e4chsrunde",
+            "icon": "\ud83d\udde8\ufe0f",
+            "color": "ff7800",
+            "sort_key": 16
+        },
+        {
+            "id": "0197a29a-ee5f-7460-9fed-6e68fce8b512",
+            "title": "Auff\u00fchrung",
+            "icon": "\ud83c\udfad",
+            "color": "e01b7e",
+            "sort_key": 19
+        },
+        {
+            "id": "01972b0f-1191-7342-ac77-37889fd4fba7",
+            "title": "Vortrag",
+            "icon": "\ud83e\uddd1\u200d\ud83c\udf93",
+            "color": "ba2aca",
+            "sort_key": 20
+        },
+        {
+            "id": "0197414d-ec45-7621-9e9b-1002cd3abd73",
+            "title": "CdE-Vereinsarbeit",
+            "icon": "\ud83d\udca1",
+            "color": "4a2269",
+            "sort_key": 25
+        },
+        {
+            "id": "01972b06-9979-7783-8c19-e2b970b91957",
+            "title": "Plenum",
+            "icon": "\ud83d\udce2",
+            "color": "12143b",
+            "isOfficial": true,
+            "sort_key": 30
+        },
+        {
+            "id": "01972b07-4b9e-7ad2-8e82-695f7dc68789",
+            "title": "Orga",
+            "icon": "\ud83d\udcce",
+            "color": "233d37",
+            "isOfficial": true,
+            "sort_key": 35
+        }
+    ]
+}

@@ -266,21 +266,13 @@ fn write_passphrase_id(
     event: &Event,
     passphrase: &Passphrase,
 ) -> std::io::Result<()> {
-    if passphrase.passphrase.is_some() {
-        write!(
-            w,
-            "passphrase '{}'",
-            passphrase.passphrase.as_ref().unwrap().replace("\x7f", "*")
-        )?;
+    if let Some(p) = passphrase.passphrase.as_ref() {
+        write!(w, "passphrase '{}'", p.replace("\x7f", "*"))?;
     } else if passphrase.derivable_from_passphrase.is_some() {
         write!(w, "passphrase {}", passphrase.id)?;
     }
-    if passphrase.derivable_from_passphrase.is_some() {
-        write!(
-            w,
-            ", derivable from {}",
-            passphrase.derivable_from_passphrase.unwrap()
-        )?;
+    if let Some(dp) = passphrase.derivable_from_passphrase.as_ref() {
+        write!(w, ", derivable from {}", dp)?;
     }
     write!(w, ", for role {:?}", passphrase.privilege)?;
     if !passphrase.comment.is_empty() {

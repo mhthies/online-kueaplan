@@ -227,7 +227,7 @@ function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId) {
                 "signal": abortController.signal
             })
             .catch((err) => {
-                if (e instanceof DOMException && e.name === "AbortError") {
+                if (err instanceof DOMException && err.name === "AbortError") {
                     console.log("Running fetch has been aborted");
                     return;
                 }

@@ -4,50 +4,55 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     const durationInput = document.getElementById("durationInput");
     const roomsInput = document.getElementById("roomsInput");
 
+    const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
+    const endTimeInfoElement = createEndTimeInfoElement(durationInput);
+
     const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
         rooms,
         concurrentEntriesApiEndpoint,
-        entryId
+        entryId,
+        daySelect,
+        beginInput,
+        durationInput,
+        roomsInput
     );
 
     daySelect.addEventListener("input", () => {
-        const naiveBeginDate = getNaiveSelectedDate();
-        const naiveBeginTime = getNaiveBeginTime();
-        const durationMilliseconds = getDurationMilliseconds();
-        updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
-        updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        const naiveBeginDate = readDateSelect(daySelect);
+        const naiveBeginTime = readNaiveTimeInput(beginInput);
+        const durationMilliseconds = readNiceDurationInput(durationInput);
+        updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
+        updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
         concurrentEntriesFetcher.scheduleFetching();
     });
     beginInput.addEventListener("input", () => {
-        const naiveBeginDate = getNaiveSelectedDate();
-        const naiveBeginTime = getNaiveBeginTime();
-        const durationMilliseconds = getDurationMilliseconds();
-        updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
-        updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        const naiveBeginDate = readDateSelect(daySelect);
+        const naiveBeginTime = readNaiveTimeInput(beginInput);
+        const durationMilliseconds = readNiceDurationInput(durationInput);
+        updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
+        updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
         concurrentEntriesFetcher.scheduleFetching();
     });
     durationInput.addEventListener("input", () => {
-        const naiveBeginDate = getNaiveSelectedDate();
-        const naiveBeginTime = getNaiveBeginTime();
-        const durationMilliseconds = getDurationMilliseconds();
-        updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+        const naiveBeginDate = readDateSelect(daySelect);
+        const naiveBeginTime = readNaiveTimeInput(beginInput);
+        const durationMilliseconds = readNiceDurationInput(durationInput);
+        updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
         concurrentEntriesFetcher.scheduleFetching();
     });
     roomsInput.addEventListener("input", () => {
         concurrentEntriesFetcher.scheduleFetching();
     });
 
-    const naiveBeginDate = getNaiveSelectedDate();
-    const naiveBeginTime = getNaiveBeginTime();
-    const durationMilliseconds = getDurationMilliseconds();
-    updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
-    updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
+    const naiveBeginDate = readDateSelect(daySelect);
+    const naiveBeginTime = readNaiveTimeInput(beginInput);
+    const durationMilliseconds = readNiceDurationInput(durationInput);
+    updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
+    updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
     concurrentEntriesFetcher.doFetch();
 }
 
-function updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime) {
-    const calendarDateInfoElement = createOrGetCalendarDateInfoElement();
-
+function updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime) {
     if (naiveBeginDate === null || naiveBeginTime === null) {
         calendarDateInfoElement.classList.add("d-none");
         return;
@@ -64,30 +69,22 @@ function updateCalendarDateInfo(effectiveBeginOfDayMilliseconds, naiveBeginDate,
     }
 }
 
-function createOrGetCalendarDateInfoElement() {
-    let element = document.getElementById("calendarDateInfo");
-
-    if (!element) {
-        const input = document.getElementById("beginInput");
-        element = document.createElement("div");
-        element.classList.add("form-text", "d-none", "text-info");
-        element.id = "calendarDateInfo";
-        const icon = document.createElement("i");
-        icon.classList.add("bi", "bi-calendar-event-fill");
-        icon.title = "Kalendertag";
-        const text = document.createElement("span");
-        element.appendChild(icon);
-        element.appendChild(document.createTextNode(" "));
-        element.appendChild(text)
-        input.parentElement.insertBefore(element, null);
-    }
-
+function createCalendarDateInfoElement(beginInput) {
+    let element = document.createElement("div");
+    element.classList.add("form-text", "d-none", "text-info");
+    element.id = "calendarDateInfo";
+    const icon = document.createElement("i");
+    icon.classList.add("bi", "bi-calendar-event-fill");
+    icon.title = "Kalendertag";
+    const text = document.createElement("span");
+    element.appendChild(icon);
+    element.appendChild(document.createTextNode(" "));
+    element.appendChild(text)
+    beginInput.parentElement.insertBefore(element, null);
     return element;
 }
 
-function updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveEffectiveBeginDate, naiveBeginTime, durationMilliseconds) {
-    let endTimeInfoElement = createOrGetEndTimeInfoElement();
-
+function updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveEffectiveBeginDate, naiveBeginTime, durationMilliseconds) {
     if (naiveEffectiveBeginDate === null || naiveBeginTime === null || durationMilliseconds === null) {
         endTimeInfoElement.getElementsByTagName("span")[0].innerText = "???";
         return;
@@ -104,40 +101,31 @@ function updateEndTimeInfo(effectiveBeginOfDayMilliseconds, naiveEffectiveBeginD
         (displayEndDate ? formatDate(endDate) + " " : "") + formatTime(endDate);
 }
 
-function createOrGetEndTimeInfoElement() {
-    let element = document.getElementById("endTimeInfo");
-
-    if (!element) {
-        const input = document.getElementById("durationInput");
-        element = document.createElement("div");
-        element.classList.add("form-text");
-        element.id = "endTimeInfo";
-        const text = document.createElement("span");
-        element.appendChild(document.createTextNode("Ende: "));
-        element.appendChild(text)
-        // durationInput is wrapped in an input group
-        input.parentElement.parentElement.insertBefore(element, null);
-    }
-
+function createEndTimeInfoElement(durationInput) {
+    let element = document.createElement("div");
+    element.classList.add("form-text");
+    element.id = "endTimeInfo";
+    const text = document.createElement("span");
+    element.appendChild(document.createTextNode("Ende: "));
+    element.appendChild(text)
+    // durationInput is wrapped in an input group
+    durationInput.parentElement.parentElement.insertBefore(element, null);
     return element;
 }
 
-function getNaiveSelectedDate() {
-    const daySelect = document.getElementById("daySelect");
+function readDateSelect(daySelect) {
     const date = new Date(daySelect.value);
     return isNaN(date) ? null : date;
 }
 
-function getNaiveBeginTime() {
+function readNaiveTimeInput(beginInput) {
     // All times are local time/naive/without timezone, but JavaScript does not support this concept.
     // So, we act like all times are UTC to avoid any conversion.
-    const beginInput = document.getElementById("beginInput");
     const time = new Date("1970-01-01T" + beginInput.value + "Z");
     return isNaN(time) ? null : time;
 }
 
-function getDurationMilliseconds() {
-    const durationInput = document.getElementById("durationInput");
+function readNiceDurationInput(durationInput) {
     return parseNiceDurationHours(durationInput.value);
 }
 
@@ -181,16 +169,12 @@ function formatTime(date) {
         + (date.getUTCSeconds() ? ":" + (date.getUTCSeconds()).toString().padStart(2, "0") : "");
 }
 
-function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId) {
+function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId, daySelect, beginInput, durationInput, roomsInput) {
     const SCHEDULE_TIMEOUT_MILLISECONDS = 300;
     const overlay = document.getElementById("concurrentEntriesOverlay");
     const spinner = document.getElementById("concurrentEntriesSpinner");
     const errorBox = document.getElementById("concurrentEntriesError");
     const resultsList = document.getElementById("concurrentEntriesList");
-    const daySelect = document.getElementById("daySelect");
-    const beginInput = document.getElementById("beginInput");
-    const durationInput = document.getElementById("durationInput");
-    const roomsInput = document.getElementById("roomsInput");
     const roomsMap = new Map(rooms.map((r) => [r.value, r.text]));
 
     let timeoutId = null;

@@ -24,6 +24,8 @@ def test_empty_category_notification(page: Page, reset_database: None) -> None:
 
 
 def test_main_list_entry_attributes(page: Page, reset_database: None) -> None:
+    # Note: This test is somehow redundant to test_create_entry(), but also tests some different aspects of the main
+    #   list.
     actions.login(page, 1, "orga")
     actions.add_category(page, data.CATEGORY_SPORT)
     actions.add_room(page, data.ROOM_SPORTPLAETZE)
@@ -37,6 +39,7 @@ def test_main_list_entry_attributes(page: Page, reset_database: None) -> None:
     category_icon = row.get_by_text("⚽")
     expect(category_icon).to_be_visible()
     expect(category_icon).to_have_attribute("title", "Kategorie Sport")
+    expect(category_icon).to_have_accessible_name("Kategorie Sport")
 
     title_col = helpers.get_table_cell_by_header(row, "Was?")
     comment = title_col.get_by_text("bitte Bälle und Musik mitbringen")

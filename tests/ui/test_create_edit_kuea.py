@@ -29,6 +29,8 @@ def test_create_sample_data(page: Page, reset_database: None) -> None:
 
 
 def test_create_entry(page: Page, reset_database: None) -> None:
+    # Note: This test is somehow redundant to test_main_list_entry_attributes(), but also tests some different aspects
+    #   of the add_entry form.
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -50,8 +52,6 @@ def test_create_entry(page: Page, reset_database: None) -> None:
     )
     page.get_by_role("button", name="Erstellen").click()
     expect(page).to_have_title(re.compile(r"06\.01\."))
-
-    # TODO room
 
     main_table = page.get_by_role("table")
     expect(main_table.get_by_role("row")).to_have_count(2)

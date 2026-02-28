@@ -8,6 +8,7 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     const endTimeInfoElement = createEndTimeInfoElement(durationInput);
 
     const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
+        document.getElementById("parallelEntriesBox"),
         rooms,
         concurrentEntriesApiEndpoint,
         entryId,

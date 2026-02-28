@@ -54,12 +54,12 @@ function formatTime(date) {
         + (date.getUTCSeconds() ? ":" + (date.getUTCSeconds()).toString().padStart(2, "0") : "");
 }
 
-function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId, daySelect, beginInput, durationInput, roomsInput) {
+function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelect, beginInput, durationInput, roomsInput) {
     const SCHEDULE_TIMEOUT_MILLISECONDS = 300;
-    const overlay = document.getElementById("concurrentEntriesOverlay");
-    const spinner = document.getElementById("concurrentEntriesSpinner");
-    const errorBox = document.getElementById("concurrentEntriesError");
-    const resultsList = document.getElementById("concurrentEntriesList");
+    const overlay = element.getElementsByClassName("loader-overlay")[0];
+    const spinner = element.getElementsByClassName("entries-fetcher-spinner")[0];
+    const errorBox = element.getElementsByClassName("entries-fetcher-error")[0];
+    const resultsList = element.getElementsByClassName("entries-fetcher-results")[0];
     const roomsMap = new Map(rooms.map((r) => [r.value, r.text]));
 
     let timeoutId = null;

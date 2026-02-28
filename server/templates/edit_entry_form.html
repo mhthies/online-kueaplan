@@ -85,18 +85,18 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card border-info">
-                <div class="card-header border-info">Parallele Einträge</div>
+            <div class="card border-info" aria-live="polite" role="complementary" aria-labelledby="parallelEntriesHeading">
+                <div class="card-header border-info" id="parallelEntriesHeading">Parallele Einträge</div>
                 <div class="position-relative">
                     <div class="overflow-y-auto" style="height: 280px; max-height: 65vh;">
-                        <ul class="list-group list-group-flush" id="concurrentEntriesList">
+                        <ul class="list-group list-group-flush" id="concurrentEntriesList" aria-hidden="true">
                         </ul>
                     </div>
                     <div class="loader-overlay" id="concurrentEntriesOverlay">
                         <div class="spinner-border" role="status" id="concurrentEntriesSpinner">
                             <span class="visually-hidden">Loading</span>
                         </div>
-                        <span class="text-danger text-center d-none" id="concurrentEntriesError">
+                        <span class="text-danger text-center d-none" role="status" id="concurrentEntriesError">
                             <strong>Konnte parallele Einträge nicht laden</strong><br>
                             <span class="error-message"></span>
                         </span>

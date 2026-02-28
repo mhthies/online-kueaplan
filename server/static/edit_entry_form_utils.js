@@ -119,6 +119,7 @@ function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId, daySelect, beginI
 
     function activateSpinner() {
         errorBox.classList.add("d-none");
+        resultsList.setAttribute("aria-hidden", "true")
         spinner.classList.remove("d-none");
         overlay.classList.remove("d-none");
     }
@@ -139,6 +140,7 @@ function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId, daySelect, beginI
             resultsList.appendChild(infoRow);
         }
         overlay.classList.add("d-none");
+        resultsList.setAttribute("aria-hidden", "false")
     }
 
     function generateResultRow(entry, selectedRooms) {
@@ -198,6 +200,7 @@ function ConcurrentEntriesFetcher(rooms, apiEndpoint, entryId, daySelect, beginI
         spinner.classList.add("d-none");
         errorBox.getElementsByClassName("error-message")[0].innerText = error;
         errorBox.classList.remove("d-none");
+        resultsList.setAttribute("aria-hidden", "true")
     }
 
     this.scheduleFetching = function () {

@@ -49,6 +49,8 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::edit_entry::edit_entry)
         .service(endpoints::edit_entry::new_entry_form)
         .service(endpoints::edit_entry::new_entry)
+        .service(endpoints::participant_submit_entry::participant_submit_entry)
+        .service(endpoints::participant_submit_entry::participant_submit_entry_form)
         .service(endpoints::previous_dates::previous_dates_overview)
         .service(endpoints::previous_dates::delete_previous_date)
         .service(endpoints::new_previous_date::new_previous_date_form)

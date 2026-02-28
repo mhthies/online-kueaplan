@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ base.url_for_static("tom-select.bootstrap5.min.css")? }}">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8" id="main">
+            <h1>
+                {{ base.page_title }}
+            </h1>
+
+            <form method="post" action="{{post_url()?}}" id="submit_entry_form"
+                  {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
+
+                <ul class="nav nav-underline mb-3 align-self-center" id="form-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="base-tab" data-bs-toggle="tab" data-bs-target="#base-tab-pane" type="button" role="tab" aria-controls="base-tab-pane" aria-selected="true">1. Start</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="time-place-tab" data-bs-toggle="tab" data-bs-target="#time-place-tab-pane" type="button" role="tab" aria-controls="time-place-tab-pane" aria-selected="false">2. Zeit & Ort</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="false">3. Beschreibung</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="base-tab-pane" role="tabpanel" aria-labelledby="base-tab" tabindex="0">
+                        <div class="mb-3">
+                            {{ FormFieldTemplate::new(form_data.title, "title", "Titel der KüA").size(InputSize::Large) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ FormFieldTemplate::new(form_data.responsible_person, "responsible_person", "von wem?")
+                                   .info("Wer bietet die KüA an? Bitte nenne hier mindestens eine konkrete Ansprechperson mit Namen, für Rückfragen durch Orgas und andere Teilnehmende.") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ SelectTemplate::new(form_data.category, "category", &category_entries(), "Kategorie").info("Bitte wähle die am besten passende Kategorie aus.") }}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary float-end" data-tab-button="next">Weiter <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                            <a href="{{ abort_url()? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+                                <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="time-place-tab-pane" role="tabpanel" aria-labelledby="time-place-tab" tabindex="0">
+                        <div class="mb-3">
+                            {% if event.clock_info.effective_begin_of_day != chrono::NaiveTime::from_hms_opt(0,0,0).unwrap() %}
+                                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag")
+                                        .info(&format!(
+                                            "Beachte, dass Akademie-Tage erst um {0} Uhr am folgenden Kalendertag enden.",
+                                            self.event.clock_info.effective_begin_of_day.format("%-H:%M"))) }}
+                            {% else %}
+                                {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag") }}
+                            {% endif %}
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6 col-sm-4">
+                                {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn")
+                                       .input_type(InputType::Time) }}
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                {{ FormFieldTemplate::new(form_data.duration, "duration", "Dauer")
+                                       .info("Angabe in Stunden mit Komma (1,5) oder Stunden:Minuten (1:30)")
+                                       .suffix_text("h") }}
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label for="endInput" class="form-label">Ende</label>
+                                <input class="form-control" type="text" value="0:00" id="endInput" disabled="disabled" aria-live="polite">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ FormFieldTemplate::new(form_data.time_comment, "time_comment", "Kommentar zur Zeit")
+                            .info("z.B. mögliche Änderungen der Zeit, wie „Nach dem Literaturabend“") }}
+                        </div>
+                        <hr class="mb-4 mt-4" />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ FormFieldTemplate::new(form_data.rooms, "rooms", "Orte")
+                                           .info("Wähle hier den Ort oder die Orte aus, an denen die KüA hauptsächlich stattfinden soll. Wenn es einen abweichenden Treffpunkt gibt, trage diesen stattdessen unten als Kommentar zum Ort ein.") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ FormFieldTemplate::new(form_data.room_comment, "room_comment", "Kommentar zum Ort")
+                                           .info("z.B. Treffpunkt") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-info" aria-live="polite" role="complementary" aria-labelledby="parallelEntriesHeading">
+                                    <div class="card-header border-info" id="parallelEntriesHeading">
+                                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                        Parallele Einträge
+                                    </div>
+                                    <div class="position-relative" id="parallelEntriesBox">
+                                        <div class="overflow-y-auto" style="height: 280px; max-height: 65vh;">
+                                            <ul class="list-group list-group-flush entries-fetcher-results" aria-hidden="true">
+                                            </ul>
+                                        </div>
+                                        <div class="loader-overlay">
+                                            <div class="spinner-border entries-fetcher-spinner" role="status">
+                                                <span class="visually-hidden">Loading</span>
+                                            </div>
+                                            <span class="text-danger text-center entries-fetcher-error d-none" role="status">
+                                                <strong>Konnte parallele Einträge nicht laden</strong><br>
+                                                <span class="error-message"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary float-end" data-tab-button="next">Weiter <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" data-tab-button="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Zurück</button>
+                            <a href="{{ abort_url()? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+                                <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="description-tab-pane" role="tabpanel" aria-labelledby="description-tab" tabindex="0">
+                        <div class="mb-3">
+                            {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar / Kurze Beschreibung")
+                            .size(InputSize::Small)
+                            .info("Wird unter dem Titel angezeigt. Für kurze Erläuterungen oder Hinweise.") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ FormFieldTemplate::new(form_data.description, "description", "Ausführliche Beschreibung")
+                                    .input_type(InputType::Textarea)
+                                    .info("Unterstützt Markdown")
+                            }}
+                        </div>
+
+                        {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")? }}
+                        <div>
+                            <div class="d-inline-block float-end">
+                                <button type="submit" class="btn btn-secondary mb-1">
+                                    <i class="bi bi-send-fill" aria-hidden="true"></i>
+                                    zum Review einreichen
+                                </button>
+                                <button type="submit" class="btn btn-primary mb-1">
+                                    <i class="bi bi-save" aria-hidden="true"></i>
+                                    Veröffentlichen
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" data-tab-button="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Zurück</button>
+                            <a href="{{ abort_url()? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+                                <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ base.url_for_static("protect_changes.js")? }}"></script>
+<script src="{{ base.url_for_static("edit_entry_form_utils.js")? }}"></script>
+<script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
+<script src="{{ base.url_for_static("tabbed-form.js")? }}"></script>
+<script src="{{ base.url_for_static("submit_entry_form.js")? }}"></script>
+<script>
+    const rooms = {{ room_entries()|json|safe }};
+    new TomSelect("#roomsInput", {
+        options: rooms,
+        clearAfterSelect: true
+    });
+    protectChanges(document.getElementById("submit_entry_form"));
+    initializeSubmitEntryForm(
+        {{ effective_begin_of_day_milliseconds() }},
+        rooms,
+        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }}
+    );
+    initializeTabbedForm(document.getElementById("form-tabs"));
+</script>
+{% endblock %}

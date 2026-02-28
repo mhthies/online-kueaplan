@@ -39,17 +39,17 @@ def get_table_cell_by_header(table_row: Locator, header_text: str | Pattern[str]
 
 def assert_small_font(locator: Locator) -> None:
     """Asserts that the element located by the locator has a smaller font size than normal"""
-    font_weight = locator.evaluate("el => window.getComputedStyle(el).getPropertyValue('font-size')")
-    font_weight_match = re.match(r"(\d+(\.\d+)?)px", font_weight)
-    assert font_weight_match is not None
-    font_weight_value = float(font_weight_match.group(1))
-    body_font_weight = locator.page.evaluate(
+    font_size = locator.evaluate("el => window.getComputedStyle(el).getPropertyValue('font-size')")
+    font_size_match = re.match(r"(\d+(\.\d+)?)px", font_size)
+    assert font_size_match is not None
+    font_size_value = float(font_size_match.group(1))
+    body_font_size = locator.page.evaluate(
         "() => window.getComputedStyle(document.body).getPropertyValue('font-size')"
     )
-    body_font_weight_match = re.match(r"(\d+(\.\d+)?)px", body_font_weight)
-    assert body_font_weight_match is not None
-    body_font_weight_value = float(body_font_weight_match.group(1))
-    assert font_weight_value < body_font_weight_value
+    body_font_size_match = re.match(r"(\d+(\.\d+)?)px", body_font_size)
+    assert body_font_size_match is not None
+    body_font_size_value = float(body_font_size_match.group(1))
+    assert font_size_value < body_font_size_value
 
 
 def is_line_through(locator: Locator) -> bool:

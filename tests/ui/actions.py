@@ -146,9 +146,9 @@ def add_announcement(page: Page, announcement: Announcement) -> None:
         page.get_by_role("combobox", name="bis Datum").select_option(label=announcement.end_date.strftime("%d.%m."))
     if announcement.show_with_categories:
         page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Kategorie").check()
-    for room in announcement.categories:
-        page.get_by_role("combobox", name="Kategorien").fill(room)
-        page.get_by_role("option", name=room).click()
+    for category in announcement.categories:
+        page.get_by_role("combobox", name="Kategorien").fill(category)
+        page.get_by_role("option", name=category, exact=True).click()
     if announcement.show_with_rooms:
         page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Raum").check()
     for room in announcement.rooms:

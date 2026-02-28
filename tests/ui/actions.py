@@ -54,7 +54,7 @@ def add_entry(page: Page, entry: Entry) -> None:
     page.get_by_role("textbox", name="Kommentar zur Zeit").fill(entry.time_comment)
     for room in entry.rooms:
         page.get_by_role("combobox", name="Orte").fill(room)
-        page.get_by_role("option", name=room).click()
+        page.get_by_role("option", name=room, exact=True).click()
     page.get_by_role("textbox", name="Kommentar zum Ort").fill(entry.room_comment)
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(entry.description)
     page.get_by_role("button", name="Erstellen").click()
@@ -153,7 +153,7 @@ def add_announcement(page: Page, announcement: Announcement) -> None:
         page.get_by_role("checkbox", name="Anzeigen im KüA-Plan nach Raum").check()
     for room in announcement.rooms:
         page.get_by_role("combobox", name="Räume").fill(room)
-        page.get_by_role("option", name=room).click()
+        page.get_by_role("option", name=room, exact=True).click()
 
     page.get_by_role("button", name="Erstellen").click()
     success_alert = page.get_by_role("alert").filter(has_text="Erfolg")

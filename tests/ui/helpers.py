@@ -43,9 +43,7 @@ def assert_small_font(locator: Locator) -> None:
     font_size_match = re.match(r"(\d+(\.\d+)?)px", font_size)
     assert font_size_match is not None
     font_size_value = float(font_size_match.group(1))
-    body_font_size = locator.page.evaluate(
-        "() => window.getComputedStyle(document.body).getPropertyValue('font-size')"
-    )
+    body_font_size = locator.page.evaluate("() => window.getComputedStyle(document.body).getPropertyValue('font-size')")
     body_font_size_match = re.match(r"(\d+(\.\d+)?)px", body_font_size)
     assert body_font_size_match is not None
     body_font_size_value = float(body_font_size_match.group(1))
@@ -59,3 +57,16 @@ def is_line_through(locator: Locator) -> bool:
                 getComputedStyle(e)
                 .getPropertyValue('text-decoration-line')
                 == 'line-through'))""")
+
+
+def is_text_bold(locator: Locator) -> bool:
+    css_font_weight = locator.evaluate("el => window.getComputedStyle(el).getPropertyValue('font-weight')")
+    return int(css_font_weight) > 400
+
+
+def is_text_colored(locator: Locator) -> bool:
+    css_color = locator.evaluate("el => window.getComputedStyle(el).getPropertyValue('color')")
+    match = re.search(r"\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)", css_color)
+    assert match
+    r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
+    return abs(min(r, g, b) - max(r, g, b)) > 20

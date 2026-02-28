@@ -14,6 +14,24 @@ ROOM_PELIKANHALLE = Room(title="Pelikanhalle")
 ROOM_SEMINARRAUM = Room(title="Seminarraum Pelikanhalle")
 
 
+ENTRY_PLENUMSVORBEREITUNG = Entry(
+    title="Plenums-Vorbereitung",
+    day=datetime.date(2025, 1, 1),
+    begin=datetime.time(19, 30),
+    duration=datetime.timedelta(minutes=30),
+    responsible_person="Orgas",
+    rooms=["Seminarraum Pelikanhalle", "Pelikanhalle"],
+    is_room_reservation=True,
+)
+ENTRY_PLENUM = Entry(
+    title="Plenum",
+    day=datetime.date(2025, 1, 1),
+    begin=datetime.time(20, 0),
+    duration=datetime.timedelta(minutes=45),
+    responsible_person="Orgas",
+    rooms=["Pelikanhalle"],
+    is_exclusive=True,
+)
 ENTRY_BEACH_VOLLEYBALL = Entry(
     title="Beach-Volleyball",
     day=datetime.date(2025, 1, 4),

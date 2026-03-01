@@ -4,8 +4,8 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     const durationInput = document.getElementById("durationInput");
     const roomsInput = document.getElementById("roomsInput");
 
-    const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
-    const endTimeInfoElement = createEndTimeInfoElement(durationInput);
+    const calendarDateInfoElement = createCalendarDateInfoElement(document.getElementById("beginDescription"));
+    const endTimeInfoElement = createEndTimeInfoElement(document.getElementById("durationDescription"));
 
     const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
         document.getElementById("parallelEntriesBox"),
@@ -64,24 +64,30 @@ function updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMill
     let beginIsAfterMidnight = naiveBeginTime.getTime() < effectiveBeginOfDayMilliseconds;
     if (beginIsAfterMidnight) {
         calendarDateInfoElement.classList.remove("d-none");
-        calendarDateInfoElement.getElementsByTagName("span")[0].innerText = formatDate(nextDay);
+        calendarDateInfoElement.getElementsByClassName("value")[0].innerText = formatDate(nextDay);
     } else {
         calendarDateInfoElement.classList.add("d-none");
     }
 }
 
-function createCalendarDateInfoElement(beginInput) {
+function createCalendarDateInfoElement(insertAfterElement) {
     let element = document.createElement("div");
     element.classList.add("form-text", "d-none", "text-info");
     element.id = "calendarDateInfo";
+    element.setAttribute("aria-live", "polite");
     const icon = document.createElement("i");
     icon.classList.add("bi", "bi-calendar-event-fill");
     icon.title = "Kalendertag";
+    const iconDescription = document.createElement("span");
+    iconDescription.classList.add("visually-hidden");
+    iconDescription.innerText = "Kalendertag:";
+    icon.appendChild(iconDescription);
     const text = document.createElement("span");
+    text.classList.add("value");
     element.appendChild(icon);
     element.appendChild(document.createTextNode(" "));
     element.appendChild(text)
-    beginInput.parentElement.insertBefore(element, null);
+    insertAfterElement.after(element);
     return element;
 }
 
@@ -102,14 +108,14 @@ function updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, 
         (displayEndDate ? formatDate(endDate) + " " : "") + formatTime(endDate);
 }
 
-function createEndTimeInfoElement(durationInput) {
+function createEndTimeInfoElement(insertAfterElement) {
     let element = document.createElement("div");
+    element.setAttribute("aria-live", "polite");
     element.classList.add("form-text");
     element.id = "endTimeInfo";
     const text = document.createElement("span");
     element.appendChild(document.createTextNode("Ende: "));
     element.appendChild(text)
-    // durationInput is wrapped in an input group
-    durationInput.parentElement.parentElement.insertBefore(element, null);
+    insertAfterElement.appendChild(element);
     return element;
 }

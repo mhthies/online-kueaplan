@@ -110,12 +110,12 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> N
     begin_input.fill("02:00")
     calendar_date_indicator = begin_input.locator("..").locator("#calendarDateInfo")
     expect(calendar_date_indicator).to_be_visible()
-    expect(calendar_date_indicator).to_have_text("04.01.")
+    expect(calendar_date_indicator).to_have_text("Kalendertag: 04.01.")
     expect(calendar_date_indicator).to_have_css("color", "rgb(13, 202, 240)")
 
     date_input.select_option("04.01. (Sa)")
     expect(calendar_date_indicator).to_be_visible()
-    expect(calendar_date_indicator).to_have_text("05.01.")
+    expect(calendar_date_indicator).to_have_text("Kalendertag: 05.01.")
 
     begin_input.fill("06:00")
     expect(calendar_date_indicator).not_to_be_visible()

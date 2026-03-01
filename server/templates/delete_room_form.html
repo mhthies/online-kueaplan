@@ -32,12 +32,12 @@
 
     <div class="row mb-3 g-3">
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Zu löschender Ort</div>
+            <section class="card mb-3" aria-labelledby="room-data-heading">
+                <div class="card-header" id="room-data-heading">Zu löschender Ort</div>
                 <div class="card-body">
                     <strong>{{room.title}}</strong>
                 </div>
-            </div>
+            </section>
             <div class="mb-3">
                 {{ FormFieldTemplate::new(form_data.replace_rooms, "replace_rooms", "Einträge in folgende Orte verschieben") }}
             </div>
@@ -46,9 +46,10 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card border-info">
+            <section class="card border-info" aria-labelledby="affected-entries-heading">
                 <div class="card-header border-info">
-                    Betroffene Einträge <span class="badge text-bg-info">{{ room_entries.len() }}</span>
+                    <span id="affected-entries-heading">Betroffene Einträge</span>
+                    <span class="badge text-bg-info"><span class="visually-hidden">Anzahl: </span>{{ room_entries.len() }}</span>
                 </div>
                 <div class="card-body">
                     {% if room_entries.len() == 0 %}
@@ -71,7 +72,7 @@
                         </ul>
                     {% endif %}
                 </div>
-            </div>
+            </section>
         </div>
     </div>
     <div class="card border-danger mb-3">

@@ -103,6 +103,5 @@
     new TomSelect("#replace_roomsInput", {
         options: {{ &other_room_entries()|json|safe }}
     });
-    protectChanges(document.getElementById("delete_room_form"));
 </script>
 {% endblock %}

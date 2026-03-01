@@ -58,7 +58,7 @@ pub async fn delete_room_form(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         room,
         all_rooms: &rooms,
@@ -197,7 +197,7 @@ pub async fn delete_room(
             active_main_nav_button: Some(MainNavButton::Configuration),
         },
         base_config: BaseConfigTemplateContext {
-            active_nav_button: ConfigNavButton::Categories,
+            active_nav_button: ConfigNavButton::Rooms,
         },
         room,
         all_rooms: &rooms,

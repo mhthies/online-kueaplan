@@ -101,7 +101,8 @@
 <script src="{{ base.url_for_static("tom-select.base.min.js")? }}"></script>
 <script>
     new TomSelect("#replace_roomsInput", {
-        options: {{ &other_room_entries()|json|safe }}
+        options: {{ &other_room_entries()|json|safe }},
+        clearAfterSelect: true
     });
 </script>
 {% endblock %}

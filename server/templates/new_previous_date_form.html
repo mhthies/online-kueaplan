@@ -77,7 +77,8 @@
 <script>
     const rooms = {{ room_entries()|json|safe }};
     new TomSelect("#roomsInput", {
-        options: rooms
+        options: rooms,
+        clearAfterSelect: true
     });
     protectChanges(document.getElementById("new_previous_date_form"));
 </script>

@@ -148,7 +148,8 @@
     const rooms = {{ room_entries()|json|safe }};
     const entryId = {% if let Some(entry_id) = entry_id %}{{entry_id.to_string()|json|safe}}{% else %}null{%endif%};
     new TomSelect("#roomsInput", {
-        options: rooms
+        options: rooms,
+        clearAfterSelect: true
     });
     protectChanges(document.getElementById("edit_entry_form"));
     initializeEditEntryForm(

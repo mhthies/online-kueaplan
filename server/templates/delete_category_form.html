@@ -28,21 +28,22 @@
 
     <div class="row mb-3 g-3">
         <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Zu löschende Kategorie</div>
+            <section class="card mb-3" aria-labelledby="category-data-heading">
+                <div class="card-header" id="category-data-heading">Zu löschende Kategorie</div>
                 <div class="card-body">
                     <strong>{{category.title}}</strong>
                     {% if !category.icon.is_empty() %}
                         ({{ category.icon }})
                     {% endif %}
                 </div>
-            </div>
+            </section>
             {{ SelectTemplate::new(form_data.replace_category, "replace_category", &other_category_entries(), "Einträge in folgende Kategorie verschieben") }}
         </div>
         <div class="col-md-6">
-            <div class="card border-info">
+            <section class="card border-info" aria-labelledby="affected-entries-heading">
                 <div class="card-header border-info">
-                    Betroffene Einträge <span class="badge text-bg-info">{{ category_entries.len() }}</span>
+                    <span id="affected-entries-heading">Betroffene Einträge</span>
+                    <span class="badge text-bg-info"><span class="visually-hidden">Anzahl: </span>{{ category_entries.len() }}</span>
                 </div>
                 <div class="card-body">
                     {% if category_entries.len() == 0 %}
@@ -65,7 +66,7 @@
                         </ul>
                     {% endif %}
                 </div>
-            </div>
+            </section>
         </div>
     </div>
     <div class="card border-danger mb-3">

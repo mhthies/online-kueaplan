@@ -24,19 +24,22 @@ function updateThemeButtonIcon(button) {
     const icon = button.getElementsByClassName("bi")[0];
     icon.classList.remove("bi-circle-half", "bi-moon", "bi-sun");
     let colorMode = getCookie("theme");
+    let label = "";
     if (colorMode === "dark") {
         icon.classList.add("bi-moon");
-        button.title = "Style-Umschaltung. Aktuell: hell";
+        label = "Style-Umschaltung. Aktuell: hell";
         button.setAttribute("data-next-theme", "light");
     } else if (colorMode === "light") {
         icon.classList.add("bi-sun");
-        button.title = "Style-Umschaltung. Aktuell: dunkel";
+        label = "Style-Umschaltung. Aktuell: dunkel";
         button.setAttribute("data-next-theme", "auto");
     } else {
         icon.classList.add("bi-circle-half");
-        button.title = "Style-Umschaltung. Aktuell: System-abhängig";
+        label = "Style-Umschaltung. Aktuell: System-abhängig";
         button.setAttribute("data-next-theme", "dark");
     }
+    button.title = label;
+    button.setAttribute("aria-label", label);
 }
 
 function onThemeButtonClick(button) {

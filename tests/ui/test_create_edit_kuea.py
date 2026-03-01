@@ -1,3 +1,5 @@
+import dataclasses
+import datetime
 import re
 
 from playwright.sync_api import Page, expect
@@ -7,9 +9,14 @@ from .data import (
     ANNOUNCEMENT_SPORTPLATZ_NASS,
     CATEGORY_SPORT,
     ENTRY_BEACH_VOLLEYBALL,
+    ENTRY_BEGRUESSUNGSPLENUM,
+    ENTRY_PLENUMSVORBEREITUNG,
     ENTRY_SONNENAUFGANG_WANDERUNG,
+    ROOM_PELIKANHALLE,
+    ROOM_SEMINARRAUM,
     ROOM_SPORTPLAETZE,
 )
+from .helpers import is_text_bold, is_text_colored
 
 
 def test_create_sample_data(page: Page, reset_database: None) -> None:
@@ -22,6 +29,8 @@ def test_create_sample_data(page: Page, reset_database: None) -> None:
 
 
 def test_create_entry(page: Page, reset_database: None) -> None:
+    # Note: This test is somehow redundant to test_main_list_entry_attributes(), but also tests some different aspects
+    #   of the add_entry form.
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
     page.get_by_role("link", name="Eintrag hinzufügen").click()
@@ -43,8 +52,6 @@ def test_create_entry(page: Page, reset_database: None) -> None:
     )
     page.get_by_role("button", name="Erstellen").click()
     expect(page).to_have_title(re.compile(r"06\.01\."))
-
-    # TODO room
 
     main_table = page.get_by_role("table")
     expect(main_table.get_by_role("row")).to_have_count(2)
@@ -103,12 +110,12 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> N
     begin_input.fill("02:00")
     calendar_date_indicator = begin_input.locator("..").locator("#calendarDateInfo")
     expect(calendar_date_indicator).to_be_visible()
-    expect(calendar_date_indicator).to_have_text("04.01.")
+    expect(calendar_date_indicator).to_have_text("Kalendertag: 04.01.")
     expect(calendar_date_indicator).to_have_css("color", "rgb(13, 202, 240)")
 
     date_input.select_option("04.01. (Sa)")
     expect(calendar_date_indicator).to_be_visible()
-    expect(calendar_date_indicator).to_have_text("05.01.")
+    expect(calendar_date_indicator).to_have_text("Kalendertag: 05.01.")
 
     begin_input.fill("06:00")
     expect(calendar_date_indicator).not_to_be_visible()
@@ -147,7 +154,71 @@ def test_create_entry_end_time_info_indicator(page: Page, reset_database: None) 
     expect(end_time_indicator).to_have_text("Ende: ???")
 
 
-# TODO test parallel entries
+def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_category(page, CATEGORY_SPORT)
+    actions.add_room(page, ROOM_SPORTPLAETZE)
+    actions.add_room(page, ROOM_PELIKANHALLE)
+    actions.add_room(page, ROOM_SEMINARRAUM)
+    actions.add_entry(
+        page,
+        dataclasses.replace(
+            ENTRY_BEACH_VOLLEYBALL,
+            day=datetime.date(2025, 1, 1),
+            begin=datetime.time(18, 30),
+            duration=datetime.timedelta(hours=1, minutes=20, seconds=20),
+            time_comment="Schnell noch vor dem Plenum :)",
+        ),
+    )
+    actions.add_entry(page, ENTRY_BEGRUESSUNGSPLENUM)  # from 20:00
+    actions.add_entry(page, ENTRY_PLENUMSVORBEREITUNG)  # 19:30 – 20:00
+
+    expect(page).to_have_title(re.compile(r"01\.01\."))
+    page.get_by_role("link", name="Eintrag hinzufügen").click()
+
+    expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
+    page.get_by_role("combobox", name="Tag").select_option("01.01. (Mi)")
+    page.get_by_role("combobox", name="Orte").fill("Seminarraum Pelikanhalle")
+    page.get_by_role("option", name="Seminarraum Pelikanhalle").click()
+
+    begin_input = page.get_by_role("textbox", name="Beginn")
+    duration_input = page.get_by_role("textbox", name="Dauer")
+    parallel_entries_box = page.get_by_role("complementary", name="Parallele Einträge")
+    parallel_entries_overlays = parallel_entries_box.get_by_role("status")
+
+    begin_input.fill("08:00")
+    duration_input.fill("1:00")
+    expect(parallel_entries_overlays).not_to_be_visible()
+    expect(parallel_entries_box).to_contain_text("Keine parallelen Einträge")
+
+    begin_input.fill("18:00")
+    expect(parallel_entries_overlays).not_to_be_visible()
+    expect(parallel_entries_box).not_to_contain_text("Keine parallelen Einträge")
+    list_item = parallel_entries_box.get_by_role("listitem")
+    expect(list_item).to_have_count(1)
+    expect(list_item).to_contain_text("Beach-Volleyball")
+    expect(list_item).to_contain_text("18:30 – 19:50")
+
+    begin_input.fill("18:30")
+    expect(parallel_entries_overlays).not_to_be_visible()
+    expect(list_item).to_have_count(1)
+
+    begin_input.fill("19:30")
+    expect(list_item).to_have_count(3)
+    # Items should be ordered from most problematic to least problematic (and then by time)
+    items = list_item.all()
+    expect(items[0]).to_contain_text("Begrüßungsplenum")  # exclusive
+    expect(items[0]).to_contain_text("exklusiv")
+    expect(items[1]).to_contain_text("Plenums-Vorbereitung")  # room conflict
+    expect(items[1]).to_contain_text("Pelikanhalle, Seminarraum Pelikanhalle")
+    assert is_text_bold(items[1].get_by_text("Seminarraum Pelikanhalle"))
+    assert is_text_colored(items[1].get_by_text("Seminarraum Pelikanhalle"))
+    expect(items[2]).to_contain_text("Beach-Volleyball")  # no conflict
+    assert not is_text_colored(items[2].get_by_text("Sportplätze"))
+
+    duration_input.fill("test")
+    expect(parallel_entries_overlays).to_be_visible()
+    expect(parallel_entries_overlays).to_contain_text("Ungültige Eingabedaten")
 
 
 def test_clone_entry(page: Page, reset_database: None) -> None:

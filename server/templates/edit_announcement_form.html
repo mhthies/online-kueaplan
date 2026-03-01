@@ -88,10 +88,12 @@
     const categories = {{ category_entries()|json|safe }};
     protectChanges(document.getElementById("edit_announcement_form"));
     new TomSelect("#roomsInput", {
-        options: rooms
+        options: rooms,
+        clearAfterSelect: true
     });
     new TomSelect("#categoriesInput", {
-        options: categories
+        options: categories,
+        clearAfterSelect: true
     });
 </script>
 {% endblock %}

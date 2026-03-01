@@ -1,12 +1,15 @@
 {% macro info_and_errors(info, errors) %}
-    {% if let Some(info) = info %}
-        <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle"></i> {{info}}</div>
-    {% endif %}
-    {% if !errors.is_empty() %}
-        <div id="{{name}}Errors" class="invalid-feedback">
-            {% for error in errors %}
-                <div>{{error}}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
+    <div id="{{name}}Description">
+        {% if let Some(info) = info %}
+            <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle" aria-hidden="true"></i><span class="visually-hidden">Info:</span> {{info}}</div>
+        {% endif %}
+        {% if !errors.is_empty() %}
+            <div id="{{name}}Errors" class="invalid-feedback">
+                <span class="visually-hidden">Fehler:</span>
+                {% for error in errors %}
+                    <div>{{error}}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 {% endmacro %}

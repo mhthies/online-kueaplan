@@ -50,7 +50,7 @@
         <h2 class="card-header h4">
             Zeitplan-Abschnitte
             {% if form_data.default_time_schedule.has_errors() %}
-                <i class="bi bi-exclamation-circle text-danger float-end" title="Enthält Validierungsfehler"><span class="visually-hidden">Enthält Validierungsfehler</span></i>
+                <i class="bi bi-exclamation-circle text-danger float-end" title="Enthält Validierungsfehler" aria-hidden="true"></i><span class="visually-hidden">Enthält Validierungsfehler</span>
             {% endif %}
         </h2>
         <div class="card-body">

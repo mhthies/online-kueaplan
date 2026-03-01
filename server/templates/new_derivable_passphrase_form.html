@@ -13,7 +13,7 @@
             {% if !parent_passphrase.comment.is_empty() %}
                 ({{parent_passphrase.comment}})
             {% endif %}<br>
-            &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu"></i>
+            &emsp;<i class="bi bi-arrow-return-right text-secondary" title="ableitbar zu" aria-hidden="true"></i><span class="visually-hidden">ableitbar zu</span>
             {{self::format_access_role(new_access_role)}}
         </div>
     </div>

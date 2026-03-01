@@ -77,14 +77,15 @@ function createCalendarDateInfoElement(insertAfterElement) {
     element.setAttribute("aria-live", "polite");
     const icon = document.createElement("i");
     icon.classList.add("bi", "bi-calendar-event-fill");
+    icon.setAttribute("aria-hidden", "true");
     icon.title = "Kalendertag";
     const iconDescription = document.createElement("span");
     iconDescription.classList.add("visually-hidden");
     iconDescription.innerText = "Kalendertag:";
-    icon.appendChild(iconDescription);
     const text = document.createElement("span");
     text.classList.add("value");
     element.appendChild(icon);
+    element.appendChild(iconDescription);
     element.appendChild(document.createTextNode(" "));
     element.appendChild(text)
     insertAfterElement.after(element);

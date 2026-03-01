@@ -3,7 +3,7 @@
 {% block config_content %}
 <div class="text-center">
     <div class="alert alert-info d-print-none text-start">
-        <i class="bi bi-info-circle"></i>
+        <i class="bi bi-info-circle" aria-hidden="true"></i><span class="visually-hidden">Info:</span>
         Diese Seite kann direkt als Aushang ausgedruckt werden. Einfach die normale Druck-Funktion des Web-Browsers (meist <kbd>Strg</kbd>+<kbd>P</kbd>) verwenden.
     </div>
     <h1>Online-KüA-Plan</h1>
@@ -62,7 +62,7 @@
         {% endif %}
     {% else %}
         <div class="alert alert-info d-print-none text-start mt-5">
-            <i class="bi bi-info-circle"></i>
+            <i class="bi bi-info-circle" aria-hidden="true"></i><span class="visually-hidden">Info:</span>
             Admins dieser Veranstaltung können hier auch die Passphrase anzeigen lassen, um sie mit auf den Aushang zu drucken.
             <a href="{{ admin_login_url()? }}">Zum Admin-Login…</a>
         </div>

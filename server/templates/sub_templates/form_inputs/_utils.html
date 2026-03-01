@@ -1,7 +1,7 @@
 {% macro info_and_errors(info, errors) %}
     <div id="{{name}}Description">
         {% if let Some(info) = info %}
-            <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle"><span class="visually-hidden">Info:</span></i> {{info}}</div>
+            <div id="{{name}}Help" class="form-text"><i class="bi bi-info-circle" aria-hidden="true"></i><span class="visually-hidden">Info:</span> {{info}}</div>
         {% endif %}
         {% if !errors.is_empty() %}
             <div id="{{name}}Errors" class="invalid-feedback">

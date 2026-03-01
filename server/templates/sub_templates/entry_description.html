@@ -1,5 +1,5 @@
 <section>
-    <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink"><i class="bi-link"></i></a></h3>
+    <h3 id="entry-desc-{{ entry.entry.id.to_string() }}">{{ entry.entry.title }} <a href="#entry-{{ entry.entry.id.to_string() }}" class="entry-backlink" aria-label="Springe zurück zum Eintrag"><i class="bi-link"></i></a></h3>
     <p>
         {{ to_our_timezone(entry.entry.begin).format("%d.%m. %H:%M") -}}
         {% if !entry.room_ids.is_empty() %} • {% endif -%}

@@ -23,8 +23,8 @@ ENTRY_PLENUMSVORBEREITUNG = Entry(
     rooms=["Seminarraum Pelikanhalle", "Pelikanhalle"],
     is_room_reservation=True,
 )
-ENTRY_PLENUM = Entry(
-    title="Plenum",
+ENTRY_BEGRUESSUNGSPLENUM = Entry(
+    title="Begrüßungsplenum",
     day=datetime.date(2025, 1, 1),
     begin=datetime.time(20, 0),
     duration=datetime.timedelta(minutes=45),

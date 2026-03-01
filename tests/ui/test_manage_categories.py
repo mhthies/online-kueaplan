@@ -70,7 +70,7 @@ def test_delete_category(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     actions.add_category(page, actions.Category("Plenum", "📢", "#12143b", 20, True))
     actions.add_category(page, data.CATEGORY_SPORT)
-    actions.add_entry(page, dataclasses.replace(data.ENTRY_PLENUM, category="Plenum", rooms=[]))
+    actions.add_entry(page, dataclasses.replace(data.ENTRY_BEGRUESSUNGSPLENUM, category="Plenum", rooms=[]))
     actions.add_entry(page, dataclasses.replace(data.ENTRY_BEACH_VOLLEYBALL, rooms=[]))
 
     page.get_by_role("link", name="Konfiguration").click()
@@ -85,7 +85,7 @@ def test_delete_category(page: Page, reset_database: None) -> None:
     expect(page.get_by_text("Betroffene Einträge")).to_be_visible()
     expect(page.get_by_role("region", name="Betroffene Einträge")).to_contain_text("Anzahl: 1")
     expect(page.get_by_role("region", name="Betroffene Einträge")).to_contain_text(
-        re.compile(r".*Plenum.*Orgas.*01\.01\.\s*20:00.*", re.DOTALL)
+        re.compile(r".*Begrüßungsplenum.*Orgas.*01\.01\.\s*20:00.*", re.DOTALL)
     )
     expect(page.get_by_role("region", name="Betroffene Einträge")).not_to_contain_text("Beach-Volleyball")
     page.get_by_role("combobox", name="Einträge in folgende Kategorie verschieben").select_option(label="Default")
@@ -103,5 +103,5 @@ def test_delete_category(page: Page, reset_database: None) -> None:
     expect(page.get_by_role("link", name="Sport")).to_be_visible()
     expect(page.get_by_role("link", name="Plenum")).not_to_be_visible()
     page.get_by_role("link", name="Default").click()
-    entry_row = get_table_row_by_column_value(page, "Was?", "Plenum")
+    entry_row = get_table_row_by_column_value(page, "Was?", "Begrüßungsplenum")
     expect(entry_row).to_be_visible()

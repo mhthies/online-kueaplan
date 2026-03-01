@@ -9,7 +9,7 @@ from .data import (
     ANNOUNCEMENT_SPORTPLATZ_NASS,
     CATEGORY_SPORT,
     ENTRY_BEACH_VOLLEYBALL,
-    ENTRY_PLENUM,
+    ENTRY_BEGRUESSUNGSPLENUM,
     ENTRY_PLENUMSVORBEREITUNG,
     ENTRY_SONNENAUFGANG_WANDERUNG,
     ROOM_PELIKANHALLE,
@@ -170,7 +170,7 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
             time_comment="Schnell noch vor dem Plenum :)",
         ),
     )
-    actions.add_entry(page, ENTRY_PLENUM)  # from 20:00
+    actions.add_entry(page, ENTRY_BEGRUESSUNGSPLENUM)  # from 20:00
     actions.add_entry(page, ENTRY_PLENUMSVORBEREITUNG)  # 19:30 – 20:00
 
     expect(page).to_have_title(re.compile(r"01\.01\."))
@@ -207,7 +207,7 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
     expect(list_item).to_have_count(3)
     # Items should be ordered from most problematic to least problematic (and then by time)
     items = list_item.all()
-    expect(items[0]).to_contain_text("Plenum")  # exclusive
+    expect(items[0]).to_contain_text("Begrüßungsplenum")  # exclusive
     expect(items[0]).to_contain_text("exklusiv")
     expect(items[1]).to_contain_text("Plenums-Vorbereitung")  # room conflict
     expect(items[1]).to_contain_text("Pelikanhalle, Seminarraum Pelikanhalle")

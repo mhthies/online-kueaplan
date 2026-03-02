@@ -6,7 +6,7 @@ import pytest
 from tests.conftest import ApiClientWrapper
 
 
-def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_announcement(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -40,7 +40,7 @@ def test_create_or_update_announcement(generated_api_client: ApiClientWrapper) -
     assert result[0] == announcement
 
 
-def test_change_announcement(generated_api_client: ApiClientWrapper) -> None:
+def test_change_announcement(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -70,7 +70,7 @@ def test_change_announcement(generated_api_client: ApiClientWrapper) -> None:
     assert result[0].text == "Now, the Announcement text is shorter."
 
 
-def test_create_or_update_announcement_errors(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_announcement_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     event_id = 1

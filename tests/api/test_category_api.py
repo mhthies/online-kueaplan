@@ -5,7 +5,7 @@ import pytest
 from tests.conftest import ApiClientWrapper
 
 
-def test_list_categories(generated_api_client: ApiClientWrapper) -> None:
+def test_list_categories(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "user")
     result = generated_api_client.client.list_categories(EVENT_ID)
@@ -13,7 +13,7 @@ def test_list_categories(generated_api_client: ApiClientWrapper) -> None:
     assert result[0].title == "Default"
 
 
-def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_category(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -39,7 +39,7 @@ def test_create_or_update_category(generated_api_client: ApiClientWrapper) -> No
     assert result[1] == category
 
 
-def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     event_id = 1

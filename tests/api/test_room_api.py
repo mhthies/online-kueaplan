@@ -5,7 +5,7 @@ import pytest
 from tests.conftest import ApiClientWrapper
 
 
-def test_create_or_update_room(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_room(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -28,7 +28,7 @@ def test_create_or_update_room(generated_api_client: ApiClientWrapper) -> None:
     assert result[0] == room
 
 
-def test_create_or_update_room_errors(generated_api_client: ApiClientWrapper) -> None:
+def test_create_or_update_room_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     event_id = 1

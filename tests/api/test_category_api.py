@@ -67,3 +67,30 @@ def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper
     # Non-existing event
     with pytest.raises(kueaplan_api_client.ApiException):
         generated_api_client.client.create_or_update_category(42, category.id, category)
+
+
+def test_delete_category(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    EVENT_ID = 1
+    generated_api_client.login(EVENT_ID, "orga")
+    category = kueaplan_api_client.Category(
+        id=str(uuid.uuid4()),
+        title="Test Category",
+        icon="💡",
+        color="ffaa00",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_category(EVENT_ID, category.id, category)
+
+    result = generated_api_client.client.list_categories(EVENT_ID)
+    assert len(result) == 2
+
+    generated_api_client.client.delete_category(EVENT_ID, category.id)
+
+    result = generated_api_client.client.list_categories(EVENT_ID)
+    assert len(result) == 1
+    assert result[0].title == "Default"
+
+
+# TODO test delete_category errors (authorization, referenced by entries)

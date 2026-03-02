@@ -54,3 +54,27 @@ def test_create_or_update_room_errors(generated_api_client: ApiClientWrapper, re
     # Non-existing event
     with pytest.raises(kueaplan_api_client.ApiException):
         generated_api_client.client.create_or_update_room(42, room.id, room)
+
+
+def test_delete_room(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    EVENT_ID = 1
+    generated_api_client.login(EVENT_ID, "orga")
+    room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(EVENT_ID, room.id, room)
+
+    result = generated_api_client.client.list_rooms(EVENT_ID)
+    assert len(result) == 1
+
+    generated_api_client.client.delete_room(EVENT_ID, room.id)
+
+    result = generated_api_client.client.list_rooms(EVENT_ID)
+    assert len(result) == 0
+
+
+# TODO test delete_room errors (authorization, referenced by entries)

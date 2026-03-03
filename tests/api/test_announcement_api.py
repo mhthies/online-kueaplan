@@ -81,7 +81,7 @@ def test_create_or_update_announcement_errors(generated_api_client: ApiClientWra
         sort_key=42,
     )
     generated_api_client.login(event_id, "user")
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_announcement(event_id, announcement.id, announcement)
     assert "not authorized" in str(excinfo.value.data.message)

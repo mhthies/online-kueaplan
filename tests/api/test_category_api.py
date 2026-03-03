@@ -51,7 +51,7 @@ def test_create_or_update_category_errors(generated_api_client: ApiClientWrapper
         sort_key=42,
     )
     generated_api_client.login(event_id, "user")
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_category(event_id, category.id, category)
     assert "not authorized" in str(excinfo.value.data.message)

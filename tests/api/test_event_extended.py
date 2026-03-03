@@ -25,7 +25,7 @@ def test_get_extended_event_errors(generated_api_client: ApiClientWrapper, reset
     import kueaplan_api_client
 
     EVENT_ID = 1
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.get_extended_event_info(EVENT_ID)
     assert "requires authentication" in str(excinfo.value.data.message)

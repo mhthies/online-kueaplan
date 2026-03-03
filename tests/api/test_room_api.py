@@ -38,7 +38,7 @@ def test_create_or_update_room_errors(generated_api_client: ApiClientWrapper, re
         description="This is the unofficial room, deep down underground.",
     )
     generated_api_client.login(event_id, "user")
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_room(event_id, room.id, room)
     assert "not authorized" in str(excinfo.value.data.message)

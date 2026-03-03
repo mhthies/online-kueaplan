@@ -72,7 +72,7 @@ def test_create_or_update_entry_simple_errors(generated_api_client: ApiClientWra
         previousDates=[],
     )
     generated_api_client.login(event_id, "user")
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "not authorized" in str(excinfo.value.data.message)
@@ -262,7 +262,7 @@ def test_change_entry_simple_errors(generated_api_client: ApiClientWrapper, rese
     del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
 
     generated_api_client.login(event_id, "user")
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.change_entry(
             event_id, entry.id, kueaplan_api_client.EntryPatch(title="Drachenfliegen für jedermann")

@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import pytest
@@ -93,4 +94,56 @@ def test_delete_category(generated_api_client: ApiClientWrapper, reset_database:
     assert result[0].title == "Default"
 
 
-# TODO test delete_category errors (authorization, referenced by entries)
+def test_delete_category_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+
+    # Non-existing category
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_category(event_id, "11111111-2222-3333-4444-555555555555")
+    assert "not exist" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 404
+
+    # Last category of an event should not be deleted
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        # Default category from minimal.sql
+        generated_api_client.client.delete_category(event_id, "019774dc-81c4-7862-a9ba-63de3d726010")
+    assert "last category" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # Create a new category and entry for testing
+    category = kueaplan_api_client.Category(
+        id=str(uuid.uuid4()),
+        title="Test Category",
+        icon="💡",
+        color="ffaa00",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_category(event_id, category.id, category)
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        room=[],
+        responsible_person="Max Mustermann",
+        category=category.id,
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # Category referenced by entry
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_category(event_id, category.id)
+    assert "referenced by entries" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # Unauthorized
+    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.login(event_id, "user")
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_category(event_id, category.id)
+    assert "not authorized" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 403

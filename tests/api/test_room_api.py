@@ -77,4 +77,30 @@ def test_delete_room(generated_api_client: ApiClientWrapper, reset_database: Non
     assert len(result) == 0
 
 
-# TODO test delete_room errors (authorization, referenced by entries)
+def test_delete_room_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+
+    # Non-existing room
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_room(event_id, "11111111-2222-3333-4444-555555555555")
+    assert "not exist" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 404
+
+    # Create a new room and entry for testing
+    room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(event_id, room.id, room)
+
+    # Unauthorized
+    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.login(event_id, "user")
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_room(event_id, room.id)
+    assert "not authorized" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 403

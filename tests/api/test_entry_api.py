@@ -13,6 +13,13 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
 
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "orga")
+    test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(EVENT_ID, test_room.id, test_room)
+
     entry = kueaplan_api_client.Entry(
         id=str(uuid.uuid4()),
         title="Drachenfliegen leicht gemacht",
@@ -37,8 +44,13 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
     assert result[0] == entry
 
     entry.title = "Drachenfliegen für jedermann"
-    # TODO change more attributes
     entry.is_cancelled = None
+    entry.is_exclusive = True
+    entry.time_comment = None
+    entry.room = [test_room.id]
+    entry.room_comment = "Im Testraum unten"
+    entry.begin = datetime.datetime(2025, 1, 6, 12, 5, tzinfo=datetime.UTC).isoformat()
+    entry.end = datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat()
     generated_api_client.client.create_or_update_entry(EVENT_ID, entry.id, entry)
 
     result = generated_api_client.client.get_entry(EVENT_ID, entry.id)
@@ -126,14 +138,14 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
     entry.category = "019774dc-81c4-7862-a9ba-63de3d726010"
 
     # Non-existent room in previous date
-    entry.previous_dates = [kueaplan_api_client.PreviousDate(
-        id=str(uuid.uuid4()),
-        begin=datetime.datetime(2025, 1, 6, 12, 0,
-                                tzinfo=datetime.UTC).isoformat(),
-        end=datetime.datetime(2025, 1, 6, 13, 30,
-                              tzinfo=datetime.UTC).isoformat(),
-        room=[test_room.id,
-              "11111111-2222-3333-4444-555555555555"])]
+    entry.previous_dates = [
+        kueaplan_api_client.PreviousDate(
+            id=str(uuid.uuid4()),
+            begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+            end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+            room=[test_room.id, "11111111-2222-3333-4444-555555555555"],
+        )
+    ]
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "must reference existing rooms" in str(excinfo.value.data.message)
@@ -150,13 +162,9 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
     entry.room = []
 
     # Deleted room in previous date
-    entry.previous_dates = [kueaplan_api_client.PreviousDate(
-        id=str(uuid.uuid4()),
-        begin=datetime.datetime(2025, 1, 6, 12, 0,
-                                tzinfo=datetime.UTC).isoformat(),
-        end=datetime.datetime(2025, 1, 6, 13, 30,
-                              tzinfo=datetime.UTC).isoformat(),
-        room=[test_room.id])]
+    entry.previous_dates = [
+        kueaplan_api_client.PreviousDate(id=str(uuid.uuid4()), begin=entry.begin, end=entry.end, room=[test_room.id])
+    ]
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "has been deleted" in str(excinfo.value.data.message)
@@ -170,14 +178,187 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
     assert "has been deleted" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
 
+
 # TODO test for reference errors due to room/category from wrong event
 # TODO create other event via psql command (using command-line interface is to complicated)
 
-# TODO test patching event
 
-# TODO test for errors while patching event (same as test_create_or_update_entry_simple_errors() and
-#   test_create_or_update_entry_reference_errors()
+def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
 
-# TODO test deleting event
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(event_id, test_room.id, test_room)
 
-# TODO test for errors while deleting event
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        comment="wir lassen Drachen steigen",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        time_comment="direkt nach dem Mittagessen",
+        responsible_person="Max Mustermann",
+        is_cancelled=True,
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    result = generated_api_client.client.list_entries(event_id)
+    # Categories are ordered by sort_key. Default room is 0, so our room comes second
+    assert result[0] == entry
+
+    entry.title = "Drachenfliegen für jedermann"
+    entry.is_cancelled = None
+    entry.is_exclusive = True
+    entry.time_comment = None
+    entry.room = [test_room.id]
+    entry.room_comment = "Im Testraum unten"
+    entry.begin = datetime.datetime(2025, 1, 6, 12, 5, tzinfo=datetime.UTC).isoformat()
+    entry.end = datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat()
+
+    generated_api_client.client.change_entry(
+        event_id,
+        entry.id,
+        kueaplan_api_client.EntryPatch(
+            title="Drachenfliegen für jedermann",
+            is_cancelled=False,
+            is_exclusive=True,
+            time_comment="",
+            room=[test_room.id],
+            room_comment="Im Testraum unten",
+            begin=datetime.datetime(2025, 1, 6, 12, 5, tzinfo=datetime.UTC).isoformat(),
+            end=datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat(),
+        ),
+    )
+
+    result = generated_api_client.client.get_entry(event_id, entry.id)
+    assert result == entry
+
+
+def test_change_entry_simple_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    # First, login as orga to create the entry, but delete the session token afterward, to drop privileges
+    generated_api_client.login(event_id, "orga")
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+
+    generated_api_client.login(event_id, "user")
+    # Unauthenticated
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id, entry.id, kueaplan_api_client.EntryPatch(title="Drachenfliegen für jedermann")
+        )
+    assert "not authorized" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 403
+
+    # Non-existing entry
+    generated_api_client.login(event_id, "orga")
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id,
+            "11111111-2222-3333-4444-555555555555",
+            kueaplan_api_client.EntryPatch(title="Drachenfliegen für jedermann"),
+        )
+    assert "not exist" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 404
+
+
+def test_patch_reference_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    test_category = kueaplan_api_client.Category(
+        id=str(uuid.uuid4()),
+        title="Test Category",
+        icon="💡",
+        color="ffaa00",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_category(event_id, test_category.id, test_category)
+    test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(event_id, test_room.id, test_room)
+
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # Non-existent room
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id,
+            entry.id,
+            kueaplan_api_client.EntryPatch(room=[test_room.id, "11111111-2222-3333-4444-555555555555"]),
+        )
+    assert "must reference existing rooms" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+    # Non-existent category
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id, entry.id, kueaplan_api_client.EntryPatch(category="11111111-2222-3333-4444-555555555555")
+        )
+    assert "must reference an existing category" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+    # Deleted room
+    generated_api_client.client.delete_room(event_id, test_room.id)
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id, entry.id, kueaplan_api_client.EntryPatch(room=[test_room.id])
+        )
+    assert "has been deleted" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+    # Deleted category
+    generated_api_client.client.delete_category(event_id, test_category.id)
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id, entry.id, kueaplan_api_client.EntryPatch(category=test_category.id)
+        )
+    assert "has been deleted" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+
+# TODO test for reference errors due to room/category from wrong event
+
+# TODO test creating PreviousDate
+
+# TODO test creating PreviousDate errors (inkl. reference errors)
+
+# TODO test deleting PreviousDate errors
+
+# TODO test deleting entry
+
+# TODO test for errors while deleting entry

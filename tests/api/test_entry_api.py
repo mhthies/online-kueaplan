@@ -115,19 +115,48 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "must reference existing rooms" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
+    entry.room = [test_room.id]
 
     # Non-existent category
-    entry.room = [test_room.id]
     entry.category = "11111111-2222-3333-4444-555555555555"
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "must reference an existing category" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
+    entry.category = "019774dc-81c4-7862-a9ba-63de3d726010"
+
+    # Non-existent room in previous date
+    entry.previous_dates = [kueaplan_api_client.PreviousDate(
+        id=str(uuid.uuid4()),
+        begin=datetime.datetime(2025, 1, 6, 12, 0,
+                                tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30,
+                              tzinfo=datetime.UTC).isoformat(),
+        room=[test_room.id,
+              "11111111-2222-3333-4444-555555555555"])]
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "must reference existing rooms" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+    entry.previous_dates = []
 
     # Deleted room
     generated_api_client.client.delete_room(event_id, test_room.id)
     entry.room = [test_room.id]
-    entry.category = "019774dc-81c4-7862-a9ba-63de3d726010"
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "has been deleted" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+    entry.room = []
+
+    # Deleted room in previous date
+    entry.previous_dates = [kueaplan_api_client.PreviousDate(
+        id=str(uuid.uuid4()),
+        begin=datetime.datetime(2025, 1, 6, 12, 0,
+                                tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30,
+                              tzinfo=datetime.UTC).isoformat(),
+        room=[test_room.id])]
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "has been deleted" in str(excinfo.value.data.message)
@@ -135,15 +164,11 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
 
     # Deleted category
     generated_api_client.client.delete_category(event_id, test_category.id)
-    entry.room = []
     entry.category = test_category.id
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
     assert "has been deleted" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
-
-    # TODO previous date with non-existent or deleted room
-
 
 # TODO test for reference errors due to room/category from wrong event
 # TODO create other event via psql command (using command-line interface is to complicated)

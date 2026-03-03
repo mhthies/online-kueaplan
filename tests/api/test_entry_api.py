@@ -359,6 +359,65 @@ def test_patch_reference_errors(generated_api_client: ApiClientWrapper, reset_da
 
 # TODO test deleting PreviousDate errors
 
-# TODO test deleting entry
 
-# TODO test for errors while deleting entry
+def test_delete_entry(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    result = generated_api_client.client.list_entries(event_id)
+    assert len(result) == 1
+
+    generated_api_client.client.delete_entry(event_id, entry.id)
+
+    result = generated_api_client.client.list_entries(event_id)
+    assert len(result) == 0
+
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.get_entry(event_id, entry.id)
+    assert "not exist" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 404
+
+
+def test_delete_entry_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # Non-existing entry
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_entry(event_id, "11111111-2222-3333-4444-555555555555")
+    assert "not exist" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 404
+
+    # Unauthorized
+    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.login(event_id, "user")
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_entry(event_id, entry.id)
+    assert "not authorized" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 403

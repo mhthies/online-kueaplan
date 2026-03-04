@@ -147,3 +147,35 @@ def test_delete_category_errors(generated_api_client: ApiClientWrapper, reset_da
         generated_api_client.client.delete_category(event_id, category.id)
     assert "not authorized" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 403
+
+
+def test_category_id_conflicts(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    other_event_id = 2
+
+    generated_api_client.login(event_id, "orga")
+    generated_api_client.login(other_event_id, "orga")
+
+    category = kueaplan_api_client.Category(
+        id=str(uuid.uuid4()),
+        title="Test Category",
+        icon="💡",
+        color="ffaa00",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_category(event_id, category.id, category)
+
+    # Same category in other event
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_category(other_event_id, category.id, category)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # category has been deleted
+    generated_api_client.client.delete_category(event_id, category.id)
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_category(other_event_id, category.id, category)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409

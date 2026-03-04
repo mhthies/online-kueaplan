@@ -104,3 +104,33 @@ def test_delete_room_errors(generated_api_client: ApiClientWrapper, reset_databa
         generated_api_client.client.delete_room(event_id, room.id)
     assert "not authorized" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 403
+
+
+def test_room_id_conflicts(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    other_event_id = 2
+
+    generated_api_client.login(event_id, "orga")
+    generated_api_client.login(other_event_id, "orga")
+
+    room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(event_id, room.id, room)
+
+    # Same room in other event
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_room(other_event_id, room.id, room)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # room has been deleted
+    generated_api_client.client.delete_room(event_id, room.id)
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_room(other_event_id, room.id, room)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409

@@ -746,3 +746,58 @@ def test_delete_entry_errors(generated_api_client: ApiClientWrapper, reset_datab
         generated_api_client.client.delete_entry(event_id, entry.id)
     assert "not authorized" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 403
+
+
+def test_entry_id_conflicts(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    other_event_id = 2
+
+    generated_api_client.login(event_id, "orga")
+    generated_api_client.login(other_event_id, "orga")
+
+    previous_date = kueaplan_api_client.PreviousDate(
+        id=str(uuid.uuid4()),
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        room=[],
+        comment="",
+    )
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[previous_date],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # Same entry in other event
+    entry.previous_dates = []
+    entry.category = "019cba98-3963-7477-a04a-0ac6bfaff6bf"
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(other_event_id, entry.id, entry)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+    entry.previous_dates = [previous_date]
+    entry.category = "019774dc-81c4-7862-a9ba-63de3d726010"
+
+    # New entry, but same previous date
+    original_entry_id = entry.id
+    entry.id = uuid.uuid4()
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+    entry.id = original_entry_id
+
+    # Entry has been deleted
+    generated_api_client.client.delete_entry(event_id, entry.id)
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "already exists" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409

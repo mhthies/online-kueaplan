@@ -179,8 +179,64 @@ def test_create_or_update_entry_reference_errors(generated_api_client: ApiClient
     assert excinfo.value.data.http_code == 422
 
 
-# TODO test for reference errors due to room/category from wrong event
-# TODO create other event via psql command (using command-line interface is to complicated)
+def test_create_or_update_entry_reference_errors_other_event(
+    generated_api_client: ApiClientWrapper, reset_database: None
+) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    other_event_id = 2
+
+    generated_api_client.login(event_id, "orga")
+    generated_api_client.login(other_event_id, "orga")
+    test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(other_event_id, test_room.id, test_room)
+
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+
+    # room from other event
+    entry.room = [test_room.id]
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "does not belong to event" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+    entry.room = []
+
+    # room from other event in previous date
+    entry.previous_dates = [
+        kueaplan_api_client.PreviousDate(
+            id=str(uuid.uuid4()),
+            room=[test_room.id],
+            begin=entry.begin,
+            end=entry.end,
+            comment="",
+        )
+    ]
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "does not belong to event" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+    entry.previous_dates = []
+
+    # category from other event
+    entry.category = "019cba98-3963-7477-a04a-0ac6bfaff6bf"  # Default category of The other event
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+    assert "does not belong to event" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
 
 
 def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
@@ -351,7 +407,54 @@ def test_patch_reference_errors(generated_api_client: ApiClientWrapper, reset_da
     assert excinfo.value.data.http_code == 422
 
 
-# TODO test for reference errors due to room/category from wrong event
+def test_change_entry_reference_errors_other_event(
+    generated_api_client: ApiClientWrapper, reset_database: None
+) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    other_event_id = 2
+
+    generated_api_client.login(event_id, "orga")
+    generated_api_client.login(other_event_id, "orga")
+    test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(other_event_id, test_room.id, test_room)
+
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        room=[],
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # room from other event
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id, entry.id, kueaplan_api_client.EntryPatch(room=[test_room.id])
+        )
+    assert "does not belong to event" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+    # category from other event
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.change_entry(
+            event_id,
+            entry.id,
+            kueaplan_api_client.EntryPatch(
+                category="019cba98-3963-7477-a04a-0ac6bfaff6bf"  # Default category of The other event
+            ),
+        )
+    assert "does not belong to event" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
 
 
 def test_create_and_update_previous_date(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
@@ -491,6 +594,21 @@ def test_create_or_update_previous_date_reference_errors(
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_previous_date(event_id, entry.id, previous_date.id, previous_date)
     assert "has been deleted" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 422
+
+    # room from another event
+    other_event_id = 2
+    generated_api_client.login(other_event_id, "orga")
+    other_test_room = kueaplan_api_client.Room(
+        id=str(uuid.uuid4()),
+        title="Test Room",
+        description="",
+    )
+    generated_api_client.client.create_or_update_room(other_event_id, other_test_room.id, other_test_room)
+    previous_date.room = [other_test_room.id]
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.create_or_update_previous_date(event_id, entry.id, previous_date.id, previous_date)
+    assert "does not belong to event" in str(excinfo.value.data.message)
     assert excinfo.value.data.http_code == 422
 
 

@@ -699,14 +699,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     )
                     .execute(connection)?;
             }
-            if !replace_with_rooms.is_empty() {
-                replace_room_with_other_rooms(
-                    the_event_id,
-                    room_id,
-                    replace_with_rooms,
-                    connection,
-                )?;
-            }
+            replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
 
             let count = diesel::update(rooms)
                 .filter(id.eq(room_id))
@@ -1444,23 +1437,13 @@ fn replace_room_with_other_rooms(
     replace_with_rooms: &[RoomId],
     connection: &mut PgConnection,
 ) -> Result<(), StoreError> {
-    use diesel::dsl::not;
     use schema::entries;
     use schema::entry_rooms;
-    use schema::rooms::dsl::*;
+    use schema::previous_date_rooms;
+    use schema::previous_dates;
 
     // Check that replacements actually exists in event
-    let count = rooms
-        .filter(id.eq_any(replace_with_rooms))
-        .filter(event_id.eq(the_event_id))
-        .filter(not(deleted))
-        .count()
-        .execute(connection)?;
-    if count != replace_with_rooms.len() {
-        return Err(StoreError::InvalidInputData(
-            "one of the replacement rooms does not exist in event".to_owned(),
-        ));
-    };
+    check_rooms_validity(replace_with_rooms, the_event_id, connection)?;
 
     let entry_ids: Vec<EntryId> = entry_rooms::table
         .filter(entry_rooms::room_id.eq(room_id))
@@ -1485,6 +1468,31 @@ fn replace_room_with_other_rooms(
         .execute(connection)?;
     diesel::update(entries::table)
         .set(entries::last_updated.eq(diesel::dsl::now))
+        .execute(connection)?;
+
+    let previous_date_ids: Vec<EntryId> = previous_date_rooms::table
+        .filter(previous_date_rooms::room_id.eq(room_id))
+        .select(previous_date_rooms::previous_date_id)
+        .get_results(connection)?;
+    diesel::delete(previous_date_rooms::table.filter(previous_date_rooms::room_id.eq(room_id)))
+        .execute(connection)?;
+    diesel::insert_into(previous_date_rooms::table)
+        .values(
+            previous_date_ids
+                .iter()
+                .flat_map(|previous_date_id| {
+                    replace_with_rooms.iter().map(|room_id| {
+                        (
+                            previous_date_rooms::previous_date_id.eq(*previous_date_id),
+                            previous_date_rooms::room_id.eq(*room_id),
+                        )
+                    })
+                })
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)?;
+    diesel::update(previous_dates::table)
+        .set(previous_dates::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
     Ok(())
 }

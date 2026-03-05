@@ -192,7 +192,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 let mut entry = full_entry.entry;
                 let entry_id = entry.id;
                 entry.event_id = event_id;
-                check_category_validity(&entry.category, event_id, connection)?;
+                check_categories_validity(&[entry.category], event_id, connection)?;
                 diesel::insert_into(schema::entries::table)
                     .values(entry)
                     .execute(connection)?;
@@ -208,6 +208,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 let mut announcement = full_announcement.announcement;
                 let announcement_id = announcement.id;
                 announcement.event_id = event_id;
+                check_categories_validity(&full_announcement.category_ids, event_id, connection)?;
+                check_rooms_validity(&full_announcement.room_ids, event_id, connection)?;
                 diesel::insert_into(schema::announcements::table)
                     .values(announcement)
                     .execute(connection)?;
@@ -380,7 +382,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 }
             }
 
-            check_category_validity(&entry.entry.category, entry.entry.event_id, connection)?;
+            check_categories_validity(&[entry.entry.category], entry.entry.event_id, connection)?;
 
             // entry
             let upsert_result = {
@@ -455,7 +457,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 update_entry_rooms(entry_id, room_ids, connection)?;
             }
             if let Some(category_id) = entry_data.category.as_ref() {
-                check_category_validity(category_id, current_event_id, connection)?;
+                check_categories_validity(&[*category_id], current_event_id, connection)?;
             }
             let result = diesel::update(entries)
                 .filter(id.eq(entry_id))
@@ -924,6 +926,16 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     return Err(StoreError::ConcurrentEditConflict);
                 }
             }
+            check_categories_validity(
+                &announcement.category_ids,
+                announcement.announcement.event_id,
+                connection,
+            )?;
+            check_rooms_validity(
+                &announcement.room_ids,
+                announcement.announcement.event_id,
+                connection,
+            )?;
 
             // announcement
             let upsert_result = {
@@ -983,10 +995,12 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             auth_token.check_privilege(current_event_id, Privilege::ManageAnnouncements)?;
 
             if let Some(room_ids) = announcement_data.room_ids.as_ref() {
+                check_categories_validity(room_ids, current_event_id, connection)?;
                 update_announcement_rooms(announcement_id, room_ids, connection)?;
             }
-            if let Some(room_ids) = announcement_data.room_ids.as_ref() {
-                update_announcement_categories(announcement_id, room_ids, connection)?;
+            if let Some(category_ids) = announcement_data.category_ids.as_ref() {
+                check_rooms_validity(category_ids, current_event_id, connection)?;
+                update_announcement_categories(announcement_id, category_ids, connection)?;
             }
             diesel::update(announcements)
                 .filter(id.eq(announcement_id))
@@ -1475,32 +1489,28 @@ fn replace_room_with_other_rooms(
     Ok(())
 }
 
-fn check_category_validity(
-    category_id: &CategoryId,
+fn check_categories_validity(
+    category_ids: &[CategoryId],
     given_event_id: EventId,
     connection: &mut PgConnection,
 ) -> Result<(), StoreError> {
     use schema::categories::dsl::*;
     let result = categories
-        .filter(id.eq(category_id))
-        .select((event_id, deleted))
-        .first::<(EventId, bool)>(connection);
-    if let Err(diesel::result::Error::NotFound) = result {
-        return Err(StoreError::InvalidInputData(format!(
-            "Category {category_id} does not exist"
-        )));
-    }
-    let (category_event_id, category_deleted) = result?;
-
-    if category_deleted {
-        return Err(StoreError::InvalidInputData(format!(
-            "Category {category_id} has been deleted."
-        )));
-    }
-    if category_event_id != given_event_id {
-        return Err(StoreError::InvalidInputData(format!(
-            "Category {category_id} does not belong to event {given_event_id}."
-        )));
+        .filter(id.eq_any(category_ids))
+        .select((id, event_id, deleted))
+        .load::<(CategoryId, EventId, bool)>(connection)?;
+    // We don't need to check for existence here, since this is done by the foreign key constraint
+    for (category_id, category_event_id, category_deleted) in result {
+        if category_deleted {
+            return Err(StoreError::InvalidInputData(format!(
+                "Category {category_id} has been deleted."
+            )));
+        }
+        if category_event_id != given_event_id {
+            return Err(StoreError::InvalidInputData(format!(
+                "Category {category_id} does not belong to event {given_event_id}."
+            )));
+        }
     }
     Ok(())
 }

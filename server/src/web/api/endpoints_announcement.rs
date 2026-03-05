@@ -104,7 +104,8 @@ async fn delete_announcement(
         store.delete_announcement(&auth, event_id, announcement_id)?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

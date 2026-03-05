@@ -139,6 +139,7 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                 | APIError::AlreadyExisting
                 | APIError::InvalidJson(_)
                 | APIError::InvalidData(_)
+                | APIError::ViolatingDataIntegrity(_)
                 | APIError::EntityIdMissmatch
                 | APIError::TransactionConflict
                 | APIError::ConcurrentEditConflict => {}

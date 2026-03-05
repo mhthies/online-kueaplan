@@ -102,7 +102,8 @@ async fn delete_passphrase(
         store.delete_passphrase(&auth, event_id, passphrase_id)?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

@@ -126,7 +126,8 @@ async fn delete_entry(
         store.delete_entry(&auth, event_id, entry_id)?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

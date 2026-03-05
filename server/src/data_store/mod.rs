@@ -517,6 +517,8 @@ pub enum StoreError {
     },
     /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
     /// SQL constraint. See string description for details.
+    /// This is also used when the requested action would violate data integrity constraints (e.g.
+    /// leave dangling references).
     InvalidInputData(String),
     /// Some data queried from the database could not be deserialized. See string description for
     /// details.

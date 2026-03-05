@@ -789,7 +789,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(not(deleted))
                 .filter(id.ne(category_id))
                 .count()
-                .execute(connection)?;
+                .first::<i64>(connection)?;
             if count_remaining_categories == 0 {
                 return Err(StoreError::InvalidInputData(
                     "Cannot delete last category of the event.".to_owned(),
@@ -800,24 +800,25 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             if let Some(replacement_category) = replacement_category {
                 use schema::entries::dsl::*;
 
-                // Check that replacement actually exists in event
-                let count = categories
-                    .filter(schema::categories::id.eq(replacement_category))
-                    .filter(schema::categories::event_id.eq(the_event_id))
-                    .filter(not(schema::categories::deleted))
-                    .count()
-                    .execute(connection)?;
-                if count == 0 {
-                    return Err(StoreError::InvalidInputData(
-                        "replacement category does not exist in event".into(),
-                    ));
-                };
+                check_categories_validity(&[replacement_category], the_event_id, connection)?;
 
                 diesel::update(entries)
                     .filter(category.eq(category_id))
                     .filter(event_id.eq(the_event_id))
                     .set(category.eq(replacement_category))
                     .execute(connection)?;
+            } else {
+                // Otherwise, make sure that there are no entries in this category
+                let count_entries = schema::entries::table
+                    .filter(schema::entries::category.eq(category_id))
+                    .filter(not(schema::entries::deleted))
+                    .count()
+                    .first::<i64>(connection)?;
+                if count_entries != 0 {
+                    return Err(StoreError::InvalidInputData(
+                        "The category is still referenced by entries.".to_owned(),
+                    ));
+                };
             }
 
             let count = diesel::update(categories)

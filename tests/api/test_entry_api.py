@@ -293,7 +293,17 @@ def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_datab
             end=datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat(),
         ),
     )
+    result = generated_api_client.client.get_entry(event_id, entry.id)
+    assert result == entry
 
+    generated_api_client.client.change_entry(
+        event_id,
+        entry.id,
+        kueaplan_api_client.EntryPatch(
+            room=[],
+        ),
+    )
+    entry.room = []
     result = generated_api_client.client.get_entry(event_id, entry.id)
     assert result == entry
 

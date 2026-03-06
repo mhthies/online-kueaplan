@@ -4,7 +4,7 @@ import uuid
 from tests.conftest import ApiClientWrapper
 
 
-def test_list_passphrases(generated_api_client: ApiClientWrapper) -> None:
+def test_list_passphrases(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "admin")
     passphrases = generated_api_client.client.list_passphrases(EVENT_ID)
@@ -25,7 +25,7 @@ def test_list_passphrases(generated_api_client: ApiClientWrapper) -> None:
     assert user_derivable_passphrase.role == "participant-sharable"
 
 
-def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
+def test_create_passphrase(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -54,7 +54,7 @@ def test_create_passphrase(generated_api_client: ApiClientWrapper) -> None:
     client2.client.create_or_update_category(EVENT_ID, category.id, category)
 
 
-def test_extended_attributes(generated_api_client: ApiClientWrapper) -> None:
+def test_extended_attributes(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1

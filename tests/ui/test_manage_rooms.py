@@ -4,7 +4,7 @@ import re
 from playwright.sync_api import Page, expect
 
 from tests.ui import actions, data
-from tests.ui.helpers import get_table_cell_by_header, get_table_row_by_column_value
+from tests.ui.helpers import get_table_cell_by_header, get_table_row_by_column_value, is_line_through
 
 # We don't need to test creating rooms here, as this is covered by many tests, using the `actions.add_room()` function.
 
@@ -147,3 +147,50 @@ def test_delete_room_with_replacement(page: Page, reset_database: None) -> None:
     page.get_by_role("link", name="Sportplätze").click()
     entry_row = get_table_row_by_column_value(page, "Was?", "Beach-Volleyball")
     expect(entry_row).to_be_visible()
+
+
+def test_delete_room_with_replacement_in_previous_date(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_room(page, actions.Room("Pelikanhalle (unten)"))
+    actions.add_room(page, data.ROOM_PELIKANHALLE)
+    actions.add_entry(page, dataclasses.replace(data.ENTRY_BEGRUESSUNGSPLENUM, rooms=[]))
+
+    # Add previous date with room "Pelikanhalle (unten)"
+    row = get_table_row_by_column_value(page, "Was?", "Begrüßungsplenum")
+    row.get_by_role("link", name="Eintrag bearbeiten").click()
+    page.get_by_role("link", name="Vorherige Termine").click()
+    page.get_by_role("link", name="Vorherigen Termin hinzufügen").click()
+    # day, time, duration and rooms should be prefilled to the same time as the current entry
+    page.get_by_role("combobox", name="Orte").fill("Pelikanhalle (unten)")
+    page.get_by_role("option", name="Pelikanhalle (unten)").click()
+    page.get_by_role("textbox", name="Kommentar zur Verschiebung").fill("Wegen schönen Wetters jetzt draußen")
+    page.get_by_role("button", name="Speichern").click()
+    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
+    expect(success_alert).to_be_visible()
+    success_alert.get_by_role("button", name="Close").click()
+
+    page.get_by_role("link", name="Konfiguration").click()
+    page.get_by_role("navigation", name="Konfigurationsbereich-Navigation").get_by_role("link", name="Orte").click()
+    room_row = get_table_row_by_column_value(page, "Name", "Pelikanhalle (unten)")
+    room_row.get_by_role("link", name="Löschen").click()
+    expect(page.get_by_role("region", name="Zu löschender Ort")).to_contain_text("Pelikanhalle (unten)")
+
+    page.get_by_role("combobox", name="Einträge in folgende Orte verschieben").fill("Pelikanhalle")
+    page.get_by_role("option", name="Pelikanhalle", exact=True).click()
+    page.get_by_role("textbox", name="Ergänzender Kommentar zum Ort bei den betroffenen Einträgen").fill(
+        "unten in der Halle"
+    )
+    page.get_by_role("button", name="Ort löschen").click()
+    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
+    expect(success_alert).to_be_visible()
+    success_alert.get_by_role("button", name="Close").click()
+
+    page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Orte").click()
+    page.get_by_role("link", name="Pelikanhalle").click()
+    row = get_table_row_by_column_value(page, "Was?", "Begrüßungsplenum")
+    expect(row).to_contain_text("Pelikanhalle")
+    assert is_line_through(row.get_by_text("Pelikanhalle"))
+    expect(row).not_to_contain_text("Pelikanhalle (unten)")
+    expect(row).to_contain_text("Wegen schönen Wetters jetzt draußen")
+    # additional room comment from room deletion should not be added when room is only in previous date
+    expect(row).not_to_contain_text("unten in der Halle")

@@ -382,6 +382,7 @@ COPY public.announcements (id, event_id, announcement_type, text, show_with_days
 
 COPY public.categories (id, title, icon, color, event_id, deleted, last_updated, is_official, sort_key) FROM stdin;
 019774dc-81c4-7862-a9ba-63de3d726010	Default		99aabb	1	f	2025-06-15 20:33:10.223001+02	f	0
+019cba98-3963-7477-a04a-0ac6bfaff6bf	Default		99aabb	2	f	2026-03-04 21:43:30.000000+02	f	0
 \.
 
 
@@ -411,6 +412,7 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 3	1	3	admin	\N		\N	\N
 4	1	4	\N	1		\N	\N
 5	1	4	\N	2		\N	\N
+6	2	2	orga	\N		\N	\N
 \.
 
 
@@ -420,6 +422,7 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 
 COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id) FROM stdin;
 1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	test	\N	\N
+2	The other event	2025-06-01	2025-06-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	other	\N	\N
 \.
 
 
@@ -451,14 +454,14 @@ COPY public.rooms (id, title, description, event_id, deleted, last_updated) FROM
 -- Name: event_passphrases_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.event_passphrases_id_seq', 6, false);
+SELECT pg_catalog.setval('public.event_passphrases_id_seq', 7, false);
 
 
 --
 -- Name: events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.events_id_seq', 2, true);
+SELECT pg_catalog.setval('public.events_id_seq', 3, true);
 
 
 --

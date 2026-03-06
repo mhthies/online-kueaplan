@@ -76,10 +76,25 @@ pub enum APIError {
     },
     InvalidJson(actix_web::error::JsonPayloadError),
     InvalidData(String),
+    ViolatingDataIntegrity(String),
     EntityIdMissmatch,
     TransactionConflict,
     ConcurrentEditConflict,
     InternalError(String),
+}
+
+impl APIError {
+    fn for_delete_endpoint(self) -> Self {
+        match self {
+            // The data_store does not distinguish between invalid data and integrity violation by
+            // the requested operation. We map all of this problems to `InvalidData`.
+            // Typically, deleting of objects results in integrity violation problems, whereas
+            // adding or updating data causes problems with actual invalid data. Thus, we provide
+            // this simple mapping function to fix the result code of DELETE endpoints.
+            Self::InvalidData(e) => Self::ViolatingDataIntegrity(e),
+            _ => self,
+        }
+    }
 }
 
 impl Display for APIError {
@@ -120,6 +135,9 @@ impl Display for APIError {
             },
             Self::InvalidData(e) => {
                 write!(f, "Invalid request data: {}", e)?;
+            },
+            Self::ViolatingDataIntegrity(e) => {
+                write!(f, "Operation cannot be performed: {}", e)?;
             },
             Self::EntityIdMissmatch => {
                 f.write_str("Entity id in given data does not match URL")?;
@@ -163,6 +181,7 @@ impl ResponseError for APIError {
                 _ => StatusCode::BAD_REQUEST,
             },
             &APIError::InvalidData(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            Self::ViolatingDataIntegrity(_) => StatusCode::CONFLICT,
             &APIError::EntityIdMissmatch => StatusCode::UNPROCESSABLE_ENTITY,
             &APIError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
             Self::ConcurrentEditConflict => StatusCode::CONFLICT,

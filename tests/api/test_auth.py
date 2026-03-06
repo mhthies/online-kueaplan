@@ -5,7 +5,7 @@ import pytest
 from tests.conftest import ApiClientWrapper
 
 
-def test_check_authorization(generated_api_client: ApiClientWrapper) -> None:
+def test_check_authorization(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -18,7 +18,7 @@ def test_check_authorization(generated_api_client: ApiClientWrapper) -> None:
     assert result.authorization[0].role == "orga"
 
 
-def test_check_all_events_authorization(generated_api_client: ApiClientWrapper) -> None:
+def test_check_all_events_authorization(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
@@ -40,7 +40,7 @@ def test_check_all_events_authorization(generated_api_client: ApiClientWrapper) 
     assert set(auth.role for auth in result.events[0].authorization) == {"orga", "participant"}
 
 
-def test_drop_access_role(generated_api_client: ApiClientWrapper) -> None:
+def test_drop_access_role(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1

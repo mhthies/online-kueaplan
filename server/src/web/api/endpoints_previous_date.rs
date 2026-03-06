@@ -54,7 +54,8 @@ async fn delete_previous_date(
         store.delete_previous_date(&auth, entry_id, previous_date_id)?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

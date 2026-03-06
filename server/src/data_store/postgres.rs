@@ -192,11 +192,14 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 let mut entry = full_entry.entry;
                 let entry_id = entry.id;
                 entry.event_id = event_id;
+                check_categories_validity(&[entry.category], event_id, connection)?;
                 diesel::insert_into(schema::entries::table)
                     .values(entry)
                     .execute(connection)?;
+                check_rooms_validity(&full_entry.room_ids, event_id, connection)?;
                 update_entry_rooms(entry_id, &full_entry.room_ids, connection)?;
                 for previous_date in full_entry.previous_dates {
+                    check_rooms_validity(&previous_date.room_ids, event_id, connection)?;
                     update_or_insert_previous_date(&previous_date, entry_id, connection)?;
                 }
             }
@@ -205,6 +208,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 let mut announcement = full_announcement.announcement;
                 let announcement_id = announcement.id;
                 announcement.event_id = event_id;
+                check_categories_validity(&full_announcement.category_ids, event_id, connection)?;
+                check_rooms_validity(&full_announcement.room_ids, event_id, connection)?;
                 diesel::insert_into(schema::announcements::table)
                     .values(announcement)
                     .execute(connection)?;
@@ -377,6 +382,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 }
             }
 
+            check_categories_validity(&[entry.entry.category], entry.entry.event_id, connection)?;
+
             // entry
             let upsert_result = {
                 // Unfortunately, `InsertStatement<_, OnConflictValues<...>>`, which is returned by
@@ -404,6 +411,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let is_updated = upsert_result[0];
 
             // rooms
+            check_rooms_validity(&entry.room_ids, entry.entry.event_id, connection)?;
             update_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
 
             // previous dates
@@ -420,6 +428,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
 
             for previous_date in entry.previous_dates {
+                check_rooms_validity(&previous_date.room_ids, entry.entry.event_id, connection)?;
                 update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?;
             }
 
@@ -444,13 +453,24 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             auth_token.check_privilege(current_event_id, Privilege::ManageEntries)?;
 
             if let Some(room_ids) = entry_data.room_ids.as_ref() {
+                check_rooms_validity(room_ids, current_event_id, connection)?;
                 update_entry_rooms(entry_id, room_ids, connection)?;
             }
-            diesel::update(entries)
+            if let Some(category_id) = entry_data.category.as_ref() {
+                check_categories_validity(&[*category_id], current_event_id, connection)?;
+            }
+            let result = diesel::update(entries)
                 .filter(id.eq(entry_id))
                 .set(entry_data)
-                .execute(connection)?;
-            Ok(())
+                .execute(connection);
+
+            match result {
+                Ok(_) => Ok(()),
+                // Ignore error "There are no changes to save. This query cannot be built" when
+                // nothing is changed (or only rooms are changed)
+                Err(diesel::result::Error::QueryBuilderError(_)) => Ok(()),
+                Err(e) => Err(e.into()),
+            }
         })
     }
 
@@ -492,6 +512,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .first::<EventId>(connection)?;
 
             auth_token.check_privilege(event_id, Privilege::ManageEntries)?;
+            check_rooms_validity(&previous_date.room_ids, event_id, connection)?;
 
             let created = update_or_insert_previous_date(
                 &previous_date,
@@ -678,14 +699,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     )
                     .execute(connection)?;
             }
-            if !replace_with_rooms.is_empty() {
-                replace_room_with_other_rooms(
-                    the_event_id,
-                    room_id,
-                    replace_with_rooms,
-                    connection,
-                )?;
-            }
+            replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
 
             let count = diesel::update(rooms)
                 .filter(id.eq(room_id))
@@ -775,7 +789,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(not(deleted))
                 .filter(id.ne(category_id))
                 .count()
-                .execute(connection)?;
+                .first::<i64>(connection)?;
             if count_remaining_categories == 0 {
                 return Err(StoreError::InvalidInputData(
                     "Cannot delete last category of the event.".to_owned(),
@@ -786,24 +800,25 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             if let Some(replacement_category) = replacement_category {
                 use schema::entries::dsl::*;
 
-                // Check that replacement actually exists in event
-                let count = categories
-                    .filter(schema::categories::id.eq(replacement_category))
-                    .filter(schema::categories::event_id.eq(the_event_id))
-                    .filter(not(schema::categories::deleted))
-                    .count()
-                    .execute(connection)?;
-                if count == 0 {
-                    return Err(StoreError::InvalidInputData(
-                        "replacement category does not exist in event".into(),
-                    ));
-                };
+                check_categories_validity(&[replacement_category], the_event_id, connection)?;
 
                 diesel::update(entries)
                     .filter(category.eq(category_id))
                     .filter(event_id.eq(the_event_id))
                     .set(category.eq(replacement_category))
                     .execute(connection)?;
+            } else {
+                // Otherwise, make sure that there are no entries in this category
+                let count_entries = schema::entries::table
+                    .filter(schema::entries::category.eq(category_id))
+                    .filter(not(schema::entries::deleted))
+                    .count()
+                    .first::<i64>(connection)?;
+                if count_entries != 0 {
+                    return Err(StoreError::InvalidInputData(
+                        "The category is still referenced by entries.".to_owned(),
+                    ));
+                };
             }
 
             let count = diesel::update(categories)
@@ -905,6 +920,16 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     return Err(StoreError::ConcurrentEditConflict);
                 }
             }
+            check_categories_validity(
+                &announcement.category_ids,
+                announcement.announcement.event_id,
+                connection,
+            )?;
+            check_rooms_validity(
+                &announcement.room_ids,
+                announcement.announcement.event_id,
+                connection,
+            )?;
 
             // announcement
             let upsert_result = {
@@ -964,10 +989,12 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             auth_token.check_privilege(current_event_id, Privilege::ManageAnnouncements)?;
 
             if let Some(room_ids) = announcement_data.room_ids.as_ref() {
+                check_categories_validity(room_ids, current_event_id, connection)?;
                 update_announcement_rooms(announcement_id, room_ids, connection)?;
             }
-            if let Some(room_ids) = announcement_data.room_ids.as_ref() {
-                update_announcement_categories(announcement_id, room_ids, connection)?;
+            if let Some(category_ids) = announcement_data.category_ids.as_ref() {
+                check_rooms_validity(category_ids, current_event_id, connection)?;
+                update_announcement_categories(announcement_id, category_ids, connection)?;
             }
             diesel::update(announcements)
                 .filter(id.eq(announcement_id))
@@ -1411,23 +1438,13 @@ fn replace_room_with_other_rooms(
     replace_with_rooms: &[RoomId],
     connection: &mut PgConnection,
 ) -> Result<(), StoreError> {
-    use diesel::dsl::not;
     use schema::entries;
     use schema::entry_rooms;
-    use schema::rooms::dsl::*;
+    use schema::previous_date_rooms;
+    use schema::previous_dates;
 
     // Check that replacements actually exists in event
-    let count = rooms
-        .filter(id.eq_any(replace_with_rooms))
-        .filter(event_id.eq(the_event_id))
-        .filter(not(deleted))
-        .count()
-        .execute(connection)?;
-    if count != replace_with_rooms.len() {
-        return Err(StoreError::InvalidInputData(
-            "one of the replacement rooms does not exist in event".to_owned(),
-        ));
-    };
+    check_rooms_validity(replace_with_rooms, the_event_id, connection)?;
 
     let entry_ids: Vec<EntryId> = entry_rooms::table
         .filter(entry_rooms::room_id.eq(room_id))
@@ -1453,6 +1470,83 @@ fn replace_room_with_other_rooms(
     diesel::update(entries::table)
         .set(entries::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
+
+    let previous_date_ids: Vec<EntryId> = previous_date_rooms::table
+        .filter(previous_date_rooms::room_id.eq(room_id))
+        .select(previous_date_rooms::previous_date_id)
+        .get_results(connection)?;
+    diesel::delete(previous_date_rooms::table.filter(previous_date_rooms::room_id.eq(room_id)))
+        .execute(connection)?;
+    diesel::insert_into(previous_date_rooms::table)
+        .values(
+            previous_date_ids
+                .iter()
+                .flat_map(|previous_date_id| {
+                    replace_with_rooms.iter().map(|room_id| {
+                        (
+                            previous_date_rooms::previous_date_id.eq(*previous_date_id),
+                            previous_date_rooms::room_id.eq(*room_id),
+                        )
+                    })
+                })
+                .collect::<Vec<_>>(),
+        )
+        .execute(connection)?;
+    diesel::update(previous_dates::table)
+        .set(previous_dates::last_updated.eq(diesel::dsl::now))
+        .execute(connection)?;
+    Ok(())
+}
+
+fn check_categories_validity(
+    category_ids: &[CategoryId],
+    given_event_id: EventId,
+    connection: &mut PgConnection,
+) -> Result<(), StoreError> {
+    use schema::categories::dsl::*;
+    let result = categories
+        .filter(id.eq_any(category_ids))
+        .select((id, event_id, deleted))
+        .load::<(CategoryId, EventId, bool)>(connection)?;
+    // We don't need to check for existence here, since this is done by the foreign key constraint
+    for (category_id, category_event_id, category_deleted) in result {
+        if category_deleted {
+            return Err(StoreError::InvalidInputData(format!(
+                "Category {category_id} has been deleted."
+            )));
+        }
+        if category_event_id != given_event_id {
+            return Err(StoreError::InvalidInputData(format!(
+                "Category {category_id} does not belong to event {given_event_id}."
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn check_rooms_validity(
+    room_ids: &[RoomId],
+    the_event_id: EventId,
+    connection: &mut PgConnection,
+) -> Result<(), StoreError> {
+    use schema::rooms::dsl::*;
+    let result = rooms
+        .filter(id.eq_any(room_ids))
+        .select((id, event_id, deleted))
+        .load::<(RoomId, EventId, bool)>(connection)?;
+    // We don't need to check for existence here, since this is done by the foreign key constraint
+    for (room_id, room_event_id, room_deleted) in result {
+        if room_deleted {
+            return Err(StoreError::InvalidInputData(format!(
+                "Room {room_id} has been deleted."
+            )));
+        }
+        if room_event_id != the_event_id {
+            return Err(StoreError::InvalidInputData(format!(
+                "Room {room_id} does not belong to event {the_event_id}."
+            )));
+        }
+    }
     Ok(())
 }
 

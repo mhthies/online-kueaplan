@@ -76,7 +76,8 @@ async fn delete_room(
         store.delete_room(&auth, event_id, room_id, &[], "")?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

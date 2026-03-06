@@ -77,7 +77,8 @@ async fn delete_category(
         store.delete_category(&auth, event_id, category_id, None)?;
         Ok(())
     })
-    .await??;
+    .await?
+    .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
 }

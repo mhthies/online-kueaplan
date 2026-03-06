@@ -5,7 +5,7 @@ import pytest
 from tests.conftest import ApiClientWrapper
 
 
-def test_get_extended_event(generated_api_client: ApiClientWrapper) -> None:
+def test_get_extended_event(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "user")
     result = generated_api_client.client.get_extended_event_info(EVENT_ID)
@@ -21,17 +21,17 @@ def test_get_extended_event(generated_api_client: ApiClientWrapper) -> None:
     assert result.default_time_schedule.sections[3].end_time is None
 
 
-def test_get_extended_event_errors(generated_api_client: ApiClientWrapper) -> None:
+def test_get_extended_event_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1
-    # Unauthenticated
+    # Unauthorized
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.get_extended_event_info(EVENT_ID)
     assert "requires authentication" in str(excinfo.value.data.message)
 
 
-def test_update_extended_event(generated_api_client: ApiClientWrapper) -> None:
+def test_update_extended_event(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     EVENT_ID = 1
     generated_api_client.login(EVENT_ID, "admin")
     event_info = generated_api_client.client.get_extended_event_info(EVENT_ID)
@@ -49,7 +49,7 @@ def test_update_extended_event(generated_api_client: ApiClientWrapper) -> None:
     assert new_event_info == event_info
 
 
-def test_update_extended_event_errors(generated_api_client: ApiClientWrapper) -> None:
+def test_update_extended_event_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
     EVENT_ID = 1

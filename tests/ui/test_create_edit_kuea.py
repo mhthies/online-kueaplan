@@ -6,7 +6,6 @@ from playwright.sync_api import Page, expect
 
 from . import actions, helpers
 from .data import (
-    ANNOUNCEMENT_SPORTPLATZ_NASS,
     CATEGORY_SPORT,
     ENTRY_BEACH_VOLLEYBALL,
     ENTRY_BEGRUESSUNGSPLENUM,
@@ -17,15 +16,6 @@ from .data import (
     ROOM_SPORTPLAETZE,
 )
 from .helpers import is_text_bold, is_text_colored
-
-
-def test_create_sample_data(page: Page, reset_database: None) -> None:
-    actions.login(page, 1, "orga")
-    actions.add_category(page, CATEGORY_SPORT)
-    actions.add_room(page, ROOM_SPORTPLAETZE)
-    actions.add_entry(page, ENTRY_BEACH_VOLLEYBALL)
-    actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
-    actions.add_announcement(page, ANNOUNCEMENT_SPORTPLATZ_NASS)
 
 
 def test_create_entry(page: Page, reset_database: None) -> None:

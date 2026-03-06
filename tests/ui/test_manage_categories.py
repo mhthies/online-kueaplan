@@ -24,9 +24,7 @@ def test_change_category(page: Page, reset_database: None) -> None:
     page.get_by_role("textbox", name="Name der Kategorie").fill("Außensport")
     page.get_by_role("textbox", name="Icon").fill("🎾")
     page.get_by_role("button", name="Speichern").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("button", name="Datum").click()
     page.get_by_role("link", name="Sa 04.01.").click()
@@ -57,9 +55,7 @@ def test_category_sorting(page: Page, reset_database: None) -> None:
     plenum_row.get_by_role("link", name="Bearbeiten").click()
     page.get_by_role("spinbutton", name="Sortier-Schlüssel").fill("10")
     page.get_by_role("button", name="Speichern").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     expect(page.locator("xpath=//td[2]")).to_contain_text(["Default", "Musizieren", "Plenum"])
     page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Kategorien").click()
@@ -90,9 +86,7 @@ def test_delete_category(page: Page, reset_database: None) -> None:
     expect(page.get_by_role("region", name="Betroffene Einträge")).not_to_contain_text("Beach-Volleyball")
     page.get_by_role("combobox", name="Einträge in folgende Kategorie verschieben").select_option(label="Default")
     page.get_by_role("button", name="Kategorie löschen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("button", name="Datum").click()
     page.get_by_role("link", name="Sa 04.01.").click()

@@ -16,9 +16,7 @@ def move_beach_volleyball_to_pelikanhalle_at_1430(page: Page) -> None:
     page.get_by_role("checkbox", name="Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen").check()
     page.get_by_role("textbox", name="Kommentar zur Verschiebung").fill("Wegen schlechten Wetters in der Halle")
     page.get_by_role("button", name="Speichern").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
 
 def test_previous_date_view_merged(page: Page, reset_database: None) -> None:
@@ -156,9 +154,7 @@ def test_remove_previous_date(page: Page, reset_database: None) -> None:
     helpers.get_table_cell_by_header(previous_date_row, "Aktionen").get_by_role(
         "button", name="Diesen vorherigen Termin aus dem KüA-Plan löschen"
     ).click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("link", name="Zurück").click()
 

@@ -3,6 +3,7 @@ import datetime
 import re
 import time
 
+import playwright.sync_api
 from playwright.sync_api import Browser, Page, expect
 
 from . import actions, data, helpers
@@ -276,7 +277,7 @@ def test_detect_concurrent_entry_change(browser: Browser, reset_database: None) 
 def test_detect_unsaved_changes(page: Page, reset_database: None) -> None:
     dialog_shown = False
 
-    def handle_dialog(dialog):
+    def handle_dialog(dialog: playwright.sync_api.Dialog) -> None:
         if dialog.type == "beforeunload":
             nonlocal dialog_shown
             dialog_shown = True
@@ -306,7 +307,7 @@ def test_detect_unsaved_changes(page: Page, reset_database: None) -> None:
     assert dialog_shown
 
     # Special handling of cancel button: no dialog shown
-    dialog_shown = False
+    dialog_shown = False  # type: ignore [unreachable]  # mypy does not get the mutability of `dialog_shown`
     page.get_by_role("link", name="Abbrechen").click()
     expect(page).to_have_title(re.compile(r"03.01."))
     assert not dialog_shown

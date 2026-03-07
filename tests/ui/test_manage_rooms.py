@@ -32,9 +32,7 @@ Nicht den ersten Eingang (am etwas zurückliegenden Gebäudeteil) nehmen, sonder
 Dann rechts die Treppe runter gehen.
     """)
     page.get_by_role("button", name="Speichern").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("button", name="Datum").click()
     page.get_by_role("link", name="Mi 01.01.").click()
@@ -73,9 +71,7 @@ def test_delete_room(page: Page, reset_database: None) -> None:
     )
     expect(page.get_by_role("region", name="Betroffene Einträge")).not_to_contain_text("Beach-Volleyball")
     page.get_by_role("button", name="Ort löschen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("button", name="Datum").click()
     page.get_by_role("link", name="Mi 01.01.").click()
@@ -125,9 +121,7 @@ def test_delete_room_with_replacement(page: Page, reset_database: None) -> None:
         "unten in der Halle"
     )
     page.get_by_role("button", name="Ort löschen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("button", name="Datum").click()
     page.get_by_role("link", name="Mi 01.01.").click()
@@ -165,9 +159,7 @@ def test_delete_room_with_replacement_in_previous_date(page: Page, reset_databas
     page.get_by_role("option", name="Pelikanhalle (unten)").click()
     page.get_by_role("textbox", name="Kommentar zur Verschiebung").fill("Wegen schönen Wetters jetzt draußen")
     page.get_by_role("button", name="Speichern").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("link", name="Konfiguration").click()
     page.get_by_role("navigation", name="Konfigurationsbereich-Navigation").get_by_role("link", name="Orte").click()
@@ -181,9 +173,7 @@ def test_delete_room_with_replacement_in_previous_date(page: Page, reset_databas
         "unten in der Halle"
     )
     page.get_by_role("button", name="Ort löschen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    actions.check_success_toast(page)
 
     page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Orte").click()
     page.get_by_role("link", name="Pelikanhalle").click()

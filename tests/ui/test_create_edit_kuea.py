@@ -1,12 +1,13 @@
 import dataclasses
 import datetime
 import re
+import time
 
-from playwright.sync_api import Page, expect
+import playwright.sync_api
+from playwright.sync_api import Browser, Page, expect
 
-from . import actions, helpers
+from . import actions, data, helpers
 from .data import (
-    ANNOUNCEMENT_SPORTPLATZ_NASS,
     CATEGORY_SPORT,
     ENTRY_BEACH_VOLLEYBALL,
     ENTRY_BEGRUESSUNGSPLENUM,
@@ -17,15 +18,6 @@ from .data import (
     ROOM_SPORTPLAETZE,
 )
 from .helpers import is_text_bold, is_text_colored
-
-
-def test_create_sample_data(page: Page, reset_database: None) -> None:
-    actions.login(page, 1, "orga")
-    actions.add_category(page, CATEGORY_SPORT)
-    actions.add_room(page, ROOM_SPORTPLAETZE)
-    actions.add_entry(page, ENTRY_BEACH_VOLLEYBALL)
-    actions.add_entry(page, ENTRY_SONNENAUFGANG_WANDERUNG)
-    actions.add_announcement(page, ANNOUNCEMENT_SPORTPLATZ_NASS)
 
 
 def test_create_entry(page: Page, reset_database: None) -> None:
@@ -239,3 +231,83 @@ def test_clone_entry(page: Page, reset_database: None) -> None:
     # Due to the carryover to the next day of the entry, crossing the day boundary, we should see both duplicates of the
     #   entry on the 4th of January.
     expect(page.get_by_role("cell").filter(has_text="Sonnenaufgang-Wanderung")).to_have_count(2)
+
+
+def test_detect_concurrent_entry_change(browser: Browser, reset_database: None) -> None:
+    context1 = browser.new_context()
+    page1 = context1.new_page()
+    context2 = browser.new_context()
+    page2 = context2.new_page()
+    actions.login(page1, 1, "orga")
+    actions.login(page2, 1, "orga")
+    actions.add_entry(page1, data.ENTRY_AKROBATIK)
+
+    page2.get_by_role("button", name="Datum").click()
+    page2.get_by_role("link", name="Fr 03.01.").click()
+    helpers.get_table_row_by_column_value(page2, "Was?", "Akrobatik").get_by_role("link", name="bearbeiten").click()
+    page2.get_by_role("textbox", name="Kommentar / Kurze Beschreibung").fill(
+        "Erfahrung von Akrobatik-KüAs wird vorausgesetzt"
+    )
+
+    helpers.get_table_row_by_column_value(page1, "Was?", "Akrobatik").get_by_role("link", name="bearbeiten").click()
+    page1.get_by_role("textbox", name="von wem? / Ansprechpersonen").fill("Lilo Thiemann und Flavio Blume")
+    page1.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(page1)
+
+    page2.get_by_role("button", name="Speichern").click()
+    error_alert = page2.get_by_role("alert").filter(has_text="Fehler")
+    expect(error_alert).to_be_visible()
+    expect(error_alert).to_contain_text("zwischenzeitlich bearbeitet")
+    expect(error_alert).to_contain_text("Bitte das Formular neu laden und die Änderung erneut durchführen")
+    error_alert.get_by_role("link", name="Formular neuladen").click()
+
+    expect(page2.get_by_role("textbox", name="von wem? / Ansprechpersonen")).to_have_value(
+        "Lilo Thiemann und Flavio Blume"
+    )
+    page2.get_by_role("textbox", name="Kommentar / Kurze Beschreibung").fill(
+        "Erfahrung von Akrobatik-KüAs wird vorausgesetzt"
+    )
+    page2.get_by_role("button", name="Speichern").click()
+
+    row = helpers.get_table_row_by_column_value(page2, "Was?", "Akrobatik")
+    expect(row).to_contain_text("Lilo Thiemann und Flavio Blume")
+    expect(row).to_contain_text("Erfahrung von Akrobatik-KüAs wird vorausgesetzt")
+
+
+def test_detect_unsaved_changes(page: Page, reset_database: None) -> None:
+    dialog_shown = False
+
+    def handle_dialog(dialog: playwright.sync_api.Dialog) -> None:
+        if dialog.type == "beforeunload":
+            nonlocal dialog_shown
+            dialog_shown = True
+        dialog.dismiss()
+
+    page.on("dialog", handle_dialog)
+
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_AKROBATIK)
+    helpers.get_table_row_by_column_value(page, "Was?", "Akrobatik").get_by_role("link", name="bearbeiten").click()
+
+    # No effective changes -> no dialog shown
+    page.get_by_role("textbox", name="Kommentar zum Ort").fill("Wir laufen über's Gelände")
+    page.get_by_role("textbox", name="Kommentar zur Zeit").focus()
+    page.get_by_role("textbox", name="Kommentar zum Ort").fill("")
+    page.get_by_role("link", name="Vorherige Termine").click()
+    expect(page).to_have_title(re.compile(r"Vorherige Termine"))
+    assert not dialog_shown
+
+    # with changes: onbeforeunload dialog is shown for confirming
+    page.get_by_role("link", name="Bearbeiten").click()
+    page.get_by_role("textbox", name="von wem? / Ansprechpersonen").fill("Lilo Thiemann und Flavio Blume")
+    page.get_by_role("link", name="Vorherige Termine").click()
+    tic = time.time()
+    while not dialog_shown and time.time() - tic < 5.0:
+        time.sleep(0.01)
+    assert dialog_shown
+
+    # Special handling of cancel button: no dialog shown
+    dialog_shown = False  # type: ignore [unreachable]  # mypy does not get the mutability of `dialog_shown`
+    page.get_by_role("link", name="Abbrechen").click()
+    expect(page).to_have_title(re.compile(r"03.01."))
+    assert not dialog_shown

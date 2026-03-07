@@ -137,3 +137,41 @@ def test_main_list_description(page: Page, reset_database: None) -> None:
     # Check presence of meta data above description
     metadata_paragraph = section.get_by_text("von incognita")
     expect(metadata_paragraph).to_contain_text("04.01. 14:00")
+
+
+def test_main_list_entry_room_order(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_room(page, actions.Room("C"))
+    actions.add_room(page, actions.Room("B"))
+    actions.add_room(page, actions.Room("D"))
+    actions.add_room(page, actions.Room("A"))
+
+    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("textbox", name="Titel").fill("Test Entry")
+    page.get_by_role("textbox", name="Beginn").fill("17:00")
+    for room in ("B", "A"):
+        page.get_by_role("combobox", name="Orte").fill(room)
+        page.get_by_role("option", name=room, exact=True).click()
+    page.get_by_role("button", name="Erstellen").click()
+    actions.check_success_toast(page)
+
+    row = helpers.get_table_row_by_column_value(page, "Was?", "Test Entry")
+    row.get_by_title("bearbeiten").click()
+    page.get_by_role("textbox", name="Beginn").fill("16:00")
+    rooms_input = page.get_by_role("combobox", name="Orte")
+    rooms_input.press("Backspace")
+    rooms_input.press("Backspace")
+    page.get_by_role("combobox", name="Orte").fill("D")
+    page.get_by_role("option", name="D", exact=True).click()
+    page.get_by_role("checkbox", name="Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen").check()
+    page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(page)
+
+    row.get_by_title("bearbeiten").click()
+    page.get_by_role("combobox", name="Orte").fill("C")
+    page.get_by_role("option", name="C", exact=True).click()
+    page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(page)
+
+    room_col = helpers.get_table_cell_by_header(row, "Wo?")
+    expect(room_col).to_have_text(re.compile(r"\s*C,\s+D,\s+Zuvor geplant.*\bA,\s+B\s*", re.DOTALL))

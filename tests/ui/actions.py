@@ -58,9 +58,7 @@ def add_entry(page: Page, entry: Entry) -> None:
     page.get_by_role("textbox", name="Kommentar zum Ort").fill(entry.room_comment)
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(entry.description)
     page.get_by_role("button", name="Erstellen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    check_success_toast(page)
 
 
 @dataclasses.dataclass
@@ -76,9 +74,7 @@ def add_room(page: Page, room: Room) -> None:
     page.get_by_role("textbox", name="Name des Orts").fill(room.title)
     page.get_by_role("textbox", name="Beschreibung").fill(room.description)
     page.get_by_role("button", name="Erstellen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    check_success_toast(page)
 
 
 @dataclasses.dataclass
@@ -105,9 +101,7 @@ def add_category(page: Page, category: Category) -> None:
     if category.is_official:
         page.get_by_role("checkbox", name="ist offiziell").check()
     page.get_by_role("button", name="Erstellen").click()
-    success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
-    expect(success_alert).to_be_visible()
-    success_alert.get_by_role("button", name="Close").click()
+    check_success_toast(page)
 
 
 class AnnouncementType(enum.Enum):
@@ -156,6 +150,10 @@ def add_announcement(page: Page, announcement: Announcement) -> None:
         page.get_by_role("option", name=room, exact=True).click()
 
     page.get_by_role("button", name="Erstellen").click()
+    check_success_toast(page)
+
+
+def check_success_toast(page: Page) -> None:
     success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
     expect(success_alert).to_be_visible()
     success_alert.get_by_role("button", name="Close").click()

@@ -459,18 +459,12 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             if let Some(category_id) = entry_data.category.as_ref() {
                 check_categories_validity(&[*category_id], current_event_id, connection)?;
             }
-            let result = diesel::update(entries)
+            diesel::update(entries)
                 .filter(id.eq(entry_id))
-                .set(entry_data)
-                .execute(connection);
+                .set((entry_data, last_updated.eq(diesel::dsl::now)))
+                .execute(connection)?;
 
-            match result {
-                Ok(_) => Ok(()),
-                // Ignore error "There are no changes to save. This query cannot be built" when
-                // nothing is changed (or only rooms are changed)
-                Err(diesel::result::Error::QueryBuilderError(_)) => Ok(()),
-                Err(e) => Err(e.into()),
-            }
+            Ok(())
         })
     }
 
@@ -1006,7 +1000,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
             diesel::update(announcements)
                 .filter(id.eq(announcement_id))
-                .set(announcement_data)
+                .set((announcement_data, last_updated.eq(diesel::dsl::now)))
                 .execute(connection)?;
             Ok(())
         })

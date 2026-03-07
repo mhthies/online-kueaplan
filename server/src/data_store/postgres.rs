@@ -710,6 +710,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 return Err(StoreError::NotExisting);
             }
 
+            // do this after we marked the room as deleted, to make sure that we detect when you
+            // replace with the room itself. This is fine, because we're working in a database
+            // transaction.
+            replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
+
             Ok(())
         })
     }
@@ -796,7 +801,19 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 ));
             };
 
+            let count = diesel::update(categories)
+                .filter(id.eq(category_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            };
+
             // Move entries to different category if requested
+            // Do this after we marked the room as deleted, to make sure that we detect when you
+            // replace with the room itself. This is fine, because we're working in a database
+            // transaction.
             if let Some(replacement_category) = replacement_category {
                 use schema::entries::dsl::*;
 
@@ -820,15 +837,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     ));
                 };
             }
-
-            let count = diesel::update(categories)
-                .filter(id.eq(category_id))
-                .filter(event_id.eq(the_event_id))
-                .set(deleted.eq(true))
-                .execute(connection)?;
-            if count == 0 {
-                return Err(StoreError::NotExisting);
-            };
 
             Ok(())
         })

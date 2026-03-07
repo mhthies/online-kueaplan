@@ -1470,6 +1470,7 @@ fn replace_room_with_other_rooms(
         )
         .execute(connection)?;
     diesel::update(entries::table)
+        .filter(entries::id.eq_any(entry_ids))
         .set(entries::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
 
@@ -1495,6 +1496,7 @@ fn replace_room_with_other_rooms(
         )
         .execute(connection)?;
     diesel::update(previous_dates::table)
+        .filter(previous_dates::id.eq_any(previous_date_ids))
         .set(previous_dates::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
     Ok(())

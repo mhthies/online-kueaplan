@@ -94,6 +94,45 @@ def test_delete_category(generated_api_client: ApiClientWrapper, reset_database:
     assert result[0].title == "Default"
 
 
+def test_delete_category_with_replacement(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    # given: a new category and an entry, which belongs to this category
+    category = kueaplan_api_client.Category(
+        id=str(uuid.uuid4()),
+        title="Test Category",
+        icon="💡",
+        color="ffaa00",
+        sort_key=42,
+    )
+    generated_api_client.client.create_or_update_category(event_id, category.id, category)
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        room=[],
+        responsible_person="Max Mustermann",
+        category=category.id,
+        previousDates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # when: we delete the category and specify the default category as replacement
+    # then: the deletion succeeds
+    generated_api_client.client.delete_category(
+        event_id,
+        category.id,
+        kueaplan_api_client.DeleteCategoryRequest(replace_category="019774dc-81c4-7862-a9ba-63de3d726010"),
+    )
+
+    # and then: the entry is assigned to the default category
+    new_entry = generated_api_client.client.get_entry(event_id, entry.id)
+    assert new_entry.category == uuid.UUID("019774dc-81c4-7862-a9ba-63de3d726010")
+
+
 def test_delete_category_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
@@ -134,10 +173,27 @@ def test_delete_category_errors(generated_api_client: ApiClientWrapper, reset_da
     )
     generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
 
-    # Category referenced by entry
+    # Category referenced by entry and no replacement given
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.delete_category(event_id, category.id)
     assert "referenced by entries" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # Non-existing replacement
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_category(
+            event_id,
+            category.id,
+            kueaplan_api_client.DeleteCategoryRequest(replace_category="11111111-2222-3333-4444-555555555555"),
+        )
+    assert "must reference an existing category" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # Category replaced by itself
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_category(
+            event_id, category.id, kueaplan_api_client.DeleteCategoryRequest(replace_category=category.id)
+        )
     assert excinfo.value.data.http_code == 409
 
     # Unauthorized

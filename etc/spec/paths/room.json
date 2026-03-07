@@ -73,6 +73,29 @@
     "security": [
       {"sessionTokenAuth": []}
     ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "replaceRooms": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "ids of zero or more other rooms that will be used to replace the deleted room in entries and previous dates. If not present or empty, the room is removed from all entry and previous dates that are current assigned to it, without replacement."
+              },
+              "addRoomComment": {
+                "type": "string",
+                "description": "An arbitrary string that will be appended to the `roomComment` of all entries that are currently assigned to the deleted room. If not empty and the entry's current room comment is not empty, '; ' will be used to join them."
+              }
+            }
+          }
+        }
+      }
+    },
     "responses": {
       "204": {
         "description": "Removing the room was successful."

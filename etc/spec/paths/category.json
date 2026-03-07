@@ -73,6 +73,23 @@
     "security": [
       {"sessionTokenAuth": []}
     ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "replaceCategory": {
+                "type": "string",
+                "format": "uuid",
+                "description": "id of another category that will be used to replace the deleted category, if any entry is still assigned to it. If not present or null, deleting a categories with entries assigned to it is not possible and will result in a HTTP 409 response.",
+                "nullable": true
+              }
+            }
+          }
+        }
+      }
+    },
     "responses": {
       "204": {
         "description": "Removing the category was successful."

@@ -459,18 +459,12 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             if let Some(category_id) = entry_data.category.as_ref() {
                 check_categories_validity(&[*category_id], current_event_id, connection)?;
             }
-            let result = diesel::update(entries)
+            diesel::update(entries)
                 .filter(id.eq(entry_id))
-                .set(entry_data)
-                .execute(connection);
+                .set((entry_data, last_updated.eq(diesel::dsl::now)))
+                .execute(connection)?;
 
-            match result {
-                Ok(_) => Ok(()),
-                // Ignore error "There are no changes to save. This query cannot be built" when
-                // nothing is changed (or only rooms are changed)
-                Err(diesel::result::Error::QueryBuilderError(_)) => Ok(()),
-                Err(e) => Err(e.into()),
-            }
+            Ok(())
         })
     }
 
@@ -710,6 +704,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 return Err(StoreError::NotExisting);
             }
 
+            // do this after we marked the room as deleted, to make sure that we detect when you
+            // replace with the room itself. This is fine, because we're working in a database
+            // transaction.
+            replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
+
             Ok(())
         })
     }
@@ -796,7 +795,19 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 ));
             };
 
+            let count = diesel::update(categories)
+                .filter(id.eq(category_id))
+                .filter(event_id.eq(the_event_id))
+                .set(deleted.eq(true))
+                .execute(connection)?;
+            if count == 0 {
+                return Err(StoreError::NotExisting);
+            };
+
             // Move entries to different category if requested
+            // Do this after we marked the room as deleted, to make sure that we detect when you
+            // replace with the room itself. This is fine, because we're working in a database
+            // transaction.
             if let Some(replacement_category) = replacement_category {
                 use schema::entries::dsl::*;
 
@@ -820,15 +831,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     ));
                 };
             }
-
-            let count = diesel::update(categories)
-                .filter(id.eq(category_id))
-                .filter(event_id.eq(the_event_id))
-                .set(deleted.eq(true))
-                .execute(connection)?;
-            if count == 0 {
-                return Err(StoreError::NotExisting);
-            };
 
             Ok(())
         })
@@ -998,7 +1000,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
             diesel::update(announcements)
                 .filter(id.eq(announcement_id))
-                .set(announcement_data)
+                .set((announcement_data, last_updated.eq(diesel::dsl::now)))
                 .execute(connection)?;
             Ok(())
         })
@@ -1468,6 +1470,7 @@ fn replace_room_with_other_rooms(
         )
         .execute(connection)?;
     diesel::update(entries::table)
+        .filter(entries::id.eq_any(entry_ids))
         .set(entries::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
 
@@ -1493,6 +1496,7 @@ fn replace_room_with_other_rooms(
         )
         .execute(connection)?;
     diesel::update(previous_dates::table)
+        .filter(previous_dates::id.eq_any(previous_date_ids))
         .set(previous_dates::last_updated.eq(diesel::dsl::now))
         .execute(connection)?;
     Ok(())

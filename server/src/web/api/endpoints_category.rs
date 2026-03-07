@@ -2,6 +2,7 @@ use crate::data_store::models::NewCategory;
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
 use actix_web::{delete, get, put, web, HttpResponse, Responder};
+use serde::Deserialize;
 use uuid::Uuid;
 
 #[get("/events/{event_id}/categories")]
@@ -64,21 +65,33 @@ async fn delete_category(
     path: web::Path<(i32, Uuid)>,
     state: web::Data<AppState>,
     session_token_header: Option<web::Header<SessionTokenHeader>>,
+    data: Option<web::Json<DeleteCategoryBody>>,
 ) -> Result<impl Responder, APIError> {
     let (event_id, category_id) = path.into_inner();
     let session_token = session_token_header
         .ok_or(APIError::NoSessionToken)?
         .into_inner()
         .session_token(&state.secret)?;
-    // TODO allow replacing category
+    let data = data.map(web::Json::<_>::into_inner);
     web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        store.delete_category(&auth, event_id, category_id, None)?;
+        store.delete_category(
+            &auth,
+            event_id,
+            category_id,
+            data.map(|data| data.replace_category),
+        )?;
         Ok(())
     })
     .await?
     .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
+}
+
+#[derive(Deserialize)]
+struct DeleteCategoryBody {
+    #[serde(default, rename = "replaceCategory")]
+    replace_category: Uuid,
 }

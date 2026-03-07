@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import pytest
@@ -77,6 +78,50 @@ def test_delete_room(generated_api_client: ApiClientWrapper, reset_database: Non
     assert len(result) == 0
 
 
+def test_delete_room_with_replacement(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
+    import kueaplan_api_client
+
+    event_id = 1
+    generated_api_client.login(event_id, "orga")
+    # given: two rooms and an entry, which takes place in one room and has a previous date in this room
+    room1 = kueaplan_api_client.Room(id=str(uuid.uuid4()), title="Test Room", description="")
+    room2 = kueaplan_api_client.Room(id=str(uuid.uuid4()), title="Test Room 2", description="")
+    generated_api_client.client.create_or_update_room(event_id, room1.id, room1)
+    generated_api_client.client.create_or_update_room(event_id, room2.id, room2)
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        room=[room1.id],
+        room_comment="Das macht Spaß",
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from database dump
+        previous_dates=[
+            kueaplan_api_client.PreviousDate(
+                id=str(uuid.uuid4()),
+                begin=datetime.datetime(2025, 1, 6, 13, 0, tzinfo=datetime.UTC).isoformat(),
+                end=datetime.datetime(2025, 1, 6, 14, 30, tzinfo=datetime.UTC).isoformat(),
+                room=[room1.id],
+            )
+        ],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # when: we delete the room and specify the second room as replacement (as well as an additional room comment)
+    generated_api_client.client.delete_room(
+        event_id,
+        room1.id,
+        kueaplan_api_client.DeleteRoomRequest(replace_rooms=[room2.id], add_room_comment="war im alten Testraum"),
+    )
+
+    # and then: the entry and its previous date are assigned to the second room (and the room_comment is amended)
+    new_entry = generated_api_client.client.get_entry(event_id, entry.id)
+    assert new_entry.room == [room2.id]
+    assert new_entry.previous_dates[0].room == [room2.id]
+    assert new_entry.room_comment == "Das macht Spaß; war im alten Testraum"
+
+
 def test_delete_room_errors(generated_api_client: ApiClientWrapper, reset_database: None) -> None:
     import kueaplan_api_client
 
@@ -96,6 +141,35 @@ def test_delete_room_errors(generated_api_client: ApiClientWrapper, reset_databa
         description="",
     )
     generated_api_client.client.create_or_update_room(event_id, room.id, room)
+    entry = kueaplan_api_client.Entry(
+        id=str(uuid.uuid4()),
+        title="Drachenfliegen leicht gemacht",
+        begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),
+        end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
+        room=[room.id],
+        room_comment="Das macht Spaß",
+        responsible_person="Max Mustermann",
+        category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from database dump
+        previous_dates=[],
+    )
+    generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
+
+    # Non-existing replacement
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_room(
+            event_id,
+            room.id,
+            kueaplan_api_client.DeleteRoomRequest(replace_rooms=["11111111-2222-3333-4444-555555555555"]),
+        )
+    assert "must reference existing rooms" in str(excinfo.value.data.message)
+    assert excinfo.value.data.http_code == 409
+
+    # Room replaced with itself
+    with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
+        generated_api_client.client.delete_room(
+            event_id, room.id, kueaplan_api_client.DeleteRoomRequest(replace_rooms=[room.id])
+        )
+    assert excinfo.value.data.http_code == 409
 
     # Unauthorized
     del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]

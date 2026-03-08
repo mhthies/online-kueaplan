@@ -702,7 +702,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     )
                     .execute(connection)?;
             }
-            replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
 
             let count = diesel::update(rooms)
                 .filter(id.eq(room_id))

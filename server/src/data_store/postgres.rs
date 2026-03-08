@@ -523,6 +523,8 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         entry_id: EntryId,
         previous_date_id: PreviousDateId,
     ) -> Result<(), StoreError> {
+        use schema::entries;
+
         self.connection.transaction(|connection| {
             // Check if referenced entry exists and get entry's event_id for auth check
             let event_id = schema::entries::table
@@ -538,6 +540,13 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     .filter(schema::previous_dates::id.eq(previous_date_id)),
             )
             .execute(connection)?;
+            // We need to somehow mark the entry as changed, so clients using the sync API will be
+            // informed about the change. Since the previous_date itself does no longer exist, we
+            // cannot use it's last_updated field for this purpose, anymore.
+            diesel::update(entries::table)
+                .filter(entries::id.eq(entry_id))
+                .set(entries::last_updated.eq(diesel::dsl::now))
+                .execute(connection)?;
             Ok(())
         })
     }

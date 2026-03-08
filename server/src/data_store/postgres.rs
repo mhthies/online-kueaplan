@@ -674,6 +674,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
     ) -> Result<(), StoreError> {
         use diesel::dsl::exists;
         use schema::rooms::dsl::*;
+        use schema::{announcement_rooms, announcements};
 
         // The correctness of the given event_id is checked in the DELETE statement below
         auth_token.check_privilege(the_event_id, Privilege::ManageRooms)?;
@@ -717,6 +718,20 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             // transaction.
             replace_room_with_other_rooms(the_event_id, room_id, replace_with_rooms, connection)?;
 
+            // update announcements for the deleted room
+            diesel::update(announcements::table)
+                .filter(exists(
+                    announcement_rooms::table
+                        .select(0.as_sql::<diesel::sql_types::Integer>())
+                        .filter(announcement_rooms::announcement_id.eq(announcements::id))
+                        .filter(announcement_rooms::room_id.eq(room_id)),
+                ))
+                .set(announcements::last_updated.eq(diesel::dsl::now))
+                .execute(connection)?;
+            diesel::delete(
+                announcement_rooms::table.filter(announcement_rooms::room_id.eq(room_id)),
+            )
+            .execute(connection)?;
             Ok(())
         })
     }
@@ -781,8 +796,9 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         category_id: uuid::Uuid,
         replacement_category: Option<CategoryId>,
     ) -> Result<(), StoreError> {
-        use diesel::dsl::not;
+        use diesel::dsl::{exists, not};
         use schema::categories::dsl::*;
+        use schema::{announcement_categories, announcements};
 
         // The correctness of the given event_id is checked in the DELETE statement below
         auth_token.check_privilege(the_event_id, Privilege::ManageCategories)?;
@@ -839,6 +855,22 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     ));
                 };
             }
+
+            // update announcements for the deleted category
+            diesel::update(announcements::table)
+                .filter(exists(
+                    announcement_categories::table
+                        .select(0.as_sql::<diesel::sql_types::Integer>())
+                        .filter(announcement_categories::announcement_id.eq(announcements::id))
+                        .filter(announcement_categories::category_id.eq(category_id)),
+                ))
+                .set(announcements::last_updated.eq(diesel::dsl::now))
+                .execute(connection)?;
+            diesel::delete(
+                announcement_categories::table
+                    .filter(announcement_categories::category_id.eq(category_id)),
+            )
+            .execute(connection)?;
 
             Ok(())
         })

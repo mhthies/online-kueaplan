@@ -728,10 +728,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 ))
                 .set(announcements::last_updated.eq(diesel::dsl::now))
                 .execute(connection)?;
-            diesel::delete(
-                announcement_rooms::table.filter(announcement_rooms::room_id.eq(room_id)),
-            )
-            .execute(connection)?;
             Ok(())
         })
     }
@@ -857,6 +853,11 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             }
 
             // update announcements for the deleted category
+            // We do not actually delete the announcement_categories references here. This is not
+            // necessary, because the related query function (get_announcements()) filters out
+            // references to deleted categories.
+            // On the other hand, keeping the references allows for recovery from an accidental
+            // deletion of a category.
             diesel::update(announcements::table)
                 .filter(exists(
                     announcement_categories::table
@@ -866,11 +867,6 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 ))
                 .set(announcements::last_updated.eq(diesel::dsl::now))
                 .execute(connection)?;
-            diesel::delete(
-                announcement_categories::table
-                    .filter(announcement_categories::category_id.eq(category_id)),
-            )
-            .execute(connection)?;
 
             Ok(())
         })
@@ -1488,12 +1484,17 @@ fn replace_room_with_other_rooms(
     // Check that replacements actually exists in event
     check_rooms_validity(replace_with_rooms, the_event_id, connection)?;
 
+    // We do not actually delete the entry_rooms, previous_date_rooms and announcement_rooms
+    // reference entries here. This is not necessary, because the related query functions
+    // (get_entries_filtered(), get_entry() and get_announcements) filter out references to deleted
+    // rooms.
+    // On the other hand, keeping the references allows for recovery from an accidental deletion of
+    // a room.
+
     let entry_ids: Vec<EntryId> = entry_rooms::table
         .filter(entry_rooms::room_id.eq(room_id))
         .select(entry_rooms::entry_id)
         .get_results(connection)?;
-    diesel::delete(entry_rooms::table.filter(entry_rooms::room_id.eq(room_id)))
-        .execute(connection)?;
     diesel::insert_into(entry_rooms::table)
         .values(
             entry_ids
@@ -1518,8 +1519,6 @@ fn replace_room_with_other_rooms(
         .filter(previous_date_rooms::room_id.eq(room_id))
         .select(previous_date_rooms::previous_date_id)
         .get_results(connection)?;
-    diesel::delete(previous_date_rooms::table.filter(previous_date_rooms::room_id.eq(room_id)))
-        .execute(connection)?;
     diesel::insert_into(previous_date_rooms::table)
         .values(
             previous_date_ids

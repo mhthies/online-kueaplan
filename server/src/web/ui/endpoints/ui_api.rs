@@ -24,17 +24,20 @@ async fn concurrent_entries(
         util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let query = query.into_inner();
 
-    let (entries, event, query) = web::block(move || -> Result<_, AppError> {
+    let (entries, rooms, event, query) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         let event = store.get_extended_event(&auth, event_id)?;
         Ok((
             store.get_entries_filtered(&auth, event_id, query.to_filter(&event.clock_info))?,
+            store.get_rooms(&auth, event_id)?,
             event,
             query,
         ))
     })
     .await??;
+    let rooms_by_id: crate::web::ui::sub_templates::main_list_row::RoomByIdWithOrder =
+        rooms.iter().collect();
 
     let mut entries_and_room_conflict_flag: Vec<_> = entries
         .into_iter()
@@ -57,11 +60,12 @@ async fn concurrent_entries(
             let show_begin_date = begin.date() < query.effective_day;
             let show_end_date =
                 query.duration > chrono::Duration::hours(12) && end.date() != begin.date();
+            let room_ids_sorted = rooms_by_id.iter_rooms_by_id_ordered(&e.room_ids).map(|r| r.id).collect::<Vec<_>>();
             json!({
                 "title": e.entry.title,
                 "begin": if show_begin_date {begin.format("%d.%m. %H:%M").to_string()} else {begin.format("%H:%M").to_string()},
                 "end": if show_end_date {end.format("%d.%m. %H:%M").to_string()} else {end.format("%H:%M").to_string()},
-                "rooms": e.room_ids,
+                "rooms": room_ids_sorted,
                 "has_room_conflict": has_room_conflict,
                 "is_room_reservation": e.entry.is_room_reservation,
                 "is_exclusive": e.entry.is_exclusive,

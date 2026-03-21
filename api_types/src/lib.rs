@@ -40,6 +40,8 @@ pub struct EventDayScheduleSection {
     pub end_time: Option<NaiveTime>,
 }
 
+/// Simple helper function to be used with `#[serde(skip_serializing_if=...)]` for serializing
+/// optional bool values.
 fn not(v: &bool) -> bool {
     !v
 }

@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, EventClockInfo, ExtendedEvent};
+use crate::data_store::models::{EntrySubmissionMode, Event, EventClockInfo, ExtendedEvent};
 use crate::data_store::{EventFilter, EventId, StoreError};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
@@ -184,6 +184,7 @@ impl ExtendedEventFormData {
             default_time_schedule: default_time_schedule.0,
             preceding_event_id: preceding_event_id?.0.map(|v| v.into_inner()),
             subsequent_event_id: subsequent_event_id?.0.map(|v| v.into_inner()),
+            entry_submission_mode: EntrySubmissionMode::Disabled, // TODO
         })
     }
 }

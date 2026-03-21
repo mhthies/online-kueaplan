@@ -29,9 +29,14 @@
                     "description": "id of an event which directly follows this event, or null if there is no such event. If existing, users should be guided to the subsequent event from the last day of this event.",
                     "type": "integer",
                     "nullable": true
+                },
+                "entrySubmissionMode": {
+                    "description": "Whether entry submissions by participants are allowed for this event and if so, in which mode of operation.",
+                    "type": "string",
+                    "enum": ["disabled", "review-before-publishing", "review-after-publishing"]
                 }
             },
-            "required": ["timezone", "effectiveBeginOfDay", "defaultTimeSchedule", "precedingEventId", "subsequentEventId"]
+            "required": ["timezone", "effectiveBeginOfDay", "defaultTimeSchedule", "precedingEventId", "subsequentEventId", "entrySubmissionMode"]
         }
     ]
 }

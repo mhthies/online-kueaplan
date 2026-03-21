@@ -39,6 +39,8 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
     )
     generated_api_client.client.create_or_update_entry(EVENT_ID, entry.id, entry)
 
+    # Unspecified state defaults to "published"
+    entry.state = "published"
     result = generated_api_client.client.list_entries(EVENT_ID)
     # Categories are ordered by sort_key. Default room is 0, so our room comes second
     assert result[0] == entry
@@ -266,6 +268,8 @@ def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_datab
     )
     generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
 
+    # Unspecified state defaults to "published"
+    entry.state = "published"
     result = generated_api_client.client.list_entries(event_id)
     # Categories are ordered by sort_key. Default room is 0, so our room comes second
     assert result[0] == entry

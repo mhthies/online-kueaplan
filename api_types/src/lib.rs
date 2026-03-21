@@ -26,6 +26,8 @@ pub struct ExtendedEvent {
     pub preceding_event_id: Option<i32>,
     #[serde(rename = "subsequentEventId")]
     pub subsequent_event_id: Option<i32>,
+    #[serde(rename = "entrySubmissionMode")]
+    pub entry_submission_mode: EntrySubmissionMode,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -38,6 +40,21 @@ pub struct EventDayScheduleSection {
     pub name: String,
     #[serde(rename = "endTime")]
     pub end_time: Option<NaiveTime>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum EntrySubmissionMode {
+    /// No submission of entries by participants
+    #[serde(rename = "disabled")]
+    Disabled = 0,
+    /// Entries can be submitted by participants, but only in state SubmittedForReview, such that
+    /// they have to be reviewd by event orgas before being visible to all participants.
+    #[serde(rename = "review-before-publishing")]
+    ReviewBeforePublishing = 1,
+    /// Entries can be submitted by participants, in state PreliminaryPublished, such that they will
+    /// be directly visible to all participants, but are marked for later review be orgas.
+    #[serde(rename = "review-after-publishing")]
+    ReviewAfterPublishing = 2,
 }
 
 /// Simple helper function to be used with `#[serde(skip_serializing_if=...)]` for serializing
@@ -70,6 +87,8 @@ pub struct Entry {
     #[serde(default, skip_serializing_if = "not", rename = "isRoomReservation")]
     pub is_room_reservation: bool,
     pub category: Uuid,
+    #[serde(default = "EntryState::default_from_api")]
+    pub state: EntryState,
     #[serde(default, rename = "previousDates")]
     pub previous_dates: Vec<PreviousDate>,
 }
@@ -126,6 +145,8 @@ pub struct EntryPatch {
     pub is_room_reservation: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub category: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<EntryState>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -136,6 +157,37 @@ pub struct PreviousDate {
     #[serde(default, skip_serializing_if = "str::is_empty")]
     pub comment: String,
     pub room: Vec<Uuid>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum EntryState {
+    /// Normal public entry state, visible to all participants.
+    #[serde(rename = "published")]
+    Published = 0,
+    /// Entry has been created by an orga, but marked as a draft to be not published (visible to
+    /// participants) yet
+    #[serde(rename = "draft")]
+    Draft = 1,
+    /// Entry has been submitted by a participant and needs to be reviewed by an orga before
+    /// publishing (making it visible to participants)
+    #[serde(rename = "submitted-for-review")]
+    SubmittedForReview = 2,
+    /// Entry is published but still awaiting review by an orga
+    #[serde(rename = "preliminary-published")]
+    PreliminaryPublished = 3,
+    /// Entry has been retracted, so it's currently not visible to participants (but can be
+    /// published again later)
+    #[serde(rename = "retracted")]
+    Retracted = 4,
+    /// Entry was submitted by a participant and has been rejected from publishing in review
+    #[serde(rename = "rejected")]
+    Rejected = 5,
+}
+
+impl EntryState {
+    fn default_from_api() -> Self {
+        Self::Published
+    }
 }
 
 #[derive(Serialize, Deserialize)]

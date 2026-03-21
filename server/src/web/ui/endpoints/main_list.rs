@@ -348,7 +348,7 @@ fn group_rows_into_blocks<'a, 'e>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_store::models::{Entry, FullPreviousDate, PreviousDate};
+    use crate::data_store::models::{Entry, EntryState, FullPreviousDate, PreviousDate};
     use uuid::uuid;
 
     const DEFAULT_CLOCK_INFO: EventClockInfo = EventClockInfo {
@@ -379,6 +379,7 @@ mod tests {
                     room_comment: "".to_string(),
                     is_exclusive: false,
                     is_cancelled: false,
+                    state: EntryState::Published,
                 },
                 room_ids: vec![room_1],
                 previous_dates: vec![
@@ -422,6 +423,7 @@ mod tests {
                     room_comment: "".to_string(),
                     is_exclusive: false,
                     is_cancelled: false,
+                    state: EntryState::Published,
                 },
                 room_ids: vec![room_3],
                 previous_dates: vec![
@@ -464,6 +466,7 @@ mod tests {
                     room_comment: "".to_string(),
                     is_exclusive: false,
                     is_cancelled: false,
+                    state: EntryState::Published,
                 },
                 room_ids: vec![room_1],
                 previous_dates: vec![FullPreviousDate {

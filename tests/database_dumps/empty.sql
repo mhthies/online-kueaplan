@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 3wy3LqJmoibxMMyHQiicIQF8XxmAUHcRMGhq9kkNfcYfQgAZoEzwMdM4WN8OLU3
+\restrict 85ni5oGcssTYfiWP9UmnpmtVTBrhM2XwC2gPTdy11xg3s4rK3RpCtdomdFNyAJF
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -187,6 +187,7 @@ CREATE TABLE public.entries (
     room_comment character varying DEFAULT ''::character varying NOT NULL,
     is_exclusive boolean DEFAULT false NOT NULL,
     is_cancelled boolean DEFAULT false NOT NULL,
+    state integer NOT NULL,
     CONSTRAINT entries_time_range CHECK (("end" >= begin))
 );
 
@@ -259,6 +260,7 @@ CREATE TABLE public.events (
     slug character varying,
     preceding_event_id integer,
     subsequent_event_id integer,
+    entry_submission_mode integer NOT NULL,
     CONSTRAINT events_date_range CHECK ((end_date >= begin_date))
 );
 
@@ -349,6 +351,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20251025113806	2025-10-25 14:32:23.431471
 20251108174050	2025-11-08 19:19:48.400034
 20251126174535	2025-11-29 16:32:57.663578
+202603211552400000	2026-03-21 17:17:24.38129
 \.
 
 
@@ -388,7 +391,7 @@ COPY public.categories (id, title, icon, color, event_id, deleted, last_updated,
 -- Data for Name: entries; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled) FROM stdin;
+COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled, state) FROM stdin;
 \.
 
 
@@ -412,7 +415,7 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 -- Data for Name: events; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id) FROM stdin;
+COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id, entry_submission_mode) FROM stdin;
 \.
 
 
@@ -783,5 +786,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 3wy3LqJmoibxMMyHQiicIQF8XxmAUHcRMGhq9kkNfcYfQgAZoEzwMdM4WN8OLU3
+\unrestrict 85ni5oGcssTYfiWP9UmnpmtVTBrhM2XwC2gPTdy11xg3s4rK3RpCtdomdFNyAJF
 

@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict B6Q7yjAqmvdX6vtZalcMvFPjeVRFqJoe28rIq0Yxr7xa2WCfweDwLEPSdYvjNYf
+\restrict yN2Iwt6hBBiF9y1Z9O3XeyWoelmhdfUCe7XqOWmtmB8rsGhO2OsvKr8tysBsU4s
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -187,6 +187,7 @@ CREATE TABLE public.entries (
     room_comment character varying DEFAULT ''::character varying NOT NULL,
     is_exclusive boolean DEFAULT false NOT NULL,
     is_cancelled boolean DEFAULT false NOT NULL,
+    state integer NOT NULL,
     CONSTRAINT entries_time_range CHECK (("end" >= begin))
 );
 
@@ -259,6 +260,7 @@ CREATE TABLE public.events (
     slug character varying,
     preceding_event_id integer,
     subsequent_event_id integer,
+    entry_submission_mode integer NOT NULL,
     CONSTRAINT events_date_range CHECK ((end_date >= begin_date))
 );
 
@@ -349,6 +351,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20251025113806	2025-10-25 14:32:23.185685
 20251108174050	2025-11-08 19:19:48.143637
 20251126174535	2025-11-29 16:32:57.400042
+202603211552400000	2026-03-21 17:17:24.087896
 \.
 
 
@@ -382,7 +385,7 @@ COPY public.announcements (id, event_id, announcement_type, text, show_with_days
 
 COPY public.categories (id, title, icon, color, event_id, deleted, last_updated, is_official, sort_key) FROM stdin;
 019774dc-81c4-7862-a9ba-63de3d726010	Default		99aabb	1	f	2025-06-15 20:33:10.223001+02	f	0
-019cba98-3963-7477-a04a-0ac6bfaff6bf	Default		99aabb	2	f	2026-03-04 21:43:30.000000+02	f	0
+019cba98-3963-7477-a04a-0ac6bfaff6bf	Default		99aabb	2	f	2026-03-04 20:43:30+01	f	0
 \.
 
 
@@ -390,7 +393,7 @@ COPY public.categories (id, title, icon, color, event_id, deleted, last_updated,
 -- Data for Name: entries; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled) FROM stdin;
+COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled, state) FROM stdin;
 \.
 
 
@@ -420,9 +423,9 @@ COPY public.event_passphrases (id, event_id, privilege, passphrase, derivable_fr
 -- Data for Name: events; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id) FROM stdin;
-1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	test	\N	\N
-2	The other event	2025-06-01	2025-06-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	other	\N	\N
+COPY public.events (id, title, begin_date, end_date, timezone, effective_begin_of_day, default_time_schedule, slug, preceding_event_id, subsequent_event_id, entry_submission_mode) FROM stdin;
+1	TestEvent	2025-01-01	2025-01-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	test	\N	\N	0
+2	The other event	2025-06-01	2025-06-06	Europe/Berlin	05:30:00	{"sections": [{"name": "vom Vortag", "end_time": "05:30:00"}, {"name": "Morgens", "end_time": "12:00:00"}, {"name": "Mittags", "end_time": "18:00:00"}, {"name": "Abends", "end_time": null}]}	other	\N	\N	0
 \.
 
 
@@ -793,5 +796,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict B6Q7yjAqmvdX6vtZalcMvFPjeVRFqJoe28rIq0Yxr7xa2WCfweDwLEPSdYvjNYf
+\unrestrict yN2Iwt6hBBiF9y1Z9O3XeyWoelmhdfUCe7XqOWmtmB8rsGhO2OsvKr8tysBsU4s
 

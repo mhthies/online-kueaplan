@@ -66,6 +66,7 @@ diesel::table! {
         room_comment -> Varchar,
         is_exclusive -> Bool,
         is_cancelled -> Bool,
+        state -> Int4,
     }
 }
 
@@ -101,6 +102,7 @@ diesel::table! {
         slug -> Nullable<Varchar>,
         preceding_event_id -> Nullable<Int4>,
         subsequent_event_id -> Nullable<Int4>,
+        entry_submission_mode -> Int4,
     }
 }
 

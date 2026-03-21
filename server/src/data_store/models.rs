@@ -521,6 +521,28 @@ pub enum EntryState {
     /// Entry was submitted by a participant and has been rejected from publishing in review
     Rejected = 5,
 }
+
+impl EntryState {
+    pub fn is_published(&self) -> bool {
+        match self {
+            Self::Published | Self::PreliminaryPublished => true,
+            Self::Draft | Self::SubmittedForReview | Self::Retracted | Self::Rejected => false,
+        }
+    }
+
+    pub fn all() -> impl Iterator<Item = &'static Self> {
+        [
+            Self::Published,
+            Self::Draft,
+            Self::SubmittedForReview,
+            Self::PreliminaryPublished,
+            Self::Retracted,
+            Self::Rejected,
+        ]
+        .iter()
+    }
+}
+
 impl TryFrom<i32> for EntryState {
     type Error = EnumMemberNotExistingError;
 

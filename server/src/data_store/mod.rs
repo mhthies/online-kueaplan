@@ -77,7 +77,7 @@ pub trait KueaPlanStoreFacade {
         data: models::EventWithContents,
     ) -> Result<EventId, StoreError>;
 
-    /// Get a filtered list of entries of the event
+    /// Get a filtered list of (published) entries of the event
     ///
     /// Entries are returned in chronological order, i.e. sorted by (begin, end)
     fn get_entries_filtered(

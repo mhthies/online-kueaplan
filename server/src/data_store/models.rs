@@ -10,6 +10,37 @@ use diesel::{AsExpression, FromSqlRow};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+macro_rules! impl_to_sql_for_enum {
+    ($T:ty) => {
+        impl<DB> ToSql<diesel::sql_types::Integer, DB> for $T
+        where
+            DB: diesel::backend::Backend,
+            for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+            i32: ToSql<diesel::sql_types::Integer, DB>,
+        {
+            fn to_sql<'b>(
+                &'b self,
+                out: &mut diesel::serialize::Output<'b, '_, DB>,
+            ) -> diesel::serialize::Result {
+                let value: i32 = (*self).into();
+                value.to_sql(&mut out.reborrow())
+            }
+        }
+
+        impl<DB> FromSql<diesel::sql_types::Integer, DB> for $T
+        where
+            DB: diesel::backend::Backend,
+            i32: FromSql<diesel::sql_types::Integer, DB>,
+        {
+            fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+                let x = i32::from_sql(bytes)?;
+                x.try_into()
+                    .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
+            }
+        }
+    };
+}
+
 #[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct Event {
@@ -788,32 +819,7 @@ impl From<kueaplan_api_types::AnnouncementType> for AnnouncementType {
     }
 }
 
-impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
-where
-    DB: diesel::backend::Backend,
-    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
-    i32: ToSql<diesel::sql_types::Integer, DB>,
-{
-    fn to_sql<'b>(
-        &'b self,
-        out: &mut diesel::serialize::Output<'b, '_, DB>,
-    ) -> diesel::serialize::Result {
-        let value: i32 = (*self).into();
-        value.to_sql(&mut out.reborrow())
-    }
-}
-
-impl<DB> FromSql<diesel::sql_types::Integer, DB> for AnnouncementType
-where
-    DB: diesel::backend::Backend,
-    i32: FromSql<diesel::sql_types::Integer, DB>,
-{
-    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        let x = i32::from_sql(bytes)?;
-        x.try_into()
-            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
-    }
-}
+impl_to_sql_for_enum!(AnnouncementType);
 
 // Introduce type for Announcement-Category and Announcement-Room associations, to simplify grouped
 // retrieval of category_ids/room_ids of an Announcement, using Diesel's .grouped_by() method.

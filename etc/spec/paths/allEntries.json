@@ -1,9 +1,24 @@
 {
   "get": {
-    "operationId": "listEntries",
-    "summary": "Get all (published) KüA plan entries for this event.",
+    "operationId": "listAllEntries",
+    "summary": "Get all KüA plan entries of the event, including non-published entries.",
+    "description": "This endpoint allows to retrieve all entries, independent from their publishing/review state. Thus, it requires orga or admin privileges. In addition, it allows to filter by entry state, in addition to the usual filter parameters provided by the `listEntries` endpoint.",
     "parameters": [
       {"$ref": "../components/eventId.json"},
+      {
+        "name": "state",
+        "in": "query",
+        "description": "If given, only include entries with one of the given publishing/review states.",
+        "required": false,
+        "schema": {
+          "type": "array",
+          "collectionFormat": "csv",
+          "items": {
+            "type": "string",
+            "enum": []
+          }
+        }
+      },
       {
         "name": "after",
         "in": "query",

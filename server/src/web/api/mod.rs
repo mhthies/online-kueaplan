@@ -39,6 +39,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_auth::authorize)
         .service(endpoints_auth::drop_access_role)
         .service(endpoints_entry::list_entries)
+        .service(endpoints_entry::list_all_entries)
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)
         .service(endpoints_entry::change_entry)

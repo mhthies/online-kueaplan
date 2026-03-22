@@ -90,7 +90,7 @@ pub fn export_event_to_file(
     let data = SavedEvent {
         event: data_store.get_extended_event(&auth_token, event_id)?.into(),
         entries: data_store
-            .get_entries_filtered(&auth_token, event_id, EntryFilter::default())?
+            .get_published_entries_filtered(&auth_token, event_id, EntryFilter::default())?
             .into_iter()
             .map(|e| e.into())
             .collect(),

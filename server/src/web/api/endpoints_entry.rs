@@ -1,8 +1,10 @@
-use crate::data_store::models::FullNewEntry;
+use crate::data_store::models::{EntryState, FullNewEntry};
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::util::EntryFilterAsQuery;
 use crate::web::AppState;
 use actix_web::{delete, get, patch, put, web, HttpResponse, Responder};
+use serde::de::{Error, Unexpected};
+use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
 
 #[get("/events/{event_id}/entries")]
@@ -20,7 +22,7 @@ async fn list_entries(
     let entries: Vec<kueaplan_api_types::Entry> = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok(store.get_entries_filtered(&auth, event_id, query.into_inner().into())?)
+        Ok(store.get_published_entries_filtered(&auth, event_id, query.into_inner().into())?)
     })
     .await??
     .into_iter()
@@ -28,6 +30,49 @@ async fn list_entries(
     .collect();
 
     Ok(web::Json(entries))
+}
+
+#[get("/events/{event_id}/allEntries")]
+async fn list_all_entries(
+    path: web::Path<i32>,
+    query: web::Query<AllEntriesQuery>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let event_id = path.into_inner();
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
+    let query_data = query.into_inner();
+    let filter = query_data.generic_filter.into();
+    let states_filter = query_data
+        .state_filter
+        .map(|states| -> Vec<EntryState> { states.into_iter().map(Into::into).collect() })
+        .unwrap_or(EntryState::all().copied().collect());
+    let entries: Vec<kueaplan_api_types::Entry> = web::block(move || -> Result<_, APIError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        Ok(store.get_all_entries_filtered(&auth, event_id, filter, &states_filter)?)
+    })
+    .await??
+    .into_iter()
+    .map(|e| e.into())
+    .collect();
+
+    Ok(web::Json(entries))
+}
+
+#[derive(Deserialize, Default)]
+pub struct AllEntriesQuery {
+    #[serde(flatten)]
+    pub generic_filter: EntryFilterAsQuery,
+    #[serde(
+        rename = "state",
+        deserialize_with = "deserialize_optional_comma_separated_list_of_event_states"
+    )]
+    #[serde(default)]
+    pub state_filter: Option<Vec<kueaplan_api_types::EntryState>>,
 }
 
 #[get("/events/{event_id}/entries/{entry_id}")]
@@ -130,4 +175,25 @@ async fn delete_entry(
     .map_err(APIError::for_delete_endpoint)?;
 
     Ok(HttpResponse::NoContent())
+}
+
+fn deserialize_optional_comma_separated_list_of_event_states<'de, D>(
+    deserializer: D,
+) -> Result<Option<Vec<kueaplan_api_types::EntryState>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let str_sequence = String::deserialize(deserializer)?;
+    let result = str_sequence
+        .split(',')
+        .filter(|s| !s.is_empty())
+        .map(serde_urlencoded::from_str)
+        .collect::<Result<Vec<kueaplan_api_types::EntryState>, _>>()
+        .map_err(|_| {
+            D::Error::invalid_value(
+                Unexpected::Str(&str_sequence),
+                &"A comma-separated list of entry state names",
+            )
+        })?;
+    Ok(Some(result))
 }

@@ -80,11 +80,31 @@ pub trait KueaPlanStoreFacade {
     /// Get a filtered list of (published) entries of the event
     ///
     /// Entries are returned in chronological order, i.e. sorted by (begin, end)
-    fn get_entries_filtered(
+    fn get_published_entries_filtered(
         &mut self,
         auth_token: &AuthToken,
         the_event_id: EventId,
         filter: EntryFilter,
+    ) -> Result<Vec<models::FullEntry>, StoreError>;
+
+    /// Get a (filtered) list of entries of the event, including entries in a non-published state.
+    ///
+    /// Entries are returned in chronological order, i.e. sorted by (begin, end).
+    /// In contrast to `get_published_entries_filtered()`, this function also returns entries in a
+    /// non-public state (e.g. [Draft](models::EntryState::Draft) or
+    /// [SubmittedForReview](models::EntryState::SubmittedForReview), but requires
+    /// [Privilege::ManageEntries].
+    ///
+    /// ## Parameters
+    /// * `filter`: Only fetch entries matching the given filter. See [EntryFilter] for more
+    ///   details. Use `EntryFilter::default()` to get all entries.
+    /// * `state_filter`: If not `None`, only entries in one of the given states are returned.
+    fn get_all_entries_filtered(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+        filter: EntryFilter,
+        state_filter: &[models::EntryState],
     ) -> Result<Vec<models::FullEntry>, StoreError>;
 
     fn get_entry(

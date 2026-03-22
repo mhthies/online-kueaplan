@@ -35,7 +35,7 @@ pub async fn delete_category_form(
         Ok((
             store.get_extended_event(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
-            store.get_entries_filtered(&auth, event_id, entry_filter)?,
+            store.get_published_entries_filtered(&auth, event_id, entry_filter)?,
             auth,
         ))
     })
@@ -179,7 +179,7 @@ pub async fn delete_category(
         let mut store = store.get_facade()?;
         auth.check_privilege(event_id, Privilege::ManageCategories)?;
         Ok((
-            store.get_entries_filtered(&auth, event_id, entry_filter)?,
+            store.get_published_entries_filtered(&auth, event_id, entry_filter)?,
             auth,
         ))
     })

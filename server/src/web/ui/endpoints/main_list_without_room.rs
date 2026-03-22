@@ -32,7 +32,7 @@ async fn main_list_without_room(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_extended_event(&auth, event_id)?,
-            store.get_entries_filtered(
+            store.get_published_entries_filtered(
                 &auth,
                 event_id,
                 EntryFilter::builder()

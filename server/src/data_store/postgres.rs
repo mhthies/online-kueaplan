@@ -229,72 +229,35 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
-    fn get_entries_filtered(
+    fn get_published_entries_filtered(
         &mut self,
         auth_token: &AuthToken,
         the_event_id: i32,
         filter: EntryFilter,
     ) -> Result<Vec<models::FullEntry>, StoreError> {
-        use diesel::dsl::not;
-        use schema::entries::dsl::*;
         auth_token.check_privilege(the_event_id, Privilege::ShowKueaPlan)?;
+        get_entries_generic(
+            &mut self.connection,
+            the_event_id,
+            filter,
+            models::EntryState::all().filter(|s| s.is_published()),
+        )
+    }
 
-        self.connection.transaction(|connection| {
-            let the_entries = entries
-                .filter(event_id.eq(the_event_id))
-                .filter(not(deleted))
-                .filter(state.eq_any(models::EntryState::all().filter(|s| s.is_published())))
-                .filter(entry_filter_to_sql(filter))
-                .order_by((begin.asc(), end.asc(), id.asc()))
-                .select(models::Entry::as_select())
-                .load::<models::Entry>(connection)?;
-
-            let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
-                .inner_join(schema::rooms::table)
-                .filter(not(schema::rooms::deleted))
-                .select(models::EntryRoomMapping::as_select())
-                .load::<models::EntryRoomMapping>(connection)?
-                .grouped_by(&the_entries);
-
-            let the_previous_dates = models::PreviousDate::belonging_to(&the_entries)
-                .select(models::PreviousDate::as_select())
-                .load::<models::PreviousDate>(connection)?;
-
-            let the_previous_date_rooms =
-                models::PreviousDateRoomMapping::belonging_to(&the_previous_dates)
-                    .inner_join(schema::rooms::table)
-                    .filter(not(schema::rooms::deleted))
-                    .select(models::PreviousDateRoomMapping::as_select())
-                    .load::<models::PreviousDateRoomMapping>(connection)?
-                    .grouped_by(&the_previous_dates);
-
-            let the_previous_dates = the_previous_dates
-                .into_iter()
-                .zip(the_previous_date_rooms)
-                .map(
-                    |(previous_date, previous_date_rooms)| models::FullPreviousDate {
-                        previous_date,
-                        room_ids: previous_date_rooms
-                            .into_iter()
-                            .map(|rm| rm.room_id)
-                            .collect(),
-                    },
-                )
-                .grouped_by(&the_entries);
-
-            Ok(the_entries
-                .into_iter()
-                .zip(the_entry_rooms)
-                .zip(the_previous_dates)
-                .map(
-                    |((entry, entry_rooms), entry_previous_dates)| models::FullEntry {
-                        entry,
-                        room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
-                        previous_dates: entry_previous_dates,
-                    },
-                )
-                .collect())
-        })
+    fn get_all_entries_filtered(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+        filter: EntryFilter,
+        state_filter: &[models::EntryState],
+    ) -> Result<Vec<models::FullEntry>, StoreError> {
+        auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
+        get_entries_generic(
+            &mut self.connection,
+            the_event_id,
+            filter,
+            state_filter.iter(),
+        )
     }
 
     fn get_entry(
@@ -1341,6 +1304,73 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .load::<models::Passphrase>(&mut self.connection)?;
         Ok(passphrases)
     }
+}
+
+fn get_entries_generic<'a, StateIter: Iterator<Item = &'a models::EntryState>>(
+    connection: &mut PgConnection,
+    the_event_id: EventId,
+    filter: EntryFilter,
+    state_filter: StateIter,
+) -> Result<Vec<models::FullEntry>, StoreError> {
+    use diesel::dsl::not;
+    use schema::entries::dsl::*;
+
+    connection.transaction(|connection| {
+        let the_entries = entries
+            .filter(event_id.eq(the_event_id))
+            .filter(not(deleted))
+            .filter(state.eq_any(state_filter))
+            .filter(entry_filter_to_sql(filter))
+            .order_by((begin.asc(), end.asc(), id.asc()))
+            .select(models::Entry::as_select())
+            .load::<models::Entry>(connection)?;
+
+        let the_entry_rooms = models::EntryRoomMapping::belonging_to(&the_entries)
+            .inner_join(schema::rooms::table)
+            .filter(not(schema::rooms::deleted))
+            .select(models::EntryRoomMapping::as_select())
+            .load::<models::EntryRoomMapping>(connection)?
+            .grouped_by(&the_entries);
+
+        let the_previous_dates = models::PreviousDate::belonging_to(&the_entries)
+            .select(models::PreviousDate::as_select())
+            .load::<models::PreviousDate>(connection)?;
+
+        let the_previous_date_rooms =
+            models::PreviousDateRoomMapping::belonging_to(&the_previous_dates)
+                .inner_join(schema::rooms::table)
+                .filter(not(schema::rooms::deleted))
+                .select(models::PreviousDateRoomMapping::as_select())
+                .load::<models::PreviousDateRoomMapping>(connection)?
+                .grouped_by(&the_previous_dates);
+
+        let the_previous_dates = the_previous_dates
+            .into_iter()
+            .zip(the_previous_date_rooms)
+            .map(
+                |(previous_date, previous_date_rooms)| models::FullPreviousDate {
+                    previous_date,
+                    room_ids: previous_date_rooms
+                        .into_iter()
+                        .map(|rm| rm.room_id)
+                        .collect(),
+                },
+            )
+            .grouped_by(&the_entries);
+
+        Ok(the_entries
+            .into_iter()
+            .zip(the_entry_rooms)
+            .zip(the_previous_dates)
+            .map(
+                |((entry, entry_rooms), entry_previous_dates)| models::FullEntry {
+                    entry,
+                    room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
+                    previous_dates: entry_previous_dates,
+                },
+            )
+            .collect())
+    })
 }
 
 fn update_entry_rooms(

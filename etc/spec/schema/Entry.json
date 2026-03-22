@@ -70,6 +70,11 @@
             "type": "string",
             "format": "uuid"
         },
+        "state": {
+            "description": "The submission/publishing state of the entry. When creating or updating an entry as orga and the `state` property is not given, it will default to 'published'.",
+            "type": "string",
+            "enum": ["published", "draft", "submitted-for-review", "preliminary-published", "retracted", "rejected"]
+        },
         "previousDates": {
             "description": "List of former places/times for which the KüA was scheduled to take place.",
             "type": "array",

@@ -1,7 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
-    Category, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate, NewEntry,
-    PreviousDate, Room,
+    Category, EntryState, EventClockInfo, ExtendedEvent, FullEntry, FullNewEntry, FullPreviousDate,
+    NewEntry, PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{
@@ -554,6 +554,7 @@ impl EntryFormData {
                     room_comment: room_comment?,
                     is_exclusive,
                     is_cancelled,
+                    state: EntryState::Published,
                 },
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],

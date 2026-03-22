@@ -1,11 +1,13 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Event, EventClockInfo, ExtendedEvent};
+use crate::data_store::models::{EntrySubmissionMode, Event, EventClockInfo, ExtendedEvent};
 use crate::data_store::{EventFilter, EventId, StoreError};
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
-use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{
+    FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
+};
 use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, HiddenInputTemplate, InputType, SelectEntry, SelectTemplate,
 };
@@ -15,6 +17,7 @@ use actix_web::web::{Form, Html};
 use actix_web::{get, post, web, HttpRequest, Responder};
 use askama::Template;
 use serde::Deserialize;
+use std::borrow::Cow;
 
 #[get("/{event_id}/config/event/edit")]
 pub async fn edit_extended_event_form(
@@ -136,6 +139,33 @@ pub async fn edit_extended_event(
     )
 }
 
+#[derive(Debug)]
+struct EntrySubmissionModeValue(EntrySubmissionMode);
+
+impl Default for EntrySubmissionModeValue {
+    fn default() -> Self {
+        Self(EntrySubmissionMode::Disabled)
+    }
+}
+
+impl FormValueRepresentation for EntrySubmissionModeValue {
+    fn into_form_value_string(self) -> String {
+        let value: i32 = self.0.into();
+        value.to_string()
+    }
+}
+
+impl ValidateFromFormInput for EntrySubmissionModeValue {
+    fn from_form_value(value: &str) -> Result<Self, String> {
+        let v = value
+            .parse::<i32>()
+            .map_err(|e| format!("Keine Zahl: {}", e))?;
+        Ok(Self(v.try_into().map_err(|_| {
+            "Kein gültiger Einreichungs-Modus".to_string()
+        })?))
+    }
+}
+
 #[derive(Deserialize)]
 struct ExtendedEventFormData {
     title: FormValue<validation::NonEmptyString>,
@@ -147,6 +177,7 @@ struct ExtendedEventFormData {
     default_time_schedule: FormValue<validation::EventDayTimeScheduleAsJson>,
     preceding_event_id: FormValue<validation::MaybeEmpty<validation::Int32FromList>>,
     subsequent_event_id: FormValue<validation::MaybeEmpty<validation::Int32FromList>>,
+    entry_submission_mode: FormValue<EntrySubmissionModeValue>,
 }
 
 impl ExtendedEventFormData {
@@ -160,6 +191,7 @@ impl ExtendedEventFormData {
         let default_time_schedule = self.default_time_schedule.validate();
         let preceding_event_id = self.preceding_event_id.validate_with(other_event_ids);
         let subsequent_event_id = self.subsequent_event_id.validate_with(other_event_ids);
+        let entry_submission_mode = self.entry_submission_mode.validate();
 
         let effective_begin_of_day = effective_begin_of_day?;
         let default_time_schedule = default_time_schedule?;
@@ -184,6 +216,7 @@ impl ExtendedEventFormData {
             default_time_schedule: default_time_schedule.0,
             preceding_event_id: preceding_event_id?.0.map(|v| v.into_inner()),
             subsequent_event_id: subsequent_event_id?.0.map(|v| v.into_inner()),
+            entry_submission_mode: entry_submission_mode?.0,
         })
     }
 }
@@ -210,6 +243,7 @@ impl From<ExtendedEvent> for ExtendedEventFormData {
                 value.subsequent_event_id.map(validation::Int32FromList),
             )
             .into(),
+            entry_submission_mode: EntrySubmissionModeValue(value.entry_submission_mode).into(),
         }
     }
 }
@@ -258,5 +292,26 @@ impl<'a> EditExtendedEventFormTemplate<'a> {
                 }),
         );
         result
+    }
+
+    fn entry_submission_mode_entries() -> Vec<SelectEntry<'static>> {
+        vec![
+            SelectEntry {
+                value: i32::from(EntrySubmissionMode::Disabled).to_string().into(),
+                text: Cow::Borrowed("Nicht erlaubt"),
+            },
+            SelectEntry {
+                value: i32::from(EntrySubmissionMode::ReviewBeforePublishing)
+                    .to_string()
+                    .into(),
+                text: Cow::Borrowed("Erlaubt, mit Review vor Veröffentlichung"),
+            },
+            SelectEntry {
+                value: i32::from(EntrySubmissionMode::ReviewAfterPublishing)
+                    .to_string()
+                    .into(),
+                text: Cow::Borrowed("Erlaubt, mit nachträglichem Review"),
+            },
+        ]
     }
 }

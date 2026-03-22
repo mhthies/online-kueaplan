@@ -10,6 +10,37 @@ use diesel::{AsExpression, FromSqlRow};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+macro_rules! impl_to_sql_for_enum {
+    ($T:ty) => {
+        impl<DB> ToSql<diesel::sql_types::Integer, DB> for $T
+        where
+            DB: diesel::backend::Backend,
+            for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
+            i32: ToSql<diesel::sql_types::Integer, DB>,
+        {
+            fn to_sql<'b>(
+                &'b self,
+                out: &mut diesel::serialize::Output<'b, '_, DB>,
+            ) -> diesel::serialize::Result {
+                let value: i32 = (*self).into();
+                value.to_sql(&mut out.reborrow())
+            }
+        }
+
+        impl<DB> FromSql<diesel::sql_types::Integer, DB> for $T
+        where
+            DB: diesel::backend::Backend,
+            i32: FromSql<diesel::sql_types::Integer, DB>,
+        {
+            fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+                let x = i32::from_sql(bytes)?;
+                x.try_into()
+                    .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
+            }
+        }
+    };
+}
+
 #[derive(Clone, Debug, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name=super::schema::events, treat_none_as_null=true)]
 pub struct Event {
@@ -55,6 +86,7 @@ pub struct ExtendedEvent {
     pub default_time_schedule: EventDayTimeSchedule,
     pub preceding_event_id: Option<EventId>,
     pub subsequent_event_id: Option<EventId>,
+    pub entry_submission_mode: EntrySubmissionMode,
 }
 
 impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
@@ -73,6 +105,7 @@ impl TryFrom<kueaplan_api_types::ExtendedEvent> for ExtendedEvent {
             default_time_schedule: value.default_time_schedule.into(),
             preceding_event_id: value.preceding_event_id,
             subsequent_event_id: value.subsequent_event_id,
+            entry_submission_mode: value.entry_submission_mode.into(),
         })
     }
 }
@@ -86,6 +119,7 @@ impl From<ExtendedEvent> for kueaplan_api_types::ExtendedEvent {
             default_time_schedule: value.default_time_schedule.into(),
             preceding_event_id: value.preceding_event_id,
             subsequent_event_id: value.subsequent_event_id,
+            entry_submission_mode: value.entry_submission_mode.into(),
         }
     }
 }
@@ -249,6 +283,67 @@ impl From<EventDayScheduleSection> for kueaplan_api_types::EventDayScheduleSecti
     }
 }
 
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+#[repr(i32)]
+pub enum EntrySubmissionMode {
+    /// No submission of entries by participants
+    Disabled = 0,
+    /// Entries can be submitted by participants, but only in state SubmittedForReview, such that
+    /// they have to be reviewd by event orgas before being visible to all participants.
+    ReviewBeforePublishing = 1,
+    /// Entries can be submitted by participants, in state PreliminaryPublished, such that they will
+    /// be directly visible to all participants, but are marked for later review be orgas.
+    ReviewAfterPublishing = 2,
+}
+
+impl TryFrom<i32> for EntrySubmissionMode {
+    type Error = EnumMemberNotExistingError;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(EntrySubmissionMode::Disabled),
+            1 => Ok(EntrySubmissionMode::ReviewBeforePublishing),
+            2 => Ok(EntrySubmissionMode::ReviewAfterPublishing),
+            _ => Err(EnumMemberNotExistingError {
+                member_value: value,
+                enum_name: "EntrySubmissionMode",
+            }),
+        }
+    }
+}
+impl From<EntrySubmissionMode> for i32 {
+    fn from(value: EntrySubmissionMode) -> Self {
+        value as i32
+    }
+}
+
+impl From<EntrySubmissionMode> for kueaplan_api_types::EntrySubmissionMode {
+    fn from(value: EntrySubmissionMode) -> Self {
+        match value {
+            EntrySubmissionMode::Disabled => Self::Disabled,
+            EntrySubmissionMode::ReviewBeforePublishing => Self::ReviewBeforePublishing,
+            EntrySubmissionMode::ReviewAfterPublishing => Self::ReviewAfterPublishing,
+        }
+    }
+}
+
+impl From<kueaplan_api_types::EntrySubmissionMode> for EntrySubmissionMode {
+    fn from(value: kueaplan_api_types::EntrySubmissionMode) -> Self {
+        match value {
+            kueaplan_api_types::EntrySubmissionMode::Disabled => Self::Disabled,
+            kueaplan_api_types::EntrySubmissionMode::ReviewBeforePublishing => {
+                Self::ReviewBeforePublishing
+            }
+            kueaplan_api_types::EntrySubmissionMode::ReviewAfterPublishing => {
+                Self::ReviewAfterPublishing
+            }
+        }
+    }
+}
+
+impl_to_sql_for_enum!(EntrySubmissionMode);
+
 #[derive(Clone, Queryable, Identifiable, Selectable)]
 #[diesel(table_name=super::schema::entries)]
 pub struct Entry {
@@ -267,6 +362,7 @@ pub struct Entry {
     pub room_comment: String,
     pub is_exclusive: bool,
     pub is_cancelled: bool,
+    pub state: EntryState,
 }
 
 #[derive(Clone)]
@@ -293,6 +389,7 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
             time_comment: value.entry.time_comment,
             is_exclusive: value.entry.is_exclusive,
             is_cancelled: value.entry.is_cancelled,
+            state: value.entry.state.into(),
             previous_dates: value
                 .previous_dates
                 .into_iter()
@@ -319,6 +416,7 @@ pub struct NewEntry {
     pub room_comment: String,
     pub is_exclusive: bool,
     pub is_cancelled: bool,
+    pub state: EntryState,
 }
 
 #[derive(Clone)]
@@ -345,6 +443,7 @@ impl FullNewEntry {
                 time_comment: entry.time_comment,
                 is_exclusive: entry.is_exclusive,
                 is_cancelled: entry.is_cancelled,
+                state: entry.state.into(),
             },
             room_ids: entry.room,
             previous_dates: entry
@@ -374,6 +473,7 @@ impl From<FullEntry> for FullNewEntry {
                 room_comment: value.entry.room_comment,
                 is_exclusive: value.entry.is_exclusive,
                 is_cancelled: value.entry.is_cancelled,
+                state: value.entry.state,
             },
             room_ids: value.room_ids,
             previous_dates: value.previous_dates,
@@ -396,9 +496,104 @@ pub struct EntryPatch {
     pub room_comment: Option<String>,
     pub is_exclusive: Option<bool>,
     pub is_cancelled: Option<bool>,
+    pub state: Option<EntryState>,
     #[diesel(skip_update)]
     pub room_ids: Option<Vec<Uuid>>,
 }
+
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
+#[diesel(sql_type = diesel::sql_types::Integer)]
+#[repr(i32)]
+pub enum EntryState {
+    /// Normal public entry state, visible to all participants.
+    Published = 0,
+    /// Entry has been created by an orga, but marked as a draft to be not published (visible to
+    /// participants) yet
+    Draft = 1,
+    /// Entry has been submitted by a participant and needs to be reviewed by an orga before
+    /// publishing (making it visible to participants)
+    SubmittedForReview = 2,
+    /// Entry is published but still awaiting review by an orga
+    PreliminaryPublished = 3,
+    /// Entry has been retracted, so it's currently not visible to participants (but can be
+    /// published again later)
+    Retracted = 4,
+    /// Entry was submitted by a participant and has been rejected from publishing in review
+    Rejected = 5,
+}
+
+impl EntryState {
+    pub fn is_published(&self) -> bool {
+        match self {
+            Self::Published | Self::PreliminaryPublished => true,
+            Self::Draft | Self::SubmittedForReview | Self::Retracted | Self::Rejected => false,
+        }
+    }
+
+    pub fn all() -> impl Iterator<Item = &'static Self> {
+        [
+            Self::Published,
+            Self::Draft,
+            Self::SubmittedForReview,
+            Self::PreliminaryPublished,
+            Self::Retracted,
+            Self::Rejected,
+        ]
+        .iter()
+    }
+}
+
+impl TryFrom<i32> for EntryState {
+    type Error = EnumMemberNotExistingError;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Published),
+            1 => Ok(Self::Draft),
+            2 => Ok(Self::SubmittedForReview),
+            3 => Ok(Self::PreliminaryPublished),
+            4 => Ok(Self::Retracted),
+            5 => Ok(Self::Rejected),
+            _ => Err(EnumMemberNotExistingError {
+                member_value: value,
+                enum_name: "EntryState",
+            }),
+        }
+    }
+}
+impl From<EntryState> for i32 {
+    fn from(value: EntryState) -> Self {
+        value as i32
+    }
+}
+
+impl From<EntryState> for kueaplan_api_types::EntryState {
+    fn from(value: EntryState) -> Self {
+        match value {
+            EntryState::Published => Self::Published,
+            EntryState::Draft => Self::Draft,
+            EntryState::SubmittedForReview => Self::SubmittedForReview,
+            EntryState::PreliminaryPublished => Self::PreliminaryPublished,
+            EntryState::Retracted => Self::Retracted,
+            EntryState::Rejected => Self::Rejected,
+        }
+    }
+}
+
+impl From<kueaplan_api_types::EntryState> for EntryState {
+    fn from(value: kueaplan_api_types::EntryState) -> Self {
+        match value {
+            kueaplan_api_types::EntryState::Published => Self::Published,
+            kueaplan_api_types::EntryState::Draft => Self::Draft,
+            kueaplan_api_types::EntryState::SubmittedForReview => Self::SubmittedForReview,
+            kueaplan_api_types::EntryState::PreliminaryPublished => Self::PreliminaryPublished,
+            kueaplan_api_types::EntryState::Retracted => Self::Retracted,
+            kueaplan_api_types::EntryState::Rejected => Self::Rejected,
+        }
+    }
+}
+
+impl_to_sql_for_enum!(EntryState);
 
 impl From<kueaplan_api_types::EntryPatch> for EntryPatch {
     fn from(value: kueaplan_api_types::EntryPatch) -> Self {
@@ -416,6 +611,7 @@ impl From<kueaplan_api_types::EntryPatch> for EntryPatch {
             is_exclusive: value.is_exclusive,
             is_cancelled: value.is_cancelled,
             room_ids: value.room,
+            state: value.state.map(|s| s.into()),
         }
     }
 }
@@ -788,32 +984,7 @@ impl From<kueaplan_api_types::AnnouncementType> for AnnouncementType {
     }
 }
 
-impl<DB> ToSql<diesel::sql_types::Integer, DB> for AnnouncementType
-where
-    DB: diesel::backend::Backend,
-    for<'c> DB: diesel::backend::Backend<BindCollector<'c> = RawBytesBindCollector<DB>>,
-    i32: ToSql<diesel::sql_types::Integer, DB>,
-{
-    fn to_sql<'b>(
-        &'b self,
-        out: &mut diesel::serialize::Output<'b, '_, DB>,
-    ) -> diesel::serialize::Result {
-        let value: i32 = (*self).into();
-        value.to_sql(&mut out.reborrow())
-    }
-}
-
-impl<DB> FromSql<diesel::sql_types::Integer, DB> for AnnouncementType
-where
-    DB: diesel::backend::Backend,
-    i32: FromSql<diesel::sql_types::Integer, DB>,
-{
-    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        let x = i32::from_sql(bytes)?;
-        x.try_into()
-            .map_err(|e: EnumMemberNotExistingError| e.to_string().into())
-    }
-}
+impl_to_sql_for_enum!(AnnouncementType);
 
 // Introduce type for Announcement-Category and Announcement-Room associations, to simplify grouped
 // retrieval of category_ids/room_ids of an Announcement, using Diesel's .grouped_by() method.

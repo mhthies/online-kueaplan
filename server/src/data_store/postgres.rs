@@ -243,6 +243,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             let the_entries = entries
                 .filter(event_id.eq(the_event_id))
                 .filter(not(deleted))
+                .filter(state.eq_any(models::EntryState::all().filter(|s| s.is_published())))
                 .filter(entry_filter_to_sql(filter))
                 .order_by((begin.asc(), end.asc(), id.asc()))
                 .select(models::Entry::as_select())
@@ -314,6 +315,9 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .select(models::Entry::as_select())
                 .first::<models::Entry>(connection)?;
             auth_token.check_privilege(entry.event_id, Privilege::ShowKueaPlan)?;
+            if !entry.state.is_published() {
+                auth_token.check_privilege(entry.event_id, Privilege::ManageEntries)?;
+            }
 
             let room_ids = entry_rooms::table
                 .inner_join(rooms::table)

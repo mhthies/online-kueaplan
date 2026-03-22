@@ -7,3 +7,6 @@ target/
 
 # Local configuration env variables
 /.env
+
+# diesel-cli lockfile
+.diesel_lock

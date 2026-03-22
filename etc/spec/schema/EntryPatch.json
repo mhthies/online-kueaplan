@@ -64,6 +64,11 @@
             "description": "if present, changes the category this entry belongs to, given as the category's unique identifier.",
             "type": "string",
             "format": "uuid"
+        },
+        "state": {
+            "description": "if present, changes the submission/publishing state of the entry.",
+            "type": "string",
+            "enum": ["published", "draft", "submitted-for-review", "preliminary-published", "retracted", "rejected"]
         }
     },
     "required": []

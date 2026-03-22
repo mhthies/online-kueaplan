@@ -4,8 +4,8 @@ use crate::cli_error::CliError;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken};
 use crate::data_store::get_store_from_env;
 use crate::data_store::models::{
-    Event, EventClockInfo, EventDayScheduleSection, EventDayTimeSchedule, ExtendedEvent,
-    NewCategory, NewPassphrase,
+    EntrySubmissionMode, Event, EventClockInfo, EventDayScheduleSection, EventDayTimeSchedule,
+    ExtendedEvent, NewCategory, NewPassphrase,
 };
 use crate::data_store::{EventFilter, KuaPlanStore};
 use uuid::Uuid;
@@ -86,6 +86,7 @@ pub fn create_event() -> Result<(), CliError> {
         },
         preceding_event_id: None,
         subsequent_event_id: None,
+        entry_submission_mode: EntrySubmissionMode::Disabled,
     };
 
     let event_id = data_store.create_event(&auth, event)?;

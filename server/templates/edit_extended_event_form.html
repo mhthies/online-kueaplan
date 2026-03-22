@@ -45,6 +45,9 @@
         <div class="col-sm-6">
             {{ SelectTemplate::new(form_data.subsequent_event_id, "subsequent_event_id", &other_event_entries(), "Nachfolgende Veranstaltung") }}
         </div>
+        <div class="col-sm-6">
+            {{ SelectTemplate::new(form_data.entry_submission_mode, "entry_submission_mode", &Self::entry_submission_mode_entries(), "KüA-Einreichungen durch Teilnehmende") }}
+        </div>
     </div>
     <div class="mb-3 card {% if form_data.default_time_schedule.has_errors() %}border-invalid{% endif %}">
         <h2 class="card-header h4">

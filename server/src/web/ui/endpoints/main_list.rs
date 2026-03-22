@@ -45,7 +45,7 @@ async fn main_list(
             let auth = store.get_auth_token_for_session(&session_token, event_id)?;
             let event = store.get_extended_event(&auth, event_id)?;
             Ok((
-                store.get_entries_filtered(
+                store.get_published_entries_filtered(
                     &auth,
                     event_id,
                     date_to_filter(date, time_after, &event.clock_info),

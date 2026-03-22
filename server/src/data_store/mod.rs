@@ -80,7 +80,7 @@ pub trait KueaPlanStoreFacade {
     /// Get a filtered list of (published) entries of the event
     ///
     /// Entries are returned in chronological order, i.e. sorted by (begin, end)
-    fn get_entries_filtered(
+    fn get_published_entries_filtered(
         &mut self,
         auth_token: &AuthToken,
         the_event_id: EventId,

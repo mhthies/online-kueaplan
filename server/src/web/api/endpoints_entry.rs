@@ -20,7 +20,7 @@ async fn list_entries(
     let entries: Vec<kueaplan_api_types::Entry> = web::block(move || -> Result<_, APIError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        Ok(store.get_entries_filtered(&auth, event_id, query.into_inner().into())?)
+        Ok(store.get_published_entries_filtered(&auth, event_id, query.into_inner().into())?)
     })
     .await??
     .into_iter()

@@ -38,7 +38,7 @@ async fn ical(
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         Ok((
             store.get_event(event_id)?,
-            store.get_entries_filtered(&auth, event_id, query.entry_filter.into())?,
+            store.get_published_entries_filtered(&auth, event_id, query.entry_filter.into())?,
             store.get_rooms(&auth, event_id)?,
             store.get_categories(&auth, event_id)?,
         ))

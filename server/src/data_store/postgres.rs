@@ -229,7 +229,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         })
     }
 
-    fn get_entries_filtered(
+    fn get_published_entries_filtered(
         &mut self,
         auth_token: &AuthToken,
         the_event_id: i32,

@@ -72,6 +72,12 @@
                                         <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
                                     </a>
                                 </li>
+                                {% let review_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::Review) %}
+                                <li class="nav-item">
+                                    <a href="{{ base.url_for_event_endpoint("list_to_review")? }}" class="nav-link {% if review_active %}active{% endif %}" {% if review_active %}aria-current="page"{% endif %}>
+                                        <i aria-hidden="true" class="bi bi-clipboard2-check"></i> Prüfen
+                                    </a>
+                                </li>
                             {% endif %}
                             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
                                 {% let config_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::Configuration) %}

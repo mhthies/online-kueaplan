@@ -140,6 +140,7 @@ pub enum MainNavButton {
     ByCategory,
     ByRoom,
     AddEntry,
+    Review,
     Configuration,
 }
 

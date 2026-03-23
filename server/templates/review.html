@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% macro navlink(url, icon, label, index) %}
+    <li class="nav-item">
+        <a class="nav-link {% if active_nav_button == index%}active{% endif %}" {% if active_nav_button == index%}aria-current="page"{% endif %} href="{{ url }}">
+            <i class="bi bi-{{icon}}" aria-hidden="true"></i> {{label}}
+        </a>
+    </li>
+{% endmacro %}
+
+
+{% block body %}
+<div class="container mt-3" id="main">
+    <div class="row">
+        <div class="col-lg-3 mb-3 mb-lg-0" id="review-navigation">
+            <nav aria-label="Review-Bereich-Navigation">
+                <ul class="nav nav-pills flex-row flex-lg-column">
+                    {{ navlink(base.url_for_event_endpoint("list_to_review")?,
+                               "clipboard2-check",
+                               "Zu Prüfen",
+                               ReviewNavButton::ToReview) }}
+                    {{ navlink(base.url_for_event_endpoint("list_drafts")?,
+                               "pencil-square",
+                               "Entwürfe",
+                               ReviewNavButton::Drafts) }}
+                    {{ navlink(base.url_for_event_endpoint("list_rejected_entries")?,
+                               "x-octagon",
+                               "Abgelehnt",
+                               ReviewNavButton::Rejected) }}
+                    {{ navlink(base.url_for_event_endpoint("list_retracted_entries")?,
+                               "eye-slash",
+                               "Versteckt",
+                               ReviewNavButton::Retracted) }}
+                </ul>
+            </nav>
+        </div>
+        <div class="col-lg-9" id="review-content">
+            <h1>{{ base.page_title }}</h1>
+            <table class="table table-striped kuealist">
+                <thead>
+                <tr>
+                    <th scope="col">Was?</th>
+                    <th scope="col">Wann?</th>
+                    <th scope="col">Wo?</th>
+                    <th scope="col">Von wem?</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        {% let category = categories.get(entry.entry.category).ok_or("Category not found")? %}
+                        {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), category, rooms, event.clock_info).show_edit_links(true) }}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

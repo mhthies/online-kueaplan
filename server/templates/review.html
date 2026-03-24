@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 
-{% macro navlink(url, icon, label, index) %}
+{% macro navlink(url, icon, label, index, entry_count, colored_count) %}
     <li class="nav-item">
         <a class="nav-link {% if active_nav_button == index%}active{% endif %}" {% if active_nav_button == index%}aria-current="page"{% endif %} href="{{ url }}">
             <i class="bi bi-{{icon}}" aria-hidden="true"></i> {{label}}
+            {% if entry_count > 0 %}
+            <span class="badge rounded-pill {% if colored_count%}text-bg-danger{% else %}text-bg-light{% endif %}"><span class="visually-hidden">Anzahl: </span>{{ entry_count }}</span>
+            {% endif %}
         </a>
     </li>
 {% endmacro %}
@@ -18,19 +21,28 @@
                     {{ navlink(base.url_for_event_endpoint("list_to_review")?,
                                "clipboard2-check",
                                "Zu Prüfen",
-                               ReviewNavButton::ToReview) }}
+                               ReviewNavButton::ToReview,
+                               *entry_count_by_state.get(&EntryState::PreliminaryPublished).unwrap_or(&0)
+                               + *entry_count_by_state.get(&EntryState::SubmittedForReview).unwrap_or(&0),
+                               true) }}
                     {{ navlink(base.url_for_event_endpoint("list_drafts")?,
                                "pencil-square",
                                "Entwürfe",
-                               ReviewNavButton::Drafts) }}
+                               ReviewNavButton::Drafts,
+                               *entry_count_by_state.get(&EntryState::Draft).unwrap_or(&0),
+                               false) }}
                     {{ navlink(base.url_for_event_endpoint("list_rejected_entries")?,
                                "x-octagon",
                                "Abgelehnt",
-                               ReviewNavButton::Rejected) }}
+                               ReviewNavButton::Rejected,
+                               *entry_count_by_state.get(&EntryState::Rejected).unwrap_or(&0),
+                               false) }}
                     {{ navlink(base.url_for_event_endpoint("list_retracted_entries")?,
                                "eye-slash",
                                "Versteckt",
-                               ReviewNavButton::Retracted) }}
+                               ReviewNavButton::Retracted,
+                               *entry_count_by_state.get(&EntryState::Retracted).unwrap_or(&0),
+                               false) }}
                 </ul>
             </nav>
         </div>
@@ -48,7 +60,8 @@
                 <tbody>
                     {% for entry in entries %}
                         {% let category = categories.get(entry.entry.category).ok_or("Category not found")? %}
-                        {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), category, rooms, event.clock_info).show_edit_links(true) }}
+                        {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), category, rooms, event.clock_info)
+                               .show_edit_links(true) }}
                     {% endfor %}
                 </tbody>
             </table>

@@ -501,7 +501,7 @@ pub struct EntryPatch {
     pub room_ids: Option<Vec<Uuid>>,
 }
 
-#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy, PartialOrd, Ord)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]
 pub enum EntryState {

@@ -95,25 +95,27 @@ async fn generic_review_list(
     let event_id = path.into_inner();
     let session_token =
         util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
-    let (entries, rooms, categories, event, auth) = web::block(move || -> Result<_, AppError> {
-        let mut store = state.store.get_facade()?;
-        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
-        auth.check_privilege(event_id, Privilege::ManageEntries)?;
-        let event = store.get_extended_event(&auth, event_id)?;
-        Ok((
-            store.get_all_entries_filtered(
-                &auth,
-                event_id,
-                EntryFilter::default(),
-                entry_states,
-            )?,
-            store.get_rooms(&auth, event_id)?,
-            store.get_categories(&auth, event_id)?,
-            event,
-            auth,
-        ))
-    })
-    .await??;
+    let (entries, entry_count_by_state, rooms, categories, event, auth) =
+        web::block(move || -> Result<_, AppError> {
+            let mut store = state.store.get_facade()?;
+            let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+            auth.check_privilege(event_id, Privilege::ManageEntries)?;
+            let event = store.get_extended_event(&auth, event_id)?;
+            Ok((
+                store.get_all_entries_filtered(
+                    &auth,
+                    event_id,
+                    EntryFilter::default(),
+                    entry_states,
+                )?,
+                store.get_entry_count_by_state(&auth, event_id)?,
+                store.get_rooms(&auth, event_id)?,
+                store.get_categories(&auth, event_id)?,
+                event,
+                auth,
+            ))
+        })
+        .await??;
 
     let tmpl = ReviewListTemplate {
         base: BaseTemplateContext {
@@ -129,6 +131,7 @@ async fn generic_review_list(
         categories: categories.iter().map(|r| (r.id, r)).collect(),
         active_nav_button,
         event: &event,
+        entry_count_by_state: entry_count_by_state.iter().copied().collect(),
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -142,6 +145,7 @@ struct ReviewListTemplate<'a> {
     categories: BTreeMap<uuid::Uuid, &'a Category>,
     active_nav_button: ReviewNavButton,
     event: &'a ExtendedEvent,
+    entry_count_by_state: BTreeMap<EntryState, i64>,
 }
 
 #[derive(Debug, PartialEq)]

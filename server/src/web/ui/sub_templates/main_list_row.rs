@@ -52,6 +52,8 @@ pub struct MainListRowTemplate<'a> {
     rooms: &'a RoomByIdWithOrder<'a>,
     clock_info: &'a EventClockInfo,
     show_edit_links: bool,
+    show_edit_buttons: bool,
+    show_markup: bool,
     show_description_links: bool,
     date_context: Option<chrono::NaiveDate>,
     room_context: Option<uuid::Uuid>,
@@ -75,6 +77,8 @@ impl<'a> MainListRowTemplate<'a> {
             clock_info,
             show_edit_links: false,
             show_description_links: false,
+            show_edit_buttons: false,
+            show_markup: true,
             date_context: None,
             room_context: None,
             main_entry_link_mode: MainEntryLinkMode::None,
@@ -83,6 +87,16 @@ impl<'a> MainListRowTemplate<'a> {
 
     pub fn show_edit_links(mut self, show_links: bool) -> Self {
         self.show_edit_links = show_links;
+        self
+    }
+
+    pub fn show_edit_buttons(mut self, show_buttons: bool) -> Self {
+        self.show_edit_buttons = show_buttons;
+        self
+    }
+
+    pub fn show_markup(mut self, show_markup: bool) -> Self {
+        self.show_markup = show_markup;
         self
     }
 

@@ -55,13 +55,15 @@
                     <th scope="col">Wann?</th>
                     <th scope="col">Wo?</th>
                     <th scope="col">Von wem?</th>
+                    <th scope="col"><span class="visually-hidden">Aktionen</span></th>
                 </tr>
                 </thead>
                 <tbody>
                     {% for entry in entries %}
                         {% let category = categories.get(entry.entry.category).ok_or("Category not found")? %}
                         {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), category, rooms, event.clock_info)
-                               .show_edit_links(true) }}
+                               .show_edit_buttons(true)
+                               .show_markup(false) }}
                     {% endfor %}
                 </tbody>
             </table>

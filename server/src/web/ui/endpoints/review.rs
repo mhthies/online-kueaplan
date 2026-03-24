@@ -28,6 +28,7 @@ async fn list_to_review(
             EntryState::SubmittedForReview,
         ],
         "Zu prüfende Einträge",
+        "Aktuell stehen keine KüA-Einreichungen zur Prüfung aus.",
         ReviewNavButton::ToReview,
     )
     .await
@@ -45,6 +46,7 @@ async fn list_drafts(
         req,
         &[EntryState::Draft],
         "Entwürfe",
+        "Zur Zeit gibt es keine unveröffentlichten Entwürfe.",
         ReviewNavButton::Drafts,
     )
     .await
@@ -62,6 +64,7 @@ async fn list_rejected_entries(
         req,
         &[EntryState::Rejected],
         "Abgelehnte Einreichungen",
+        "Bislang wurden keine Einreichungen abgelehnt (ohne sie zu löschen).",
         ReviewNavButton::Rejected,
     )
     .await
@@ -79,6 +82,7 @@ async fn list_retracted_entries(
         req,
         &[EntryState::Retracted],
         "Versteckte Einträge",
+        "Bislang wurden keine Einträge nach der Veröffentlichung zurückgezogen (ohne sie zu löschen).",
         ReviewNavButton::Retracted,
     )
     .await
@@ -90,6 +94,7 @@ async fn generic_review_list(
     req: HttpRequest,
     entry_states: &'static [EntryState],
     title: &str,
+    empty_message: &str,
     active_nav_button: ReviewNavButton,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
@@ -132,6 +137,7 @@ async fn generic_review_list(
         active_nav_button,
         event: &event,
         entry_count_by_state: entry_count_by_state.iter().copied().collect(),
+        empty_message,
     };
     Ok(Html::new(tmpl.render()?))
 }
@@ -146,6 +152,7 @@ struct ReviewListTemplate<'a> {
     active_nav_button: ReviewNavButton,
     event: &'a ExtendedEvent,
     entry_count_by_state: BTreeMap<EntryState, i64>,
+    empty_message: &'a str,
 }
 
 #[derive(Debug, PartialEq)]

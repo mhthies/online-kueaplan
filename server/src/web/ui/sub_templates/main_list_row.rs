@@ -176,6 +176,7 @@ impl<'a> MainListRowTemplate<'a> {
                 self.request,
                 entry.event_id,
                 &entry.id,
+                entry.state,
                 &time_calculation::get_effective_date(&entry.begin, self.clock_info),
             ))
             .transpose(),

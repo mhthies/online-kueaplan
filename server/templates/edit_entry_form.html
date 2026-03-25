@@ -15,6 +15,7 @@
                base.request,
                *base.get_basic_event().expect("Event should always be known").id,
                entry_id.expect("For non-new entries, `entry_id` should always be known."),
+               current_entry_state.expect("For non-new entries, `current_entry_state` should always be known."),
                base.current_date.expect("For non-new entries, `entry_id` should always be known."),
                sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::EditEntry,
            ) }}

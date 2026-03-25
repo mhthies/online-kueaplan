@@ -167,6 +167,7 @@ async fn mark_entry_cancelled(
                     &req,
                     event_id,
                     &entry_id,
+                    entry.entry.state,
                     &time_calculation::get_effective_date(&entry.entry.begin, &event.clock_info),
                 )?
                 .to_string(),

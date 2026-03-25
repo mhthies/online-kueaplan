@@ -13,6 +13,7 @@
            base.request,
            *base.get_basic_event().expect("Event should always be known").id,
            entry.entry.id,
+           *entry.entry.state,
            base.current_date.expect("For non-new entries, `entry_id` should always be known."),
            EditEntryNavbarActiveLink::PreviousDatesOverview,
        ) }}

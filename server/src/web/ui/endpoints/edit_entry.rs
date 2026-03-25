@@ -52,6 +52,7 @@ async fn edit_entry_form(
 
     let entry_id = entry.entry.id;
     let entry_begin = entry.entry.begin;
+    let entry_state = entry.entry.state;
     let form_data = EntryFormData::from_full_entry(entry, &event.clock_info);
 
     let tmpl = EditEntryFormTemplate {
@@ -70,6 +71,7 @@ async fn edit_entry_form(
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
         is_new_entry: false,
+        current_entry_state: Some(entry_state),
         cloned_from_entry_id: None,
     };
 
@@ -113,10 +115,12 @@ async fn edit_entry(
     );
 
     let mut entry_begin = old_entry.entry.begin;
+    let mut entry_state = old_entry.entry.state;
     let result: FormSubmitResult =
         if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
             entry.entry.event_id = event_id;
             entry_begin = entry.entry.begin;
+            entry_state = entry.entry.state;
             if let Some(previous_date_comment) = create_previous_date {
                 if entry.entry.begin != old_entry.entry.begin
                     || entry.entry.end != old_entry.entry.end
@@ -164,6 +168,7 @@ async fn edit_entry(
         categories: &categories,
         entry_id: Some(&entry_id),
         has_unsaved_changes: true,
+        current_entry_state: Some(old_entry.entry.state),
         is_new_entry: false,
         cloned_from_entry_id: None,
     };
@@ -182,6 +187,7 @@ async fn edit_entry(
             &req,
             event_id,
             &entry_id,
+            entry_state,
             &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
@@ -244,6 +250,7 @@ async fn new_entry_form(
         categories: &categories,
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
+        current_entry_state: None,
         is_new_entry: true,
         cloned_from_entry_id: clone_from,
     };
@@ -287,11 +294,13 @@ async fn new_entry(
 
     let mut entry_id = None;
     let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
+    let mut entry_state = EntryState::Published;
     let result: util::FormSubmitResult = if let Some((mut entry, _, _)) = entry {
         let auth_clone = auth.clone();
         entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
         entry_begin = entry.entry.begin;
+        entry_state = entry.entry.state;
         web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             // TODO detect and ignore double addition
@@ -319,6 +328,7 @@ async fn new_entry(
         categories: &categories,
         entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
+        current_entry_state: None,
         is_new_entry: true,
         cloned_from_entry_id: query_data.clone_from,
     };
@@ -334,6 +344,7 @@ async fn new_entry(
             &req,
             event_id,
             &entry_id.unwrap_or_default(),
+            entry_state,
             &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
@@ -360,7 +371,8 @@ struct EditEntryFormTemplate<'a> {
     rooms: &'a Vec<Room>,
     entry_id: Option<&'a EntryId>,
     has_unsaved_changes: bool,
-    is_new_entry: bool,
+    is_new_entry: bool, // TODO remove and replace with current_entry_state.is_none()
+    current_entry_state: Option<EntryState>,
     cloned_from_entry_id: Option<EntryId>,
 }
 
@@ -406,6 +418,8 @@ impl<'a> EditEntryFormTemplate<'a> {
                 self.event.basic_data.id,
                 self.entry_id
                     .expect("For non-new entries, `entry_id` should always be known."),
+                self.current_entry_state
+                    .expect("For non-new entries, `current_entry_state` should always be known."),
                 &self
                     .base
                     .current_date

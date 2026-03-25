@@ -2,7 +2,6 @@ use crate::data_store::models::{Category, EventClockInfo, FullEntry, FullPreviou
 use crate::data_store::{CategoryId, RoomId};
 use crate::web::time_calculation;
 use crate::web::ui::colors::CategoryColors;
-use crate::web::ui::util;
 use crate::web::ui::util::url_for_entry_details;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
@@ -146,8 +145,21 @@ impl<'a> MainListRowTemplate<'a> {
         )
     }
 
-    fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
-        util::url_for_edit_entry(self.request, entry)
+    fn url_for_edit_entry(&self) -> Result<String, UrlGenerationError> {
+        Ok(self
+            .request
+            .url_for(
+                if self.row.includes_entry {
+                    "edit_entry_form"
+                } else {
+                    "previous_dates_overview"
+                },
+                &[
+                    self.row.entry.entry.event_id.to_string(),
+                    self.row.entry.entry.id.to_string(),
+                ],
+            )?
+            .to_string())
     }
 
     /// Generate the HTML 'class' attribute for the table row of the given `entry`

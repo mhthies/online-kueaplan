@@ -68,19 +68,6 @@ pub fn url_for_main_list(
         .to_string())
 }
 
-/// Generate a URL for editing the given KüA-Plan entry
-pub fn url_for_edit_entry(
-    req: &HttpRequest,
-    entry: &FullEntry,
-) -> Result<String, UrlGenerationError> {
-    Ok(req
-        .url_for(
-            "edit_entry_form",
-            &[entry.entry.event_id.to_string(), entry.entry.id.to_string()],
-        )?
-        .to_string())
-}
-
 /// Extract the session token from the session token cookie and validate it
 ///
 /// The `privilege` and `event_id` parameters are not validated here, but only used for better error

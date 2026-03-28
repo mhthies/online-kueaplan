@@ -1,7 +1,7 @@
 <label for="{{name}}Select" class="form-label">{{label}}</label>
 {% if suffix_text.is_some() %}<div class="input-group {%if data.has_errors() %}is-invalid{% endif %}">{% endif %}
 <select class="form-select {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%}"
-        id="{{name}}Select" name="{{name}}" aria-describedby="{{name}}Description">
+        id="{{name}}Select" name="{{name}}" aria-describedby="{% if info.is_some() %}{{name}}Help{% endif %} {% if data.has_errors() %}{{name}}Errors{% endif %}">
 {% for entry in entries %}
     <option value="{{entry.value}}"{% if entry.value == data.string_value() %}selected{% endif %}>{{entry.text}}</option>
 {% endfor %}

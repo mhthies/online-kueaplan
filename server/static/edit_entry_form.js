@@ -4,8 +4,8 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     const durationInput = document.getElementById("durationInput");
     const roomsInput = document.getElementById("roomsInput");
 
-    const calendarDateInfoElement = createCalendarDateInfoElement(document.getElementById("beginDescription"));
-    const endTimeInfoElement = createEndTimeInfoElement(document.getElementById("durationDescription"));
+    const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
+    const endTimeInfoElement = createEndTimeInfoElement(durationInput.parentElement);
 
     const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
         document.getElementById("parallelEntriesBox"),
@@ -117,6 +117,6 @@ function createEndTimeInfoElement(insertAfterElement) {
     const text = document.createElement("span");
     element.appendChild(document.createTextNode("Ende: "));
     element.appendChild(text)
-    insertAfterElement.appendChild(element);
+    insertAfterElement.after(element);
     return element;
 }

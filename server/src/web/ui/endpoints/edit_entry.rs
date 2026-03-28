@@ -9,10 +9,13 @@ use crate::web::time_calculation::{
 };
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
-use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{
+    BoolFormValue, FormValue, FormValueRepresentation, ValidateFromFormInput,
+    _FormValidSimpleValidate,
+};
 use crate::web::ui::sub_templates::form_inputs::{
-    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType, SelectEntry,
-    SelectTemplate,
+    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
+    RadioButtonGroupTemplate, SelectEntry, SelectTemplate,
 };
 use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short, FormSubmitResult};
 use crate::web::ui::{sub_templates, util, validation};
@@ -24,6 +27,7 @@ use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
+use std::fmt::Debug;
 use uuid::Uuid;
 
 #[get("/{event_id}/entry/{entry_id}/edit")]
@@ -111,6 +115,7 @@ async fn edit_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         Some(entry_id),
+        Some(old_entry.entry.state),
         &event.clock_info,
     );
 
@@ -288,6 +293,7 @@ async fn new_entry(
     let entry = data.validate(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
+        None,
         None,
         &event.clock_info,
     );
@@ -493,6 +499,7 @@ struct EntryFormData {
     last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
     create_previous_date: BoolFormValue,
     previous_date_comment: FormValue<String>,
+    change_state: FormValue<ChangeStateValue>,
 }
 
 impl EntryFormData {
@@ -501,6 +508,7 @@ impl EntryFormData {
             entry_id: entry_id.into(),
             day: validation::IsoDate(date).into(),
             category: validation::UuidFromList(category_id).into(),
+            change_state: ChangeStateValue::Accept.into(),
             ..Self::default()
         }
     }
@@ -521,6 +529,7 @@ impl EntryFormData {
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
         known_entry_id: Option<EntryId>,
+        current_entry_state: Option<EntryState>,
         clock_info: &EventClockInfo,
     ) -> Option<(
         FullNewEntry,
@@ -545,6 +554,7 @@ impl EntryFormData {
         let previous_last_updated = self.last_updated.validate();
         let create_previous_date = self.create_previous_date.get_value();
         let previous_date_comment = self.previous_date_comment.validate();
+        let change_state = self.change_state.validate();
 
         let begin = timestamp_from_effective_date_and_time(
             day?.into_inner(),
@@ -568,7 +578,7 @@ impl EntryFormData {
                     room_comment: room_comment?,
                     is_exclusive,
                     is_cancelled,
-                    state: EntryState::Published,
+                    state: change_state?.change_state(current_entry_state),
                 },
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],
@@ -610,6 +620,66 @@ impl EntryFormData {
             last_updated: validation::SimpleTimestampMicroseconds(value.entry.last_updated).into(),
             create_previous_date: false.into(),
             previous_date_comment: "".to_string().into(),
+            change_state: ChangeStateValue::NoChange.into(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum ChangeStateValue {
+    /// Keep ToReview/Draft state or store new entry as Draft
+    NoChange,
+    /// Accept & publish reviewed submission or publish Draft
+    Accept,
+    Reject,
+}
+
+impl ChangeStateValue {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::NoChange => "",
+            Self::Accept => "accept",
+            Self::Reject => "reject",
+        }
+    }
+
+    /// Calculate the new state of an entry, depending on the previous state and the
+    /// ChangeStateValue (radio button selected in the edit form)
+    ///
+    /// # Params
+    /// * `previous_state`: Previous state of the entry or None if this is a new entry.
+    fn change_state(&self, previous_state: Option<EntryState>) -> EntryState {
+        match (previous_state, self) {
+            (None, Self::NoChange) => EntryState::Draft,
+            (Some(s), Self::NoChange) => s,
+            (_, Self::Accept) => EntryState::Published,
+            (
+                Some(EntryState::SubmittedForReview | EntryState::PreliminaryPublished),
+                Self::Reject,
+            ) => EntryState::Rejected,
+            (_, ChangeStateValue::Reject) => EntryState::Retracted,
+        }
+    }
+}
+
+impl Default for ChangeStateValue {
+    fn default() -> Self {
+        ChangeStateValue::NoChange
+    }
+}
+
+impl FormValueRepresentation for ChangeStateValue {
+    fn into_form_value_string(self) -> String {
+        self.as_str().to_string()
+    }
+}
+impl ValidateFromFormInput for ChangeStateValue {
+    fn from_form_value(value: &str) -> Result<Self, String> {
+        match value {
+            "" => Ok(Self::NoChange),
+            "accept" => Ok(Self::Accept),
+            "reject" => Ok(Self::Reject),
+            _ => Err(format!("Kein gültiger Zustands-Wechsel: {}", value)),
         }
     }
 }

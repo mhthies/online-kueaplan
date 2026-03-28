@@ -530,6 +530,23 @@ impl EntryState {
         }
     }
 
+    pub fn requires_review(&self) -> bool {
+        match self {
+            Self::SubmittedForReview | Self::PreliminaryPublished => true,
+            Self::Draft | Self::Published | Self::Retracted | Self::Rejected => false,
+        }
+    }
+
+    pub fn is_dismissed(&self) -> bool {
+        match self {
+            Self::Retracted | Self::Rejected => true,
+            Self::Draft
+            | Self::Published
+            | Self::SubmittedForReview
+            | Self::PreliminaryPublished => false,
+        }
+    }
+
     pub fn all() -> impl Iterator<Item = &'static Self> {
         [
             Self::Published,

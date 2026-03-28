@@ -166,6 +166,64 @@ impl<'a, T: FormValueRepresentation> SelectTemplate<'a, T> {
 
 impl<T: FormValueRepresentation> askama::filters::HtmlSafe for SelectTemplate<'_, T> {}
 
+#[derive(Serialize)]
+pub struct RadioButtonGroupEntry<'a> {
+    pub value: &'a str,
+    pub text: &'a str,
+    pub icon: Option<&'a str>,
+    pub button_css_class: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "sub_templates/form_inputs/radio_button_group.html")]
+pub struct RadioButtonGroupTemplate<'a, T: FormValueRepresentation> {
+    name: &'a str,
+    entries: Vec<RadioButtonGroupEntry<'a>>,
+    info: Option<&'a str>,
+    data: &'a FormValue<T>,
+}
+
+impl<'a, T: FormValueRepresentation> RadioButtonGroupTemplate<'a, T> {
+    pub fn new(data: &'a FormValue<T>, name: &'a str) -> Self {
+        Self {
+            name,
+            entries: Vec::new(),
+            info: None,
+            data,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn info(mut self, info: &'a str) -> Self {
+        self.info = Some(info);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn entries(mut self, mut entries: Vec<RadioButtonGroupEntry<'a>>) -> Self {
+        self.entries.append(&mut entries);
+        self
+    }
+
+    pub fn entry(
+        mut self,
+        value: &'a str,
+        text: &'a str,
+        icon: Option<&'a str>,
+        button_css_class: &'a str,
+    ) -> Self {
+        self.entries.push(RadioButtonGroupEntry {
+            value,
+            text,
+            icon,
+            button_css_class,
+        });
+        self
+    }
+}
+
+impl<T: FormValueRepresentation> askama::filters::HtmlSafe for RadioButtonGroupTemplate<'_, T> {}
+
 #[derive(Template)]
 #[template(path = "sub_templates/form_inputs/checkbox.html")]
 pub struct CheckboxTemplate<'a> {

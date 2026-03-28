@@ -1,0 +1,10 @@
+<div class="btn-group {%if data.has_errors() %}is-invalid{% endif %}">
+    {% for entry in entries %}
+        <input type="radio" class="btn-check" name="{{name}}" value="{{ entry.value }}" id="{{name}}-{{entry.value}}Radio" autocomplete="off" {% if entry.value == data.string_value() %}checked{% endif %}/>
+        <label class="btn {{entry.button_css_class}}" for="{{name}}-{{entry.value}}Radio">
+            {% if let Some(icon) = entry.icon%}<i class="bi bi-{{icon}}" aria-hidden="true"></i> {% endif %}{{ entry.text }}
+        </label>
+    {% endfor %}
+</div>
+{%- import "_utils.html" as utils %}
+{{ utils::info_and_errors(info, data.errors()) }}

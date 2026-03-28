@@ -43,7 +43,7 @@
                 </div>
                 <div class="col-md text-secondary">
                     Diesen Eintrag vollständig aus dem KüA-Plan löschen.
-                    Der Eintrag bleibt zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, kann aber nicht ohne Eingriff eines Admins wiederhergestellt werden.
+                    Der Eintrag bleibt zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, kann aber nicht ohne Eingriff des Server-Admins wiederhergestellt werden.
                 </div>
             </form>
             <form class="row align-items-center" method="post" action="{{ base.request.url_for("mark_entry_cancelled", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">

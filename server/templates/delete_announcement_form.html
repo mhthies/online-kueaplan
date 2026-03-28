@@ -17,7 +17,7 @@
             </div>
             <div class="col-md text-secondary">
                 Diese Bekanntmachung vollständig aus dem KüA-Plan löschen.
-                Der Daten bleiben zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, können aber nicht ohne Eingriff eines Admins wiederhergestellt werden.
+                Der Daten bleiben zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, können aber nicht ohne Eingriff des Server-Admins wiederhergestellt werden.
             </div>
         </form>
         <form class="row align-items-center" method="post" action="{{ base.request.url_for("disable_announcement", [event.id.to_string(), announcement.announcement.id.to_string()])? }}">

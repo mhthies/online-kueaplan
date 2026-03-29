@@ -297,6 +297,15 @@ pub enum EntrySubmissionMode {
     ReviewAfterPublishing = 2,
 }
 
+impl EntrySubmissionMode {
+    pub fn includes_reviews(&self) -> bool {
+        match self {
+            Self::Disabled => false,
+            Self::ReviewBeforePublishing | Self::ReviewAfterPublishing => true,
+        }
+    }
+}
+
 impl TryFrom<i32> for EntrySubmissionMode {
     type Error = EnumMemberNotExistingError;
 

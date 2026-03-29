@@ -21,10 +21,14 @@
 | abort current action        | `bi-x-square`              |
 | go to some relevant page    | `bi-arrow-up-right-circle` |
 | add entity                  | `bi-plus-lg`               |
+| add secondary entity        | `bi-plus-circle`           |
 | delete entity               | `bi-trash`                 |
 | edit entity                 | `bi-pencil`                |
 | hide                        | `bi-eye-slash`             |
 | mark as cancelled/disabled  | `bi-x-cirle`               |
+| accept/publish entry        | `bi-check2-circle`         |
+| (no state change)           | `bi-circle`                |
+| reject                      | `bi-slash-circle`          |
 | reload                      | `bi-arrow-clockwise`       |
 | navigate back               | `bi-arrow-left`            |
 
@@ -39,26 +43,36 @@
 | previous date                                | `bi-clock-history`        |
 
 ### Properties
-| Usage                        | Icon                   |
-|------------------------------|------------------------|
-| visibility                   | `bi-eye`               |
-| true                         | `bi-check-circle-fill` |
-| false                        | `bi-x-circle`          |
-| actual current date of entry | `bi-clock-fill`        |
+| Usage                                      | Icon                   |
+|--------------------------------------------|------------------------|
+| visibility                                 | `bi-eye`               |
+| true                                       | `bi-check-circle-fill` |
+| false                                      | `bi-x-circle`          |
+| actual current date of entry               | `bi-clock-fill`        |
+| entry state: draft                         | `bi-pencil-square`     |
+| entry state: requires review               | `bi-clipboard2-check`  |
+| entry state: rejected                      | `bi-slash-circle`      |
+| entry state: retracted                     | `bi-eye-slash`         |
+| passphrase access role: user               | `bi-person-fill`       |
+| passphrase access role: orga               | `bi-clipboard`         |
+| passphrase access role: event admin        | `bi-gear-fill`         |
+| passphrase access role: sharable view link | `bi-share`             |
 
 
 ### Notifications/Alerts/Announcements
-| Usage       | Icon                      |
-|-------------|---------------------------|
-| informative | `bi-info-circle`          |
-| description | `bi-info-square-fill`     |
-| error       | `bi-exclamation-triangle` |
+| Usage          | Icon                      |
+|----------------|---------------------------|
+| informative    | `bi-info-circle`          |
+| description    | `bi-info-square-fill`     |
+| error          | `bi-exclamation-triangle` |
+| entry conflict | `bi-exclamation-diamond`  |
 
 ### Pages
-| Usage                    | Icon         |
-|--------------------------|--------------|
-| list of KüA-Plan entries | `bi-list-ul` |
-| configuration area       | `bi-gear`    |
+| Usage                    | Icon                  |
+|--------------------------|-----------------------|
+| list of KüA-Plan entries | `bi-list-ul`          |
+| configuration area       | `bi-gear`             |
+| entry review area        | `bi-clipbaord2-check` |
 
 
 ## Notifications

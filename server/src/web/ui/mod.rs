@@ -113,6 +113,7 @@ fn get_ui_service() -> actix_web::Scope {
 fn get_ui_api_service() -> actix_web::Scope {
     web::scope("/ui-api")
         .service(endpoints::ui_api::concurrent_entries)
+        .service(endpoints::ui_api::review_notifications)
         .app_data(
             web::QueryConfig::default()
                 .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),

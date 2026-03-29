@@ -10,6 +10,11 @@
 {
     text-decoration: line-through;
 }
+.kuealist .kuea-buttons {
+    width: 0;
+    min-width: fit-content;
+    text-wrap: nowrap;
+}
 
 /* KüA list category colors */
 .kuealist tr.kuea-with-category {

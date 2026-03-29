@@ -25,7 +25,7 @@ def test_create_entry(page: Page, reset_database: None) -> None:
     #   of the add_entry form.
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
 
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     expect(page.get_by_role("heading", name="Neuer Eintrag")).to_be_visible()
@@ -61,14 +61,14 @@ def test_create_entry_prefilled_date(page: Page, reset_database: None) -> None:
     page.get_by_role("link", name="Do 02.01.").click()
     expect(page).to_have_title(re.compile(r"02\.01\."))
 
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
     expect(page.get_by_role("combobox", name="Tag")).to_have_value("2025-01-02")
 
 
 def test_create_entry_validation_error_duration(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
 
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     expect(page.get_by_role("heading", name="Neuer Eintrag")).to_be_visible()
@@ -92,7 +92,7 @@ def test_create_entry_validation_error_duration(page: Page, reset_database: None
 def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
 
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     date_input = page.get_by_role("combobox", name="Tag")
@@ -116,7 +116,7 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> N
 def test_create_entry_end_time_info_indicator(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "orga")
     expect(page).to_have_title(re.compile(r"06\.01\."))
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
 
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     date_input = page.get_by_role("combobox", name="Tag")
@@ -166,7 +166,7 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
     actions.add_entry(page, ENTRY_PLENUMSVORBEREITUNG)  # 19:30 – 20:00
 
     expect(page).to_have_title(re.compile(r"01\.01\."))
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
 
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     page.get_by_role("combobox", name="Tag").select_option("01.01. (Mi)")

@@ -108,7 +108,7 @@ async fn delete_entry(
             AppError::TransactionConflict => {
                 let notification = FlashMessage {
                 flash_type: FlashType::Error,
-                message: "Der Eintrag konnte wegen eines parallelen Datenbank-Zugriff nicht gelöscht werden. Bitte erneut versuchen.".to_string(),
+                message: "Der Eintrag konnte wegen eines parallelen Datenbank-Zugriffs nicht gelöscht werden. Bitte erneut versuchen.".to_string(),
                 keep_open: true,
                 button: None,
             };
@@ -176,9 +176,9 @@ async fn mark_entry_cancelled(
         }
         Err(e) => {
             let notification = match e {
-                AppError::ConcurrentEditConflict => FlashMessage {
+                AppError::TransactionConflict => FlashMessage {
                     flash_type: FlashType::Error,
-                    message: "Der Eintrag konnte wegen einer parallelen Änderung nicht geändert werden. Bitte erneut versuchen.".to_string(),
+                    message: "Der Eintrag konnte wegen wegen eines parallelen Datenbank-Zugriffs nicht modifiziert werden. Bitte erneut versuchen.".to_string(),
                     keep_open: true,
                     button: None,
                 },

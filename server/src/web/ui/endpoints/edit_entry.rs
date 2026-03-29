@@ -630,9 +630,10 @@ impl EntryFormData {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 enum ChangeStateValue {
     /// Keep ToReview/Draft state or store new entry as Draft
+    #[default]
     NoChange,
     /// Accept & publish reviewed submission or publish Draft
     Accept,
@@ -664,12 +665,6 @@ impl ChangeStateValue {
             ) => EntryState::Rejected,
             (_, ChangeStateValue::Reject) => EntryState::Retracted,
         }
-    }
-}
-
-impl Default for ChangeStateValue {
-    fn default() -> Self {
-        ChangeStateValue::NoChange
     }
 }
 

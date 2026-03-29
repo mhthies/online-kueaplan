@@ -524,6 +524,7 @@ impl EntryFormData {
     ) -> Self {
         Self {
             entry_id: new_entry_id.into(),
+            change_state: ChangeStateValue::Accept.into(),
             ..Self::from_full_entry(cloned_entry, event_clock_info)
         }
     }

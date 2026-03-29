@@ -133,10 +133,9 @@
                 Prüfung des Eintrags
             </div>
             <div class="card-body">
-                {# TODO change label of first entry to "Bestätigen", when already published #}
                 {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
                     .entry(ChangeStateValue::Accept.as_str(),
-                           "Veröffentlichen",
+                           current_entry_state.unwrap().is_published()|then_else("Bestätigen", "Veröffentlichen"),
                            Some("check2-circle"),
                            "btn-outline-success")
                     .entry(ChangeStateValue::NoChange.as_str(), "Ungeprüft", Some("circle"), "btn-outline-secondary")
@@ -152,7 +151,7 @@
             <div class="card-body">
                 {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
                         .entry(ChangeStateValue::Accept.as_str(), "Jetzt veröffentlichen", Some("check2-circle"), "btn-outline-success")
-                        .entry(ChangeStateValue::NoChange.as_str(), "Als Entwurf speichern", Some("circle"), "btn-outline-secondary")
+                        .entry(ChangeStateValue::NoChange.as_str(), *is_new_entry|then_else("Als Entwurf speichern", "Als Entwurf belassen"), Some("circle"), "btn-outline-secondary")
                 }}
             </div>
         </div>

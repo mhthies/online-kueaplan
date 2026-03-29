@@ -475,6 +475,10 @@ impl<'a> EditEntryFormTemplate<'a> {
     }
 }
 
+mod filters {
+    pub use crate::web::ui::askama_filters::then_else;
+}
+
 #[derive(Default, Deserialize, Debug)]
 struct EntryFormData {
     /// Id of the entry, only used for creating new entries (for editing existing entries, the id is

@@ -26,7 +26,7 @@ def test_create_new_user_passphrase(browser: Browser, reset_database: None) -> N
     admin_page.get_by_role("button", name="Erstellen").click()
 
     actions.login(user_page, 1, "test-passphrase")
-    expect(user_page.get_by_role("link", name="Eintrag hinzufügen")).not_to_be_visible()
+    expect(user_page.get_by_role("link", name="Neuer Eintrag")).not_to_be_visible()
 
 
 def test_create_sharable_link_passphrase_for_admin(page: Page, reset_database: None) -> None:

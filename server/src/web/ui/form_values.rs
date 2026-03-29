@@ -156,9 +156,9 @@ impl<T: FormValueRepresentation> From<T> for FormValue<T> {
     }
 }
 
-/// Helper trait with a simplified version of the [FormValue::validate] method that is added to the
-/// [FormValue] type when the data type `T` does not have associated validation data (i.e. the
-/// [FormValueRepresentation::ValidationData] type is the unit type (`()`)),
+/// Helper trait with a simplified version of the [FormValue::validate_with] method that is added to
+/// the [FormValue] type when the data type `T` does not have associated validation data (i.e. `T`
+/// T implements [ValidateFromFormInput])
 pub trait _FormValidSimpleValidate<T> {
     fn validate(&mut self) -> Option<T>;
 }

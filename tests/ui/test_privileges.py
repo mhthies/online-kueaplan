@@ -8,7 +8,7 @@ from . import actions
 def test_user_cannot_add_entry(page: Page, reset_database: None) -> None:
     actions.login(page, 1, "user")
 
-    expect(page.get_by_role("link", name="Eintrag hinzufügen")).not_to_be_visible()
+    expect(page.get_by_role("link", name="Neuer Eintrag")).not_to_be_visible()
 
     page.goto("http://localhost:9099/ui/1/new_entry?date=2025-01-06")
     expect(page).to_have_title(re.compile("Fehler"))

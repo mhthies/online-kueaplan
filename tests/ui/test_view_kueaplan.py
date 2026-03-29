@@ -146,7 +146,7 @@ def test_main_list_entry_room_order(page: Page, reset_database: None) -> None:
     actions.add_room(page, actions.Room("D"))
     actions.add_room(page, actions.Room("A"))
 
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
     page.get_by_role("textbox", name="Titel").fill("Test Entry")
     page.get_by_role("textbox", name="Beginn").fill("17:00")
     for room in ("B", "A"):

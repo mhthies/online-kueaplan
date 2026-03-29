@@ -9,10 +9,13 @@ use crate::web::time_calculation::{
 };
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
-use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{
+    BoolFormValue, FormValue, FormValueRepresentation, ValidateFromFormInput,
+    _FormValidSimpleValidate,
+};
 use crate::web::ui::sub_templates::form_inputs::{
-    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType, SelectEntry,
-    SelectTemplate,
+    CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
+    RadioButtonGroupTemplate, SelectEntry, SelectTemplate,
 };
 use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short, FormSubmitResult};
 use crate::web::ui::{sub_templates, util, validation};
@@ -24,6 +27,7 @@ use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeSet;
+use std::fmt::Debug;
 use uuid::Uuid;
 
 #[get("/{event_id}/entry/{entry_id}/edit")]
@@ -52,6 +56,7 @@ async fn edit_entry_form(
 
     let entry_id = entry.entry.id;
     let entry_begin = entry.entry.begin;
+    let entry_state = entry.entry.state;
     let form_data = EntryFormData::from_full_entry(entry, &event.clock_info);
 
     let tmpl = EditEntryFormTemplate {
@@ -70,6 +75,7 @@ async fn edit_entry_form(
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
         is_new_entry: false,
+        current_entry_state: Some(entry_state),
         cloned_from_entry_id: None,
     };
 
@@ -109,14 +115,17 @@ async fn edit_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         Some(entry_id),
+        Some(old_entry.entry.state),
         &event.clock_info,
     );
 
     let mut entry_begin = old_entry.entry.begin;
+    let mut entry_state = old_entry.entry.state;
     let result: FormSubmitResult =
         if let Some((mut entry, previous_last_updated, create_previous_date)) = entry {
             entry.entry.event_id = event_id;
             entry_begin = entry.entry.begin;
+            entry_state = entry.entry.state;
             if let Some(previous_date_comment) = create_previous_date {
                 if entry.entry.begin != old_entry.entry.begin
                     || entry.entry.end != old_entry.entry.end
@@ -164,6 +173,7 @@ async fn edit_entry(
         categories: &categories,
         entry_id: Some(&entry_id),
         has_unsaved_changes: true,
+        current_entry_state: Some(old_entry.entry.state),
         is_new_entry: false,
         cloned_from_entry_id: None,
     };
@@ -182,6 +192,7 @@ async fn edit_entry(
             &req,
             event_id,
             &entry_id,
+            entry_state,
             &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
@@ -244,6 +255,7 @@ async fn new_entry_form(
         categories: &categories,
         entry_id: Some(&entry_id),
         has_unsaved_changes: false,
+        current_entry_state: None,
         is_new_entry: true,
         cloned_from_entry_id: clone_from,
     };
@@ -282,16 +294,19 @@ async fn new_entry(
         &rooms.iter().map(|r| r.id).collect(),
         &categories.iter().map(|c| c.id).collect(),
         None,
+        None,
         &event.clock_info,
     );
 
     let mut entry_id = None;
     let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
+    let mut entry_state = EntryState::Published;
     let result: util::FormSubmitResult = if let Some((mut entry, _, _)) = entry {
         let auth_clone = auth.clone();
         entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
         entry_begin = entry.entry.begin;
+        entry_state = entry.entry.state;
         web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             // TODO detect and ignore double addition
@@ -319,6 +334,7 @@ async fn new_entry(
         categories: &categories,
         entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
+        current_entry_state: None,
         is_new_entry: true,
         cloned_from_entry_id: query_data.clone_from,
     };
@@ -334,6 +350,7 @@ async fn new_entry(
             &req,
             event_id,
             &entry_id.unwrap_or_default(),
+            entry_state,
             &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
         )?,
         &req,
@@ -360,7 +377,8 @@ struct EditEntryFormTemplate<'a> {
     rooms: &'a Vec<Room>,
     entry_id: Option<&'a EntryId>,
     has_unsaved_changes: bool,
-    is_new_entry: bool,
+    is_new_entry: bool, // TODO remove and replace with current_entry_state.is_none()
+    current_entry_state: Option<EntryState>,
     cloned_from_entry_id: Option<EntryId>,
 }
 
@@ -406,6 +424,8 @@ impl<'a> EditEntryFormTemplate<'a> {
                 self.event.basic_data.id,
                 self.entry_id
                     .expect("For non-new entries, `entry_id` should always be known."),
+                self.current_entry_state
+                    .expect("For non-new entries, `current_entry_state` should always be known."),
                 &self
                     .base
                     .current_date
@@ -455,6 +475,10 @@ impl<'a> EditEntryFormTemplate<'a> {
     }
 }
 
+mod filters {
+    pub use crate::web::ui::askama_filters::then_else;
+}
+
 #[derive(Default, Deserialize, Debug)]
 struct EntryFormData {
     /// Id of the entry, only used for creating new entries (for editing existing entries, the id is
@@ -479,6 +503,7 @@ struct EntryFormData {
     last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
     create_previous_date: BoolFormValue,
     previous_date_comment: FormValue<String>,
+    change_state: FormValue<ChangeStateValue>,
 }
 
 impl EntryFormData {
@@ -487,6 +512,7 @@ impl EntryFormData {
             entry_id: entry_id.into(),
             day: validation::IsoDate(date).into(),
             category: validation::UuidFromList(category_id).into(),
+            change_state: ChangeStateValue::Accept.into(),
             ..Self::default()
         }
     }
@@ -498,6 +524,7 @@ impl EntryFormData {
     ) -> Self {
         Self {
             entry_id: new_entry_id.into(),
+            change_state: ChangeStateValue::Accept.into(),
             ..Self::from_full_entry(cloned_entry, event_clock_info)
         }
     }
@@ -507,6 +534,7 @@ impl EntryFormData {
         rooms: &Vec<Uuid>,
         categories: &Vec<Uuid>,
         known_entry_id: Option<EntryId>,
+        current_entry_state: Option<EntryState>,
         clock_info: &EventClockInfo,
     ) -> Option<(
         FullNewEntry,
@@ -531,6 +559,7 @@ impl EntryFormData {
         let previous_last_updated = self.last_updated.validate();
         let create_previous_date = self.create_previous_date.get_value();
         let previous_date_comment = self.previous_date_comment.validate();
+        let change_state = self.change_state.validate();
 
         let begin = timestamp_from_effective_date_and_time(
             day?.into_inner(),
@@ -554,7 +583,7 @@ impl EntryFormData {
                     room_comment: room_comment?,
                     is_exclusive,
                     is_cancelled,
-                    state: EntryState::Published,
+                    state: change_state?.change_state(current_entry_state),
                 },
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],
@@ -596,6 +625,61 @@ impl EntryFormData {
             last_updated: validation::SimpleTimestampMicroseconds(value.entry.last_updated).into(),
             create_previous_date: false.into(),
             previous_date_comment: "".to_string().into(),
+            change_state: ChangeStateValue::NoChange.into(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+enum ChangeStateValue {
+    /// Keep ToReview/Draft state or store new entry as Draft
+    #[default]
+    NoChange,
+    /// Accept & publish reviewed submission or publish Draft
+    Accept,
+    Reject,
+}
+
+impl ChangeStateValue {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::NoChange => "",
+            Self::Accept => "accept",
+            Self::Reject => "reject",
+        }
+    }
+
+    /// Calculate the new state of an entry, depending on the previous state and the
+    /// ChangeStateValue (radio button selected in the edit form)
+    ///
+    /// # Params
+    /// * `previous_state`: Previous state of the entry or None if this is a new entry.
+    fn change_state(&self, previous_state: Option<EntryState>) -> EntryState {
+        match (previous_state, self) {
+            (None, Self::NoChange) => EntryState::Draft,
+            (Some(s), Self::NoChange) => s,
+            (_, Self::Accept) => EntryState::Published,
+            (
+                Some(EntryState::SubmittedForReview | EntryState::PreliminaryPublished),
+                Self::Reject,
+            ) => EntryState::Rejected,
+            (_, ChangeStateValue::Reject) => EntryState::Retracted,
+        }
+    }
+}
+
+impl FormValueRepresentation for ChangeStateValue {
+    fn into_form_value_string(self) -> String {
+        self.as_str().to_string()
+    }
+}
+impl ValidateFromFormInput for ChangeStateValue {
+    fn from_form_value(value: &str) -> Result<Self, String> {
+        match value {
+            "" => Ok(Self::NoChange),
+            "accept" => Ok(Self::Accept),
+            "reject" => Ok(Self::Reject),
+            _ => Err(format!("Kein gültiger Zustands-Wechsel: {}", value)),
         }
     }
 }

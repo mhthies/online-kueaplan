@@ -59,3 +59,19 @@ pub fn ellipsis(value: &str, _: &dyn askama::Values, length: usize) -> askama::R
         Ok(value.to_owned())
     }
 }
+
+/// Ternary operator for &str as an askama filter.
+///
+/// Usage: `{{ condition_variable|then_else("Then String", "Else String") }}`
+///
+/// For simple use cases like this, askama's if-else syntax should be used instead. However, the
+/// ternary filter is useful when string literals are used as function/filter/macro parameters.
+#[askama::filter_fn]
+pub fn then_else<'a>(
+    condition: bool,
+    _: &dyn askama::Values,
+    then_value: &'a str,
+    else_value: &'a str,
+) -> askama::Result<&'a str> {
+    Ok(if condition { then_value } else { else_value })
+}

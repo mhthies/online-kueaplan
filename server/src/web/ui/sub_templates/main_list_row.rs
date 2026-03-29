@@ -2,7 +2,6 @@ use crate::data_store::models::{Category, EventClockInfo, FullEntry, FullPreviou
 use crate::data_store::{CategoryId, RoomId};
 use crate::web::time_calculation;
 use crate::web::ui::colors::CategoryColors;
-use crate::web::ui::util;
 use crate::web::ui::util::url_for_entry_details;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
@@ -52,6 +51,8 @@ pub struct MainListRowTemplate<'a> {
     rooms: &'a RoomByIdWithOrder<'a>,
     clock_info: &'a EventClockInfo,
     show_edit_links: bool,
+    show_edit_buttons: bool,
+    show_markup: bool,
     show_description_links: bool,
     date_context: Option<chrono::NaiveDate>,
     room_context: Option<uuid::Uuid>,
@@ -75,6 +76,8 @@ impl<'a> MainListRowTemplate<'a> {
             clock_info,
             show_edit_links: false,
             show_description_links: false,
+            show_edit_buttons: false,
+            show_markup: true,
             date_context: None,
             room_context: None,
             main_entry_link_mode: MainEntryLinkMode::None,
@@ -83,6 +86,16 @@ impl<'a> MainListRowTemplate<'a> {
 
     pub fn show_edit_links(mut self, show_links: bool) -> Self {
         self.show_edit_links = show_links;
+        self
+    }
+
+    pub fn show_edit_buttons(mut self, show_buttons: bool) -> Self {
+        self.show_edit_buttons = show_buttons;
+        self
+    }
+
+    pub fn show_markup(mut self, show_markup: bool) -> Self {
+        self.show_markup = show_markup;
         self
     }
 
@@ -132,8 +145,21 @@ impl<'a> MainListRowTemplate<'a> {
         )
     }
 
-    fn url_for_edit_entry(&self, entry: &FullEntry) -> Result<String, UrlGenerationError> {
-        util::url_for_edit_entry(self.request, entry)
+    fn url_for_edit_entry(&self) -> Result<String, UrlGenerationError> {
+        Ok(self
+            .request
+            .url_for(
+                if self.row.includes_entry {
+                    "edit_entry_form"
+                } else {
+                    "previous_dates_overview"
+                },
+                &[
+                    self.row.entry.entry.event_id.to_string(),
+                    self.row.entry.entry.id.to_string(),
+                ],
+            )?
+            .to_string())
     }
 
     /// Generate the HTML 'class' attribute for the table row of the given `entry`
@@ -162,6 +188,7 @@ impl<'a> MainListRowTemplate<'a> {
                 self.request,
                 entry.event_id,
                 &entry.id,
+                entry.state,
                 &time_calculation::get_effective_date(&entry.begin, self.clock_info),
             ))
             .transpose(),

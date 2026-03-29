@@ -117,3 +117,30 @@ where
     })?;
     Ok(value.into_inner())
 }
+
+#[get("/{event_id}/review-notifications")]
+async fn review_notifications(
+    path: web::Path<i32>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let event_id = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
+
+    let entry_count_by_state = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        Ok(store.get_entry_count_by_state(&auth, event_id)?)
+    })
+    .await??;
+
+    let review_count: i64 = entry_count_by_state
+        .iter()
+        .filter_map(|(state, count)| state.requires_review().then_some(*count))
+        .sum();
+
+    Ok(web::Json(json!({
+        "to_review": review_count,
+    })))
+}

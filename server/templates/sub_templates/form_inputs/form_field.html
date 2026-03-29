@@ -8,7 +8,7 @@
            class="form-control {%if data.has_errors() %}is-invalid{% endif %} {% match size %}{%when InputSize::Large%}form-control-lg{%when InputSize::Normal%}{%when InputSize::Small%}form-control-sm{%endmatch%} {% if input_type == InputType::Color %}form-control-color{% endif %}"
            id="{{name}}Input" name="{{name}}"
            value="{{data.string_value()}}"
-           aria-describedby="{{name}}Description">
+           aria-describedby="{% if info.is_some() %}{{name}}Help{% endif %} {% if data.has_errors() %}{{name}}Errors{% endif %}">
     {% if let Some(suffix) = suffix_text %}
         <span class="input-group-text">{{ suffix }}</span>
         </div>

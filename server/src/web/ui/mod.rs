@@ -56,6 +56,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_entry::delete_entry_form)
         .service(endpoints::delete_entry::delete_entry)
         .service(endpoints::delete_entry::mark_entry_cancelled)
+        .service(endpoints::delete_entry::retract_entry)
         .service(endpoints::config_index::config_index)
         .service(endpoints::edit_extended_event::edit_extended_event_form)
         .service(endpoints::edit_extended_event::edit_extended_event)
@@ -94,6 +95,10 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::calendar_link_overview::calendar_link_overview)
         .service(endpoints::print_templates::print_link_and_passphrase)
         .service(endpoints::print_templates::event_ui_link_qr_code)
+        .service(endpoints::review::list_to_review)
+        .service(endpoints::review::list_drafts)
+        .service(endpoints::review::list_rejected_entries)
+        .service(endpoints::review::list_retracted_entries)
         .default_service(web::to(not_found_handler))
         .app_data(
             web::QueryConfig::default()
@@ -108,6 +113,7 @@ fn get_ui_service() -> actix_web::Scope {
 fn get_ui_api_service() -> actix_web::Scope {
     web::scope("/ui-api")
         .service(endpoints::ui_api::concurrent_entries)
+        .service(endpoints::ui_api::review_notifications)
         .app_data(
             web::QueryConfig::default()
                 .error_handler(|err, _req| AppError::InvalidData(err.to_string()).into()),

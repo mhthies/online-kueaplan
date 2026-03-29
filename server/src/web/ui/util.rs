@@ -1,6 +1,6 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, Privilege};
-use crate::data_store::models::{AnnouncementType, Event, EventClockInfo, FullEntry};
+use crate::data_store::models::{AnnouncementType, EntryState, Event, EventClockInfo, FullEntry};
 use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
@@ -37,15 +37,22 @@ pub fn url_for_entry_details(
     req: &HttpRequest,
     event_id: EventId,
     entry_id: &EntryId,
+    entry_state: EntryState,
     entry_begin_effective_date: &chrono::NaiveDate,
 ) -> Result<url::Url, UrlGenerationError> {
-    let mut url = req.url_for(
-        "main_list",
-        [
-            &event_id.to_string(),
-            &entry_begin_effective_date.to_string(),
-        ],
-    )?;
+    let mut url = match entry_state {
+        EntryState::Published | EntryState::PreliminaryPublished => req.url_for(
+            "main_list",
+            [
+                &event_id.to_string(),
+                &entry_begin_effective_date.to_string(),
+            ],
+        )?,
+        EntryState::Draft => req.url_for("list_drafts", [&event_id.to_string()])?,
+        EntryState::SubmittedForReview => req.url_for("list_to_review", [&event_id.to_string()])?,
+        EntryState::Retracted => req.url_for("list_retracted_entries", [&event_id.to_string()])?,
+        EntryState::Rejected => req.url_for("list_rejected_entries", [&event_id.to_string()])?,
+    };
     url.set_fragment(Some(&format!("entry-{}", entry_id)));
     Ok(url)
 }
@@ -58,19 +65,6 @@ pub fn url_for_main_list(
 ) -> Result<String, UrlGenerationError> {
     Ok(req
         .url_for("main_list", &[event_id.to_string(), date.to_string()])?
-        .to_string())
-}
-
-/// Generate a URL for editing the given KüA-Plan entry
-pub fn url_for_edit_entry(
-    req: &HttpRequest,
-    entry: &FullEntry,
-) -> Result<String, UrlGenerationError> {
-    Ok(req
-        .url_for(
-            "edit_entry_form",
-            &[entry.entry.event_id.to_string(), entry.entry.id.to_string()],
-        )?
         .to_string())
 }
 

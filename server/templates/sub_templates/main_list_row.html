@@ -36,7 +36,7 @@
 {% endif %}
 
 {% let entry = row.entry.entry %}
-<tr class="{{ css_class_for_tr(row) }}">
+<tr {% if show_markup %}class="{{ css_class_for_tr(row) }}"{% endif %}>
     <td class="kuea-title aside-container" {% if row.entry_takes_place_now() %}id="entry-{{ entry.id.to_string() }}"{% endif %}>
         {% let effective_begin_date = crate::web::time_calculation::get_effective_date(row.sort_time, clock_info) %}
         {% if let Some(date) = date_context %}
@@ -56,10 +56,11 @@
             <div class="d-inline-block float-end ms-2" title="Kategorie {{category.title}}" aria-label="Kategorie {{category.title}}">{{ category.icon }}</div>
         {% endif %}
         <span class="content">{{ entry.title }}</span>
-        {% if row.includes_entry && show_edit_links %}
+        {% if show_edit_links %}
             <div class="table-aside-buttons">
-                <a href="{{ url_for_edit_entry(row.entry)? }}" aria-label="Eintrag bearbeiten"
-                   title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; bearbeiten">
+                <a href="{{ url_for_edit_entry()? }}"
+                   aria-label="{% if row.includes_entry %}Eintrag bearbeiten{% else %}Termine des Eintrags bearbeiten{% endif %}"
+                   title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; {% if !row.includes_entry %}bzw. Termin {% endif %}bearbeiten">
                     <i class="bi-pencil" aria-hidden="true"></i></a>
             </div>
         {% endif %}
@@ -152,4 +153,12 @@
             <span class="d-inline d-sm-none">von</span> {{ entry.responsible_person }}
         {% endif %}
     </td>
+    {% if show_edit_buttons %}
+        <td class="kuea-buttons">
+            <a href="{{ url_for_edit_entry()? }}" aria-label="Eintrag bearbeiten"
+               title="Eintrag &quot;{{entry.title|ellipsis(30)}}&quot; bearbeiten"
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi-pencil" aria-hidden="true"></i></a>
+        </td>
+    {% endif %}
 </tr>

@@ -132,6 +132,11 @@ impl<'a> BaseTemplateContext<'a> {
         self.get_extended_event()
             .map(|e| crate::web::time_calculation::current_effective_date(&e.clock_info))
     }
+
+    pub fn entry_review_is_enabled(&self) -> bool {
+        self.get_extended_event()
+            .is_some_and(|e| e.entry_submission_mode.includes_reviews())
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -140,6 +145,7 @@ pub enum MainNavButton {
     ByCategory,
     ByRoom,
     AddEntry,
+    Review,
     Configuration,
 }
 

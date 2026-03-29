@@ -69,6 +69,10 @@
         display: inline-block;
         margin-top: -1.25em;
     }
+    .kuealist .kuea-buttons {
+        width: 100%;
+        text-align: right;
+    }
 }
 
 /* KüA list aside buttons */

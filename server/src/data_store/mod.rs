@@ -107,6 +107,12 @@ pub trait KueaPlanStoreFacade {
         state_filter: &[models::EntryState],
     ) -> Result<Vec<models::FullEntry>, StoreError>;
 
+    fn get_entry_count_by_state(
+        &mut self,
+        auth_token: &AuthToken,
+        event_id: EventId,
+    ) -> Result<Vec<(models::EntryState, i64)>, StoreError>;
+
     fn get_entry(
         &mut self,
         auth_token: &AuthToken,

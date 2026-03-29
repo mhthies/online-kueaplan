@@ -297,6 +297,15 @@ pub enum EntrySubmissionMode {
     ReviewAfterPublishing = 2,
 }
 
+impl EntrySubmissionMode {
+    pub fn includes_reviews(&self) -> bool {
+        match self {
+            Self::Disabled => false,
+            Self::ReviewBeforePublishing | Self::ReviewAfterPublishing => true,
+        }
+    }
+}
+
 impl TryFrom<i32> for EntrySubmissionMode {
     type Error = EnumMemberNotExistingError;
 
@@ -501,7 +510,7 @@ pub struct EntryPatch {
     pub room_ids: Option<Vec<Uuid>>,
 }
 
-#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, FromSqlRow, AsExpression, Eq, Clone, Copy, PartialOrd, Ord)]
 #[diesel(sql_type = diesel::sql_types::Integer)]
 #[repr(i32)]
 pub enum EntryState {
@@ -527,6 +536,23 @@ impl EntryState {
         match self {
             Self::Published | Self::PreliminaryPublished => true,
             Self::Draft | Self::SubmittedForReview | Self::Retracted | Self::Rejected => false,
+        }
+    }
+
+    pub fn requires_review(&self) -> bool {
+        match self {
+            Self::SubmittedForReview | Self::PreliminaryPublished => true,
+            Self::Draft | Self::Published | Self::Retracted | Self::Rejected => false,
+        }
+    }
+
+    pub fn is_dismissed(&self) -> bool {
+        match self {
+            Self::Retracted | Self::Rejected => true,
+            Self::Draft
+            | Self::Published
+            | Self::SubmittedForReview
+            | Self::PreliminaryPublished => false,
         }
     }
 

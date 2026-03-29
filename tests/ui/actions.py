@@ -36,7 +36,7 @@ class Entry:
 
 
 def add_entry(page: Page, entry: Entry) -> None:
-    page.get_by_role("link", name="Eintrag hinzufügen").click()
+    page.get_by_role("link", name="Neuer Eintrag").click()
     page.get_by_role("textbox", name="Titel").fill(entry.title)
     page.get_by_role("textbox", name="Kommentar / Kurze Beschreibung").fill(entry.comment)
     if entry.is_cancelled:

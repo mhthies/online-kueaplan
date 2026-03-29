@@ -1,3 +1,4 @@
+use crate::data_store::models::EntryState;
 use crate::data_store::{EntryId, EventId};
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
@@ -11,6 +12,7 @@ pub struct EditEntryNavbar<'a> {
     request: &'a HttpRequest,
     event_id: EventId,
     entry_id: &'a EntryId,
+    entry_state: EntryState,
     entry_begin_effective_date: chrono::NaiveDate,
     active_link: EditEntryNavbarActiveLink,
 }
@@ -20,6 +22,7 @@ impl<'a> EditEntryNavbar<'a> {
         request: &'a HttpRequest,
         event_id: EventId,
         entry_id: &'a EntryId,
+        entry_state: EntryState,
         entry_begin_effective_date: chrono::NaiveDate,
         active_link: EditEntryNavbarActiveLink,
     ) -> Self {
@@ -27,6 +30,7 @@ impl<'a> EditEntryNavbar<'a> {
             request,
             event_id,
             entry_id,
+            entry_state,
             entry_begin_effective_date,
             active_link,
         }

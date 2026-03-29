@@ -260,6 +260,25 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
         )
     }
 
+    fn get_entry_count_by_state(
+        &mut self,
+        auth_token: &AuthToken,
+        the_event_id: EventId,
+    ) -> Result<Vec<(models::EntryState, i64)>, StoreError> {
+        use diesel::dsl::{count_star, not};
+        use schema::entries::dsl::*;
+
+        auth_token.check_privilege(the_event_id, Privilege::ManageEntries)?;
+
+        let result = entries
+            .group_by(state)
+            .select((state, count_star()))
+            .filter(event_id.eq(the_event_id))
+            .filter(not(deleted))
+            .load::<(models::EntryState, i64)>(&mut self.connection)?;
+        Ok(result)
+    }
+
     fn get_entry(
         &mut self,
         auth_token: &AuthToken,

@@ -69,8 +69,20 @@
                                 {% let add_entry_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::AddEntry) %}
                                 <li class="nav-item">
                                     <a href="{{ base.new_entry_form_url()? }}" class="nav-link {% if add_entry_active %}active{% endif %}" {% if add_entry_active %}aria-current="page"{% endif %}>
-                                        <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag hinzufügen
+                                        <i class="bi bi-plus-circle" aria-hidden="true"></i> Neuer Eintrag
                                     </a>
+                                </li>
+                                {% let review_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::Review) %}
+                                <li class="nav-item">
+                                    {% if base.entry_review_is_enabled() %}
+                                        <a href="{{ base.url_for_event_endpoint("list_to_review")? }}" class="nav-link {% if review_active %}active{% endif %}" id="review-area-button" {% if review_active %}aria-current="page"{% endif %}>
+                                            <i aria-hidden="true" class="bi bi-clipboard2-check"></i> Prüfen
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ base.url_for_event_endpoint("list_retracted_entries")? }}" class="nav-link {% if review_active %}active{% endif %}" id="review-area-button" {% if review_active %}aria-current="page"{% endif %}>
+                                            <i aria-hidden="true" class="bi bi-eye-slash"></i> Versteckte
+                                        </a>
+                                    {% endif %}
                                 </li>
                             {% endif %}
                             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
@@ -163,6 +175,12 @@
     const toastElList = document.querySelectorAll('.toast');
     const toastList = Array.from(toastElList).map(toastEl => new bootstrap.Toast(toastEl, {}));
     toastList.forEach(toast => toast.show());
+</script>
+{% endif %}
+{% if base.entry_review_is_enabled() && base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries) %}
+<script src="{{ base.url_for_static("review-notifications.js")? }}"></script>
+<script>
+    initializeReviewNotifications({{ base.url_for_event_endpoint("review_notifications")?.to_string()|json|safe }});
 </script>
 {% endif %}
 {% block scripts %}

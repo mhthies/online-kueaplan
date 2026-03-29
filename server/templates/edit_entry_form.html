@@ -15,6 +15,7 @@
                base.request,
                *base.get_basic_event().expect("Event should always be known").id,
                entry_id.expect("For non-new entries, `entry_id` should always be known."),
+               current_entry_state.expect("For non-new entries, `current_entry_state` should always be known."),
                base.current_date.expect("For non-new entries, `entry_id` should always be known."),
                sub_templates::edit_entry_helpers::EditEntryNavbarActiveLink::EditEntry,
            ) }}
@@ -111,7 +112,7 @@
                 .info("Unterstützt Markdown")
         }}
     </div>
-    {% if !is_new_entry %}
+    {% if !is_new_entry && current_entry_state.unwrap().is_published() %}
         <div class="card mb-3">
             <div class="card-header">
                 {{ CheckboxTemplate::new(form_data.create_previous_date,
@@ -125,6 +126,55 @@
                        .size(InputSize::Small) }}
             </div>
         </div>
+    {% endif %}
+    {% if !is_new_entry && current_entry_state.unwrap().requires_review() %}
+        <div class="card mb-3">
+            <div class="card-header">
+                Prüfung des Eintrags
+            </div>
+            <div class="card-body">
+                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                    .entry(ChangeStateValue::Accept.as_str(),
+                           current_entry_state.unwrap().is_published()|then_else("Bestätigen", "Veröffentlichen"),
+                           Some("check2-circle"),
+                           "btn-outline-success")
+                    .entry(ChangeStateValue::NoChange.as_str(), "Ungeprüft", Some("circle"), "btn-outline-secondary")
+                    .entry(ChangeStateValue::Reject.as_str(), "Ablehnen", Some("slash-circle"), "btn-outline-danger")
+                }}
+            </div>
+        </div>
+    {% elif is_new_entry || current_entry_state.unwrap() == EntryState::Draft %}
+        <div class="card mb-3">
+            <div class="card-header">
+                Veröffentlichung
+            </div>
+            <div class="card-body">
+                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                        .entry(ChangeStateValue::Accept.as_str(), "Jetzt veröffentlichen", Some("check2-circle"), "btn-outline-success")
+                        .entry(ChangeStateValue::NoChange.as_str(), *is_new_entry|then_else("Als Entwurf speichern", "Als Entwurf belassen"), Some("circle"), "btn-outline-secondary")
+                }}
+            </div>
+        </div>
+    {% elif !is_new_entry && current_entry_state.unwrap().is_dismissed() %}
+        <div class="card mb-3">
+            <div class="card-header">
+                Veröffentlichung
+            </div>
+            <div class="card-body">
+                <p>
+                    Dieser Eintrag wurde {% if current_entry_state.unwrap() == EntryState::Rejected %}bei der Prüfung abgelehnt{% else %}nach der Veröffentlichung zurückgezogen{% endif %}.
+                    Es ist trotzdem möglich, ihn wieder zu veröffentlichen:
+                </p>
+                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                        .entry(ChangeStateValue::Accept.as_str(), "Veröffentlichen", Some("check2-circle"), "btn-outline-success")
+                        .entry(ChangeStateValue::NoChange.as_str(), "Versteckt lassen", Some("circle"), "btn-outline-secondary")
+                }}
+            </div>
+        </div>
+    {% else %}
+        {{ HiddenInputTemplate::new(form_data.change_state, "change_state")? }}
+    {% endif %}
+    {% if !is_new_entry %}
         {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")? }}
     {% else %}
         {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")? }}

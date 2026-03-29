@@ -56,6 +56,7 @@ fn get_ui_service() -> actix_web::Scope {
         .service(endpoints::delete_entry::delete_entry_form)
         .service(endpoints::delete_entry::delete_entry)
         .service(endpoints::delete_entry::mark_entry_cancelled)
+        .service(endpoints::delete_entry::retract_entry)
         .service(endpoints::config_index::config_index)
         .service(endpoints::edit_extended_event::edit_extended_event_form)
         .service(endpoints::edit_extended_event::edit_extended_event)

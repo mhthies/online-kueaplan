@@ -36,8 +36,8 @@
         <h2 class="card-header border-danger fs-4">
             Löschen
         </h2>
-        <div class="card-body">
-            <form class="row align-items-center mb-3" method="post" action="{{ base.request.url_for("delete_entry", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
+        <div class="card-body d-flex flex-column gap-3">
+            <form class="row align-items-center" method="post" action="{{ base.request.url_for("delete_entry", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
                 <div class="col-md-auto mb-2 mb-md-0">
                     <button type="submit" class="btn btn-danger"><i class="bi bi-trash" aria-hidden="true"></i> Löschen</button>
                 </div>
@@ -46,17 +46,43 @@
                     Der Eintrag bleibt zwar aus technischen Gründen weiterhin in der Datenbank gespeichert, kann aber nicht ohne Eingriff des Server-Admins wiederhergestellt werden.
                 </div>
             </form>
-            <form class="row align-items-center" method="post" action="{{ base.request.url_for("mark_entry_cancelled", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
-                <div class="col-md-auto mb-2 mb-md-0">
-                    <button type="submit" class="btn btn-primary" {% if entry.entry.is_cancelled %}disabled{% endif %}>
-                        <i class="bi bi-x-circle" aria-hidden="true"></i> Als „fällt aus“ markieren
-                    </button>
-                </div>
-                <div class="col-md text-secondary">
-                    Diesen Eintrag ändern, sodass er als ausfallend dargestellt wird.
-                    Dies entspricht der Option „fällt aus“ im Bearbeitungs-Formular.
-                </div>
-            </form>
+            {% if entry.entry.state.requires_review() || entry.entry.state.is_published() %}
+                <form class="row align-items-center" method="post" action="{{ base.request.url_for("retract_entry", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
+                    <div class="col-md-auto mb-2 mb-md-0">
+                        <button type="submit" class="btn btn-warning">
+                            {% if entry.entry.state.requires_review() %}
+                                <i class="bi bi-slash-circle" aria-hidden="true"></i> Einreichung ablehnen
+                            {% else %}
+                                <i class="bi bi-eye-slash" aria-hidden="true"></i> Verstecken
+                            {% endif %}
+                        </button>
+                    </div>
+                    <div class="col-md text-secondary">
+                        {% if entry.entry.state.requires_review() %}
+                            Diese Einreichung ablehnen.
+                            Dies entspricht der Auswahl von „Ablehnen“ bei der Prüfung im Bearbeitungs-Formular.
+                            Der Eintrag ist anschließend für Orgas im Bereich „Prüfen“ → „Abgelehnt“ noch zugänglich.
+                        {% else %}
+                            Diesen Eintrag zurückziehen/verstecken.
+                            Der Eintrag wird im KüA-Plan nicht mehr angezeigt.
+                            Er ist für Orgas aber im Bereich „Prüfen“ → „Versteckt“ noch zugänglich und kann später wieder veröffentlicht werden.
+                        {% endif %}
+                    </div>
+                </form>
+            {% endif %}
+            {% if entry.entry.state.is_published() %}
+                <form class="row align-items-center" method="post" action="{{ base.request.url_for("mark_entry_cancelled", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">
+                    <div class="col-md-auto mb-2 mb-md-0">
+                        <button type="submit" class="btn btn-primary" {% if entry.entry.is_cancelled %}disabled{% endif %}>
+                            <i class="bi bi-x-circle" aria-hidden="true"></i> Als „fällt aus“ markieren
+                        </button>
+                    </div>
+                    <div class="col-md text-secondary">
+                        Diesen Eintrag ändern, sodass er als ausfallend dargestellt wird.
+                        Dies entspricht der Option „fällt aus“ im Bearbeitungs-Formular.
+                    </div>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>

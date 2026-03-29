@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::{Category, EntryPatch, ExtendedEvent, FullEntry};
+use crate::data_store::models::{Category, EntryPatch, EntryState, ExtendedEvent, FullEntry};
 use crate::data_store::EntryId;
 use crate::web::time_calculation;
 use crate::web::time_calculation::get_effective_date;
@@ -179,6 +179,86 @@ async fn mark_entry_cancelled(
                 AppError::TransactionConflict => FlashMessage {
                     flash_type: FlashType::Error,
                     message: "Der Eintrag konnte wegen wegen eines parallelen Datenbank-Zugriffs nicht modifiziert werden. Bitte erneut versuchen.".to_string(),
+                    keep_open: true,
+                    button: None,
+                },
+                _ => return Err(e),
+            };
+
+            req.add_flash_message(notification);
+            Ok(Redirect::to(
+                req.url_for(
+                    "delete_entry_form",
+                    &[event_id.to_string(), entry_id.to_string()],
+                )?
+                .to_string(),
+            )
+            .see_other())
+        }
+    }
+}
+
+#[post("/{event_id}/entry/{entry_id}/retract")]
+async fn retract_entry(
+    path: web::Path<(i32, EntryId)>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<impl Responder, AppError> {
+    let (event_id, entry_id) = path.into_inner();
+    let session_token =
+        util::extract_session_token(&state, &req, Privilege::ManageEntries, event_id)?;
+
+    let result = web::block(move || -> Result<_, AppError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        // Yes, there's a race condition here because we don't do it in a database transaction and
+        // much overhead for fetching the whole entry. But both issues don't actually matter in
+        // practice.
+        let entry = store.get_entry(&auth, entry_id)?;
+        let new_state = if entry.entry.state.requires_review() {
+            EntryState::Rejected
+        } else {
+            EntryState::Retracted
+        };
+        let patchset = EntryPatch {
+            state: Some(new_state),
+            ..Default::default()
+        };
+        store.patch_entry(&auth, entry_id, patchset)?;
+        Ok((
+            store.get_entry(&auth, entry_id)?,
+            store.get_extended_event(&auth, event_id)?,
+        ))
+    })
+    .await?;
+
+    match result {
+        Ok((entry, event)) => {
+            let notification = FlashMessage {
+                flash_type: FlashType::Success,
+                message: "Die Änderung wurde gespeichert.".to_string(),
+                keep_open: false,
+                button: None,
+            };
+            req.add_flash_message(notification);
+
+            Ok(Redirect::to(
+                util::url_for_entry_details(
+                    &req,
+                    event_id,
+                    &entry_id,
+                    entry.entry.state,
+                    &time_calculation::get_effective_date(&entry.entry.begin, &event.clock_info),
+                )?
+                .to_string(),
+            )
+            .see_other())
+        }
+        Err(e) => {
+            let notification = match e {
+                AppError::ConcurrentEditConflict => FlashMessage {
+                    flash_type: FlashType::Error,
+                    message: "Der Eintrag konnte wegen eines parallelen Datenbank-Zugriffs nicht modifiziert werden. Bitte erneut versuchen.".to_string(),
                     keep_open: true,
                     button: None,
                 },

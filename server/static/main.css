@@ -118,6 +118,25 @@ tr.category-row>* {
     border-color: var(--bs-form-invalid-border-color);
 }
 
+/* .btn-illuminated: Fill buttons with a radial gradient to make them look like illuminated with a light bulb */
+.btn-check:checked + .btn.btn-illuminated,
+.btn.active.btn-illuminated,
+.btn.show.btn-illuminated,
+.btn.btn-illuminated:first-child:active,
+:not(.btn-check) + .btn.btn-illuminated:active {
+    background: radial-gradient(transparent, color-mix(in srgb, var(--bs-btn-active-bg) 17%, transparent) 55%,
+                                color-mix(in srgb, var(--bs-btn-active-bg) 50%, transparent));
+    color: var(--bs-btn-color);
+}
+[data-bs-theme=dark] .btn-check:checked + .btn.btn-illuminated,
+[data-bs-theme=dark] .btn.active.btn-illuminated,
+[data-bs-theme=dark] .btn.show.btn-illuminated,
+[data-bs-theme=dark] .btn.btn-illuminated:first-child:active,
+[data-bs-theme=dark] :not(.btn-check) + .btn.btn-illuminated:active {
+    background: radial-gradient(var(--bs-btn-active-bg), color-mix(in srgb, var(--bs-btn-active-bg) 40%, transparent));
+    color: var(--bs-btn-active-color)
+}
+
 /* Helper classes */
 .inner-margin-fix>:last-child{
     margin-bottom: 0;

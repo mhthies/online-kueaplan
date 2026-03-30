@@ -89,6 +89,12 @@ pub struct Entry {
     pub category: Uuid,
     #[serde(default = "EntryState::default_from_api")]
     pub state: EntryState,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "orgaComment"
+    )]
+    pub orga_comment: Option<String>,
     #[serde(default, rename = "previousDates")]
     pub previous_dates: Vec<PreviousDate>,
 }
@@ -147,6 +153,12 @@ pub struct EntryPatch {
     pub category: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub state: Option<EntryState>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "orgaComment"
+    )]
+    pub orga_comment: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]

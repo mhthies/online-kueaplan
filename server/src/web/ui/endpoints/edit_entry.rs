@@ -584,6 +584,7 @@ impl EntryFormData {
                     is_exclusive,
                     is_cancelled,
                     state: change_state?.change_state(current_entry_state),
+                    orga_comment: "".to_string(),
                 },
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],

@@ -67,6 +67,7 @@ diesel::table! {
         is_exclusive -> Bool,
         is_cancelled -> Bool,
         state -> Int4,
+        orga_comment -> Varchar,
     }
 }
 

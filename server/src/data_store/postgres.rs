@@ -10,6 +10,7 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
 use r2d2::PooledConnection;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -241,6 +242,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             the_event_id,
             filter,
             models::EntryState::all().filter(|s| s.is_published()),
+            false,
         )
     }
 
@@ -257,6 +259,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             the_event_id,
             filter,
             state_filter.iter(),
+            true,
         )
     }
 
@@ -321,6 +324,16 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                     .load::<models::PreviousDateRoomMapping>(connection)?
                     .grouped_by(&previous_dates);
 
+            let orga_internal = auth_token
+                .has_privilege(entry.event_id, Privilege::ManageEntries)
+                .then(|| {
+                    entries
+                        .filter(id.eq(entry_id))
+                        .select(models::EntryInternalFields::as_select())
+                        .first::<models::EntryInternalFields>(connection)
+                })
+                .transpose()?;
+
             Ok(models::FullEntry {
                 entry,
                 room_ids,
@@ -337,6 +350,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                         },
                     )
                     .collect(),
+                orga_internal,
             })
         })
     }
@@ -1330,6 +1344,7 @@ fn get_entries_generic<'a, StateIter: Iterator<Item = &'a models::EntryState>>(
     the_event_id: EventId,
     filter: EntryFilter,
     state_filter: StateIter,
+    with_internal_fields: bool,
 ) -> Result<Vec<models::FullEntry>, StoreError> {
     use diesel::dsl::not;
     use schema::entries::dsl::*;
@@ -1377,7 +1392,7 @@ fn get_entries_generic<'a, StateIter: Iterator<Item = &'a models::EntryState>>(
             )
             .grouped_by(&the_entries);
 
-        Ok(the_entries
+        let mut the_entries = the_entries
             .into_iter()
             .zip(the_entry_rooms)
             .zip(the_previous_dates)
@@ -1386,9 +1401,30 @@ fn get_entries_generic<'a, StateIter: Iterator<Item = &'a models::EntryState>>(
                     entry,
                     room_ids: entry_rooms.into_iter().map(|e| e.room_id).collect(),
                     previous_dates: entry_previous_dates,
+                    orga_internal: None,
                 },
             )
-            .collect())
+            .collect::<Vec<_>>();
+
+        if with_internal_fields {
+            let entry_index_by_id: HashMap<_, _> = the_entries
+                .iter()
+                .enumerate()
+                .map(|(i, u)| (u.entry.id, i))
+                .collect();
+
+            let entries_internal_fields = entries
+                .filter(id.eq_any(the_entries.iter().map(|e| e.entry.id)))
+                .select((id, models::EntryInternalFields::as_select()))
+                .load::<(EntryId, models::EntryInternalFields)>(connection)?;
+
+            for (entry_id, internal_fields) in entries_internal_fields {
+                the_entries[*entry_index_by_id.get(&entry_id).unwrap()].orga_internal =
+                    Some(internal_fields);
+            }
+        }
+
+        Ok(the_entries)
     })
 }
 

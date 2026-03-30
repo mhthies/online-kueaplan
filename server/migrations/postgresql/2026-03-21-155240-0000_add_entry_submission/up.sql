@@ -1,9 +1,5 @@
 ALTER TABLE events
     ADD COLUMN entry_submission_mode INT NOT NULL DEFAULT 0;
-ALTER TABLE events
-    ALTER COLUMN entry_submission_mode DROP DEFAULT;
 
 ALTER TABLE entries
     ADD COLUMN state INT NOT NULL DEFAULT 0;
-ALTER TABLE entries
-    ALTER COLUMN state DROP DEFAULT;

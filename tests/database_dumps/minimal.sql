@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict yN2Iwt6hBBiF9y1Z9O3XeyWoelmhdfUCe7XqOWmtmB8rsGhO2OsvKr8tysBsU4s
+\restrict ZhliP8St7pEg3d5eGWfLkcbgooRn6yewckEbnHFExHPd0s6uYia1gjPmfkZXhNQ
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -187,7 +187,7 @@ CREATE TABLE public.entries (
     room_comment character varying DEFAULT ''::character varying NOT NULL,
     is_exclusive boolean DEFAULT false NOT NULL,
     is_cancelled boolean DEFAULT false NOT NULL,
-    state integer NOT NULL,
+    state integer DEFAULT 0 NOT NULL,
     CONSTRAINT entries_time_range CHECK (("end" >= begin))
 );
 
@@ -260,7 +260,7 @@ CREATE TABLE public.events (
     slug character varying,
     preceding_event_id integer,
     subsequent_event_id integer,
-    entry_submission_mode integer NOT NULL,
+    entry_submission_mode integer DEFAULT 0 NOT NULL,
     CONSTRAINT events_date_range CHECK ((end_date >= begin_date))
 );
 
@@ -351,7 +351,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20251025113806	2025-10-25 14:32:23.185685
 20251108174050	2025-11-08 19:19:48.143637
 20251126174535	2025-11-29 16:32:57.400042
-202603211552400000	2026-03-21 17:17:24.087896
+202603211552400000	2026-04-07 20:47:49.607194
 \.
 
 
@@ -796,5 +796,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict yN2Iwt6hBBiF9y1Z9O3XeyWoelmhdfUCe7XqOWmtmB8rsGhO2OsvKr8tysBsU4s
+\unrestrict ZhliP8St7pEg3d5eGWfLkcbgooRn6yewckEbnHFExHPd0s6uYia1gjPmfkZXhNQ
 

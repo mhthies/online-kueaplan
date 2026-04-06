@@ -83,21 +83,71 @@ impl<T: FormValueRepresentation> FormValue<T> {
         }
     }
 
-    pub fn validate_with<'d, D: ValidationDataForFormValue<T> + 'd>(
+    /// Convert and validate the contained value (deserialized from the form data) as a `T` value
+    /// with the given additional `data`, allowing the field to be missing in the form data.
+    ///
+    /// In contrast to [Self::validate_with()], this function treats the form field as an optional
+    /// field, allowing the value to be missing the deserialized form data. A missing field is not
+    /// treated as an error. This is useful for fields that may be hidden or disabled in the HTML
+    /// form under some circumstances.
+    ///
+    /// If the value is expected to always be present in the form data, but an empty value is
+    /// allowed (in addition to valid `T` values) and shall be treated as None, use
+    /// [super::validation::MaybeEmpty] as a wrapper for `T` and validated with
+    /// [Self::validate_with()].
+    ///
+    /// If `T` implements [ValidateFromFormInput], i.e. the type can be converted and validated
+    /// without additional data, the [_FormValidSimpleValidate::validate_optional] must be used on
+    /// the FormField instead of this function.
+    ///
+    /// # Returns
+    /// * `Some(Some(T))` if the value is present and valid
+    /// * `Some(None)` if the value is missing in the form data
+    /// * `None` if the value is present, but invalid. In this case, an error message is added to
+    ///   this FormField's `errors` vector.
+    pub fn validate_optional_with<'d, D: ValidationDataForFormValue<T> + 'd>(
         &'_ mut self,
         data: D,
-    ) -> Option<T> {
+    ) -> Option<Option<T>> {
         if let Some(value) = &self.value {
             match data.validate_form_value(value) {
-                Ok(v) => Some(v),
+                Ok(v) => Some(Some(v)),
                 Err(e) => {
                     self.errors.push(e);
                     None
                 }
             }
         } else {
-            self.errors.push("Wert fehlt in Formular-Daten".to_owned());
-            None
+            Some(None)
+        }
+    }
+
+    /// Convert and validate the contained value (deserialized from the form data) as a `T` value
+    /// with the given additional `data`.
+    ///
+    /// In contrast to [Self::validate_optional_with()], this function expects the field to be
+    /// always present in the form data (although—depending on `T` it may be an empty string). A
+    /// missing field is treated as a validation error.
+    ///
+    /// If `T` implements [ValidateFromFormInput], i.e. the type can be converted and validated
+    /// without additional data, the [_FormValidSimpleValidate::validate] must be used on
+    /// the FormField instead.
+    ///
+    /// # Returns
+    /// * `Some(T)` if the value is present and valid
+    /// * `None` if the value is present, but invalid (or missing). In this case, an error message
+    ///   is added to this FormField's `errors` vector.
+    pub fn validate_with<'d, D: ValidationDataForFormValue<T> + 'd>(
+        &'_ mut self,
+        data: D,
+    ) -> Option<T> {
+        match self.validate_optional_with(data) {
+            Some(Some(v)) => Some(v),
+            Some(None) => {
+                self.errors.push("Wert fehlt in Formular-Daten".to_owned());
+                None
+            }
+            None => None,
         }
     }
 
@@ -156,26 +206,72 @@ impl<T: FormValueRepresentation> From<T> for FormValue<T> {
     }
 }
 
-/// Helper trait with a simplified version of the [FormValue::validate_with] method that is added to
-/// the [FormValue] type when the data type `T` does not have associated validation data (i.e. `T`
-/// T implements [ValidateFromFormInput])
+/// Helper trait with a simplified version of the [FormValue::validate_with] and
+/// [FormValue::validate_optional_with] methods that is added to the [FormValue] type when the data
+/// type `T` does not have associated validation data (i.e. `T` implements [ValidateFromFormInput])
 pub trait _FormValidSimpleValidate<T> {
+    /// Convert and validate the contained value (deserialized from the form data) as a `T` value,
+    /// allowing the field to be missing in the form data.
+    ///
+    /// In contrast to [Self::validate()], this function treats the form field as an optional
+    /// field, allowing the value to be missing the deserialized form data. A missing field is not
+    /// treated as an error. This is useful for fields that may be hidden or disabled in the HTML
+    /// form under some circumstances.
+    ///
+    /// If the value is expected to always be present in the form data, but an empty value is
+    /// allowed (in addition to valid `T` values) and shall be treated as None, use
+    /// [super::validation::MaybeEmpty] as a wrapper for `T` and validated with
+    /// [Self::validate()].
+    ///
+    /// If `T` requires additional data for conversion or validation, the
+    /// [FormValue::validate_optional_with] function must be used instead of this function.
+    ///
+    /// # Returns
+    /// * `Some(Some(T))` if the value is present and valid
+    /// * `Some(None)` if the value is missing in the form data
+    /// * `None` if the value is present, but invalid. In this case, an error message is added to
+    ///   this FormField's `errors` vector.
+    fn validate_optional(&mut self) -> Option<Option<T>>;
+
+    /// Convert and validate the contained value (deserialized from the form data) as a `T` value.
+    ///
+    /// In contrast to [Self::validate_optional()], this function expects the field to be
+    /// always present in the form data (although—depending on `T` it may be an empty string). A
+    /// missing field is treated as a validation error.
+    ///
+    /// If `T` requires additional data for conversion or validation, the
+    /// [FormValue::validate_with] function must be used instead of this function.
+    ///
+    /// # Returns
+    /// * `Some(T)` if the value is present and valid
+    /// * `None` if the value is present, but invalid (or missing). In this case, an error message
+    ///   is added to this FormField's `errors` vector.
     fn validate(&mut self) -> Option<T>;
 }
 
 impl<T: ValidateFromFormInput> _FormValidSimpleValidate<T> for FormValue<T> {
-    fn validate(&mut self) -> Option<T> {
+    fn validate_optional(&mut self) -> Option<Option<T>> {
         if let Some(value) = &self.value {
             match T::from_form_value(value) {
-                Ok(v) => Some(v),
+                Ok(v) => Some(Some(v)),
                 Err(e) => {
                     self.errors.push(e);
                     None
                 }
             }
         } else {
-            self.errors.push("Wert fehlt in Formular-Daten".to_owned());
-            None
+            Some(None)
+        }
+    }
+
+    fn validate(&mut self) -> Option<T> {
+        match self.validate_optional() {
+            Some(Some(v)) => Some(v),
+            Some(None) => {
+                self.errors.push("Wert fehlt in Formular-Daten".to_owned());
+                None
+            }
+            None => None,
         }
     }
 }

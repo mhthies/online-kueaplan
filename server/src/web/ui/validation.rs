@@ -352,6 +352,16 @@ impl ValidateFromFormInput for Int32 {
     }
 }
 
+/// Wrapper type for any form value data type `T` to allow empty string.
+///
+/// An empty string in the form data is always treated as a `None` value. Any other string is
+/// validated according to `T`'s [ValidateFromFormInput] implementation.
+///
+/// This wrapper is required if the field is expected to always be  present in the form data but may
+/// be empty (in addition to valid T values). If the field may be missing in the submitted form data
+/// completely, this must be handled by using
+/// [super::form_values::_FormValidSimpleValidate::validate_optional] resp.
+/// [super::form_values::FormValue::validate_optional_with].
 #[derive(Debug, PartialEq)]
 pub struct MaybeEmpty<T>(pub Option<T>);
 

@@ -559,7 +559,8 @@ impl EntryFormData {
         let duration = self.duration.validate();
         let previous_last_updated = self.last_updated.validate();
         let create_previous_date = self.create_previous_date.get_value();
-        let previous_date_comment = self.previous_date_comment.validate();
+        let previous_date_comment =
+            create_previous_date.then(|| self.previous_date_comment.validate());
         let change_state = self.change_state.validate();
         let orga_comment = self.orga_comment.validate();
 
@@ -593,7 +594,9 @@ impl EntryFormData {
             },
             previous_last_updated.map(|v| v.0),
             if create_previous_date {
-                previous_date_comment
+                Some(previous_date_comment.expect(
+                    "previous_date_comment form value should be validated when create_previous_date is set",
+                )?)
             } else {
                 None
             },

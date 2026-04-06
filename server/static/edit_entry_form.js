@@ -55,6 +55,16 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     const orgaCommentInput = document.getElementById("orga_commentInput");
     orgaCommentInput.addEventListener("input", (e) => updateOrgaCommentBackground(e.target));
     updateOrgaCommentBackground(orgaCommentInput)
+
+    const previousDateCheckbox = document.getElementById("create_previous_dateCheckbox");
+    const previousDateCommentInput = document.getElementById("previous_date_commentInput");
+    if (previousDateCheckbox && previousDateCommentInput) {
+        previousDateCheckbox.addEventListener("change", (e) => {
+            updatePreviousDateCommentState(e.target, previousDateCommentInput);
+        });
+        updatePreviousDateCommentState(previousDateCheckbox, previousDateCommentInput);
+    }
+
 }
 
 function updateOrgaCommentBackground(orgaCommentInput) {
@@ -63,6 +73,10 @@ function updateOrgaCommentBackground(orgaCommentInput) {
     } else {
         orgaCommentInput.classList.add("non-empty-comment");
     }
+}
+
+function updatePreviousDateCommentState(previousDateCheckbox, previousDateCommentInput) {
+    previousDateCommentInput.disabled = !previousDateCheckbox.checked;
 }
 
 function updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime) {

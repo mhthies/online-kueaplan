@@ -51,6 +51,18 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
     updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
     updateEndTimeInfo(endTimeInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
     concurrentEntriesFetcher.doFetch();
+
+    const orgaCommentInput = document.getElementById("orga_commentInput");
+    orgaCommentInput.addEventListener("input", (e) => updateOrgaCommentBackground(e.target));
+    updateOrgaCommentBackground(orgaCommentInput)
+}
+
+function updateOrgaCommentBackground(orgaCommentInput) {
+    if (orgaCommentInput.value === "") {
+        orgaCommentInput.classList.remove("non-empty-comment");
+    } else {
+        orgaCommentInput.classList.add("non-empty-comment");
+    }
 }
 
 function updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime) {

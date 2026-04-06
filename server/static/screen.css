@@ -127,3 +127,8 @@ table.kuealist .aside-container .table-aside-buttons {
 .print-qrcode {
     max-width: 400px;
 }
+/* background color for non-empty input field */
+.form-control.non-empty-comment, .form-control.non-empty-comment:focus {
+    background-color: var(--bs-info-bg-subtle);
+    border-color: var(--bs-info-border-subtle);
+}

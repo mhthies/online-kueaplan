@@ -54,6 +54,7 @@ pub struct MainListRowTemplate<'a> {
     show_edit_buttons: bool,
     show_markup: bool,
     show_description_links: bool,
+    show_orga_comment: bool,
     date_context: Option<chrono::NaiveDate>,
     room_context: Option<uuid::Uuid>,
     main_entry_link_mode: MainEntryLinkMode,
@@ -76,6 +77,7 @@ impl<'a> MainListRowTemplate<'a> {
             clock_info,
             show_edit_links: false,
             show_description_links: false,
+            show_orga_comment: false,
             show_edit_buttons: false,
             show_markup: true,
             date_context: None,
@@ -101,6 +103,11 @@ impl<'a> MainListRowTemplate<'a> {
 
     pub fn show_description_links(mut self, show_links: bool) -> Self {
         self.show_description_links = show_links;
+        self
+    }
+
+    pub fn show_orga_comment(mut self, show_comment: bool) -> Self {
+        self.show_orga_comment = show_comment;
         self
     }
 
@@ -354,5 +361,5 @@ fn css_class_for_category(category_id: &CategoryId) -> String {
 }
 
 mod filters {
-    pub use crate::web::ui::askama_filters::ellipsis;
+    pub use crate::web::ui::askama_filters::{count_lines, ellipsis, first_line, skip_first_line};
 }

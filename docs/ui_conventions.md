@@ -49,6 +49,7 @@
 | true                                       | `bi-check-circle-fill` |
 | false                                      | `bi-x-circle`          |
 | actual current date of entry               | `bi-clock-fill`        |
+| orga-internal comment                      | `bi-chat-right-dots`   |
 | entry state: draft                         | `bi-pencil-square`     |
 | entry state: requires review               | `bi-clipboard2-check`  |
 | entry state: rejected                      | `bi-slash-circle`      |

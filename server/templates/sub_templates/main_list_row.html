@@ -103,7 +103,25 @@
             <div class="comment mt-1">
                 {{ previous_date.previous_date.comment }}
             </div>
-        {% endfor %}
+        {% endfor -%}
+        {% if show_orga_comment && let Some(orga_internal) = row.entry.orga_internal -%}
+            {% if !orga_internal.comment.is_empty() -%}
+                <div class="comment orga-comment text-info mt-1">
+                    {% if orga_internal.comment|count_lines > 1 %}
+                        <details>
+                            <summary>
+                                <i class="bi bi-chat-right-dots me-1" aria-hidden="true"></i><span class="visually-hidden">Interner Kommentar:</span>
+                                {{ orga_internal.comment|first_line }}
+                            </summary>
+                            {{ orga_internal.comment|skip_first_line|linebreaksbr }}
+                        </details>
+                    {% else %}
+                        <i class="bi bi-chat-right-dots" aria-hidden="true"></i><span class="visually-hidden">Interner Kommentar:</span>
+                        {{ orga_internal.comment }}
+                    {% endif %}
+                </div>
+            {% endif -%}
+        {% endif -%}
     </td>
     <td class="kuea-time">
         {% if row.includes_entry %}

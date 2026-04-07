@@ -71,7 +71,8 @@
                             {% let category = categories.get(entry.entry.category).ok_or("Category not found")? %}
                             {{ MainListRowTemplate::new(base.request, &MainListRow::from_entry(entry), category, rooms, event.clock_info)
                                    .show_edit_buttons(true)
-                                   .show_markup(false) }}
+                                   .show_markup(false)
+                                   .show_orga_comment(true) }}
                         {% endfor %}
                     </tbody>
                 </table>

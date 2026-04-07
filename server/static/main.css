@@ -152,3 +152,12 @@ td.shrink-to-content {
     width: 65%;
     max-height: 75vh;"
 }
+
+/* orga-internal comment markup */
+.orga-comment {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.875em;
+}
+.kuealist .comment.orga-comment {
+    font-size: 0.765em;
+}

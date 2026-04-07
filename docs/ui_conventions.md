@@ -39,7 +39,7 @@
 | calendar date (as opposed to effective date) | `bi-calendar-event-fill`  |
 | place                                        | `bi-geo-alt-fill`         |
 | category                                     | `bi-grid`                 |
-| announcement                                 | `chat-right-heart`        |
+| announcement                                 | `bi-chat-right-text-fill` |
 | previous date                                | `bi-clock-history`        |
 
 ### Properties

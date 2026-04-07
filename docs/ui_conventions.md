@@ -41,6 +41,7 @@
 | category                                     | `bi-grid`                 |
 | announcement                                 | `bi-chat-right-text-fill` |
 | previous date                                | `bi-clock-history`        |
+| passphrase                                   | `bi-key`                  |
 
 ### Properties
 | Usage                                      | Icon                   |
@@ -69,11 +70,12 @@
 | entry conflict | `bi-exclamation-diamond`  |
 
 ### Pages
-| Usage                    | Icon                  |
-|--------------------------|-----------------------|
-| list of KüA-Plan entries | `bi-list-ul`          |
-| configuration area       | `bi-gear`             |
-| entry review area        | `bi-clipbaord2-check` |
+| Usage                    | Icon                   |
+|--------------------------|------------------------|
+| list of KüA-Plan entries | `bi-list-ul`           |
+| configuration area       | `bi-gear`              |
+| entry review area        | `bi-clipbaord2-check`  |
+| print template           | `bi-file-earmark-fill` |
 
 
 ## Notifications

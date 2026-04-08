@@ -211,12 +211,12 @@
         options: rooms,
         clearAfterSelect: true
     });
-    protectChanges(document.getElementById("edit_entry_form"));
     initializeEditEntryForm(
         {{ effective_begin_of_day_milliseconds() }},
         rooms,
         {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
         entryId
     );
+    protectChanges(document.getElementById("edit_entry_form"));
 </script>
 {% endblock %}

@@ -22,6 +22,7 @@ def test_create_draft(generated_api_client: ApiClientWrapper, reset_database: No
         responsible_person="Max Mustermann",
         state="draft",
         category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
+        orga_comment="Die KüA wird vermutlich sehr beliebt sein! Wir sollten einen guten Zeitpunkt finden.",
         previousDates=[],
     )
     generated_api_client.client.create_or_update_entry(EVENT_ID, entry.id, entry)

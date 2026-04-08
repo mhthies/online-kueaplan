@@ -504,6 +504,7 @@ struct EntryFormData {
     create_previous_date: BoolFormValue,
     previous_date_comment: FormValue<String>,
     change_state: FormValue<ChangeStateValue>,
+    orga_comment: FormValue<String>,
 }
 
 impl EntryFormData {
@@ -558,8 +559,10 @@ impl EntryFormData {
         let duration = self.duration.validate();
         let previous_last_updated = self.last_updated.validate();
         let create_previous_date = self.create_previous_date.get_value();
-        let previous_date_comment = self.previous_date_comment.validate();
+        let previous_date_comment =
+            create_previous_date.then(|| self.previous_date_comment.validate());
         let change_state = self.change_state.validate();
+        let orga_comment = self.orga_comment.validate();
 
         let begin = timestamp_from_effective_date_and_time(
             day?.into_inner(),
@@ -584,13 +587,16 @@ impl EntryFormData {
                     is_exclusive,
                     is_cancelled,
                     state: change_state?.change_state(current_entry_state),
+                    orga_comment: orga_comment?,
                 },
                 room_ids: room_ids?.into_inner(),
                 previous_dates: vec![],
             },
             previous_last_updated.map(|v| v.0),
             if create_previous_date {
-                previous_date_comment
+                Some(previous_date_comment.expect(
+                    "previous_date_comment form value should be validated when create_previous_date is set",
+                )?)
             } else {
                 None
             },
@@ -626,6 +632,11 @@ impl EntryFormData {
             create_previous_date: false.into(),
             previous_date_comment: "".to_string().into(),
             change_state: ChangeStateValue::NoChange.into(),
+            orga_comment: value
+                .orga_internal
+                .map(|i| i.comment)
+                .unwrap_or_default()
+                .into(),
         }
     }
 }

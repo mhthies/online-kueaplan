@@ -41,6 +41,8 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
 
     # Unspecified state defaults to "published"
     entry.state = "published"
+    # OrgaComment is not included in the normal public entry listing
+    entry.orga_comment = None
     result = generated_api_client.client.list_entries(EVENT_ID)
     # Categories are ordered by sort_key. Default room is 0, so our room comes second
     assert result[0] == entry
@@ -55,6 +57,8 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
     entry.end = datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat()
     generated_api_client.client.create_or_update_entry(EVENT_ID, entry.id, entry)
 
+    # OrgaComment is not included when fetching single entry as orga
+    entry.orga_comment = ""
     result = generated_api_client.client.get_entry(EVENT_ID, entry.id)
     assert result == entry
 
@@ -262,6 +266,7 @@ def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_datab
         end=datetime.datetime(2025, 1, 6, 13, 30, tzinfo=datetime.UTC).isoformat(),
         time_comment="direkt nach dem Mittagessen",
         responsible_person="Max Mustermann",
+        orga_comment="Dieser Kommentar ist geheim!",
         is_cancelled=True,
         category="019774dc-81c4-7862-a9ba-63de3d726010",  # Default category from minimal.sql
         previousDates=[],
@@ -270,6 +275,8 @@ def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_datab
 
     # Unspecified state defaults to "published"
     entry.state = "published"
+    # OrgaComment is not included in normal public entry listing
+    entry.orga_comment = None
     result = generated_api_client.client.list_entries(event_id)
     # Categories are ordered by sort_key. Default room is 0, so our room comes second
     assert result[0] == entry
@@ -297,6 +304,8 @@ def test_change_entry_simple(generated_api_client: ApiClientWrapper, reset_datab
             end=datetime.datetime(2025, 1, 6, 13, 30, 45, tzinfo=datetime.UTC).isoformat(),
         ),
     )
+    # OrgaComment is not included when fetching single entry as orga
+    entry.orga_comment = "Dieser Kommentar ist geheim!"
     result = generated_api_client.client.get_entry(event_id, entry.id)
     assert result == entry
 

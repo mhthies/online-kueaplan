@@ -45,6 +45,7 @@ pub struct FormFieldTemplate<'a, T: FormValueRepresentation> {
     suffix_text: Option<&'a str>,
     info: Option<&'a str>,
     data: &'a FormValue<T>,
+    css_class: &'a str,
 }
 
 impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
@@ -57,6 +58,7 @@ impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
             suffix_text: None,
             info: None,
             data,
+            css_class: "",
         }
     }
 
@@ -77,6 +79,11 @@ impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
 
     pub fn info(mut self, info: &'a str) -> Self {
         self.info = Some(info);
+        self
+    }
+
+    pub fn css_class(mut self, class: &'a str) -> Self {
+        self.css_class = class;
         self
     }
 }

@@ -112,68 +112,78 @@
                 .info("Unterstützt Markdown")
         }}
     </div>
-    {% if !is_new_entry && current_entry_state.unwrap().is_published() %}
-        <div class="card mb-3">
-            <div class="card-header">
-                {{ CheckboxTemplate::new(form_data.create_previous_date,
-                                         "create_previous_date",
-                                         "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen")
-                       .info("Nur wirksam, wenn Zeit oder Orte geändert werden.")
-                }}
-            </div>
-            <div class="card-body">
-                {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung")
-                       .size(InputSize::Small) }}
-            </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            {% if !is_new_entry && current_entry_state.unwrap().is_published() %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        {{ CheckboxTemplate::new(form_data.create_previous_date,
+                                                 "create_previous_date",
+                                                 "Hinweis zur Verschiebung am vorherigen Termin im KüA-Plan anlegen")
+                               .info("Nur wirksam, wenn Zeit oder Orte geändert werden.")
+                        }}
+                    </div>
+                    <div class="card-body">
+                        {{ FormFieldTemplate::new(form_data.previous_date_comment, "previous_date_comment", "Kommentar zur Verschiebung")
+                               .size(InputSize::Small) }}
+                    </div>
+                </div>
+            {% endif %}
+            {% if !is_new_entry && current_entry_state.unwrap().requires_review() %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Prüfung des Eintrags
+                    </div>
+                    <div class="card-body">
+                        {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                            .entry(ChangeStateValue::Accept.as_str(),
+                                   current_entry_state.unwrap().is_published()|then_else("Bestätigen", "Veröffentlichen"),
+                                   Some("check2-circle"),
+                                   "btn-outline-success")
+                            .entry(ChangeStateValue::NoChange.as_str(), "Ungeprüft", Some("circle"), "btn-outline-secondary")
+                            .entry(ChangeStateValue::Reject.as_str(), "Ablehnen", Some("slash-circle"), "btn-outline-danger")
+                        }}
+                    </div>
+                </div>
+            {% elif is_new_entry || current_entry_state.unwrap() == EntryState::Draft %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Veröffentlichung
+                    </div>
+                    <div class="card-body">
+                        {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                                .entry(ChangeStateValue::Accept.as_str(), "Jetzt veröffentlichen", Some("check2-circle"), "btn-outline-success")
+                                .entry(ChangeStateValue::NoChange.as_str(), *is_new_entry|then_else("Als Entwurf speichern", "Als Entwurf belassen"), Some("circle"), "btn-outline-secondary")
+                        }}
+                    </div>
+                </div>
+            {% elif !is_new_entry && current_entry_state.unwrap().is_dismissed() %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Veröffentlichung
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Dieser Eintrag wurde {% if current_entry_state.unwrap() == EntryState::Rejected %}bei der Prüfung abgelehnt{% else %}nach der Veröffentlichung zurückgezogen{% endif %}.
+                            Es ist trotzdem möglich, ihn wieder zu veröffentlichen:
+                        </p>
+                        {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
+                                .entry(ChangeStateValue::Accept.as_str(), "Veröffentlichen", Some("check2-circle"), "btn-outline-success")
+                                .entry(ChangeStateValue::NoChange.as_str(), "Versteckt lassen", Some("circle"), "btn-outline-secondary")
+                        }}
+                    </div>
+                </div>
+            {% else %}
+                {{ HiddenInputTemplate::new(form_data.change_state, "change_state")? }}
+            {% endif %}
         </div>
-    {% endif %}
-    {% if !is_new_entry && current_entry_state.unwrap().requires_review() %}
-        <div class="card mb-3">
-            <div class="card-header">
-                Prüfung des Eintrags
-            </div>
-            <div class="card-body">
-                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
-                    .entry(ChangeStateValue::Accept.as_str(),
-                           current_entry_state.unwrap().is_published()|then_else("Bestätigen", "Veröffentlichen"),
-                           Some("check2-circle"),
-                           "btn-outline-success")
-                    .entry(ChangeStateValue::NoChange.as_str(), "Ungeprüft", Some("circle"), "btn-outline-secondary")
-                    .entry(ChangeStateValue::Reject.as_str(), "Ablehnen", Some("slash-circle"), "btn-outline-danger")
-                }}
-            </div>
+        <div class="col-md-6">
+            {{ FormFieldTemplate::new(form_data.orga_comment, "orga_comment", "Orga-interner Kommentar")
+                   .input_type(InputType::Textarea)
+                   .css_class("orga-comment")
+            }}
         </div>
-    {% elif is_new_entry || current_entry_state.unwrap() == EntryState::Draft %}
-        <div class="card mb-3">
-            <div class="card-header">
-                Veröffentlichung
-            </div>
-            <div class="card-body">
-                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
-                        .entry(ChangeStateValue::Accept.as_str(), "Jetzt veröffentlichen", Some("check2-circle"), "btn-outline-success")
-                        .entry(ChangeStateValue::NoChange.as_str(), *is_new_entry|then_else("Als Entwurf speichern", "Als Entwurf belassen"), Some("circle"), "btn-outline-secondary")
-                }}
-            </div>
-        </div>
-    {% elif !is_new_entry && current_entry_state.unwrap().is_dismissed() %}
-        <div class="card mb-3">
-            <div class="card-header">
-                Veröffentlichung
-            </div>
-            <div class="card-body">
-                <p>
-                    Dieser Eintrag wurde {% if current_entry_state.unwrap() == EntryState::Rejected %}bei der Prüfung abgelehnt{% else %}nach der Veröffentlichung zurückgezogen{% endif %}.
-                    Es ist trotzdem möglich, ihn wieder zu veröffentlichen:
-                </p>
-                {{ RadioButtonGroupTemplate::new(form_data.change_state, "change_state")
-                        .entry(ChangeStateValue::Accept.as_str(), "Veröffentlichen", Some("check2-circle"), "btn-outline-success")
-                        .entry(ChangeStateValue::NoChange.as_str(), "Versteckt lassen", Some("circle"), "btn-outline-secondary")
-                }}
-            </div>
-        </div>
-    {% else %}
-        {{ HiddenInputTemplate::new(form_data.change_state, "change_state")? }}
-    {% endif %}
+    </div>
     {% if !is_new_entry %}
         {{ HiddenInputTemplate::new(form_data.last_updated, "last_updated")? }}
     {% else %}
@@ -201,12 +211,12 @@
         options: rooms,
         clearAfterSelect: true
     });
-    protectChanges(document.getElementById("edit_entry_form"));
     initializeEditEntryForm(
         {{ effective_begin_of_day_milliseconds() }},
         rooms,
         {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
         entryId
     );
+    protectChanges(document.getElementById("edit_entry_form"));
 </script>
 {% endblock %}

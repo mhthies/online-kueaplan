@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict KsxlRan6OvGqSg0gNh645luiRtuHwJLaQEwgS0oZtm571qhJQO77wz5JfJyaKYo
+\restrict 2dduHBIJnFHLxBxkP5dGbvGKHSVg6d7AEAeC9nZfZftdkG0S8YQTJwVVeU1AGUK
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -188,6 +188,7 @@ CREATE TABLE public.entries (
     is_exclusive boolean DEFAULT false NOT NULL,
     is_cancelled boolean DEFAULT false NOT NULL,
     state integer DEFAULT 0 NOT NULL,
+    orga_comment character varying DEFAULT ''::character varying NOT NULL,
     CONSTRAINT entries_time_range CHECK (("end" >= begin))
 );
 
@@ -352,6 +353,7 @@ COPY public.__diesel_schema_migrations (version, run_on) FROM stdin;
 20251108174050	2025-11-08 19:19:48.400034
 20251126174535	2025-11-29 16:32:57.663578
 202603211552400000	2026-04-07 20:47:49.889877
+202603301939210000	2026-04-07 20:54:20.705367
 \.
 
 
@@ -391,7 +393,7 @@ COPY public.categories (id, title, icon, color, event_id, deleted, last_updated,
 -- Data for Name: entries; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled, state) FROM stdin;
+COPY public.entries (id, title, description, responsible_person, is_room_reservation, event_id, begin, "end", category, deleted, last_updated, comment, time_comment, room_comment, is_exclusive, is_cancelled, state, orga_comment) FROM stdin;
 \.
 
 
@@ -786,5 +788,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict KsxlRan6OvGqSg0gNh645luiRtuHwJLaQEwgS0oZtm571qhJQO77wz5JfJyaKYo
+\unrestrict 2dduHBIJnFHLxBxkP5dGbvGKHSVg6d7AEAeC9nZfZftdkG0S8YQTJwVVeU1AGUK
 

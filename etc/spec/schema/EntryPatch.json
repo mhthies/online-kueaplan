@@ -69,6 +69,10 @@
             "description": "if present, changes the submission/publishing state of the entry.",
             "type": "string",
             "enum": ["published", "draft", "submitted-for-review", "preliminary-published", "retracted", "rejected"]
+        },
+        "orgaComment": {
+            "description": "if present, overwrites the orga-internal comment about the entry (or its state).",
+            "type": "string"
         }
     },
     "required": []

@@ -1,0 +1,2 @@
+ALTER TABLE entries
+    ADD COLUMN orga_comment VARCHAR NOT NULL DEFAULT '';

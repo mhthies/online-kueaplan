@@ -75,3 +75,31 @@ pub fn then_else<'a>(
 ) -> askama::Result<&'a str> {
     Ok(if condition { then_value } else { else_value })
 }
+
+/// Get the number of lines (delimited by '\n') in the string
+#[askama::filter_fn]
+pub fn count_lines(text: &str, _: &dyn askama::Values) -> askama::Result<usize> {
+    if text.is_empty() {
+        Ok(0)
+    } else {
+        Ok(text.split('\n').count())
+    }
+}
+
+/// Get the first line of a string (prefix until the first occurrence of '\n')
+#[askama::filter_fn]
+pub fn first_line<'a>(text: &'a str, _: &dyn askama::Values) -> askama::Result<&'a str> {
+    Ok(text
+        .split_once('\n')
+        .map(|(first, _rest)| first)
+        .unwrap_or(text))
+}
+
+/// Get all except for the first line of a string (everything after the first occurrence of '\n')
+#[askama::filter_fn]
+pub fn skip_first_line<'a>(text: &'a str, _: &dyn askama::Values) -> askama::Result<&'a str> {
+    Ok(text
+        .split_once('\n')
+        .map(|(_first, rest)| rest)
+        .unwrap_or(""))
+}

@@ -374,11 +374,20 @@ pub struct Entry {
     pub state: EntryState,
 }
 
+#[derive(Clone, Queryable, Selectable)]
+#[diesel(table_name=super::schema::entries)]
+pub struct EntryInternalFields {
+    #[diesel(column_name = "orga_comment")]
+    pub comment: String,
+}
+
 #[derive(Clone)]
 pub struct FullEntry {
     pub entry: Entry,
     pub room_ids: Vec<Uuid>,
     pub previous_dates: Vec<FullPreviousDate>,
+    /// Fields that are only present when entry is retrieved with ManageEntries privileges.
+    pub orga_internal: Option<EntryInternalFields>,
 }
 
 impl From<FullEntry> for kueaplan_api_types::Entry {
@@ -404,6 +413,7 @@ impl From<FullEntry> for kueaplan_api_types::Entry {
                 .into_iter()
                 .map(|pd| pd.into())
                 .collect(),
+            orga_comment: value.orga_internal.map(|i| i.comment),
         }
     }
 }
@@ -426,6 +436,7 @@ pub struct NewEntry {
     pub is_exclusive: bool,
     pub is_cancelled: bool,
     pub state: EntryState,
+    pub orga_comment: String,
 }
 
 #[derive(Clone)]
@@ -453,6 +464,7 @@ impl FullNewEntry {
                 is_exclusive: entry.is_exclusive,
                 is_cancelled: entry.is_cancelled,
                 state: entry.state.into(),
+                orga_comment: entry.orga_comment.unwrap_or_default(),
             },
             room_ids: entry.room,
             previous_dates: entry
@@ -483,6 +495,7 @@ impl From<FullEntry> for FullNewEntry {
                 is_exclusive: value.entry.is_exclusive,
                 is_cancelled: value.entry.is_cancelled,
                 state: value.entry.state,
+                orga_comment: value.orga_internal.map(|i| i.comment).unwrap_or_default(),
             },
             room_ids: value.room_ids,
             previous_dates: value.previous_dates,
@@ -506,6 +519,7 @@ pub struct EntryPatch {
     pub is_exclusive: Option<bool>,
     pub is_cancelled: Option<bool>,
     pub state: Option<EntryState>,
+    pub orga_comment: Option<String>,
     #[diesel(skip_update)]
     pub room_ids: Option<Vec<Uuid>>,
 }
@@ -638,6 +652,7 @@ impl From<kueaplan_api_types::EntryPatch> for EntryPatch {
             is_cancelled: value.is_cancelled,
             room_ids: value.room,
             state: value.state.map(|s| s.into()),
+            orga_comment: value.orga_comment,
         }
     }
 }

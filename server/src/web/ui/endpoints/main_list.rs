@@ -405,6 +405,7 @@ mod tests {
                         room_ids: vec![room_2],
                     },
                 ],
+                orga_internal: None,
             },
             FullEntry {
                 entry: Entry {
@@ -448,6 +449,7 @@ mod tests {
                         room_ids: vec![room_3],
                     },
                 ],
+                orga_internal: None,
             },
             FullEntry {
                 entry: Entry {
@@ -479,6 +481,7 @@ mod tests {
                     },
                     room_ids: vec![room_1],
                 }],
+                orga_internal: None,
             },
         ];
         let result = generate_filtered_merged_list_entries(

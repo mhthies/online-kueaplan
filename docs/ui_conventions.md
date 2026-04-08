@@ -39,8 +39,9 @@
 | calendar date (as opposed to effective date) | `bi-calendar-event-fill`  |
 | place                                        | `bi-geo-alt-fill`         |
 | category                                     | `bi-grid`                 |
-| announcement                                 | `chat-right-heart`        |
+| announcement                                 | `bi-chat-right-text-fill` |
 | previous date                                | `bi-clock-history`        |
+| passphrase                                   | `bi-key`                  |
 
 ### Properties
 | Usage                                      | Icon                   |
@@ -49,6 +50,7 @@
 | true                                       | `bi-check-circle-fill` |
 | false                                      | `bi-x-circle`          |
 | actual current date of entry               | `bi-clock-fill`        |
+| orga-internal comment                      | `bi-chat-right-dots`   |
 | entry state: draft                         | `bi-pencil-square`     |
 | entry state: requires review               | `bi-clipboard2-check`  |
 | entry state: rejected                      | `bi-slash-circle`      |
@@ -68,11 +70,12 @@
 | entry conflict | `bi-exclamation-diamond`  |
 
 ### Pages
-| Usage                    | Icon                  |
-|--------------------------|-----------------------|
-| list of KüA-Plan entries | `bi-list-ul`          |
-| configuration area       | `bi-gear`             |
-| entry review area        | `bi-clipbaord2-check` |
+| Usage                    | Icon                   |
+|--------------------------|------------------------|
+| list of KüA-Plan entries | `bi-list-ul`           |
+| configuration area       | `bi-gear`              |
+| entry review area        | `bi-clipbaord2-check`  |
+| print template           | `bi-file-earmark-fill` |
 
 
 ## Notifications

@@ -75,6 +75,10 @@
             "type": "string",
             "enum": ["published", "draft", "submitted-for-review", "preliminary-published", "retracted", "rejected"]
         },
+        "orgaComment": {
+            "description": "An orga-internal comment about the entry (or its state). The field is only present when using the `listAllEntries` endpoint or accessing `getEntry` with sufficient privileges. When omitted in a new entry, defaults to an empty string.",
+            "type": "string"
+        },
         "previousDates": {
             "description": "List of former places/times for which the KüA was scheduled to take place.",
             "type": "array",

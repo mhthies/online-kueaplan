@@ -1,0 +1,75 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://kuaplan.de/meta/schema/EntrySubmission.json",
+    "title": "KüA Plan Entry Submission",
+    "description": "An entry to be submitted by a participant for publishing in the KüA Plan. This is a subset of the Entry schema",
+    "type": "object",
+
+    "properties": {
+        "id": {
+            "description": "The unique identifier of the entry",
+            "type": "string",
+            "format": "uuid"
+        },
+        "title": {
+            "description": "The subject of the planned KüA (or reservation)",
+            "type": "string"
+        },
+        "comment": {
+            "description": "A short explanatory comment to be shown together with the subject.",
+            "type": "string"
+        },
+        "description": {
+            "description": "A longer description of the planned KüA, formatted as Markdown.",
+            "type": "string"
+        },
+        "begin": {
+            "description": "The begin of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "description": "The end of this KüA",
+            "type": "string",
+            "format": "date-time"
+        },
+        "timeComment": {
+            "description": "A short comment about the KüA's time (e.g. start after another KüA, \"open end\", etc.).",
+            "type": "string"
+        },
+        "room": {
+            "description": "List of unique identifiers of the rooms this entry takes place in.",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid"
+            }
+        },
+        "roomComment": {
+            "description": "A short comment about the KüA's room (e.g. the meeting point or which part of the room).",
+            "type": "string"
+        },
+        "responsiblePerson": {
+            "description": "Name of the persons responsible for this KüA or blocker",
+            "type": "string"
+        },
+        "isRoomReservation": {
+            "description": "if present and true, this is not a real KüA announcement, but instead an informative entry to mark this time slot in this room as reserved for some reason (e.g. some non-public meeting).",
+            "type": "boolean"
+        },
+        "category": {
+            "description": "The unique identifier of the category this entry belongs to.",
+            "type": "string",
+            "format": "uuid"
+        },
+        "submitterComment": {
+            "description": "A comment that is only visible to the orgas of the event, which are moderating the KüA Plan. When omitted, defaults to an empty string.",
+            "type": "string"
+        },
+        "publishWithoutReview": {
+            "description": "Try to submit the entry to be published immediately, without prior review by the orgas. This is only possible when the event's entrySubmissionMode is 'review-after-publishing' and the entry does not violate other policies. When omitted, defaults to false.",
+            "type": "boolean"
+        }
+    },
+    "required": ["id", "title", "room", "begin", "end", "category", "previousDates"]
+}

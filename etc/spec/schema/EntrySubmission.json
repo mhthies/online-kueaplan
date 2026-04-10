@@ -7,7 +7,7 @@
 
     "properties": {
         "id": {
-            "description": "The unique identifier of the entry",
+            "description": "The unique identifier of the new entry. Should be generated as UUIDv7 (time-ordered value) according to RFC9562.",
             "type": "string",
             "format": "uuid"
         },

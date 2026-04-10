@@ -7,7 +7,7 @@
 
     "properties": {
         "id": {
-            "description": "The unique identifier of the room",
+            "description": "The unique identifier of the room. When creating a new room, it should be created as a UUIDv7 (time-ordered value) according to RFC9562.",
             "type": "string",
             "format": "uuid"
         },

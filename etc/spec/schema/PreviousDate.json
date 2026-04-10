@@ -7,7 +7,7 @@
 
     "properties": {
         "id": {
-            "description": "The unique identifier of the previous date",
+            "description": "The unique identifier of the previous date. When creating a new previous date, it should be created as a UUIDv7 (time-ordered value) according to RFC9562.",
             "type": "string",
             "format": "uuid"
         },

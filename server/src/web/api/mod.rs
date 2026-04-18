@@ -78,6 +78,7 @@ pub enum APIError {
     InvalidJson(actix_web::error::JsonPayloadError),
     InvalidData(String),
     ViolatingDataIntegrity(String),
+    ViolatingDataPolicy(String),
     EntityIdMissmatch,
     TransactionConflict,
     ConcurrentEditConflict,
@@ -140,6 +141,9 @@ impl Display for APIError {
             Self::ViolatingDataIntegrity(e) => {
                 write!(f, "Operation cannot be performed: {}", e)?;
             },
+            Self::ViolatingDataPolicy(e) => {
+                write!(f, "Posted data violates a policy: {}", e)?;
+            },
             Self::EntityIdMissmatch => {
                 f.write_str("Entity id in given data does not match URL")?;
             },
@@ -183,6 +187,7 @@ impl ResponseError for APIError {
             },
             &APIError::InvalidData(_) => StatusCode::UNPROCESSABLE_ENTITY,
             Self::ViolatingDataIntegrity(_) => StatusCode::CONFLICT,
+            Self::ViolatingDataPolicy(_) => StatusCode::CONFLICT,
             &APIError::EntityIdMissmatch => StatusCode::UNPROCESSABLE_ENTITY,
             &APIError::TransactionConflict => StatusCode::SERVICE_UNAVAILABLE,
             Self::ConcurrentEditConflict => StatusCode::CONFLICT,
@@ -213,6 +218,7 @@ impl From<StoreError> for APIError {
                 required_privilege,
                 privilege_expired,
             },
+            StoreError::PolicyViolation(p) => Self::ViolatingDataPolicy(p.to_string()),
             StoreError::InvalidInputData(e) => Self::InvalidData(e),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",

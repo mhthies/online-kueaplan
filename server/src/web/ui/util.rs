@@ -1,7 +1,7 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::data_store::models::{AnnouncementType, EntryState, Event, EventClockInfo, FullEntry};
-use crate::data_store::{EntryId, EventId, StoreError};
+use crate::data_store::{DataPolicy, EntryId, EventId, StoreError};
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
@@ -183,6 +183,7 @@ pub fn announcement_type_color(announcement_type: AnnouncementType) -> &'static 
 pub enum FormSubmitResult {
     Success,
     ValidationError,
+    PolicyViolation(DataPolicy),
     TransactionConflict,
     ConcurrentEditConflict,
     UnexpectedError(AppError),
@@ -195,6 +196,7 @@ impl From<Result<(), StoreError>> for FormSubmitResult {
             Err(e) => match e {
                 StoreError::TransactionConflict => FormSubmitResult::TransactionConflict,
                 StoreError::ConcurrentEditConflict => FormSubmitResult::ConcurrentEditConflict,
+                StoreError::PolicyViolation(p) => FormSubmitResult::PolicyViolation(p),
                 _ => FormSubmitResult::UnexpectedError(e.into()),
             },
         }
@@ -249,6 +251,26 @@ pub fn create_edit_form_response(
                 flash_type: FlashType::Error,
                 message: "Eingegebene Daten sind ungültig. Bitte markierte Felder überprüfen."
                     .to_owned(),
+                keep_open: false,
+                button: None,
+            });
+            Ok(Either::Right(
+                HttpResponse::UnprocessableEntity().body(form_template.render()?),
+            ))
+        }
+        FormSubmitResult::PolicyViolation(violated_policy) => {
+            let policy_text =
+                match violated_policy {
+                    DataPolicy::EntrySubmissionEnabled => "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.",
+                    DataPolicy::EntrySubmissionReviewState => "Der geforderte Veröffentlichungs-Status ist für eingereichte Beiträge nicht erlaubt.",
+                    DataPolicy::EntrySubmissionNoRoomConflict => "Konflikt mit anderer KüA im gleichen Raum.",
+                    DataPolicy::EntrySubmissionNoExclusiveConflict => "Konflikt mit einer exklusiven KüA.",
+                    DataPolicy::EntrySubmissionNoExclusiveProperty => "Exklusive KüAs können hier nicht angelegt werden.",
+                    DataPolicy::EntrySubmissionNoOfficialCategory => "Die KüA darf nicht zu einer \"offiziellen\" Kategorie gehören."
+                };
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: format!("Die eingebenen Daten verletzen eine Regel: {}", policy_text),
                 keep_open: false,
                 button: None,
             });

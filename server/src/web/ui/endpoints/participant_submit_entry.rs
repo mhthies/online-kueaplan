@@ -2,7 +2,9 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
     Category, EntryState, EventClockInfo, ExtendedEvent, FullNewEntry, NewEntry, Room,
 };
-use crate::data_store::{EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError};
+use crate::data_store::{
+    DataPolicy, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
+};
 use crate::web::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time,
 };
@@ -138,6 +140,20 @@ async fn participant_submit_entry(
         util::FormSubmitResult::ValidationError
     };
 
+    if let util::FormSubmitResult::PolicyViolation(violated_policy) = &result {
+        match violated_policy {
+            DataPolicy::EntrySubmissionNoRoomConflict => {
+                data.rooms
+                    .add_error("Konflikt mit anderer KüA im gleichen Raum.".to_owned());
+            }
+            DataPolicy::EntrySubmissionNoExclusiveConflict => {
+                data.begin
+                    .add_error("Konflikt mit einer exklusiven KüA.".to_owned());
+            }
+            _ => {}
+        }
+    }
+
     let tmpl = ParticipantSubmitEntryFormTemplate {
         base: BaseTemplateContext {
             request: &req,
@@ -154,8 +170,6 @@ async fn participant_submit_entry(
         entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
     };
-
-    // TODO handle policy errors
 
     util::create_edit_form_response(
         result,

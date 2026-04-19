@@ -108,6 +108,28 @@ impl<'a> BaseTemplateContext<'a> {
         Ok(url.to_string())
     }
 
+    /// Generate the url for the 'submit entry' button.
+    ///
+    /// Requires `event` to be Some.
+    pub fn submit_entry_form_url(&self) -> Result<String, AppError> {
+        let mut url = self.request.url_for(
+            "participant_submit_entry_form",
+            &[self
+                .get_basic_event()
+                .ok_or(AppError::InternalError(
+                    "Cannot generate participant_submit_entry_form URL, because `event` is not present".to_owned(),
+                ))?
+                .id
+                .to_string()],
+        )?;
+        url.set_query(Some(&serde_urlencoded::to_string(
+            crate::web::ui::endpoints::participant_submit_entry::SubmitEntryQueryParams {
+                date: self.current_date,
+            },
+        )?));
+        Ok(url.to_string())
+    }
+
     /// Get the URL for the given `endpoint_name`, assuming that this endpoint only requires a
     /// single URL placeholder with the current event id.
     pub fn url_for_event_endpoint(&self, endpoint_name: &str) -> Result<String, AppError> {
@@ -136,6 +158,11 @@ impl<'a> BaseTemplateContext<'a> {
     pub fn entry_review_is_enabled(&self) -> bool {
         self.get_extended_event()
             .is_some_and(|e| e.entry_submission_mode.includes_reviews())
+    }
+
+    pub fn entry_submission_is_enabled(&self) -> bool {
+        self.get_extended_event()
+            .is_some_and(|e| e.entry_submission_mode.allows_entry_submission())
     }
 }
 

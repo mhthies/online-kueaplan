@@ -309,6 +309,7 @@ pub enum Privilege {
     ShowKueaPlan,
     ShowConfigArea,
     ManageEntries,
+    SubmitParticipantEntries,
     ManageCategories,
     ManageRooms,
     EditEventDetails,
@@ -337,6 +338,9 @@ impl Privilege {
             ],
             Privilege::ShowConfigArea => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageEntries => &[AccessRole::Orga, AccessRole::Admin],
+            Privilege::SubmitParticipantEntries => {
+                &[AccessRole::User, AccessRole::Orga, AccessRole::Admin]
+            }
             Privilege::ManageCategories => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::ManageRooms => &[AccessRole::Orga, AccessRole::Admin],
             Privilege::EditEventDetails => &[AccessRole::Admin],

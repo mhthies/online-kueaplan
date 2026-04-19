@@ -1,8 +1,8 @@
-use crate::data_store::models::{EntryState, FullNewEntry};
+use crate::data_store::models::{EntryState, FullNewEntry, NewEntry};
 use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::util::EntryFilterAsQuery;
 use crate::web::AppState;
-use actix_web::{delete, get, patch, put, web, HttpResponse, Responder};
+use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder};
 use serde::de::{Error, Unexpected};
 use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
@@ -152,6 +152,62 @@ async fn change_entry(
     .await??;
 
     Ok(HttpResponse::NoContent())
+}
+
+#[post("/events/{event_id}/submitEntry")]
+async fn submit_entry(
+    path: web::Path<i32>,
+    data: web::Json<kueaplan_api_types::EntrySubmission>,
+    state: web::Data<AppState>,
+    session_token_header: Option<web::Header<SessionTokenHeader>>,
+) -> Result<impl Responder, APIError> {
+    let event_id = path.into_inner();
+    let session_token = session_token_header
+        .ok_or(APIError::NoSessionToken)?
+        .into_inner()
+        .session_token(&state.secret)?;
+    let submission = data.into_inner();
+    let entry = FullNewEntry {
+        entry: NewEntry {
+            id: submission.id,
+            title: submission.title,
+            description: submission.description,
+            responsible_person: submission.responsible_person,
+            is_room_reservation: submission.is_room_reservation,
+            event_id,
+            begin: submission.begin,
+            end: submission.end,
+            category: submission.category,
+            comment: submission.comment,
+            time_comment: submission.time_comment,
+            room_comment: submission.room_comment,
+            is_exclusive: false,
+            is_cancelled: false,
+            state: if submission.publish_without_review {
+                EntryState::PreliminaryPublished
+            } else {
+                EntryState::SubmittedForReview
+            },
+            orga_comment: if submission.submitter_comment.is_empty() {
+                "".to_string()
+            } else {
+                format!(
+                    "Kommentar der einreichenden Person:\n> {}",
+                    submission.submitter_comment.replace("\n", "\n> ")
+                )
+            },
+        },
+        room_ids: submission.room,
+        previous_dates: vec![],
+    };
+    web::block(move || -> Result<_, APIError> {
+        let mut store = state.store.get_facade()?;
+        let auth = store.get_auth_token_for_session(&session_token, event_id)?;
+        store.submit_entry_by_participant(&auth, entry)?;
+        Ok(())
+    })
+    .await??;
+    Ok(HttpResponse::Ok())
 }
 
 #[delete("/events/{event_id}/entries/{entry_id}")]

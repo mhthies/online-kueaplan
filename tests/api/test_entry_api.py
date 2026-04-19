@@ -338,7 +338,7 @@ def test_change_entry_simple_errors(generated_api_client: ApiClientWrapper, rese
         previousDates=[],
     )
     generated_api_client.client.create_or_update_entry(event_id, entry.id, entry)
-    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.clear_login()
 
     generated_api_client.login(event_id, "user")
     # Unauthorized
@@ -551,7 +551,7 @@ def test_create_or_update_previous_date_simple_errors(
     )
 
     # Unauthorized
-    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.clear_login()
     generated_api_client.login(event_id, "user")
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.create_or_update_previous_date(event_id, entry.id, previous_date.id, previous_date)
@@ -700,7 +700,7 @@ def test_delete_previous_date_errors(generated_api_client: ApiClientWrapper, res
     assert excinfo.value.data.http_code == 404
 
     # Unauthorized
-    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.clear_login()
     generated_api_client.login(event_id, "user")
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.delete_previous_date(event_id, entry.id, entry.previous_dates[0].id)
@@ -763,7 +763,7 @@ def test_delete_entry_errors(generated_api_client: ApiClientWrapper, reset_datab
     assert excinfo.value.data.http_code == 404
 
     # Unauthorized
-    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.clear_login()
     generated_api_client.login(event_id, "user")
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.delete_entry(event_id, entry.id)

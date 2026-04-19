@@ -1,0 +1,39 @@
+{
+  "post": {
+    "operationId": "submitEntry",
+    "summary": "As a participant, submit a new Entry of the KüA Plan.",
+    "description": "This endpoint allows participants of the event (without orga privileges) to submit entries for the KüA Plan.\n\nDepending on the event's configuration (see `getExtendedEventInfo` endpoint, field `entrySubmissionMode`), submitted entries require review by an orga before being published (or are not permitted at all). Immediate publishing of the entry without prior review must be explicitly requested by setting the `publishWithoutReview` field to `true`.\n\nIf submitting the entry in the requested way is not allowed, the server responses with a 409 status code. This is the case when:\n* submitting entries is allowed at all in this event,\n* `publishWithoutReview` has been set, but immediate publishing is not allowed in this event,\n* the entry would conflict with another entry in the same room at the same time,\n* the entry would conflict with an entry marked as `exclusive`.",
+    "parameters": [
+      {"$ref": "../components/eventId.json"}
+    ],
+    "security": [
+      {"sessionTokenAuth": []}
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "../schema/EntrySubmission.json"  }
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "204": {
+        "description": "The entry has been submitted successfully. If 'publishWithoutReview' has been requested in the entry data, the entry has been published successfully."
+      },
+      "400": {"$ref": "../components/badJSONError.json"},
+      "403": {"$ref": "../components/authorizationError.json"},
+      "409": {
+        "description": "Error response, returned when the entry could not be submitted for policy reasons (e.g. no entry submission allowed, immediate publishing requested but not allowed, conflicting entry).",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "../schema/Error.json"}
+          }
+        }
+      },
+      "415": {"$ref": "../components/wrongMediaTypeError.json"},
+      "422": {"$ref": "../components/badContentError.json"},
+      "500": {"$ref": "../components/serverError.json"}
+    }
+  }
+}

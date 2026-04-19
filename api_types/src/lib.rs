@@ -161,6 +161,32 @@ pub struct EntryPatch {
     pub orga_comment: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct EntrySubmission {
+    pub id: Uuid,
+    pub title: String,
+    #[serde(default)]
+    pub comment: String,
+    #[serde(default)]
+    pub description: String,
+    pub room: Vec<Uuid>,
+    #[serde(default, rename = "roomComment")]
+    pub room_comment: String,
+    pub begin: DateTime<Utc>,
+    pub end: DateTime<Utc>,
+    #[serde(default, rename = "timeComment")]
+    pub time_comment: String,
+    #[serde(default, rename = "responsiblePerson")]
+    pub responsible_person: String,
+    #[serde(default, rename = "isRoomReservation")]
+    pub is_room_reservation: bool,
+    pub category: Uuid,
+    #[serde(default, rename = "submitterComment")]
+    pub submitter_comment: String,
+    #[serde(default, rename = "publishWithoutReview")]
+    pub publish_without_review: bool,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct PreviousDate {
     pub id: Uuid,

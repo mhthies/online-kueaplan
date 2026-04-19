@@ -165,3 +165,6 @@ class ApiClientWrapper:
     def login(self, event_id: int, passphrase: str) -> None:
         auth_response = self.client.authorize(event_id, self.module.AuthorizeRequest(passphrase=passphrase))
         self.client.api_client.configuration.api_key["sessionTokenAuth"] = auth_response.session_token
+
+    def clear_login(self) -> None:
+        del self.client.api_client.configuration.api_key["sessionTokenAuth"]

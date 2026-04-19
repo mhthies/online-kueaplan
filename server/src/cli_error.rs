@@ -110,6 +110,9 @@ impl From<StoreError> for CliError {
                 "Missing global data_store privilege: {:?}",
                 required_privilege
             )),
+            StoreError::PolicyViolation(p) => {
+                Self::DataError(format!("Data violates policy: {}", p))
+            }
             StoreError::InvalidInputData(e) => Self::DataError(e),
             StoreError::InvalidDataInDatabase(e) => Self::UnexpectedStoreError(e),
         }

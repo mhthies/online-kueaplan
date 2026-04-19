@@ -1,7 +1,7 @@
 use super::{
-    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, EntryFilter, EntryId,
-    EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, PreviousDateId, RoomId,
-    StoreError,
+    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, DataPolicy, EntryFilter,
+    EntryId, EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, PreviousDateId,
+    RoomId, StoreError,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
@@ -463,6 +463,40 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
                 .filter(id.eq(entry_id))
                 .set((entry_data, last_updated.eq(diesel::dsl::now)))
                 .execute(connection)?;
+
+            Ok(())
+        })
+    }
+
+    fn submit_entry_by_participant(
+        &mut self,
+        auth_token: &AuthToken,
+        entry: models::FullNewEntry,
+    ) -> Result<(), StoreError> {
+        use schema::entries::dsl::*;
+
+        auth_token.check_privilege(entry.entry.event_id, Privilege::SubmitParticipantEntries)?;
+
+        self.connection.transaction(|connection| {
+            let event_data = schema::events::table
+                .filter(schema::events::id.eq(entry.entry.event_id))
+                .select(models::ExtendedEvent::as_select())
+                .first::<models::ExtendedEvent>(connection)?;
+            check_categories_validity(&[entry.entry.category], entry.entry.event_id, connection)?;
+            check_submission_policies(&entry, connection, event_data.entry_submission_mode)?;
+
+            diesel::insert_into(entries)
+                .values(&entry.entry)
+                .execute(connection)?;
+
+            // rooms
+            check_rooms_validity(&entry.room_ids, entry.entry.event_id, connection)?;
+            update_entry_rooms(entry.entry.id, &entry.room_ids, connection)?;
+
+            for previous_date in entry.previous_dates {
+                check_rooms_validity(&previous_date.room_ids, entry.entry.event_id, connection)?;
+                update_or_insert_previous_date(&previous_date, entry.entry.id, connection)?;
+            }
 
             Ok(())
         })
@@ -1678,6 +1712,95 @@ fn check_rooms_validity(
                 "Room {room_id} does not belong to event {the_event_id}."
             )));
         }
+    }
+    Ok(())
+}
+
+/// Check if the given entry can be submitted by a participant, i.e. it does not use orga-only
+/// features or creates conflicts with other entries.
+///
+/// * category is not an "official" category
+/// * no room conflicts
+/// * no exclusive entry conflicts
+/// * no usage of orga-only entry properties: exclusive entry
+fn check_submission_policies(
+    entry: &models::FullNewEntry,
+    connection: &mut PgConnection,
+    submission_mode: models::EntrySubmissionMode,
+) -> Result<(), StoreError> {
+    if !submission_mode.allows_entry_submission() {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionEnabled,
+        ));
+    }
+    if !submission_mode
+        .allowed_submission_states()
+        .contains(&entry.entry.state)
+    {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionReviewState,
+        ));
+    }
+
+    if entry.entry.is_exclusive {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionNoExclusiveProperty,
+        ));
+    }
+
+    let is_official_category = schema::categories::table
+        .filter(schema::categories::id.eq(entry.entry.category))
+        .select(schema::categories::is_official)
+        .first::<bool>(connection)
+        .map_err(|e| -> StoreError {
+            match e {
+                // when the category does not exist, we should return the same error as the database
+                // constraint violation would create later
+                diesel::result::Error::NotFound => StoreError::InvalidInputData(
+                    "Entry's category must reference an existing category.".to_owned(),
+                ),
+                e => e.into(),
+            }
+        })?;
+    if is_official_category {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionNoOfficialCategory,
+        ));
+    }
+
+    let conflicts_base_query = schema::entries::table
+        .filter(schema::entries::event_id.eq(entry.entry.event_id))
+        .filter(diesel::dsl::not(schema::entries::deleted))
+        .filter(diesel::dsl::not(schema::entries::is_cancelled))
+        .filter(
+            schema::entries::state.eq_any(models::EntryState::all().filter(|s| s.is_published())),
+        )
+        .filter(schema::entries::begin.lt(entry.entry.end))
+        .filter(schema::entries::end.gt(entry.entry.begin));
+
+    let exclusive_conflicts = conflicts_base_query
+        .clone()
+        .filter(schema::entries::is_exclusive)
+        .select(diesel::dsl::count_star())
+        .first::<i64>(connection)?;
+    if exclusive_conflicts > 0 {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionNoExclusiveConflict,
+        ));
+    }
+
+    let room_conflicts = conflicts_base_query
+        .filter(diesel::dsl::exists(
+            schema::entry_rooms::table
+                .filter(schema::entry_rooms::entry_id.eq(schema::entries::id))
+                .filter(schema::entry_rooms::room_id.eq_any(&entry.room_ids)),
+        ))
+        .select(diesel::dsl::count_star())
+        .first::<i64>(connection)?;
+    if room_conflicts > 0 {
+        return Err(StoreError::PolicyViolation(
+            DataPolicy::EntrySubmissionNoRoomConflict,
+        ));
     }
     Ok(())
 }

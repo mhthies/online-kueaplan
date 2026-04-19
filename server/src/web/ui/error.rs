@@ -65,6 +65,9 @@ impl From<StoreError> for AppError {
                 "Global privilege {:?} required.",
                 required_privilege
             )),
+            StoreError::PolicyViolation(p) => {
+                Self::InvalidData(format!("Data policy violation: {}", p))
+            }
             StoreError::InvalidInputData(e) => Self::InternalError(format!("Invalid data: {}", e)),
             StoreError::InvalidDataInDatabase(e) => Self::InternalError(format!(
                 "Data queried from database could not be deserialized: {}",

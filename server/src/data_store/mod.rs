@@ -152,6 +152,11 @@ pub trait KueaPlanStoreFacade {
         entry_id: EntryId,
         entry_data: models::EntryPatch,
     ) -> Result<(), StoreError>;
+    fn submit_entry_by_participant(
+        &mut self,
+        auth_token: &AuthToken,
+        entry: models::FullNewEntry,
+    ) -> Result<(), StoreError>;
     fn delete_entry(
         &mut self,
         auth_token: &AuthToken,
@@ -541,6 +546,10 @@ pub enum StoreError {
         /// authorization has expired.
         privilege_expired: bool,
     },
+    /// The entity could not be saved in the database because it violates some policy that restricts
+    /// the valid data in the context of the executed operation. Example: Participants are not
+    /// allowed to create conflicting entries when submitting an entry.
+    PolicyViolation(DataPolicy),
     /// The provided data is invalid, i.e. it does not match the expected ranges or violates a
     /// SQL constraint. See string description for details.
     /// This is also used when the requested action would violate data integrity constraints (e.g.
@@ -621,6 +630,9 @@ impl std::fmt::Display for StoreError {
             } => {
                 write!(f, "Client is not authorized to perform this action. Global {:?} privilege required.", required_privilege)
             }
+            Self::PolicyViolation(p) => {
+                write!(f, "Data to be stored in the database violates a policy: {:?}", p)
+            },
             Self::InvalidInputData(e) => {
                 write!(f, "Data to be stored in database is not valid: {}", e)
             }
@@ -645,5 +657,49 @@ impl Display for EnumMemberNotExistingError {
             "{} is not a valid value for {} neum",
             self.member_value, self.enum_name
         )
+    }
+}
+
+#[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
+pub enum DataPolicy {
+    /// For submitting an entry, the entry submission mode of the event must allow submissions
+    EntrySubmissionEnabled,
+    /// For submitting an entry, it must be submitted in an allowed (review) state, according to
+    /// entry submission mode of the event
+    EntrySubmissionReviewState,
+    /// For submitting an entry, it must not create a room conflict with another (public) entry
+    EntrySubmissionNoRoomConflict,
+    /// For submitting an entry, it must not create a conflict with an "exclusive" (public) entry
+    EntrySubmissionNoExclusiveConflict,
+    /// A submitted entry is not allowed to use the "exclusive" property
+    EntrySubmissionNoExclusiveProperty,
+    /// A submitted entry is not allowed to be in an "official" category
+    EntrySubmissionNoOfficialCategory,
+}
+
+impl Display for DataPolicy {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EntrySubmissionEnabled => write!(f, "Entry submission must be enabled."),
+            DataPolicy::EntrySubmissionReviewState => write!(
+                f,
+                "Entry must be submitted in a review state, allowed by the entry submission mode."
+            ),
+            DataPolicy::EntrySubmissionNoRoomConflict => write!(
+                f,
+                "Submitted entry must not cause a room conflict with another entry."
+            ),
+            DataPolicy::EntrySubmissionNoExclusiveConflict => write!(
+                f,
+                "Submitted entry must not cause a conflict with an exclusive entry."
+            ),
+            DataPolicy::EntrySubmissionNoExclusiveProperty => {
+                write!(f, "Submitted entry cannot be 'exclusive'.")
+            }
+            DataPolicy::EntrySubmissionNoOfficialCategory => {
+                write!(f, "Submitted entry cannot be in an 'official' category.")
+            }
+        }
     }
 }

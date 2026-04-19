@@ -197,7 +197,7 @@ def test_delete_category_errors(generated_api_client: ApiClientWrapper, reset_da
     assert excinfo.value.data.http_code == 409
 
     # Unauthorized
-    del generated_api_client.client.api_client.configuration.api_key["sessionTokenAuth"]
+    generated_api_client.clear_login()
     generated_api_client.login(event_id, "user")
     with pytest.raises(kueaplan_api_client.ApiException) as excinfo:
         generated_api_client.client.delete_category(event_id, category.id)

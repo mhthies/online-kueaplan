@@ -1,13 +1,13 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://kuaplan.de/meta/schema/Entry.json",
-    "title": "KüA Plan Entry",
-    "description": "A single entry of the KüA plan",
+    "$id": "https://kuaplan.de/meta/schema/EntrySubmission.json",
+    "title": "KüA Plan Entry Submission",
+    "description": "An entry to be submitted by a participant for publishing in the KüA Plan. This is a subset of the Entry schema",
     "type": "object",
 
     "properties": {
         "id": {
-            "description": "The unique identifier of the entry. When creating a new entry, it should be created as a UUIDv7 (time-ordered value) according to RFC9562.",
+            "description": "The unique identifier of the new entry. Should be generated as UUIDv7 (time-ordered value) according to RFC9562.",
             "type": "string",
             "format": "uuid"
         },
@@ -57,32 +57,18 @@
             "description": "if present and true, this is not a real KüA announcement, but instead an informative entry to mark this time slot in this room as reserved for some reason (e.g. some non-public meeting).",
             "type": "boolean"
         },
-        "isExclusive": {
-            "description": "if present and true, this KüA (possibly together with other entries) exclusively blocks its interval for other KüAs (e.g. a mandatory plenum or reserved time slot for talks).",
-            "type": "boolean"
-        },
-        "isCancelled": {
-            "description": "if present and true, this is not a KüA announcement, but instead informs that his plan entry is no longer valid.",
-            "type": "boolean"
-        },
         "category": {
             "description": "The unique identifier of the category this entry belongs to.",
             "type": "string",
             "format": "uuid"
         },
-        "state": {
-            "description": "The submission/publishing state of the entry. When creating or updating an entry as orga and the `state` property is not given, it will default to 'published'.",
-            "type": "string",
-            "enum": ["published", "draft", "submitted-for-review", "preliminary-published", "retracted", "rejected"]
-        },
-        "orgaComment": {
-            "description": "An orga-internal comment about the entry (or its state). The field is only present when using the `listAllEntries` endpoint or accessing `getEntry` with sufficient privileges. When omitted in a new entry, defaults to an empty string.",
+        "submitterComment": {
+            "description": "A comment that is only visible to the orgas of the event, which are moderating the KüA Plan. When omitted, defaults to an empty string.",
             "type": "string"
         },
-        "previousDates": {
-            "description": "List of former places/times for which the KüA was scheduled to take place.",
-            "type": "array",
-            "items": {"$ref": "./PreviousDate.json"}
+        "publishWithoutReview": {
+            "description": "Try to submit the entry to be published immediately, without prior review by the orgas. This is only possible when the event's entrySubmissionMode is 'review-after-publishing' and the entry does not violate other policies. When omitted, defaults to false.",
+            "type": "boolean"
         }
     },
     "required": ["id", "title", "room", "begin", "end", "category", "previousDates"]

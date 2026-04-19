@@ -6,7 +6,7 @@ use crate::data_store::{EntryId, EventId, StoreError};
 use crate::web::time_calculation::{get_effective_date, timestamp_from_effective_date_and_time};
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
-use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{_FormValidSimpleValidate, FormValue};
 use crate::web::ui::sub_templates::edit_entry_helpers::{
     EditEntryNavbar, EditEntryNavbarActiveLink,
 };

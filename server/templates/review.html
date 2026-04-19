@@ -22,7 +22,7 @@
                 <ul class="nav nav-pills flex-row flex-lg-column">
                     {{ navlink(base.url_for_event_endpoint("list_to_review")?,
                                "clipboard2-check",
-                               "Zu Prüfen",
+                               "Zu prüfen",
                                ReviewNavButton::ToReview,
                                *entry_count_by_state.get(&EntryState::PreliminaryPublished).unwrap_or(&0)
                                + *entry_count_by_state.get(&EntryState::SubmittedForReview).unwrap_or(&0),

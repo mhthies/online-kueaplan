@@ -6,7 +6,7 @@ use crate::web::ui::base_template::{
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{
-    FormValue, FormValueRepresentation, ValidateFromFormInput, _FormValidSimpleValidate,
+    _FormValidSimpleValidate, FormValue, FormValueRepresentation, ValidateFromFormInput,
 };
 use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, InputType, SelectEntry, SelectTemplate,

@@ -5,7 +5,7 @@ use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
-use crate::web::ui::form_values::{BoolFormValue, FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{_FormValidSimpleValidate, BoolFormValue, FormValue};
 use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
 };

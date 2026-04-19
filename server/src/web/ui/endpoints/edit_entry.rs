@@ -10,8 +10,8 @@ use crate::web::time_calculation::{
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::form_values::{
-    BoolFormValue, FormValue, FormValueRepresentation, ValidateFromFormInput,
-    _FormValidSimpleValidate,
+    _FormValidSimpleValidate, BoolFormValue, FormValue, FormValueRepresentation,
+    ValidateFromFormInput,
 };
 use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,

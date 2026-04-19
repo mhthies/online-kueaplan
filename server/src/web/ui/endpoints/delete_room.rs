@@ -6,7 +6,7 @@ use crate::web::ui::base_template::{
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
-use crate::web::ui::form_values::{FormValue, _FormValidSimpleValidate};
+use crate::web::ui::form_values::{_FormValidSimpleValidate, FormValue};
 use crate::web::ui::sub_templates::form_inputs::{FormFieldTemplate, SelectEntry};
 use crate::web::ui::{util, validation};
 use crate::web::AppState;

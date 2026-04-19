@@ -5,8 +5,7 @@ function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concu
     const endInput = document.getElementById("endInput");
     const roomsInput = document.getElementById("roomsInput");
 
-    const calendarDateInfoElement = createCalendarDateInfoElement(
-        document.getElementById("beginDescription"));
+    const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
 
     const concurrentEntriesFetcher = new ConcurrentEntriesFetcher(
         document.getElementById("parallelEntriesBox"),

@@ -43,6 +43,7 @@ fn get_api_service() -> actix_web::Scope {
         .service(endpoints_entry::get_entry)
         .service(endpoints_entry::create_or_update_entry)
         .service(endpoints_entry::change_entry)
+        .service(endpoints_entry::submit_entry)
         .service(endpoints_entry::delete_entry)
         .service(endpoints_previous_date::create_or_update_previous_date)
         .service(endpoints_previous_date::delete_previous_date)

@@ -473,6 +473,26 @@ impl<'a> EditEntryFormTemplate<'a> {
             * 1000
             + self.event.clock_info.effective_begin_of_day.nanosecond() as u64 / 1_000_000
     }
+
+    fn get_state_marking(&self) -> Option<EntryFormStateMarking> {
+        if self.is_new_entry {
+            Some(EntryFormStateMarking::NewEntry)
+        } else {
+            match self
+                .current_entry_state
+                .expect("For non-new entries, `current_entry_state` should always be known.")
+            {
+                EntryState::Published => None,
+                EntryState::Draft => Some(EntryFormStateMarking::Draft),
+                EntryState::SubmittedForReview => Some(EntryFormStateMarking::SubmittedForReview),
+                EntryState::PreliminaryPublished => {
+                    Some(EntryFormStateMarking::PreliminaryPublished)
+                }
+                EntryState::Retracted => Some(EntryFormStateMarking::Retracted),
+                EntryState::Rejected => Some(EntryFormStateMarking::Rejected),
+            }
+        }
+    }
 }
 
 mod filters {
@@ -701,4 +721,51 @@ fn unordered_equality<T: Eq + Ord>(a: &[T], b: &[T]) -> bool {
     let b: BTreeSet<_> = b.iter().collect();
 
     a == b
+}
+
+/// Selects the color of the left-side border of the entry form and the "flag" at the top of it for
+/// indicting the current state of the edited entry.
+enum EntryFormStateMarking {
+    NewEntry,
+    Draft,
+    PreliminaryPublished,
+    SubmittedForReview,
+    Rejected,
+    Retracted,
+}
+
+impl EntryFormStateMarking {
+    fn container_class(&self) -> &'static str {
+        match self {
+            EntryFormStateMarking::NewEntry => "state-mark-success",
+            EntryFormStateMarking::Draft => "state-mark-secondary",
+            EntryFormStateMarking::PreliminaryPublished
+            | EntryFormStateMarking::SubmittedForReview => "state-mark-warning",
+            EntryFormStateMarking::Rejected | EntryFormStateMarking::Retracted => {
+                "state-mark-danger"
+            }
+        }
+    }
+
+    fn text(&self) -> &'static str {
+        match self {
+            EntryFormStateMarking::NewEntry => "Neuer Eintrag",
+            EntryFormStateMarking::Draft => "Entwurf",
+            EntryFormStateMarking::PreliminaryPublished => "Zu prüfen (schon öffentlich)",
+            EntryFormStateMarking::SubmittedForReview => "Zu prüfen",
+            EntryFormStateMarking::Rejected => "Bei Prüfung abgelehnt",
+            EntryFormStateMarking::Retracted => "Zurückgezogen",
+        }
+    }
+
+    fn icon(&self) -> &'static str {
+        match self {
+            EntryFormStateMarking::NewEntry => "plus",
+            EntryFormStateMarking::Draft => "pencil-square",
+            EntryFormStateMarking::PreliminaryPublished
+            | EntryFormStateMarking::SubmittedForReview => "clipboard2-check",
+            EntryFormStateMarking::Rejected => "slash-circle",
+            EntryFormStateMarking::Retracted => "eye-slash",
+        }
+    }
 }

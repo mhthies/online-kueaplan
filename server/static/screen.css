@@ -132,3 +132,40 @@ table.kuealist .aside-container .table-aside-buttons {
     background-color: var(--bs-info-bg-subtle);
     border-color: var(--bs-info-border-subtle);
 }
+
+/* entry state flag for edit entry form */
+.state-mark-container {
+    border-left: solid 3px;
+    padding-left: .75rem;
+    margin-left: -.75rem;
+}
+.state-mark-flag {
+    padding: .25rem 1.5rem .25rem .75rem;
+    margin-left: -.75rem;
+    width: fit-content;
+    clip-path: polygon(0% 0%, 0% 100%, calc(100% - .5rem) 100%, 100% 0%);
+}
+.state-mark-secondary {
+    border-left-color: var(--bs-secondary-border-subtle);
+}
+.state-mark-secondary>.state-mark-flag {
+    background-color: var(--bs-secondary-border-subtle);
+}
+.state-mark-success {
+    border-left-color: var(--bs-success-border-subtle);
+}
+.state-mark-success>.state-mark-flag {
+    background-color: var(--bs-success-border-subtle);
+}
+.state-mark-warning {
+    border-left-color: var(--bs-warning-border-subtle);
+}
+.state-mark-warning>.state-mark-flag {
+    background-color: var(--bs-warning-border-subtle);
+}
+.state-mark-danger {
+    border-left-color: var(--bs-danger-border-subtle);
+}
+.state-mark-danger>.state-mark-flag {
+    background-color: var(--bs-danger-border-subtle);
+}

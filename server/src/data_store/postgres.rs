@@ -1751,7 +1751,17 @@ fn check_submission_policies(
     let is_official_category = schema::categories::table
         .filter(schema::categories::id.eq(entry.entry.category))
         .select(schema::categories::is_official)
-        .first::<bool>(connection)?;
+        .first::<bool>(connection)
+        .map_err(|e| -> StoreError {
+            match e {
+                // when the category does not exist, we should return the same error as the database
+                // constraint violation would create later
+                diesel::result::Error::NotFound => StoreError::InvalidInputData(
+                    "Entry's category must reference an existing category.".to_owned(),
+                ),
+                e => e.into(),
+            }
+        })?;
     if is_official_category {
         return Err(StoreError::PolicyViolation(
             DataPolicy::EntrySubmissionNoOfficialCategory,

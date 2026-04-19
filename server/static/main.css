@@ -161,3 +161,20 @@ td.shrink-to-content {
 .kuealist .comment.orga-comment {
     font-size: 0.765em;
 }
+
+/* nav-assistant-tabs: tab navigation for assistants like the submit_entry_form */
+.nav-assistant-tabs {
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
+    --bs-nav-underline-gap: 0.5rem;
+    --bs-nav-link-padding-x: 0.5rem;
+    --bs-nav-link-padding-y: 0.25rem;
+    row-gap: 0;
+}
+.nav-assistant-tabs .nav-item:not(:first-child)::before {
+    float: left;
+    color: var(--bs-body-color);
+    content: "⟩";
+    padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x) var(--bs-nav-link-padding-y) 0;
+}

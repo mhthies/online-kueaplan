@@ -15,15 +15,18 @@
             <form method="post" action="{{post_url()?}}" id="submit_entry_form"
                   {% if has_unsaved_changes %}data-consider-changed="true"{% endif %}>
 
-                <ul class="nav nav-underline mb-3 align-self-center" id="form-tabs" role="tablist">
+                <ul class="nav nav-underline mb-3 nav-assistant-tabs" id="form-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="base-tab" data-bs-toggle="tab" data-bs-target="#base-tab-pane" type="button" role="tab" aria-controls="base-tab-pane" aria-selected="true">1. Start</button>
+                        <button class="nav-link active" id="base-tab" data-bs-toggle="tab" data-bs-target="#base-tab-pane" type="button" role="tab" aria-controls="base-tab-pane" aria-selected="true">Start</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="time-place-tab" data-bs-toggle="tab" data-bs-target="#time-place-tab-pane" type="button" role="tab" aria-controls="time-place-tab-pane" aria-selected="false">2. Zeit & Ort</button>
+                        <button class="nav-link" id="time-place-tab" data-bs-toggle="tab" data-bs-target="#time-place-tab-pane" type="button" role="tab" aria-controls="time-place-tab-pane" aria-selected="false">Zeit & Ort</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="false">3. Beschreibung</button>
+                        <button class="nav-link" id="description-tab" data-bs-toggle="tab" data-bs-target="#description-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="false">Beschreibung</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-tab-pane" type="button" role="tab" aria-controls="description-tab-pane" aria-selected="false">Prüfung</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
@@ -133,7 +136,16 @@
                                     .info("Unterstützt Markdown")
                             }}
                         </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary float-end" data-tab-button="next">Weiter <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" data-tab-button="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Zurück</button>
+                            <a href="{{ abort_url()? }}" class="btn btn-outline-secondary allow-exit-with-changes">
+                                <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen
+                            </a>
+                        </div>
+                    </div>
 
+                    <div class="tab-pane fade" id="review-tab-pane" role="tabpanel" aria-labelledby="review-tab" tabindex="0">
                         {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")? }}
                         <div>
                             <div class="d-inline-block float-end">

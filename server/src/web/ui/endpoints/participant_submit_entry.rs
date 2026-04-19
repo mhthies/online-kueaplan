@@ -129,8 +129,7 @@ async fn participant_submit_entry(
         entry_begin = entry.entry.begin;
         web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
-            // TODO detect and ignore double addition
-            todo!("Submit entry with new data_store method");
+            store.submit_entry_by_participant(&auth_clone, entry)?;
             Ok(())
         })
         .await?
@@ -155,6 +154,8 @@ async fn participant_submit_entry(
         entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
     };
+
+    // TODO handle policy errors
 
     util::create_edit_form_response(
         result,

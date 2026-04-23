@@ -1,6 +1,6 @@
 use crate::data_store::models::{EntryState, FullNewEntry, NewEntry};
 use crate::web::api::{APIError, SessionTokenHeader};
-use crate::web::util::EntryFilterAsQuery;
+use crate::web::util::{format_submitter_comment, EntryFilterAsQuery};
 use crate::web::AppState;
 use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder};
 use serde::de::{Error, Unexpected};
@@ -188,14 +188,7 @@ async fn submit_entry(
             } else {
                 EntryState::SubmittedForReview
             },
-            orga_comment: if submission.submitter_comment.is_empty() {
-                "".to_string()
-            } else {
-                format!(
-                    "Kommentar der einreichenden Person:\n> {}",
-                    submission.submitter_comment.replace("\n", "\n> ")
-                )
-            },
+            orga_comment: format_submitter_comment(&submission.submitter_comment),
         },
         room_ids: submission.room,
         previous_dates: vec![],

@@ -2,9 +2,7 @@ use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{
     Category, EntryState, EventClockInfo, ExtendedEvent, FullNewEntry, NewEntry, Room,
 };
-use crate::data_store::{
-    DataPolicy, EntryId, EventId, KuaPlanStore, KueaPlanStoreFacade, StoreError,
-};
+use crate::data_store::{DataPolicy, EntryId, EventId, StoreError};
 use crate::web::time_calculation::{
     get_effective_date, most_reasonable_date, timestamp_from_effective_date_and_time,
 };
@@ -15,8 +13,9 @@ use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType, SelectEntry,
     SelectTemplate,
 };
-use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short};
+use crate::web::ui::util::{event_days, weekday_short};
 use crate::web::ui::{util, validation};
+use crate::web::util::format_submitter_comment;
 use crate::web::{time_calculation, AppState};
 use actix_web::web::{Form, Html, Query};
 use actix_web::{get, post, web, HttpRequest, Responder};
@@ -61,7 +60,12 @@ async fn participant_submit_entry_form(
     let category_id = categories.first().ok_or(AppError::InternalError(
         "Event does not have a single unofficial category".to_owned(),
     ))?;
-    let form_data = SubmitEntryFormData::for_new_entry(entry_id, entry_date, category_id.id);
+    let form_data = SubmitEntryFormData::for_new_entry(
+        entry_id,
+        entry_date,
+        category_id.id,
+        event.entry_submission_mode.allows_publish_before_review(),
+    );
 
     let tmpl = ParticipantSubmitEntryFormTemplate {
         base: BaseTemplateContext {
@@ -76,7 +80,6 @@ async fn participant_submit_entry_form(
         form_data: &form_data,
         rooms: &rooms,
         categories: &categories,
-        entry_id: Some(&entry_id),
         has_unsaved_changes: false,
     };
 
@@ -122,11 +125,9 @@ async fn participant_submit_entry(
         &event.clock_info,
     );
 
-    let mut entry_id = None;
     let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
-    let result: util::FormSubmitResult = if let Some((mut entry, _, _)) = entry {
+    let result: util::FormSubmitResult = if let Some(mut entry) = entry {
         let auth_clone = auth.clone();
-        entry_id = Some(entry.entry.id);
         entry.entry.event_id = event_id;
         entry_begin = entry.entry.begin;
         web::block(move || -> Result<_, StoreError> {
@@ -167,7 +168,6 @@ async fn participant_submit_entry(
         form_data: &data,
         rooms: &rooms,
         categories: &categories,
-        entry_id: entry_id.as_ref(),
         has_unsaved_changes: true,
     };
 
@@ -205,7 +205,6 @@ struct ParticipantSubmitEntryFormTemplate<'a> {
     form_data: &'a SubmitEntryFormData,
     categories: &'a Vec<Category>,
     rooms: &'a Vec<Room>,
-    entry_id: Option<&'a EntryId>,
     has_unsaved_changes: bool,
 }
 
@@ -278,8 +277,6 @@ impl<'a> ParticipantSubmitEntryFormTemplate<'a> {
 
 #[derive(Default, Deserialize, Debug)]
 struct SubmitEntryFormData {
-    /// Id of the entry, only used for creating new entries (for editing existing entries, the id is
-    /// taken from the URL and passed to [validate] as `known_entry_id` instead)
     entry_id: FormValue<Uuid>,
     title: FormValue<validation::NonEmptyString>,
     comment: FormValue<String>,
@@ -292,20 +289,23 @@ struct SubmitEntryFormData {
     duration: FormValue<validation::NiceDurationHours>,
     category: FormValue<validation::UuidFromList>,
     rooms: FormValue<validation::CommaSeparatedUuidsFromList>,
-    /// `last_updated` value of the (original) entry. Used for detecting editing conflicts.
-    /// Only used for editing existing entries; can be empty/missing when creating new entries.
-    last_updated: FormValue<validation::SimpleTimestampMicroseconds>,
-    create_previous_date: BoolFormValue,
-    previous_date_comment: FormValue<String>,
+    submitter_comment: FormValue<String>,
+    publish_before_review: BoolFormValue,
 }
 
 impl SubmitEntryFormData {
-    fn for_new_entry(entry_id: EntryId, date: chrono::NaiveDate, category_id: Uuid) -> Self {
+    fn for_new_entry(
+        entry_id: EntryId,
+        date: chrono::NaiveDate,
+        category_id: Uuid,
+        publish_before_review_allowed: bool,
+    ) -> Self {
         Self {
             entry_id: entry_id.into(),
             day: validation::IsoDate(date).into(),
             category: validation::UuidFromList(category_id).into(),
             duration: validation::NiceDurationHours(chrono::Duration::hours(1)).into(),
+            publish_before_review: publish_before_review_allowed.into(),
             ..Self::default()
         }
     }
@@ -316,11 +316,7 @@ impl SubmitEntryFormData {
         categories: &Vec<Uuid>,
         known_entry_id: Option<EntryId>,
         clock_info: &EventClockInfo,
-    ) -> Option<(
-        FullNewEntry,
-        Option<chrono::DateTime<chrono::Utc>>,
-        Option<String>,
-    )> {
+    ) -> Option<FullNewEntry> {
         let entry_id = known_entry_id.or_else(|| self.entry_id.validate());
         let title = self.title.validate();
         let comment = self.comment.validate();
@@ -333,44 +329,39 @@ impl SubmitEntryFormData {
         let day = self.day.validate();
         let time = self.begin.validate();
         let duration = self.duration.validate();
-        let previous_last_updated = self.last_updated.validate();
-        let create_previous_date = self.create_previous_date.get_value();
-        let previous_date_comment = self.previous_date_comment.validate();
+        let submitter_comment = self.submitter_comment.validate();
+        let publish_before_review = self.publish_before_review.get_value();
 
         let begin = timestamp_from_effective_date_and_time(
             day?.into_inner(),
             time?.into_inner(),
             clock_info,
         );
-        Some((
-            FullNewEntry {
-                entry: NewEntry {
-                    id: entry_id?,
-                    title: title?.into_inner(),
-                    description: description?,
-                    responsible_person: responsible_person?,
-                    is_room_reservation: false,
-                    event_id: 0,
-                    begin,
-                    end: begin + duration?.into_inner(),
-                    category: category?.into_inner(),
-                    comment: comment?,
-                    time_comment: time_comment?,
-                    room_comment: room_comment?,
-                    is_exclusive: false,
-                    is_cancelled: false,
-                    state: EntryState::SubmittedForReview, // TODO use PreliminaryPublished if allowed and user requests it
-                    orga_comment: "".to_string(),
+        Some(FullNewEntry {
+            entry: NewEntry {
+                id: entry_id?,
+                title: title?.into_inner(),
+                description: description?,
+                responsible_person: responsible_person?,
+                is_room_reservation: false,
+                event_id: 0,
+                begin,
+                end: begin + duration?.into_inner(),
+                category: category?.into_inner(),
+                comment: comment?,
+                time_comment: time_comment?,
+                room_comment: room_comment?,
+                is_exclusive: false,
+                is_cancelled: false,
+                state: if publish_before_review {
+                    EntryState::PreliminaryPublished
+                } else {
+                    EntryState::SubmittedForReview
                 },
-                room_ids: room_ids?.into_inner(),
-                previous_dates: vec![],
+                orga_comment: format_submitter_comment(&submitter_comment?),
             },
-            previous_last_updated.map(|v| v.0),
-            if create_previous_date {
-                previous_date_comment
-            } else {
-                None
-            },
-        ))
+            room_ids: room_ids?.into_inner(),
+            previous_dates: vec![],
+        })
     }
 }

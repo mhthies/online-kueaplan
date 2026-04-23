@@ -131,3 +131,19 @@ impl From<EntryFilterAsQuery> for EntryFilter {
         }
     }
 }
+
+/// Create the orga_comment from the submitter_comment of a new submitted entry
+pub fn format_submitter_comment(submitter_comment: &str) -> String {
+    if submitter_comment.is_empty() {
+        return "".to_string();
+    }
+    let submitter_comment = submitter_comment.trim();
+    if submitter_comment.contains('\n') {
+        format!(
+            "Kommentar der einreichenden Person:\n> {}",
+            submitter_comment.replace("\n", "\n> ")
+        )
+    } else {
+        format!("Kommentar der einreichenden Person: {}", submitter_comment)
+    }
+}

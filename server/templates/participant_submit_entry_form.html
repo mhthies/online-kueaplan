@@ -157,7 +157,36 @@
                         <div class="card border-info mb-3">
                             <div class="card-header border-info">Vorschau</div>
                             <div class="card-body">
-                                TODO
+                                <table class="table kuealist">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Was?</th>
+                                            <th scope="col">Wann?</th>
+                                            <th scope="col">Wo?</th>
+                                            <th scope="col">Von wem?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="entryPreviewRow">
+                                            <td class="kuea-title aside-container">
+                                                {# TODO category icon preview (inkl. name) #}
+                                                <span class="content" data-copy-from="titleInput">Wise Crowds Consulting - Orgateamfindung</span>
+                                                <div class="comment mt-1" data-copy-from="commentInput">Du kannst helfen!</div>
+                                            </td>
+                                            <td class="kuea-time">
+                                                <span class="text-nowrap" id="timePreview">21:10&nbsp;– 22:40</span>
+                                                <div class="comment" data-copy-from="time_commentInput">10 Minuten nach Aktiventreffen</div>
+                                            </td>
+                                            <td class="kuea-place">
+                                                <span id="roomPreview"></span>
+                                                <div class="comment" data-copy-from="room_commentInput"></div>
+                                            </td>
+                                            <td class="kuea-people">
+                                                <span class="d-inline d-sm-none">von</span> <span data-copy-from="responsible_personInput"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="mb-3">

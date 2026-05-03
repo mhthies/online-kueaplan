@@ -13,6 +13,7 @@ use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType, SelectEntry,
     SelectTemplate,
 };
+use crate::web::ui::sub_templates::main_list_row::styles_for_category;
 use crate::web::ui::util::{event_days, weekday_short};
 use crate::web::ui::{util, validation};
 use crate::web::util::format_submitter_comment;

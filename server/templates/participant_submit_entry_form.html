@@ -187,6 +187,15 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                                <section id="descriptionMarkdownPreview">
+                                    <h3 data-copy-from="titleInput"></h3>
+                                    <p>
+                                        <span id="timePreview2"></span><span id="roomPreview2"></span> • von <span data-copy-from="responsible_personInput"></span>
+                                    </p>
+                                    <div class="body">
+                                        <p>Du bist auf einer CdE Akademie? Glückwunsch, du erfüllst alle notwendigen Kriterien, um am Wise Crowds Consulting teilnehmen zu können! Wir werden in einer großen Runde den Vorstand und das Akademieteam beraten, wie wir den Prozess der Orgateamfindung neu gestalten und verbessern können. Dafür brauchen wir ganz viele Menschen mit noch mehr verschiedenen Denkweisen und Ideen. Kommt also zahlreich zum Aktiventreffen und bleibt danach noch ein Weilchen länger da. Wir starten 10 min nach dem Aktiventreffen.</p>
+                                    </div>
+                                </section>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -236,7 +245,8 @@
     initializeSubmitEntryForm(
         {{ effective_begin_of_day_milliseconds() }},
         rooms,
-        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }}
+        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
+        {{ base.url_for_event_endpoint("markdown_preview")?.to_string()|json|safe }}
     );
     initializeTabbedForm(document.getElementById("form-tabs"));
 </script>

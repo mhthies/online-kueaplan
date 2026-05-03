@@ -1,4 +1,9 @@
-function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurrentEntriesApiEndpoint) {
+function initializeSubmitEntryForm(
+    effectiveBeginOfDayMilliseconds,
+    rooms,
+    concurrentEntriesApiEndpoint,
+    markdownPreviewApiEndpoint
+) {
     const daySelect = document.getElementById("daySelect");
     const beginInput = document.getElementById("beginInput");
     const durationInput = document.getElementById("durationInput");
@@ -10,6 +15,8 @@ function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concu
     const roomPreview2 = document.getElementById("roomPreview2");
     const entryPreviewRow = document.getElementById("entryPreviewRow");
     const categorySelect = document.getElementById("categorySelect");
+    const descriptionInput = document.getElementById("descriptionInput");
+    const descriptionMarkdownPreview = document.getElementById("descriptionMarkdownPreview");
 
     const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
 
@@ -23,6 +30,11 @@ function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concu
         beginInput,
         durationInput,
         roomsInput
+    );
+    const markdownPreviewFetcher = new MarkdownPreviewLoader(
+        descriptionMarkdownPreview,
+        descriptionInput,
+        markdownPreviewApiEndpoint
     );
 
     daySelect.addEventListener("input", () => {
@@ -55,6 +67,9 @@ function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concu
     categorySelect.addEventListener("change", () => {
         updateCategoryPreview(entryPreviewRow, categorySelect.value);
     });
+    descriptionInput.addEventListener("input", () => {
+        markdownPreviewFetcher.scheduleFetching();
+    })
 
     const naiveBeginDate = readDateSelect(daySelect);
     const naiveBeginTime = readNaiveTimeInput(beginInput);
@@ -62,6 +77,7 @@ function initializeSubmitEntryForm(effectiveBeginOfDayMilliseconds, rooms, concu
     updateCalendarDateInfo(calendarDateInfoElement, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime);
     updateEndTimeInfoAndTimePreview(endInput, timePreview, timePreview2, effectiveBeginOfDayMilliseconds, naiveBeginDate, naiveBeginTime, durationMilliseconds);
     concurrentEntriesFetcher.doFetch();
+    markdownPreviewFetcher.doFetch();
     updateRoomPreview(roomPreview, roomPreview2, roomsMap, roomsInput.value);
     updateCategoryPreview(entryPreviewRow, categorySelect.value);
 
@@ -139,4 +155,80 @@ function updateRoomPreview(roomPreview, roomPreview2, roomsMap, selectedRoomIds)
 function updateCategoryPreview(entryPreview, selectedCategoryId) {
     entryPreview.className = "kuea-with-category";
     entryPreview.classList.add("category-" + selectedCategoryId);
+}
+
+function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {
+    const SCHEDULE_TIMEOUT_MILLISECONDS = 700;
+    const resultBody = element.getElementsByClassName("body")[0];
+
+    let timeoutId = null;
+    let abortController = null;
+
+    this.doFetch = function() {
+        if (markdownInput.value === "") {
+            element.classList.add("d-none");
+            return;
+            if (abortController !== null) {
+                abortController.abort();
+            }
+        }
+        activateSpinner();
+        getMarkdownPreviewFromApi()
+            .then((data) => {
+                if (data === undefined) {
+                    return;
+                }
+                resultBody.innerHTML = data;
+            });
+    }
+
+    async function getMarkdownPreviewFromApi() {
+        if (abortController !== null) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+        return window.fetch(apiEndpoint,
+            {
+                "signal": abortController.signal,
+                "body": markdownInput.value,
+                "method": "POST",
+            })
+            .catch((err) => {
+                if (err instanceof DOMException && err.name === "AbortError") {
+                    console.log("Running fetch has been aborted");
+                    return;
+                }
+                displayError(err.message);
+                console.error("Failed to fetch markdown preview: ", err);
+            })
+            .then(async (response) => {
+                if (!response.ok) {
+                    displayError("Server-seitiger Fehler (HTTP " + response.status + ")");
+                    console.warn("Failed to fetch markdown preview: HTTP " + response.status + ": " + await response.text());
+                    return;
+                }
+                return response.text();
+            });
+    }
+
+    function activateSpinner() {
+        element.classList.remove("d-none");
+        resultBody.innerHTML = "<span class=\"spinner-border spinner-border-sm\" aria-hidden=\"true\"></span>\n"
+            + "  <span class=\"visually-hidden\" role=\"status\">Lade...</span>";
+    }
+
+    function displayError(error) {
+        resultBody.innerHTML = "";
+        let text = document.createElement("span");
+        text.classList.add("text-danger");
+        text.innerText = error;
+        resultBody.appendChild(text);
+    }
+
+    this.scheduleFetching = function () {
+        if (!timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(this.doFetch, SCHEDULE_TIMEOUT_MILLISECONDS);
+    }
 }

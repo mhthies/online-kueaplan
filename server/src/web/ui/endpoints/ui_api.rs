@@ -7,7 +7,7 @@ use crate::web::ui::form_values::ValidateFromFormInput;
 use crate::web::ui::{util, validation};
 use crate::web::util::deserialize_comma_separated_list_of_uuids;
 use crate::web::AppState;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{get, post, web, HttpRequest, Responder};
 use serde::de::{Error, Unexpected};
 use serde::{Deserialize, Deserializer};
 use serde_json::json;
@@ -143,4 +143,27 @@ async fn review_notifications(
     Ok(web::Json(json!({
         "to_review": review_count,
     })))
+}
+
+#[post("/markdown_preview")]
+async fn markdown_preview(
+    state: web::Data<AppState>,
+    req: HttpRequest,
+    payload: String,
+) -> Result<impl Responder, AppError> {
+    let session_token = util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, 0)?;
+    if session_token.get_passphrase_ids().is_empty() {
+        return Err(AppError::PermissionDenied {
+            required_privilege: Privilege::ShowKueaPlan,
+            event_id: 0,
+            session_error: None,
+            privilege_expired: false,
+        });
+    }
+
+    Ok(web::Html::new(
+        crate::web::ui::askama_filters::markdown::default()
+            .execute(&payload, &())?
+            .0,
+    ))
 }

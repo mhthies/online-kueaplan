@@ -187,6 +187,13 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                                <section id="descriptionMarkdownPreview">
+                                    <h3 data-copy-from="titleInput"></h3>
+                                    <p>
+                                        <span id="timePreview2"></span><span id="roomPreview2"></span> • von <span data-copy-from="responsible_personInput"></span>
+                                    </p>
+                                    <div class="body"></div>
+                                </section>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -236,7 +243,8 @@
     initializeSubmitEntryForm(
         {{ effective_begin_of_day_milliseconds() }},
         rooms,
-        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }}
+        {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
+        {{ base.url_for_event_endpoint("markdown_preview")?.to_string()|json|safe }}
     );
     initializeTabbedForm(document.getElementById("form-tabs"));
 </script>

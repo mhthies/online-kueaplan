@@ -239,7 +239,8 @@
     const rooms = {{ room_entries()|json|safe }};
     new TomSelect("#roomsInput", {
         options: rooms,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
     protectChanges(document.getElementById("submit_entry_form"));
     initializeSubmitEntryForm(

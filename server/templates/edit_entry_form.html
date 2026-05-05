@@ -216,7 +216,8 @@
     const entryId = {% if let Some(entry_id) = entry_id %}{{entry_id.to_string()|json|safe}}{% else %}null{%endif%};
     new TomSelect("#roomsInput", {
         options: rooms,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
     initializeEditEntryForm(
         {{ effective_begin_of_day_milliseconds() }},

@@ -89,11 +89,13 @@
     protectChanges(document.getElementById("edit_announcement_form"));
     new TomSelect("#roomsInput", {
         options: rooms,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
     new TomSelect("#categoriesInput", {
         options: categories,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
 </script>
 {% endblock %}

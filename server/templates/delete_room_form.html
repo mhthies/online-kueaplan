@@ -102,7 +102,8 @@
 <script>
     new TomSelect("#replace_roomsInput", {
         options: {{ &other_room_entries()|json|safe }},
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
 </script>
 {% endblock %}

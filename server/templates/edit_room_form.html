@@ -12,7 +12,7 @@
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.description, "description", "Beschreibung")
                .input_type(InputType::Textarea)
-               .info("Unterstützt Markdown")
+               .info_hlml("Unterstützt <a href=\"https://commonmark.org/help/\">Markdown</a> für die Text-Formatierung."|safe)
         }}
     </div>
     {% if is_new_room %}

@@ -116,7 +116,7 @@
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.description, "description", "Ausführliche Beschreibung")
                 .input_type(InputType::Textarea)
-                .info("Unterstützt Markdown")
+                .info_hlml("Unterstützt <a href=\"https://commonmark.org/help/\">Markdown</a> für die Text-Formatierung."|safe)
         }}
     </div>
     <div class="row g-3 mb-3">

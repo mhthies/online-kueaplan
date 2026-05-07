@@ -43,7 +43,7 @@ pub struct FormFieldTemplate<'a, T: FormValueRepresentation> {
     size: InputSize,
     input_type: InputType,
     suffix_text: Option<&'a str>,
-    info: Option<&'a str>,
+    info: Option<askama::filters::MaybeSafe<&'a str>>,
     data: &'a FormValue<T>,
     css_class: &'a str,
 }
@@ -78,7 +78,12 @@ impl<'a, T: FormValueRepresentation> FormFieldTemplate<'a, T> {
     }
 
     pub fn info(mut self, info: &'a str) -> Self {
-        self.info = Some(info);
+        self.info = Some(askama::filters::MaybeSafe::NeedsEscaping(info));
+        self
+    }
+
+    pub fn info_hlml(mut self, info: askama::filters::Safe<&'a str>) -> Self {
+        self.info = Some(askama::filters::MaybeSafe::Safe(info.0));
         self
     }
 

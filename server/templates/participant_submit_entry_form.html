@@ -141,7 +141,7 @@
                         <div class="mb-3">
                             {{ FormFieldTemplate::new(form_data.description, "description", "Ausführliche Beschreibung")
                                     .input_type(InputType::Textarea)
-                                    .info("Unterstützt Markdown")
+                                    .info_hlml("Die ausführliche Beschreibung wird unterhalb des KüA-Plans angezeigt bzw. daneben ausgehängt. Du kannst <a href=\"https://commonmark.org/help/\">Markdown</a> verwenden, um den Text zu formatieren."|safe)
                             }}
                         </div>
                         <div>

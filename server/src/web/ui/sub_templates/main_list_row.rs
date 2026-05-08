@@ -2,7 +2,7 @@ use crate::data_store::models::{Category, EventClockInfo, FullEntry, FullPreviou
 use crate::data_store::{CategoryId, RoomId};
 use crate::web::time_calculation;
 use crate::web::ui::colors::CategoryColors;
-use crate::web::ui::util::url_for_entry_details;
+use crate::web::ui::util::url_for_public_entry_details;
 use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
 use askama::Template;
@@ -191,11 +191,10 @@ impl<'a> MainListRowTemplate<'a> {
         let entry = &self.row.entry.entry;
         match self.main_entry_link_mode {
             MainEntryLinkMode::None => Ok(None),
-            MainEntryLinkMode::ByDate => Some(url_for_entry_details(
+            MainEntryLinkMode::ByDate => Some(url_for_public_entry_details(
                 self.request,
                 entry.event_id,
                 &entry.id,
-                entry.state,
                 &time_calculation::get_effective_date(&entry.begin, self.clock_info),
             ))
             .transpose(),

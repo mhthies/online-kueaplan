@@ -29,11 +29,12 @@ pub fn event_days(event: &Event) -> Vec<chrono::NaiveDate> {
         .collect()
 }
 
-/// Generate a URL that takes the user directly to a specific kueaplan entry in the main list.
+/// Generate a URL that takes an orga directly to a specific kueaplan entry in the respective list.
 ///
-/// The URL for the main_list endpoint with the correct date, according to the entry's begin is
-/// used, augmented with the anchor link of the entry,
-pub fn url_for_entry_details(
+/// If the entry is published (without pending review), this is equal to
+/// [url_for_public_entry_details], otherwise, the URL to the respective page in the review area
+/// is used.
+pub fn url_for_generic_entry(
     req: &HttpRequest,
     event_id: EventId,
     entry_id: &EntryId,
@@ -53,6 +54,27 @@ pub fn url_for_entry_details(
         EntryState::Retracted => req.url_for("list_retracted_entries", [&event_id.to_string()])?,
         EntryState::Rejected => req.url_for("list_rejected_entries", [&event_id.to_string()])?,
     };
+    url.set_fragment(Some(&format!("entry-{}", entry_id)));
+    Ok(url)
+}
+
+/// Generate a URL that takes the user directly to a specific kueaplan entry in the main list.
+///
+/// The URL for the main_list endpoint with the correct date, according to the entry's begin is
+/// used, augmented with the anchor link of the entry,
+pub fn url_for_public_entry_details(
+    req: &HttpRequest,
+    event_id: EventId,
+    entry_id: &EntryId,
+    entry_begin_effective_date: &chrono::NaiveDate,
+) -> Result<url::Url, UrlGenerationError> {
+    let mut url = req.url_for(
+        "main_list",
+        [
+            &event_id.to_string(),
+            &entry_begin_effective_date.to_string(),
+        ],
+    )?;
     url.set_fragment(Some(&format!("entry-{}", entry_id)));
     Ok(url)
 }

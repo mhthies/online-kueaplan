@@ -184,11 +184,10 @@ async fn participant_submit_entry(
         "edit_entry_form",
         immediately_published,
         if immediately_published {
-            util::url_for_entry_details(
+            util::url_for_public_entry_details(
                 &req,
                 event_id,
                 &entry_id,
-                EntryState::PreliminaryPublished,
                 &get_effective_date(&entry_begin, &event.clock_info),
             )?
         } else {

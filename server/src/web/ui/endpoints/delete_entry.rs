@@ -163,7 +163,7 @@ async fn mark_entry_cancelled(
             req.add_flash_message(notification);
 
             Ok(Redirect::to(
-                util::url_for_entry_details(
+                util::url_for_generic_entry(
                     &req,
                     event_id,
                     &entry_id,
@@ -243,7 +243,7 @@ async fn retract_entry(
             req.add_flash_message(notification);
 
             Ok(Redirect::to(
-                util::url_for_entry_details(
+                util::url_for_generic_entry(
                     &req,
                     event_id,
                     &entry_id,

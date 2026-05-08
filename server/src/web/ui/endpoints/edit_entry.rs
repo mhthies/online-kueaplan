@@ -17,7 +17,7 @@ use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
     RadioButtonGroupTemplate, SelectEntry, SelectTemplate,
 };
-use crate::web::ui::util::{event_days, url_for_entry_details, weekday_short, FormSubmitResult};
+use crate::web::ui::util::{event_days, url_for_generic_entry, weekday_short, FormSubmitResult};
 use crate::web::ui::{sub_templates, util, validation};
 use crate::web::{time_calculation, AppState};
 use actix_web::web::{Form, Html, Query};
@@ -188,7 +188,7 @@ async fn edit_entry(
         )?,
         "edit_entry_form",
         false,
-        url_for_entry_details(
+        url_for_generic_entry(
             &req,
             event_id,
             &entry_id,
@@ -346,7 +346,7 @@ async fn new_entry(
         req.url_for("new_entry_form", &[event_id.to_string()])?,
         "edit_entry_form",
         true,
-        url_for_entry_details(
+        url_for_generic_entry(
             &req,
             event_id,
             &entry_id.unwrap_or_default(),
@@ -419,7 +419,7 @@ impl<'a> EditEntryFormTemplate<'a> {
                 ],
             )
         } else {
-            url_for_entry_details(
+            url_for_generic_entry(
                 self.base.request,
                 self.event.basic_data.id,
                 self.entry_id

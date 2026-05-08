@@ -59,7 +59,8 @@ function initializeTabbedForm(tablist) {
         const submitButtons = tabPane.querySelectorAll('button[type="submit"]');
         tab.addEventListener("hidden.bs.tab", (event) => {
             submitButtons.forEach((button) => {
-                button.disabled = true;
+                button.disabledViaTabPane = true;
+                evaluateSubmitButtonState(button);
             });
         });
         tab.addEventListener("show.bs.tab", (event) => {
@@ -69,7 +70,8 @@ function initializeTabbedForm(tablist) {
             }
             tab.isHistoryPop = false;
             submitButtons.forEach((button) => {
-                button.disabled = false;
+                button.disabledViaTabPane = false;
+                evaluateSubmitButtonState(button);
             });
         });
     }
@@ -112,11 +114,27 @@ function initializeTabbedForm(tablist) {
         return tab;
     }
 
-    function disableSubmitButtons(tabPane) {
+    function initializeSubmitButtons(tabPane, isActivePane) {
         const submitButtons = tabPane.querySelectorAll('button[type="submit"]');
         submitButtons.forEach((button) => {
-            button.disabled = true;
+            button.disabledViaTabPane = !isActivePane;
+            if (button.hasAttribute("data-disabled-unless-checked")) {
+                const checkbox = document.getElementById(button.getAttribute("data-disabled-unless-checked"));
+                checkbox.addEventListener("change", () => {
+                    evaluateSubmitButtonState(button);
+                })
+            }
+            evaluateSubmitButtonState(button);
         });
+    }
+
+    function evaluateSubmitButtonState(button) {
+        let disabledViaCheckbox = false;
+        if (button.hasAttribute("data-disabled-unless-checked")) {
+            const checkbox = document.getElementById(button.getAttribute("data-disabled-unless-checked"));
+            disabledViaCheckbox = !checkbox.checked;
+        }
+        button.disabled = button.disabledViaTabPane || disabledViaCheckbox;
     }
 
     function init() {
@@ -134,9 +152,7 @@ function initializeTabbedForm(tablist) {
         const activeTab = activateInitialTab();
 
         for (const [tab, tabPane] of tabs.map((e, i) => [e, tabPanes[i]])) {
-            if (tab !== activeTab) {
-                disableSubmitButtons(tabPane);
-            }
+            initializeSubmitButtons(tabPane, tab === activeTab);
         }
     }
 

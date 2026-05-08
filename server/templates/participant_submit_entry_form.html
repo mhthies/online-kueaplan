@@ -224,9 +224,30 @@
                             {% endif %}
                         </div>
 
+                        <div class="alert alert-warning d-flex flex-row mb-3">
+                            <div>
+                                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                            </div>
+                            <div class="flex-grow-1 inner-margin-fix ms-3">
+                                <p>
+                                    <strong>Achtung:</strong>
+                                    Nach dem Einreichen kannst Du den Eintrag nicht mehr selbst bearbeiten.
+                                    Weitere Änderungen können nur durch die Orgas vorgenommen werden.
+                                    Bitte prüfe die oben angezeigte Vorschau daher sorgfältig.
+                                </p>
+                                <div class="form-check text-body">
+                                    <input class="form-check-input" type="checkbox" name="confirmPreview" id="confirmPreviewCheckbox" value="true">
+                                    <label class="form-check-label" for="confirmPreviewCheckbox">
+                                        Ich habe die Vorschau geprüft und möchte den KüA-Plan-Eintrag wie angezeigt
+                                        <span class="hide-if-publish-before-review">einreichen</span><span class="d-none show-if-publish-before-review">veröffentlichen</span>.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")? }}
                         <div>
-                            <button type="submit" class="btn btn-primary mb-1 float-end">
+                            <button type="submit" class="btn btn-primary mb-1 float-end" data-disabled-unless-checked="confirmPreviewCheckbox">
                                 <i class="bi bi-send-fill" aria-hidden="true"></i>
                                 <span class="hide-if-publish-before-review">Einreichen</span>
                                 <span class="d-none show-if-publish-before-review">Veröffentlichen</span>

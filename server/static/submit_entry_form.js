@@ -194,10 +194,10 @@ function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {
     this.doFetch = function() {
         if (markdownInput.value === "") {
             element.classList.add("d-none");
-            return;
             if (abortController !== null) {
                 abortController.abort();
             }
+            return;
         }
         activateSpinner();
         getMarkdownPreviewFromApi()

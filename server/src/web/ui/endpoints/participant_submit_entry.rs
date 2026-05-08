@@ -8,18 +8,19 @@ use crate::web::time_calculation::{
 };
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
+use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{_FormValidSimpleValidate, BoolFormValue, FormValue};
 use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType, SelectEntry,
     SelectTemplate,
 };
 use crate::web::ui::sub_templates::main_list_row::styles_for_category;
-use crate::web::ui::util::{event_days, weekday_short};
+use crate::web::ui::util::{event_days, weekday_short, FormSubmitResult};
 use crate::web::ui::{util, validation};
 use crate::web::util::format_submitter_comment;
 use crate::web::{time_calculation, AppState};
-use actix_web::web::{Form, Html, Query};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::web::{Form, Html, Query, Redirect};
+use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
 use askama::Template;
 use chrono::Timelike;
 use serde::{Deserialize, Serialize};
@@ -127,10 +128,14 @@ async fn participant_submit_entry(
     );
 
     let mut entry_begin = chrono::DateTime::<chrono::Utc>::default();
+    let mut entry_id = Uuid::default();
+    let mut immediately_published = false;
     let result: util::FormSubmitResult = if let Some(mut entry) = entry {
         let auth_clone = auth.clone();
         entry.entry.event_id = event_id;
         entry_begin = entry.entry.begin;
+        entry_id = entry.entry.id;
+        immediately_published = entry.entry.state.is_published();
         web::block(move || -> Result<_, StoreError> {
             let mut store = state.store.get_facade()?;
             store.submit_entry_by_participant(&auth_clone, entry)?;
@@ -172,20 +177,29 @@ async fn participant_submit_entry(
         has_unsaved_changes: true,
     };
 
-    util::create_edit_form_response(
+    create_submit_entry_form_response(
         result,
         &tmpl,
-        "Der Eintrag",
         req.url_for("new_entry_form", &[event_id.to_string()])?,
         "edit_entry_form",
-        true,
-        req.url_for(
-            "main_list",
-            [
-                &event_id.to_string(),
-                &get_effective_date(&entry_begin, &event.clock_info).to_string(),
-            ],
-        )?,
+        immediately_published,
+        if immediately_published {
+            util::url_for_entry_details(
+                &req,
+                event_id,
+                &entry_id,
+                EntryState::PreliminaryPublished,
+                &get_effective_date(&entry_begin, &event.clock_info),
+            )?
+        } else {
+            req.url_for(
+                "main_list",
+                [
+                    &event_id.to_string(),
+                    &get_effective_date(&entry_begin, &event.clock_info).to_string(),
+                ],
+            )?
+        },
         &req,
     )
 }
@@ -364,5 +378,77 @@ impl SubmitEntryFormData {
             room_ids: room_ids?.into_inner(),
             previous_dates: vec![],
         })
+    }
+}
+
+/// An adjusted version of util::create_edit_form_response() for non-orgas
+pub fn create_submit_entry_form_response(
+    result: FormSubmitResult,
+    form_template: impl Template,
+    form_url: url::Url,
+    form_name: &'static str,
+    is_already_published: bool,
+    success_redirect: url::Url,
+    request: &HttpRequest,
+) -> Result<Either<Redirect, HttpResponse>, AppError> {
+    match result {
+        FormSubmitResult::Success => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Success,
+                message: if is_already_published {
+                    "Der Eintrag wurde erfolgreich eingereicht und veröffentlicht.".to_owned()
+                } else {
+                    "Der Eintrag wurde erfolgreich eingereicht und wird von den Orgas geprüft."
+                        .to_owned()
+                },
+                keep_open: true,
+                button: None,
+            });
+            Ok(Either::Left(
+                Redirect::to(success_redirect.to_string()).see_other(),
+            ))
+        }
+        FormSubmitResult::ValidationError => {
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: "Die eingegebenen Daten sind ungültig. Bitte markierte Felder überprüfen."
+                    .to_owned(),
+                keep_open: true,
+                button: None,
+            });
+            Ok(Either::Right(
+                HttpResponse::UnprocessableEntity().body(form_template.render()?),
+            ))
+        }
+        FormSubmitResult::PolicyViolation(violated_policy) => {
+            let policy_text =
+                match violated_policy {
+                    DataPolicy::EntrySubmissionEnabled => "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.",
+                    DataPolicy::EntrySubmissionReviewState => "Die direkte Veröffentlichung ohne Überprüfung ist nicht erlaubt.",
+                    DataPolicy::EntrySubmissionNoRoomConflict => "Der Eintrag steht im Konflikt mit anderer KüA im gleichen Raum zur gleichen Zeit. Bitte wähle eine andere Zeit oder einen anderen Raum oder sprich mit den Orgas.",
+                    DataPolicy::EntrySubmissionNoExclusiveConflict => "Der Eintrag steht in zeitlichem Konflikt mit einer exklusiven KüA im KüA-Plan. Bitte wähle eine andere Zeit oder sprich mit den Orgas.",
+                    DataPolicy::EntrySubmissionNoExclusiveProperty => "Du kannst keine exklusive KüA einreichen.",
+                    DataPolicy::EntrySubmissionNoOfficialCategory => "Du kannst keinen Eintrag in einer „offiziellen“ Kategorie einreichen."
+                };
+            request.add_flash_message(FlashMessage {
+                flash_type: FlashType::Error,
+                message: policy_text.to_owned(),
+                keep_open: true,
+                button: None,
+            });
+            Ok(Either::Right(
+                HttpResponse::UnprocessableEntity().body(form_template.render()?),
+            ))
+        }
+        _ => util::create_edit_form_response(
+            result,
+            form_template,
+            "Der Eintrag",
+            form_url,
+            form_name,
+            true,
+            success_redirect,
+            request,
+        ),
     }
 }

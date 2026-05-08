@@ -17,6 +17,7 @@ function initializeSubmitEntryForm(
     const categorySelect = document.getElementById("categorySelect");
     const descriptionInput = document.getElementById("descriptionInput");
     const descriptionMarkdownPreview = document.getElementById("descriptionMarkdownPreview");
+    const publishBeforeReviewCheckbox = document.getElementById("publish_before_reviewCheckbox");
 
     const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
 
@@ -69,7 +70,7 @@ function initializeSubmitEntryForm(
     });
     descriptionInput.addEventListener("input", () => {
         markdownPreviewFetcher.scheduleFetching();
-    })
+    });
 
     const naiveBeginDate = readDateSelect(daySelect);
     const naiveBeginTime = readNaiveTimeInput(beginInput);
@@ -80,6 +81,13 @@ function initializeSubmitEntryForm(
     markdownPreviewFetcher.doFetch();
     updateRoomPreview(roomPreview, roomPreview2, roomsMap, roomsInput.value);
     updateCategoryPreview(entryPreviewRow, categorySelect.value);
+
+    if (publishBeforeReviewCheckbox) {
+        publishBeforeReviewCheckbox.addEventListener("change", () => {
+            updatePublishBeforeReviewDependentTexts(publishBeforeReviewCheckbox.checked);
+        });
+        updatePublishBeforeReviewDependentTexts(publishBeforeReviewCheckbox.checked);
+    }
 
     document.querySelectorAll("[data-copy-from]").forEach((e) => {
         const dataSource = document.getElementById(e.getAttribute("data-copy-from"));
@@ -155,6 +163,25 @@ function updateRoomPreview(roomPreview, roomPreview2, roomsMap, selectedRoomIds)
 function updateCategoryPreview(entryPreview, selectedCategoryId) {
     entryPreview.className = "kuea-with-category";
     entryPreview.classList.add("category-" + selectedCategoryId);
+}
+
+function updatePublishBeforeReviewDependentTexts(publishBeforeReviewEnabled) {
+    Array.from(document.getElementsByClassName("hide-if-publish-before-review"))
+        .forEach((e) => {
+            if (publishBeforeReviewEnabled) {
+                e.classList.add("d-none");
+            } else {
+                e.classList.remove("d-none");
+            }
+        });
+    Array.from(document.getElementsByClassName("show-if-publish-before-review"))
+        .forEach((e) => {
+            if (publishBeforeReviewEnabled) {
+                e.classList.remove("d-none");
+            } else {
+                e.classList.add("d-none");
+            }
+        });
 }
 
 function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {

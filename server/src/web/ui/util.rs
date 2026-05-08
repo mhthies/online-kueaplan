@@ -42,7 +42,7 @@ pub fn url_for_generic_entry(
     entry_begin_effective_date: &chrono::NaiveDate,
 ) -> Result<url::Url, UrlGenerationError> {
     let mut url = match entry_state {
-        EntryState::Published | EntryState::PreliminaryPublished => req.url_for(
+        EntryState::Published => req.url_for(
             "main_list",
             [
                 &event_id.to_string(),
@@ -50,7 +50,9 @@ pub fn url_for_generic_entry(
             ],
         )?,
         EntryState::Draft => req.url_for("list_drafts", [&event_id.to_string()])?,
-        EntryState::SubmittedForReview => req.url_for("list_to_review", [&event_id.to_string()])?,
+        EntryState::SubmittedForReview | EntryState::PreliminaryPublished => {
+            req.url_for("list_to_review", [&event_id.to_string()])?
+        }
         EntryState::Retracted => req.url_for("list_retracted_entries", [&event_id.to_string()])?,
         EntryState::Rejected => req.url_for("list_rejected_entries", [&event_id.to_string()])?,
     };

@@ -17,6 +17,7 @@ pub enum InputType {
     Time,
     Color,
     Textarea,
+    SmallTextarea,
     Integer,
     DateTimeLocal,
 }

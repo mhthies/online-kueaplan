@@ -18,6 +18,8 @@ function initializeSubmitEntryForm(
     const descriptionInput = document.getElementById("descriptionInput");
     const descriptionMarkdownPreview = document.getElementById("descriptionMarkdownPreview");
     const publishBeforeReviewCheckbox = document.getElementById("publish_before_reviewCheckbox");
+    const confirmPreviewCheckbox = document.getElementById("confirmPreviewCheckbox");
+    const submitButtonTooltipWrapper = document.getElementById("submitButtonTooltipWrapper");
 
     const calendarDateInfoElement = createCalendarDateInfoElement(beginInput);
 
@@ -37,6 +39,7 @@ function initializeSubmitEntryForm(
         descriptionInput,
         markdownPreviewApiEndpoint
     );
+    const submitButtonTooltip = new bootstrap.Tooltip(submitButtonTooltipWrapper);
 
     daySelect.addEventListener("input", () => {
         const naiveBeginDate = readDateSelect(daySelect);
@@ -71,6 +74,9 @@ function initializeSubmitEntryForm(
     descriptionInput.addEventListener("input", () => {
         markdownPreviewFetcher.scheduleFetching();
     });
+    confirmPreviewCheckbox.addEventListener("change", () => {
+        updateSubmitTooltip(submitButtonTooltipWrapper, !confirmPreviewCheckbox.checked);
+    })
 
     const naiveBeginDate = readDateSelect(daySelect);
     const naiveBeginTime = readNaiveTimeInput(beginInput);
@@ -81,6 +87,7 @@ function initializeSubmitEntryForm(
     markdownPreviewFetcher.doFetch();
     updateRoomPreview(roomPreview, roomPreview2, roomsMap, roomsInput.value);
     updateCategoryPreview(entryPreviewRow, categorySelect.value);
+    updateSubmitTooltip(submitButtonTooltipWrapper, !confirmPreviewCheckbox.checked);
 
     if (publishBeforeReviewCheckbox) {
         publishBeforeReviewCheckbox.addEventListener("change", () => {
@@ -182,6 +189,17 @@ function updatePublishBeforeReviewDependentTexts(publishBeforeReviewEnabled) {
                 e.classList.add("d-none");
             }
         });
+}
+
+function updateSubmitTooltip(tooltipElement, enable) {
+    const tooltip = bootstrap.Tooltip.getInstance(tooltipElement);
+    if (enable) {
+        tooltip.enable();
+        tooltipElement.tabIndex = 0;
+    } else {
+        tooltip.disable();
+        tooltipElement.tabIndex = -1;
+    }
 }
 
 function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {

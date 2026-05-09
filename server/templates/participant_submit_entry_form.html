@@ -247,11 +247,13 @@
 
                         {{ HiddenInputTemplate::new(form_data.entry_id, "entry_id")? }}
                         <div>
-                            <button type="submit" class="btn btn-primary mb-1 float-end" data-disabled-unless-checked="confirmPreviewCheckbox">
-                                <i class="bi bi-send-fill" aria-hidden="true"></i>
-                                <span class="hide-if-publish-before-review">Einreichen</span>
-                                <span class="d-none show-if-publish-before-review">Veröffentlichen</span>
-                            </button>
+                            <div class="d-inline-block mb-1 float-end" tabindex="0" id="submitButtonTooltipWrapper" data-bs-title="Bitte setze zuerst das obige Häkchen">
+                                <button type="submit" class="btn btn-primary" data-disabled-unless-checked="confirmPreviewCheckbox">
+                                    <i class="bi bi-send-fill" aria-hidden="true"></i>
+                                    <span class="hide-if-publish-before-review">Einreichen</span>
+                                    <span class="d-none show-if-publish-before-review">Veröffentlichen</span>
+                                </button>
+                            </div>
                             <button type="button" class="btn mb-1 btn-outline-secondary" data-tab-button="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Zurück</button>
                             <a href="{{ abort_url()? }}" class="btn mb-1 btn-outline-secondary allow-exit-with-changes">
                                 <i class="bi bi-x-square" aria-hidden="true"></i> Abbrechen

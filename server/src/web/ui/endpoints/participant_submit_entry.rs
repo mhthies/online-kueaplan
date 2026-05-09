@@ -322,6 +322,7 @@ impl SubmitEntryFormData {
             category: validation::UuidFromList(category_id).into(),
             duration: validation::NiceDurationHours(chrono::Duration::hours(1)).into(),
             publish_before_review: publish_before_review_allowed.into(),
+            begin: validation::TimeOfDay(chrono::NaiveTime::from_hms_opt(20, 0, 0).unwrap()).into(),
             ..Self::default()
         }
     }

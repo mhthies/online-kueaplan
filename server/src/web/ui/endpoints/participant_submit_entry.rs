@@ -150,12 +150,14 @@ async fn participant_submit_entry(
     if let util::FormSubmitResult::PolicyViolation(violated_policy) = &result {
         match violated_policy {
             DataPolicy::EntrySubmissionNoRoomConflict => {
-                data.rooms
-                    .add_error("Konflikt mit anderer KüA im gleichen Raum.".to_owned());
+                data.rooms.add_error(
+                    "Darf keinen Ort beinhalten, der von einer parallelen KüA belegt wird."
+                        .to_owned(),
+                );
             }
             DataPolicy::EntrySubmissionNoExclusiveConflict => {
                 data.begin
-                    .add_error("Konflikt mit einer exklusiven KüA.".to_owned());
+                    .add_error("Darf nicht parallel zu einer exklusiven KüA liegen.".to_owned());
             }
             _ => {}
         }
@@ -424,7 +426,7 @@ pub fn create_submit_entry_form_response(
                 match violated_policy {
                     DataPolicy::EntrySubmissionEnabled => "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.",
                     DataPolicy::EntrySubmissionReviewState => "Die direkte Veröffentlichung ohne Überprüfung ist nicht erlaubt.",
-                    DataPolicy::EntrySubmissionNoRoomConflict => "Der Eintrag steht im Konflikt mit anderer KüA im gleichen Raum zur gleichen Zeit. Bitte wähle eine andere Zeit oder einen anderen Raum oder sprich mit den Orgas.",
+                    DataPolicy::EntrySubmissionNoRoomConflict => "Der Eintrag steht im Konflikt mit einer anderen KüA im gleichen Raum zur gleichen Zeit. Bitte wähle eine andere Zeit oder einen anderen Raum oder sprich mit den Orgas.",
                     DataPolicy::EntrySubmissionNoExclusiveConflict => "Der Eintrag steht in zeitlichem Konflikt mit einer exklusiven KüA im KüA-Plan. Bitte wähle eine andere Zeit oder sprich mit den Orgas.",
                     DataPolicy::EntrySubmissionNoExclusiveProperty => "Du kannst keine exklusive KüA einreichen.",
                     DataPolicy::EntrySubmissionNoOfficialCategory => "Du kannst keinen Eintrag in einer „offiziellen“ Kategorie einreichen."

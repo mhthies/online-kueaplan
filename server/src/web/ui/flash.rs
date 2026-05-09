@@ -111,7 +111,7 @@ impl Flashes {
     fn into_cookie(self) -> Cookie<'static> {
         let mut result = Cookie::new(
             COOKIE_NAME,
-            serde_json::to_string(&self.flashes).expect("Flashes should be serializable as JSON"),
+            json_to_ascii_string(&self.flashes).expect("Flashes should be serializable as JSON"),
         );
         result.set_path("/");
         result
@@ -171,3 +171,40 @@ pub async fn flash_middleware(
 }
 
 // Inspiration: https://docs.rs/actix-session/latest/src/actix_session/session.rs.html
+
+//Source: https://github.com/serde-rs/json/issues/907
+struct EscapeNonAscii;
+impl serde_json::ser::Formatter for EscapeNonAscii {
+    fn write_string_fragment<W: ?Sized + std::io::Write>(
+        &mut self,
+        writer: &mut W,
+        fragment: &str,
+    ) -> std::io::Result<()> {
+        for ch in fragment.chars() {
+            if ch.is_ascii() {
+                writer.write_all(ch.encode_utf8(&mut [0; 4]).as_bytes())?;
+            } else {
+                for escape in ch.encode_utf16(&mut [0; 2]) {
+                    write!(writer, "\\u{:04x}", escape)?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+fn json_to_ascii_string<T>(value: &T) -> serde_json::Result<String>
+where
+    T: ?Sized + Serialize,
+{
+    // Based on serde_json::ser::to_string() and https://github.com/serde-rs/json/issues/907
+    let formatter = EscapeNonAscii;
+    let writer = Vec::with_capacity(128);
+    let mut ser = serde_json::Serializer::with_formatter(writer, formatter);
+    value.serialize(&mut ser)?;
+    let string = unsafe {
+        // We do not emit invalid UTF-8.
+        String::from_utf8_unchecked(ser.into_inner())
+    };
+    Ok(string)
+}

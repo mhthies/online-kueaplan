@@ -218,6 +218,12 @@
         options: rooms,
         clearAfterSelect: true,
         closeAfterSelect: true,
+        render: {
+            no_results: function(data, escape){
+                const manageRoomsUrl = {{ base.url_for_event_endpoint("manage_rooms")?.to_string()|json|safe }};
+                return '<div class="no-results">Kein passender Ort gefunden. Nutze <a href="' + manageRoomsUrl + '">Orte verwalten</a>, um einen Ort anzulegen und lade dann dieses Formular neu.</div>';
+            }
+        }
     });
     initializeEditEntryForm(
         {{ effective_begin_of_day_milliseconds() }},

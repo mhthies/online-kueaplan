@@ -278,6 +278,11 @@
         options: rooms,
         clearAfterSelect: true,
         closeAfterSelect: true,
+        render: {
+            no_results: function(data,escape){
+                return '<div class="no-results">Kein passender Ort gefunden. Du kannst nur vorhande Orte auswählen.</div>';
+            }
+        }
     });
     protectChanges(document.getElementById("submit_entry_form"));
     initializeSubmitEntryForm(

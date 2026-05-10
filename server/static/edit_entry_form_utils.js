@@ -95,14 +95,6 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
             {
                 "signal": abortController.signal
             })
-            .catch((err) => {
-                if (err instanceof DOMException && err.name === "AbortError") {
-                    console.log("Running fetch has been aborted");
-                    return;
-                }
-                displayError(err.message);
-                console.error("Failed to fetch concurrent entries: ", err);
-            })
             .then(async (response) => {
                 if (response.status === 422) {
                     displayError("Ungültige Eingabedaten");
@@ -114,6 +106,14 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
                     return;
                 }
                 return response.json();
+            })
+            .catch((err) => {
+                if (err instanceof DOMException && err.name === "AbortError") {
+                    console.log("Running fetch has been aborted");
+                    return;
+                }
+                displayError(err.message);
+                console.error("Failed to fetch concurrent entries: ", err);
             });
     }
 

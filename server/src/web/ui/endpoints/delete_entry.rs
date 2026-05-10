@@ -83,13 +83,14 @@ async fn delete_entry(
         store.delete_entry(&auth, event_id, entry_id)?;
         Ok((
             entry.entry.begin,
+            entry.entry.state,
             store.get_extended_event(&auth, event_id)?,
         ))
     })
     .await?;
 
     match result {
-        Ok((entry_begin, event)) => {
+        Ok((entry_begin, entry_state, event)) => {
             let notification = FlashMessage {
                 flash_type: FlashType::Success,
                 message: "Der Eintrag wurde gelöscht.".to_string(),
@@ -97,11 +98,29 @@ async fn delete_entry(
                 button: None,
             };
             req.add_flash_message(notification);
-            Ok(Redirect::to(util::url_for_main_list(
-                &req,
-                event_id,
-                &time_calculation::get_effective_date(&entry_begin, &event.clock_info),
-            )?)
+            Ok(Redirect::to(
+                match entry_state {
+                    EntryState::Published => req.url_for(
+                        "main_list",
+                        [
+                            &event_id.to_string(),
+                            &time_calculation::get_effective_date(&entry_begin, &event.clock_info)
+                                .to_string(),
+                        ],
+                    )?,
+                    EntryState::Draft => req.url_for("list_drafts", [&event_id.to_string()])?,
+                    EntryState::SubmittedForReview | EntryState::PreliminaryPublished => {
+                        req.url_for("list_to_review", [&event_id.to_string()])?
+                    }
+                    EntryState::Retracted => {
+                        req.url_for("list_retracted_entries", [&event_id.to_string()])?
+                    }
+                    EntryState::Rejected => {
+                        req.url_for("list_rejected_entries", [&event_id.to_string()])?
+                    }
+                }
+                .to_string(),
+            )
             .see_other())
         }
         Err(e) => match e {
@@ -163,7 +182,7 @@ async fn mark_entry_cancelled(
             req.add_flash_message(notification);
 
             Ok(Redirect::to(
-                util::url_for_entry_details(
+                util::url_for_generic_entry(
                     &req,
                     event_id,
                     &entry_id,
@@ -243,7 +262,7 @@ async fn retract_entry(
             req.add_flash_message(notification);
 
             Ok(Redirect::to(
-                util::url_for_entry_details(
+                util::url_for_generic_entry(
                     &req,
                     event_id,
                     &entry_id,

@@ -312,6 +312,13 @@ impl EntrySubmissionMode {
         }
     }
 
+    pub fn allows_publish_before_review(&self) -> bool {
+        match self {
+            Self::Disabled | Self::ReviewBeforePublishing => false,
+            Self::ReviewAfterPublishing => true,
+        }
+    }
+
     /// Get the list of allowed states in which an entry can be submitted by participants, when this
     /// mode is active for an event.
     pub fn allowed_submission_states(&self) -> &[EntryState] {

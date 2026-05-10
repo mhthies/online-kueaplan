@@ -24,7 +24,7 @@
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.text, "text", "Text")
                .input_type(InputType::Textarea)
-               .info("Unterstützt Markdown")
+               .info_hlml("Unterstützt <a href=\"https://commonmark.org/help/\">Markdown</a> für die Text-Formatierung."|safe)
         }}
     </div>
     <div class="row mb-3 g-3">
@@ -89,11 +89,13 @@
     protectChanges(document.getElementById("edit_announcement_form"));
     new TomSelect("#roomsInput", {
         options: rooms,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
     new TomSelect("#categoriesInput", {
         options: categories,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
     });
 </script>
 {% endblock %}

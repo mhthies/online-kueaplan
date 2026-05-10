@@ -63,7 +63,8 @@
                     </ul>
 
                     {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries)
-                          || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}
+                          || base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea)
+                          || base.entry_submission_is_enabled() && base.has_privilege(crate::data_store::auth_token::Privilege::SubmitParticipantEntries) %}
                         <ul class="navbar-nav">
                             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ManageEntries) %}
                                 {% let add_entry_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::AddEntry) %}
@@ -83,6 +84,13 @@
                                             <i aria-hidden="true" class="bi bi-eye-slash"></i> Versteckte
                                         </a>
                                     {% endif %}
+                                </li>
+                            {% elif base.entry_submission_is_enabled() && base.has_privilege(crate::data_store::auth_token::Privilege::SubmitParticipantEntries) %}
+                                {% let add_entry_active = base.active_main_nav_button == Some(crate::web::ui::base_template::MainNavButton::AddEntry) %}
+                                <li class="nav-item">
+                                    <a href="{{ base.submit_entry_form_url()? }}" class="nav-link {% if add_entry_active %}active{% endif %}" {% if add_entry_active %}aria-current="page"{% endif %}>
+                                        <i class="bi bi-plus-circle" aria-hidden="true"></i> Eintrag einreichen
+                                    </a>
                                 </li>
                             {% endif %}
                             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowConfigArea) %}

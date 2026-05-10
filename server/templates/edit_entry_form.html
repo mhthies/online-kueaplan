@@ -116,7 +116,7 @@
     <div class="mb-3">
         {{ FormFieldTemplate::new(form_data.description, "description", "Ausführliche Beschreibung")
                 .input_type(InputType::Textarea)
-                .info("Unterstützt Markdown")
+                .info_hlml("Unterstützt <a href=\"https://commonmark.org/help/\">Markdown</a> für die Text-Formatierung."|safe)
         }}
     </div>
     <div class="row g-3 mb-3">
@@ -216,7 +216,14 @@
     const entryId = {% if let Some(entry_id) = entry_id %}{{entry_id.to_string()|json|safe}}{% else %}null{%endif%};
     new TomSelect("#roomsInput", {
         options: rooms,
-        clearAfterSelect: true
+        clearAfterSelect: true,
+        closeAfterSelect: true,
+        render: {
+            no_results: function(data, escape){
+                const manageRoomsUrl = {{ base.url_for_event_endpoint("manage_rooms")?.to_string()|json|safe }};
+                return '<div class="no-results">Kein passender Ort gefunden. Nutze <a href="' + manageRoomsUrl + '">Orte verwalten</a>, um einen Ort anzulegen und lade dann dieses Formular neu.</div>';
+            }
+        }
     });
     initializeEditEntryForm(
         {{ effective_begin_of_day_milliseconds() }},

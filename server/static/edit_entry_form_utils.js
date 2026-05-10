@@ -54,7 +54,17 @@ function formatTime(date) {
         + (date.getUTCSeconds() ? ":" + (date.getUTCSeconds()).toString().padStart(2, "0") : "");
 }
 
-function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelect, beginInput, durationInput, roomsInput) {
+function ConcurrentEntriesFetcher(
+    element,
+    rooms,
+    apiEndpoint,
+    entryId,
+    daySelect,
+    beginInput,
+    durationInput,
+    roomsInput,
+    viewForOrgas,
+) {
     const SCHEDULE_TIMEOUT_MILLISECONDS = 300;
     const overlay = element.getElementsByClassName("loader-overlay")[0];
     const spinner = element.getElementsByClassName("entries-fetcher-spinner")[0];
@@ -83,6 +93,7 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
             begin_time: beginInput.value,
             duration: durationInput.value,
             rooms: roomsInput.value,
+            include_hidden_entries: !!viewForOrgas,
         });
         if (entryId !== null) {
             queryParameters.append("current_entry_id", entryId);
@@ -149,6 +160,9 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
         if (entry.is_room_reservation) {
             row.classList.add("fst-italic");
         }
+        if (entry.is_hidden) {
+            row.classList.add("text-secondary");
+        }
         let title = document.createElement("div");
         if (entry.is_exclusive) {
             let icon = document.createElement("i");
@@ -161,6 +175,11 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
             icon.classList.add("bi", "bi-exclamation-diamond", "text-warning");
             icon.title = "Achtung: Raum-Konflikt";
             title.appendChild(icon);
+            title.appendChild(document.createTextNode(" "));
+        }
+        let stateIcon = generateResultStateIcon(entry.state);
+        if (stateIcon && entry.is_hidden) {
+            title.appendChild(stateIcon);
             title.appendChild(document.createTextNode(" "));
         }
         title.appendChild(document.createTextNode(entry.title));
@@ -182,18 +201,53 @@ function ConcurrentEntriesFetcher(element, rooms, apiEndpoint, entryId, daySelec
             }
             let roomName = roomsMap.has(room) ? roomsMap.get(room) : "???";
             let roomSpan = document.createElement("span");
-            if (isConflict) {
-                roomSpan.classList.add("text-warning", "fw-semibold");
-            }
             roomSpan.innerText = roomName;
+            if (isConflict) {
+                roomSpan.classList.add("text-warning");
+                if (!entry.is_hidden) {
+                    roomSpan.classList.add("fw-semibold");
+                }
+                let screenReaderTag = document.createElement("span");
+                screenReaderTag.innerText=" (Konflikt)";
+                screenReaderTag.classList.add("visually-hidden");
+                roomSpan.appendChild(screenReaderTag);
+            }
             roomInfo.appendChild(roomSpan);
             firstRoom = false;
         }
         row.appendChild(roomInfo);
         let timeInfo = document.createElement("small");
-        timeInfo.innerText = entry.begin + " – " + entry.end;
+        if (stateIcon && !entry.is_hidden) {
+            stateIcon.classList.add("text-secondary");
+            timeInfo.appendChild(stateIcon);
+            timeInfo.appendChild(document.createTextNode(" "));
+        }
+        timeInfo.appendChild(document.createTextNode(entry.begin + " – " + entry.end));
         row.appendChild(timeInfo);
         return row;
+    }
+
+    function generateResultStateIcon(entryState) {
+        let state_icon_class = "";
+        let state_icon_title = "";
+        switch(entryState) {
+            case "Draft":
+                state_icon_class = "bi-pencil-square";
+                state_icon_title = "Entwurf";
+                break;
+            case "PreliminaryPublished":
+            case "SubmittedForReview":
+                state_icon_class = "bi-clipboard2-check";
+                state_icon_title = viewForOrgas ? "Prüfung ausstehend" : "Prüfung durch die Orgas ausstehend";
+                break;
+            default:
+                return null;
+        }
+        let icon = document.createElement("i");
+        icon.classList.add("bi", state_icon_class);
+        icon.title = state_icon_title;
+        icon.setAttribute("aria-title", state_icon_title);
+        return icon;
     }
 
     function displayError(error) {

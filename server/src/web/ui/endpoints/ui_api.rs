@@ -1,5 +1,5 @@
 use crate::data_store::auth_token::Privilege;
-use crate::data_store::models::EventClockInfo;
+use crate::data_store::models::{EntryState, EventClockInfo};
 use crate::data_store::EntryFilter;
 use crate::web::time_calculation::timestamp_from_effective_date_and_time;
 use crate::web::ui::error::AppError;
@@ -8,9 +8,17 @@ use crate::web::ui::{util, validation};
 use crate::web::util::deserialize_comma_separated_list_of_uuids;
 use crate::web::AppState;
 use actix_web::{get, post, web, HttpRequest, Responder};
+use lazy_static::lazy_static;
 use serde::de::{Error, Unexpected};
 use serde::{Deserialize, Deserializer};
 use serde_json::json;
+
+lazy_static! {
+    static ref NON_DISMISSED_ENTRY_STATES: Vec<EntryState> = EntryState::all()
+        .filter(|s| !s.is_dismissed())
+        .copied()
+        .collect::<Vec<_>>();
+}
 
 #[get("/{event_id}/concurrent-entries")]
 async fn concurrent_entries(
@@ -20,24 +28,37 @@ async fn concurrent_entries(
     req: HttpRequest,
 ) -> Result<impl Responder, AppError> {
     let event_id = path.into_inner();
-    let session_token =
-        util::extract_session_token(&state, &req, Privilege::ShowKueaPlan, event_id)?;
     let query = query.into_inner();
+    let session_token = util::extract_session_token(
+        &state,
+        &req,
+        if query.include_hidden_entries {
+            Privilege::ManageEntries
+        } else {
+            Privilege::ShowKueaPlan
+        },
+        event_id,
+    )?;
 
     let (entries, rooms, event, query) = web::block(move || -> Result<_, AppError> {
         let mut store = state.store.get_facade()?;
         let auth = store.get_auth_token_for_session(&session_token, event_id)?;
         let event = store.get_extended_event(&auth, event_id)?;
-        Ok((
+        let entries = if query.include_hidden_entries {
+            store.get_all_entries_filtered(
+                &auth,
+                event_id,
+                query.to_filter(&event.clock_info),
+                &NON_DISMISSED_ENTRY_STATES,
+            )?
+        } else {
             store.get_published_entries_filtered(
                 &auth,
                 event_id,
                 query.to_filter(&event.clock_info),
-            )?,
-            store.get_rooms(&auth, event_id)?,
-            event,
-            query,
-        ))
+            )?
+        };
+        Ok((entries, store.get_rooms(&auth, event_id)?, event, query))
     })
     .await??;
     let rooms_by_id: crate::web::ui::sub_templates::main_list_row::RoomByIdWithOrder =
@@ -73,6 +94,8 @@ async fn concurrent_entries(
                 "has_room_conflict": has_room_conflict,
                 "is_room_reservation": e.entry.is_room_reservation,
                 "is_exclusive": e.entry.is_exclusive,
+                "is_hidden": !e.entry.state.is_published(),
+                "state": e.entry.state,
             })
         })
         .collect();
@@ -89,6 +112,8 @@ struct ConcurrentEntriesQuery {
     #[serde(deserialize_with = "deserialize_comma_separated_list_of_uuids")]
     rooms: Vec<uuid::Uuid>,
     current_entry_id: Option<uuid::Uuid>,
+    #[serde(default)]
+    include_hidden_entries: bool,
 }
 
 impl ConcurrentEntriesQuery {

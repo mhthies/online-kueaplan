@@ -32,7 +32,8 @@ function initializeSubmitEntryForm(
         daySelect,
         beginInput,
         durationInput,
-        roomsInput
+        roomsInput,
+        false
     );
     const markdownPreviewFetcher = new MarkdownPreviewLoader(
         descriptionMarkdownPreview,

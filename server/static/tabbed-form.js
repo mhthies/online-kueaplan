@@ -40,6 +40,7 @@ function initializeTabbedForm(tablist) {
                 continue;
             }
             button.addEventListener('click', (e) => {
+                tabs[tabIndex + 1].isButtonNavigation = true;
                 bootstrap.Tab.getInstance(tabs[tabIndex + 1]).show();
             });
         }
@@ -50,6 +51,7 @@ function initializeTabbedForm(tablist) {
                 continue;
             }
             button.addEventListener('click', (e) => {
+                tabs[tabIndex - 1].isButtonNavigation = true;
                 bootstrap.Tab.getInstance(tabs[tabIndex - 1]).show();
             });
         }
@@ -72,6 +74,14 @@ function initializeTabbedForm(tablist) {
             submitButtons.forEach((button) => {
                 button.disabledViaTabPane = false;
                 evaluateSubmitButtonState(button);
+            });
+        });
+        tab.addEventListener("shown.bs.tab", (event) => {
+            if (event.target.isButtonNavigation) {
+                tabPane.focus();
+            }
+            tabs.forEach((tab) => {
+                tab.isButtonNavigation = false;
             });
         });
     }

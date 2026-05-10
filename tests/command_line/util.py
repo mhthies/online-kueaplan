@@ -16,7 +16,7 @@ def wait_for_interactive_prompt(std_out_stream: IO[bytes], timeout: float = 1.0)
         if (output := std_out_stream.read()) is not None:
             buffer.extend(output)
         if b"\n>" in buffer:
-            return buffer
+            return bytes(buffer)
         if time.time() - tic > timeout:
             raise TimeoutError(f"Subprocess did not output interactive prompt within {timeout}s. Stdout: {buffer!r}")
         time.sleep(0.02)

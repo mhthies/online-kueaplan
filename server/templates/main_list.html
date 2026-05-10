@@ -44,7 +44,9 @@
     {% if entry_blocks.is_empty() %}
         <div class="alert alert-info mt-4">
             <i class="bi bi-info-circle" aria-hidden="true"></i>
-            Aktuell sind am {{ date.format("%d.%m.") }} keine KüAs geplant.
+            Aktuell sind am {{ date.format("%d.%m.") }}
+            {% if let Some(time_after) = time_after %}ab {{ time_after.format("%H:%M") }} Uhr{% endif %}
+            keine KüAs geplant.
         </div>
     {% endif %}
 

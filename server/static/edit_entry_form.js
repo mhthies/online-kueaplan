@@ -15,7 +15,8 @@ function initializeEditEntryForm(effectiveBeginOfDayMilliseconds, rooms, concurr
         daySelect,
         beginInput,
         durationInput,
-        roomsInput
+        roomsInput,
+        true
     );
 
     daySelect.addEventListener("input", () => {

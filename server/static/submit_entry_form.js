@@ -238,14 +238,6 @@ function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {
                 "body": markdownInput.value,
                 "method": "POST",
             })
-            .catch((err) => {
-                if (err instanceof DOMException && err.name === "AbortError") {
-                    console.log("Running fetch has been aborted");
-                    return;
-                }
-                displayError(err.message);
-                console.error("Failed to fetch markdown preview: ", err);
-            })
             .then(async (response) => {
                 if (!response.ok) {
                     displayError("Server-seitiger Fehler (HTTP " + response.status + ")");
@@ -253,6 +245,14 @@ function MarkdownPreviewLoader(element, markdownInput, apiEndpoint) {
                     return;
                 }
                 return response.text();
+            })
+            .catch((err) => {
+                if (err instanceof DOMException && err.name === "AbortError") {
+                    console.log("Running fetch has been aborted");
+                    return;
+                }
+                displayError(err.message);
+                console.error("Failed to fetch markdown preview: ", err);
             });
     }
 

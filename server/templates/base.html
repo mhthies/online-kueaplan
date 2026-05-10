@@ -20,14 +20,14 @@
 <body>
 {% let flashes = base.get_flashes() %}
 {% if !flashes.is_empty() %}
-<div class="toast-container top-0 end-0 p-3 position-fixed d-print-none">
+<div class="toast-container top-0 end-0 p-3 position-fixed d-print-none" aria-live="assertive">
     {% for flash in flashes.iter() %}
     <div class="toast {% match flash.flash_type %}
                       {%- when crate::web::ui::flash::FlashType::Info%}text-bg-info
                       {%- when crate::web::ui::flash::FlashType::Success%}text-bg-success
                       {%- when crate::web::ui::flash::FlashType::Warning%}text-bg-warning
                       {%- when crate::web::ui::flash::FlashType::Error%}text-bg-danger{% endmatch %}"
-         role="alert" aria-live="assertive" aria-atomic="true"
+         role="alert" aria-atomic="true"
          {%- if flash.keep_open %} data-bs-autohide="false"{% endif %}>
         <div class="toast-header">
             <strong class="me-auto">

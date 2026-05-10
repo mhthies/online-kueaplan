@@ -38,7 +38,7 @@
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="base-tab-pane" role="tabpanel" aria-labelledby="base-tab" tabindex="0">
+                    <div class="tab-pane fade show active no-outline" id="base-tab-pane" role="tabpanel" aria-labelledby="base-tab" tabindex="0">
                         <div class="mb-3">
                             {{ FormFieldTemplate::new(form_data.title, "title", "Titel der KüA").size(InputSize::Large) }}
                         </div>
@@ -57,7 +57,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="time-place-tab-pane" role="tabpanel" aria-labelledby="time-place-tab" tabindex="0">
+                    <div class="tab-pane fade no-outline" id="time-place-tab-pane" role="tabpanel" aria-labelledby="time-place-tab" tabindex="0">
                         <div class="mb-3">
                             {% if event.clock_info.effective_begin_of_day != chrono::NaiveTime::from_hms_opt(0,0,0).unwrap() %}
                                 {{ SelectTemplate::new(form_data.day, "day", &day_entries(), "Tag")
@@ -132,7 +132,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="description-tab-pane" role="tabpanel" aria-labelledby="description-tab" tabindex="0">
+                    <div class="tab-pane fade no-outline" id="description-tab-pane" role="tabpanel" aria-labelledby="description-tab" tabindex="0">
                         <div class="mb-3">
                             {{ FormFieldTemplate::new(form_data.comment, "comment", "Kommentar / Kurze Beschreibung")
                             .size(InputSize::Small)
@@ -153,7 +153,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="preview-tab-pane" role="tabpanel" aria-labelledby="preview-tab" tabindex="0">
+                    <div class="tab-pane fade no-outline" id="preview-tab-pane" role="tabpanel" aria-labelledby="preview-tab" tabindex="0">
                         <div class="card border-info mb-3">
                             <div class="card-header border-info">Vorschau</div>
                             <div class="card-body">

@@ -5,21 +5,25 @@ import uuid
 
 import requests
 
+DEFAULT_SERVER_URL = "https://kueaplan.de"
+
 
 def main():
+    server_url = input(f"Server [{DEFAULT_SERVER_URL}]: ") or DEFAULT_SERVER_URL
     event_id = int(input("Event-ID: "))
     passphrase = input("Orga-Passphrase: ")
+    base_url = f"{server_url}/api/v1"
 
     rooms = GENERAL_ROOMS + [f"{yard} {room}" for yard in YARDS for room in YARD_ROOMS]
 
-    r = requests.post(f"{BASE_URL}/events/{event_id}/auth", json={"passphrase": passphrase})
+    r = requests.post(f"{base_url}/events/{event_id}/auth", json={"passphrase": passphrase})
     r.raise_for_status()
     auth_token = r.json()["sessionToken"]
 
     for room in rooms:
         room_id = uuidv7()
         requests.put(
-            f"{BASE_URL}/events/{event_id}/rooms/{room_id}",
+            f"{base_url}/events/{event_id}/rooms/{room_id}",
             headers={
                 "X-SESSION-TOKEN": auth_token,
             },
@@ -30,8 +34,6 @@ def main():
             },
         ).raise_for_status()
 
-
-BASE_URL = "https://kueaplan.de/api/v1"
 
 GENERAL_ROOMS = [
     "Pelikanhalle",

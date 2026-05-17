@@ -13,7 +13,8 @@
                 {"name": "Mittags", "endTime": "18:00:00"},
                 {"name": "Abends", "endTime": null}
             ]
-        }
+        },
+        "entrySubmissionMode": "disabled"
     },
     "entries": [
         {

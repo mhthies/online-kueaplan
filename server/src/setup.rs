@@ -37,6 +37,11 @@ pub fn get_admin_email_from_env() -> Result<String, SetupError> {
     env::var("ADMIN_EMAIL").map_err(|e| SetupError::from_env_error(e, "ADMIN_EMAIL"))
 }
 
+pub fn get_allow_api_cors_from_env() -> bool {
+    env::var("API_CORS_ALLOW_ANY_ORIGIN")
+        .is_ok_and(|v| ["1", "on", "true", "yes"].contains(&v.trim().to_lowercase().as_str()))
+}
+
 #[derive(Debug)]
 pub enum SetupError {
     EnvVariableMissing {

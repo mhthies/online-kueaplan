@@ -78,16 +78,16 @@ The kueaplan_server is configured through environment variables.
 Alternatively, the environment variables can be defined in a `.env` file, localed in the server's working directory.
 
 The following environment variables are available.
-**All of them are mandatory.**
 
-| envrionment variable | example                                               | description                                                                                  |
-|----------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| DATABASE_URL         | postgresql://username:password@localhost/databasename |                                                                                              |
-| SECRET               |                                                       | true-random secret string, only known to the sever, which is used for symmetric cryptography |
-| LISTEN_PORT          | 9000                                                  | HTTP listening port                                                                          |
-| LISTEN_ADDRESS       | ::1                                                   | HTTP listen address. Use `::` for listening on all IPv4 and IPv6 interfaces.                 |
-| ADMIN_NAME           | Anton Administrator                                   | displayed name of the admin of this instance (for error messages, etc.)                      |
-| ADMIN_EMAIL          | mail@example.com                                      | displayed email address of the admin of this instance (for error messages, etc.)             |
+| envrionment variable       | example                                               | description                                                                                                              |
+|----------------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| DATABASE_URL               | postgresql://username:password@localhost/databasename | (mandatory!)                                                                                                             |
+| SECRET                     |                                                       | (mandatory!) true-random secret string, only known to the sever, which is used for symmetric cryptography                |
+| LISTEN_PORT                | 9000                                                  | (mandatory!) HTTP listening port                                                                                         |
+| LISTEN_ADDRESS             | ::1                                                   | (mandatory!) HTTP listen address. Use `::` for listening on all IPv4 and IPv6 interfaces.                                |
+| ADMIN_NAME                 | Anton Administrator                                   | (mandatory!) displayed name of the admin of this instance (for error messages, etc.)                                     |
+| ADMIN_EMAIL                | mail@example.com                                      | (mandatory!) displayed email address of the admin of this instance (for error messages, etc.)                            |
+| API_CORS_ALLOW_ANY_ORIGIN  | true                                                  | enable Cross-Origin Ressource Sharing for the REST API from any origin domain (value must be 'true', '1', 'yes' or 'on') |
 
 To start the server, run
 ```bash
@@ -214,6 +214,24 @@ maxretry = 15
 bantime = 3600
 findtime = 3600
 ```
+
+
+### Cross-Origin Ressource Sharing (CORS) for the REST API
+
+Usually the Same-Origin Policy (SOP), enforced by web browsers, restricts access to web resources at different domains than the current site's origin via JavaScript.
+This prevents external web-browser-based tools, served on other domains or as local files, from accessing the KüA-Plan's REST API.
+
+And in the case of the REST API, the cross-origin request usually doesn't impose a security issue:
+The REST API does not session authentication via session cookies, auth header, IP address or other information implicitly provided by a user's browser/computer.
+Instead, the custom authentication header must be explicitly provided with every API request.
+So, a malicious website cannot access any more information from the API via JavaScript in an authenticated user's web browser than the attacker could access by directly connecting to the API server.
+Thus, we can safely allow CORS on the REST API from every origin site.
+
+This reasoning is only valid for public instances of the kueaplan_server without additional access control.
+When the online KüA-Plan is only served in an internal network or VPN, or additional session-based authentication is implemented, these additional security measures could be circumvented via a cross-origin request by a malicious site.
+We leave it up to the site admin to determine whether this might be an issue.
+
+Thus, CORS for the REST API is not enabled by default, but must be explicitly enabled by setting the `API_CORS_ALLOW_ANY_ORIGIN` environment variable to `true` (or `1` or `yes` or `on`).
 
 ## License
 

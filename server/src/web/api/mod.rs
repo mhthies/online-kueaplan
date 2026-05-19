@@ -13,6 +13,7 @@ mod endpoints_room;
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
+use crate::setup::get_allow_api_cors_from_env;
 use actix_web::error::JsonPayloadError;
 use actix_web::{
     error::ResponseError,
@@ -22,16 +23,23 @@ use actix_web::{
 use serde_json::json;
 
 pub fn configure_app(cfg: &mut web::ServiceConfig) {
-    // Enable Cross-Origin Resource Sharing from any Origin for REST API.
-    // This is secure as the API does not allow access to private resources without the explicit
-    // authentication information in every request.
-    let api_cors = actix_cors::Cors::default()
-        .allow_any_origin()
-        .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-        .allowed_header(<SessionTokenHeader as actix_web::http::header::Header>::name())
-        .allowed_header(actix_web::http::header::CONTENT_TYPE)
-        .max_age(3600);
-    cfg.service(get_api_service().wrap(api_cors));
+    let api = get_api_service();
+
+    if get_allow_api_cors_from_env() {
+        // Enable Cross-Origin Resource Sharing from any Origin for REST API.
+        // This is secure as the API does not allow access to private resources without the explicit
+        // authentication information in every request.
+        let cors = actix_cors::Cors::default()
+            .allow_any_origin()
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+            .allowed_header(<SessionTokenHeader as actix_web::http::header::Header>::name())
+            .allowed_header(actix_web::http::header::CONTENT_TYPE)
+            .max_age(3600);
+
+        cfg.service(api.wrap(cors));
+    } else {
+        cfg.service(api);
+    }
 }
 
 fn get_api_service() -> actix_web::Scope {

@@ -47,6 +47,22 @@
         </div>
         <div class="col-sm-6">
             {{ SelectTemplate::new(form_data.entry_submission_mode, "entry_submission_mode", &Self::entry_submission_mode_entries(), "KüA-Einreichungen durch Teilnehmende") }}
+            <div class="card border-info mt-3">
+                <div class="card-body d-flex flex-row">
+                    <div><i class="bi bi-info-circle" aria-hidden="true"></i></div>
+                    <div class="flex-grow-1 inner-margin-fix ms-2">
+                        <p>
+                            Wenn die KüA-Einreichungen durch Teilnehmende erlaubt sind, wir das entsprechende Formular für Teilnehmende freigeschaltet.
+                            Teilnehmende können nur KüAs einreichen, die
+                        </p>
+                        <ul>
+                            <li>nicht parallel zu einer <em>exklusiven</em> KüA liegen <u>und</u></li>
+                            <li>nicht im gleichen Raum und zur gleichen Zeit wie eine andere (öffentlich sichtbare) KüA liegen <u>und</u></li>
+                            <li>nicht einer <em>offiziellen</em> Kategorie zugeordnet sind.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="mb-3 card {% if form_data.default_time_schedule.has_errors() %}border-invalid{% endif %}">

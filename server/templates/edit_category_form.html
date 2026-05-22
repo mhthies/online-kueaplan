@@ -22,7 +22,7 @@
     </div>
     <div class="mb-3">
         {{ CheckboxTemplate::new(form_data.is_official, "is_official", "ist offiziell")
-               .info("KüAs aus dieser Kategorie werden fett dargestellt.") }}
+               .info("KüAs aus dieser Kategorie werden fett dargestellt und können bei der Einreichung von KüAs durch Teilnehmende nicht ausgewählt werden.") }}
     </div>
     {% if is_new_category %}
         {{ HiddenInputTemplate::new(form_data.category_id, "category_id")? }}

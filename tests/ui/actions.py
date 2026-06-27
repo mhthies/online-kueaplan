@@ -157,3 +157,22 @@ def check_success_toast(page: Page) -> None:
     success_alert = page.get_by_role("alert").filter(has_text="Erfolg")
     expect(success_alert).to_be_visible()
     success_alert.get_by_role("button", name="Close").click()
+
+
+def enable_entry_submission(page: Page, allow_publish_before_review: bool) -> None:
+    """Helper action to enable entry submission by participant on the event settings page.
+
+    :param page: A Playwright browser page which is already logged in as an admin of the event and located at some page
+        of the event.
+    :param allow_publish_before_review: If True, entry submission with review *after* publishing is enabled, if False,
+        only entry submission with review *before* publishing is enabled.
+    """
+    page.get_by_role("link", name="Konfiguration").click()
+    page.get_by_role("link", name="Veranstaltungs-Metadaten").click()
+    page.get_by_role("combobox", name="KüA-Einreichungen durch Teilnehmende").select_option(
+        label="Erlaubt, mit nachträglichem Review"
+        if allow_publish_before_review
+        else "Erlaubt, mit Review vor Veröffentlichung"
+    )
+    page.get_by_role("button", name="Speichern").click()
+    check_success_toast(page)

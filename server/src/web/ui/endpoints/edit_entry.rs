@@ -126,22 +126,21 @@ async fn edit_entry(
             entry.entry.event_id = event_id;
             entry_begin = entry.entry.begin;
             entry_state = entry.entry.state;
-            if let Some(previous_date_comment) = create_previous_date {
-                if entry.entry.begin != old_entry.entry.begin
+            if let Some(previous_date_comment) = create_previous_date
+                && (entry.entry.begin != old_entry.entry.begin
                     || entry.entry.end != old_entry.entry.end
-                    || !unordered_equality(&entry.room_ids, &old_entry.room_ids)
-                {
-                    entry.previous_dates.push(FullPreviousDate {
-                        previous_date: PreviousDate {
-                            id: Uuid::now_v7(),
-                            entry_id,
-                            comment: previous_date_comment,
-                            begin: old_entry.entry.begin,
-                            end: old_entry.entry.end,
-                        },
-                        room_ids: old_entry.room_ids.clone(),
-                    });
-                }
+                    || !unordered_equality(&entry.room_ids, &old_entry.room_ids))
+            {
+                entry.previous_dates.push(FullPreviousDate {
+                    previous_date: PreviousDate {
+                        id: Uuid::now_v7(),
+                        entry_id,
+                        comment: previous_date_comment,
+                        begin: old_entry.entry.begin,
+                        end: old_entry.entry.end,
+                    },
+                    room_ids: old_entry.room_ids.clone(),
+                });
             }
             let auth_clone = auth.clone();
             web::block(move || -> Result<_, StoreError> {

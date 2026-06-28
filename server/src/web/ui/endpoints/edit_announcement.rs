@@ -377,14 +377,13 @@ impl AnnouncementFormData {
 
         let begin_date = begin_date?;
         let end_date = end_date?;
-        if let Some(ref begin_date) = begin_date.0 {
-            if let Some(ref end_date) = end_date.0 {
-                if end_date.0 < begin_date.0 {
-                    self.end_date
-                        .add_error("Darf nicht vor dem Start-Datum liegen.".to_owned());
-                    return None;
-                }
-            }
+        if let Some(ref begin_date) = begin_date.0
+            && let Some(ref end_date) = end_date.0
+            && end_date.0 < begin_date.0
+        {
+            self.end_date
+                .add_error("Darf nicht vor dem Start-Datum liegen.".to_owned());
+            return None;
         }
         let rooms = rooms?.0;
         let categories = categories?.0;

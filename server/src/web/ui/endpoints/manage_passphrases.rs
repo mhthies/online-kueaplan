@@ -47,7 +47,7 @@ async fn manage_passphrases(
                 .iter_mut()
                 .find(|(parent_passphrase, _)| parent_passphrase.id == parent_passphrase_id)
             {
-                Some((_, ref mut parent_passphrase_children)) => {
+                Some((_, parent_passphrase_children)) => {
                     parent_passphrase_children.push(passphrase);
                 }
                 None => {

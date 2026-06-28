@@ -17,11 +17,11 @@ use crate::web::ui::sub_templates::form_inputs::{
     CheckboxTemplate, FormFieldTemplate, HiddenInputTemplate, InputSize, InputType,
     RadioButtonGroupTemplate, SelectEntry, SelectTemplate,
 };
-use crate::web::ui::util::{event_days, url_for_generic_entry, weekday_short, FormSubmitResult};
+use crate::web::ui::util::{FormSubmitResult, event_days, url_for_generic_entry, weekday_short};
 use crate::web::ui::{sub_templates, util, validation};
-use crate::web::{time_calculation, AppState};
+use crate::web::{AppState, time_calculation};
 use actix_web::web::{Form, Html, Query};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 use chrono::Timelike;
 use serde::{Deserialize, Serialize};

@@ -1,7 +1,7 @@
 use crate::data_store::models::NewCategory;
-use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
-use actix_web::{delete, get, put, web, HttpResponse, Responder};
+use crate::web::api::{APIError, SessionTokenHeader};
+use actix_web::{HttpResponse, Responder, delete, get, put, web};
 use serde::Deserialize;
 use uuid::Uuid;
 

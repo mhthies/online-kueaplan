@@ -1,6 +1,6 @@
 use crate::data_store::auth_token::AccessRole;
 use crate::data_store::{EntryId, EnumMemberNotExistingError, EventId, PassphraseId};
-use chrono::{naive::NaiveDate, DateTime, Utc};
+use chrono::{DateTime, Utc, naive::NaiveDate};
 use diesel::associations::BelongsTo;
 use diesel::deserialize::FromSql;
 use diesel::prelude::*;

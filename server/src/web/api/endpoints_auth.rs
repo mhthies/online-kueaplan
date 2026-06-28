@@ -1,8 +1,8 @@
 use crate::auth_session::SessionToken;
 use crate::data_store::StoreError;
-use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
-use actix_web::{get, post, web, Responder};
+use crate::web::api::{APIError, SessionTokenHeader};
+use actix_web::{Responder, get, post, web};
 use kueaplan_api_types::{
     AllEventsAuthorizationInfo, Authorization, AuthorizationInfo, AuthorizationRole,
 };

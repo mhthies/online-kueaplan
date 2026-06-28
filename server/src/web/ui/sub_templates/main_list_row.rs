@@ -3,8 +3,8 @@ use crate::data_store::{CategoryId, RoomId};
 use crate::web::time_calculation;
 use crate::web::ui::colors::CategoryColors;
 use crate::web::ui::util::url_for_public_entry_details;
-use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
+use actix_web::error::UrlGenerationError;
 use askama::Template;
 use std::collections::BTreeMap;
 

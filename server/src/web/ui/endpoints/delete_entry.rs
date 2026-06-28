@@ -1,6 +1,7 @@
+use crate::data_store::EntryId;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, EntryPatch, EntryState, ExtendedEvent, FullEntry};
-use crate::data_store::EntryId;
+use crate::web::AppState;
 use crate::web::time_calculation;
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
@@ -10,12 +11,11 @@ use crate::web::ui::sub_templates::edit_entry_helpers::{
     EditEntryNavbar, EditEntryNavbarActiveLink,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
+    MainListRow, MainListRowTemplate, RoomByIdWithOrder, styles_for_category,
 };
 use crate::web::ui::util;
-use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 
 #[get("/{event_id}/entry/{entry_id}/delete")]

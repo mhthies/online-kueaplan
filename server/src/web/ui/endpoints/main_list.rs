@@ -3,6 +3,7 @@ use crate::data_store::models::{
     Category, Event, EventClockInfo, ExtendedEvent, FullAnnouncement, FullEntry,
 };
 use crate::data_store::{AnnouncementFilter, EntryFilter};
+use crate::web::AppState;
 use crate::web::time_calculation::{
     current_effective_date, timestamp_from_effective_date_and_time,
 };
@@ -11,13 +12,12 @@ use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_helpers::EntryDescriptionTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
+    MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder, styles_for_category,
 };
 use crate::web::ui::util;
 use crate::web::ui::util::mark_first_row_of_next_calendar_date;
-use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 use askama::Template;
 use chrono::TimeZone;
 use serde::{Deserialize, Serialize};

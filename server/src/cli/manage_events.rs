@@ -137,7 +137,10 @@ pub fn delete_event(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {
     let auth_key = CliAuthTokenKey::new();
     let auth_token = AuthToken::create_for_cli(event.id, &auth_key);
 
-    println!("The event '{}' (id={}) will be deleted with all its associated data (entries, categories, rooms, announcements).", event.title, event.id);
+    println!(
+        "The event '{}' (id={}) will be deleted with all its associated data (entries, categories, rooms, announcements).",
+        event.title, event.id
+    );
     println!("Are you sure to irreversibly delete the event and all its data?");
     query_user_and_check::<String, _, _>("To confirm deletion, enter the event's title", |input| {
         if *input == event.title {

@@ -1,10 +1,10 @@
 use crate::cli::util::{query_user, query_user_bool};
 use crate::cli::{CliAuthTokenKey, EventIdOrSlug};
 use crate::cli_error::CliError;
+use crate::data_store::KuaPlanStore;
 use crate::data_store::auth_token::{AccessRole, AuthToken};
 use crate::data_store::models::{Event, NewPassphrase, Passphrase, PassphrasePatch};
-use crate::data_store::KuaPlanStore;
-use crate::data_store::{get_store_from_env, PassphraseId};
+use crate::data_store::{PassphraseId, get_store_from_env};
 use std::str::FromStr;
 
 pub fn print_passphrase_list(event_id_or_slug: EventIdOrSlug) -> Result<(), CliError> {

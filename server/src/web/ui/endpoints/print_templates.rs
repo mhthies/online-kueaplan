@@ -1,17 +1,17 @@
+use crate::data_store::EventId;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{ExtendedEvent, Passphrase};
-use crate::data_store::EventId;
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
-use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, mime, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{HttpRequest, HttpResponse, Responder, get, mime, web};
 use askama::Template;
-use qrcode::render::svg;
 use qrcode::QrCode;
+use qrcode::render::svg;
 
 #[get("/{event_id}/config/print_template_link")]
 pub async fn print_link_and_passphrase(

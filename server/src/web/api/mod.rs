@@ -11,14 +11,15 @@ mod endpoints_previous_date;
 mod endpoints_room;
 
 use crate::auth_session::SessionToken;
-use crate::data_store::auth_token::Privilege;
 use crate::data_store::StoreError;
+use crate::data_store::auth_token::Privilege;
 use crate::setup::get_allow_api_cors_from_env;
 use actix_web::error::JsonPayloadError;
 use actix_web::{
+    HttpResponse,
     error::ResponseError,
-    http::{header::ContentType, StatusCode},
-    web, HttpResponse,
+    http::{StatusCode, header::ContentType},
+    web,
 };
 use serde_json::json;
 

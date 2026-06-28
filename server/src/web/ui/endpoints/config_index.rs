@@ -1,13 +1,13 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::ExtendedEvent;
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
-use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 use askama::Template;
 
 #[get("/{event_id}/config")]

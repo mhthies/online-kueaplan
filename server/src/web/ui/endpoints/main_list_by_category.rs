@@ -1,19 +1,19 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{Category, ExtendedEvent, FullAnnouncement, FullEntry};
 use crate::data_store::{AnnouncementFilter, CategoryId, EntryFilter, EventId};
+use crate::web::AppState;
 use crate::web::time_calculation::current_effective_date;
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::sub_templates::main_list_helpers::EntryDescriptionTemplate;
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
+    MainEntryLinkMode, MainListRow, MainListRowTemplate, RoomByIdWithOrder, styles_for_category,
 };
 use crate::web::ui::util;
 use crate::web::ui::util::mark_first_row_of_next_calendar_date_per_effective_date;
-use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 use askama::Template;
 
 #[get("/{event_id}/categories/{category_id}")]

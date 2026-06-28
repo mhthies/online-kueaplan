@@ -1,9 +1,9 @@
 use crate::auth_session::SessionError;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::{EventId, StoreError};
+use actix_web::ResponseError;
 use actix_web::error::UrlGenerationError;
 use actix_web::http::StatusCode;
-use actix_web::ResponseError;
 use std::fmt::{Display, Formatter};
 
 /// Semantic error type for ui endpoint functions

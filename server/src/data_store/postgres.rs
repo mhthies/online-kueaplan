@@ -1,7 +1,7 @@
 use super::{
-    models, schema, AnnouncementFilter, AnnouncementId, CategoryId, DataPolicy, EntryFilter,
-    EntryId, EventFilter, EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, PreviousDateId,
-    RoomId, StoreError,
+    AnnouncementFilter, AnnouncementId, CategoryId, DataPolicy, EntryFilter, EntryId, EventFilter,
+    EventId, KuaPlanStore, KueaPlanStoreFacade, PassphraseId, PreviousDateId, RoomId, StoreError,
+    models, schema,
 };
 use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, AuthToken, GlobalAuthToken, Privilege};
@@ -1964,18 +1964,34 @@ fn obfuscate_passphrase(value: &str) -> String {
 /// may be the case when we don't expect this constraint to be violated by a user interaction.
 pub fn description_for_postgres_constraint(constraint_name: &str) -> Option<&'static str> {
     match constraint_name {
-        "announcement_categories_category_id_fkey" => Some("Announcement's categories must reference existing categories."),
-        "announcement_rooms_room_id_fkey" => Some("Announcement's rooms must reference existing rooms."),
-        "announcements_date_range" => Some("Announcement's begin_date must be earlier or equal to end_date."),
+        "announcement_categories_category_id_fkey" => {
+            Some("Announcement's categories must reference existing categories.")
+        }
+        "announcement_rooms_room_id_fkey" => {
+            Some("Announcement's rooms must reference existing rooms.")
+        }
+        "announcements_date_range" => {
+            Some("Announcement's begin_date must be earlier or equal to end_date.")
+        }
         "entries_category_fkey" => Some("Entry's category must reference an existing category."),
         "entries_time_range" => Some("Entry's begin must be earlier or equal to end."),
         "entry_rooms_room_id_fkey" => Some("Entry's rooms must reference existing rooms."),
-        "event_passphrases_derivable_from_passphrase_fkey" => Some("Passphrase's derivable_from_passphrase must be null or reference an existing passphrase."),
-        "events_preceding_event_id_fkey" => Some("Event's preceding_event_id must be null or reference an existing event."),
-        "events_subsequent_event_id_fkey" => Some("Event's subsequent_event_id must be null or reference an existing event."),
+        "event_passphrases_derivable_from_passphrase_fkey" => Some(
+            "Passphrase's derivable_from_passphrase must be null or reference an existing passphrase.",
+        ),
+        "events_preceding_event_id_fkey" => {
+            Some("Event's preceding_event_id must be null or reference an existing event.")
+        }
+        "events_subsequent_event_id_fkey" => {
+            Some("Event's subsequent_event_id must be null or reference an existing event.")
+        }
         "events_date_range" => Some("Event's begin_date must be earlier or equal to end_date."),
-        "previous_date_rooms_room_id_fkey" => Some("PreviousDate's rooms must reference existing rooms."),
-        "previous_dates_time_range" => Some("PreviousDate's begin must be earlier or equal to end."),
+        "previous_date_rooms_room_id_fkey" => {
+            Some("PreviousDate's rooms must reference existing rooms.")
+        }
+        "previous_dates_time_range" => {
+            Some("PreviousDate's begin must be earlier or equal to end.")
+        }
         _ => None,
     }
 }

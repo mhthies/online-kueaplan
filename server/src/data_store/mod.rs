@@ -69,7 +69,7 @@ pub trait KueaPlanStoreFacade {
     ) -> Result<(), StoreError>;
 
     fn delete_event(&mut self, auth_token: &AuthToken, event_id: EventId)
-        -> Result<(), StoreError>;
+    -> Result<(), StoreError>;
 
     fn import_event_with_contents(
         &mut self,

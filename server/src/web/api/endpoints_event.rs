@@ -1,7 +1,7 @@
 use crate::data_store::EventFilter;
-use crate::web::api::APIError;
 use crate::web::AppState;
-use actix_web::{get, web, Responder};
+use crate::web::api::APIError;
+use actix_web::{Responder, get, web};
 use serde::{Deserialize, Serialize};
 
 #[get("/events")]

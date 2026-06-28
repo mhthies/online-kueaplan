@@ -3,6 +3,7 @@ use crate::data_store::models::{
     AnnouncementType, Category, Event, FullAnnouncement, FullNewAnnouncement, NewAnnouncement, Room,
 };
 use crate::data_store::{AnnouncementId, CategoryId, EventId, RoomId, StoreError};
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -17,9 +18,8 @@ use crate::web::ui::sub_templates::form_inputs::{
 };
 use crate::web::ui::util::{announcement_type_name, event_days};
 use crate::web::ui::{util, validation};
-use crate::web::AppState;
 use actix_web::web::{Form, Html};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 use serde::Deserialize;
 use std::borrow::Cow;

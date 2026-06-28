@@ -1,8 +1,8 @@
 use crate::data_store::models::NewPassphrase;
 use crate::data_store::{EventId, PassphraseId};
-use crate::web::api::{APIError, SessionTokenHeader};
 use crate::web::AppState;
-use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
+use crate::web::api::{APIError, SessionTokenHeader};
+use actix_web::{HttpResponse, Responder, delete, get, patch, post, web};
 
 #[get("/events/{event_id}/passphrases")]
 async fn list_passphrases(

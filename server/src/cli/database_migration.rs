@@ -5,9 +5,9 @@
 //! implementation.
 use crate::cli_error::CliError;
 use crate::setup::get_database_url_from_env;
-use diesel::migration::Migration;
 use diesel::Connection;
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel::migration::Migration;
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgresql");
 

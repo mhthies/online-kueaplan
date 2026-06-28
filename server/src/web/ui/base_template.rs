@@ -1,11 +1,11 @@
 use crate::data_store::auth_token::{AuthToken, Privilege};
 use crate::data_store::models::{Event, ExtendedEvent};
 use crate::web::ui;
+use crate::web::ui::Resources;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::FlashesInterface;
-use crate::web::ui::Resources;
-use actix_web::error::UrlGenerationError;
 use actix_web::HttpRequest;
+use actix_web::error::UrlGenerationError;
 use std::fmt::Write;
 
 #[derive(Debug)]

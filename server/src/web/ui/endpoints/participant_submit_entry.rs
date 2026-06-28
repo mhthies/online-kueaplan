@@ -15,12 +15,12 @@ use crate::web::ui::sub_templates::form_inputs::{
     SelectTemplate,
 };
 use crate::web::ui::sub_templates::main_list_row::styles_for_category;
-use crate::web::ui::util::{event_days, weekday_short, FormSubmitResult};
+use crate::web::ui::util::{FormSubmitResult, event_days, weekday_short};
 use crate::web::ui::{util, validation};
 use crate::web::util::format_submitter_comment;
-use crate::web::{time_calculation, AppState};
+use crate::web::{AppState, time_calculation};
 use actix_web::web::{Form, Html, Query, Redirect};
-use actix_web::{get, post, web, Either, HttpRequest, HttpResponse, Responder};
+use actix_web::{Either, HttpRequest, HttpResponse, Responder, get, post, web};
 use askama::Template;
 use chrono::Timelike;
 use serde::{Deserialize, Serialize};
@@ -423,15 +423,26 @@ pub fn create_submit_entry_form_response(
             ))
         }
         FormSubmitResult::PolicyViolation(violated_policy) => {
-            let policy_text =
-                match violated_policy {
-                    DataPolicy::EntrySubmissionEnabled => "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.",
-                    DataPolicy::EntrySubmissionReviewState => "Die direkte Veröffentlichung ohne Überprüfung ist nicht erlaubt.",
-                    DataPolicy::EntrySubmissionNoRoomConflict => "Der Eintrag steht im Konflikt mit einer anderen KüA im gleichen Raum zur gleichen Zeit. Bitte wähle eine andere Zeit oder einen anderen Raum oder sprich mit den Orgas.",
-                    DataPolicy::EntrySubmissionNoExclusiveConflict => "Der Eintrag steht in zeitlichem Konflikt mit einer exklusiven KüA im KüA-Plan. Bitte wähle eine andere Zeit oder sprich mit den Orgas.",
-                    DataPolicy::EntrySubmissionNoExclusiveProperty => "Du kannst keine exklusive KüA einreichen.",
-                    DataPolicy::EntrySubmissionNoOfficialCategory => "Du kannst keinen Eintrag in einer „offiziellen“ Kategorie einreichen."
-                };
+            let policy_text = match violated_policy {
+                DataPolicy::EntrySubmissionEnabled => {
+                    "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt."
+                }
+                DataPolicy::EntrySubmissionReviewState => {
+                    "Die direkte Veröffentlichung ohne Überprüfung ist nicht erlaubt."
+                }
+                DataPolicy::EntrySubmissionNoRoomConflict => {
+                    "Der Eintrag steht im Konflikt mit einer anderen KüA im gleichen Raum zur gleichen Zeit. Bitte wähle eine andere Zeit oder einen anderen Raum oder sprich mit den Orgas."
+                }
+                DataPolicy::EntrySubmissionNoExclusiveConflict => {
+                    "Der Eintrag steht in zeitlichem Konflikt mit einer exklusiven KüA im KüA-Plan. Bitte wähle eine andere Zeit oder sprich mit den Orgas."
+                }
+                DataPolicy::EntrySubmissionNoExclusiveProperty => {
+                    "Du kannst keine exklusive KüA einreichen."
+                }
+                DataPolicy::EntrySubmissionNoOfficialCategory => {
+                    "Du kannst keinen Eintrag in einer „offiziellen“ Kategorie einreichen."
+                }
+            };
             request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Error,
                 message: policy_text.to_owned(),

@@ -1,8 +1,8 @@
-use crate::web::ui::error::AppError;
 use crate::web::AppState;
+use crate::web::ui::error::AppError;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 
 #[get("/")]
 async fn index(request: HttpRequest) -> Result<impl Responder, UrlGenerationError> {

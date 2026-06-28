@@ -5,15 +5,15 @@
 //! of an error. In contrast to rendering the error page in our [actix_web::ResponseError]
 //! implementation, this allows us to access the HTTP Request, e.g. for generating URLs to static
 //! files and other pages.
-use crate::data_store::auth_token::Privilege;
 use crate::data_store::EventId;
+use crate::data_store::auth_token::Privilege;
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
 use crate::web::{AdminInfo, AppState};
 use actix_web::body::EitherBody;
 use actix_web::http::header::CONTENT_TYPE;
 use actix_web::web::Html;
-use actix_web::{web, FromRequest, HttpRequest, HttpResponse, Responder, ResponseError};
+use actix_web::{FromRequest, HttpRequest, HttpResponse, Responder, ResponseError, web};
 use askama::Template;
 
 /// An actix-web middleware for generating nice error pages

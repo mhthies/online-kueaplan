@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::data_store::models::{Passphrase, PassphrasePatch};
 use crate::data_store::{EventId, StoreError};
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -8,9 +9,8 @@ use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::util;
 use crate::web::ui::util::{format_access_role, format_passphrase};
-use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 
 #[get("/{event_id}/config/passphrases/{passphrase_id}/delete")]

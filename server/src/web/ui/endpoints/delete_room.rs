@@ -1,6 +1,7 @@
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{ExtendedEvent, FullEntry, Room};
 use crate::data_store::{EntryFilter, EventId, RoomId};
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -9,9 +10,8 @@ use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{_FormValidSimpleValidate, FormValue};
 use crate::web::ui::sub_templates::form_inputs::{FormFieldTemplate, SelectEntry};
 use crate::web::ui::{util, validation};
-use crate::web::AppState;
 use actix_web::web::{Form, Html, Redirect};
-use actix_web::{get, post, web, Either, HttpRequest, Responder};
+use actix_web::{Either, HttpRequest, Responder, get, post, web};
 use askama::Template;
 use serde::Deserialize;
 use std::borrow::Cow;

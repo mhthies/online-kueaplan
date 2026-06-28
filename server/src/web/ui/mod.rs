@@ -1,7 +1,7 @@
 use actix_web::http::header::{CacheControl, CacheDirective};
 use actix_web::middleware::from_fn;
 use actix_web::web::PathConfig;
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, get, web};
 use error::AppError;
 use error_page::error_page_middleware;
 use flash::flash_middleware;

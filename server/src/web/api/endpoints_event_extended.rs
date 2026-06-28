@@ -1,8 +1,8 @@
-use crate::data_store::models::ExtendedEvent;
 use crate::data_store::EventId;
-use crate::web::api::{APIError, SessionTokenHeader};
+use crate::data_store::models::ExtendedEvent;
 use crate::web::AppState;
-use actix_web::{get, put, web, HttpResponse, Responder};
+use crate::web::api::{APIError, SessionTokenHeader};
+use actix_web::{HttpResponse, Responder, get, put, web};
 
 #[get("/events/{event_id}/extended")]
 async fn get_extended_event_info(

@@ -54,7 +54,11 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                                 .realip_remote_addr()
                                 .unwrap_or("unknown"),
                             required_privilege,
-                            if *privilege_expired { ". Privilege has expired." } else { "" }
+                            if *privilege_expired {
+                                ". Privilege has expired."
+                            } else {
+                                ""
+                            }
                         );
                     }
                 }
@@ -93,7 +97,11 @@ pub async fn error_logging_middleware<B: actix_web::body::MessageBody>(
                             .realip_remote_addr()
                             .unwrap_or("unknown"),
                         required_privilege,
-                        if *privilege_expired { "privilege has expired" } else { "" },
+                        if *privilege_expired {
+                            "privilege has expired"
+                        } else {
+                            ""
+                        },
                     );
                 }
                 APIError::NoSessionToken => {

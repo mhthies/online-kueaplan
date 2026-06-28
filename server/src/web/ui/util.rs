@@ -2,13 +2,13 @@ use crate::auth_session::SessionToken;
 use crate::data_store::auth_token::{AccessRole, Privilege};
 use crate::data_store::models::{AnnouncementType, EntryState, Event, EventClockInfo, FullEntry};
 use crate::data_store::{DataPolicy, EntryId, EventId, StoreError};
+use crate::web::AppState;
 use crate::web::time_calculation::get_effective_date;
 use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashMessageActionButton, FlashType, FlashesInterface};
 use crate::web::ui::form_values::{_FormValidSimpleValidate, FormValue};
 use crate::web::ui::sub_templates::main_list_row::MainListRow;
 use crate::web::ui::validation;
-use crate::web::AppState;
 use actix_web::error::UrlGenerationError;
 use actix_web::web::Redirect;
 use actix_web::{Either, HttpRequest, HttpResponse};
@@ -283,15 +283,26 @@ pub fn create_edit_form_response(
             ))
         }
         FormSubmitResult::PolicyViolation(violated_policy) => {
-            let policy_text =
-                match violated_policy {
-                    DataPolicy::EntrySubmissionEnabled => "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.",
-                    DataPolicy::EntrySubmissionReviewState => "Der geforderte Veröffentlichungs-Status ist für eingereichte Beiträge nicht erlaubt.",
-                    DataPolicy::EntrySubmissionNoRoomConflict => "Konflikt mit anderer KüA im gleichen Raum.",
-                    DataPolicy::EntrySubmissionNoExclusiveConflict => "Konflikt mit einer exklusiven KüA.",
-                    DataPolicy::EntrySubmissionNoExclusiveProperty => "Exklusive KüAs können hier nicht angelegt werden.",
-                    DataPolicy::EntrySubmissionNoOfficialCategory => "Die KüA darf nicht zu einer \"offiziellen\" Kategorie gehören."
-                };
+            let policy_text = match violated_policy {
+                DataPolicy::EntrySubmissionEnabled => {
+                    "Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt."
+                }
+                DataPolicy::EntrySubmissionReviewState => {
+                    "Der geforderte Veröffentlichungs-Status ist für eingereichte Beiträge nicht erlaubt."
+                }
+                DataPolicy::EntrySubmissionNoRoomConflict => {
+                    "Konflikt mit anderer KüA im gleichen Raum."
+                }
+                DataPolicy::EntrySubmissionNoExclusiveConflict => {
+                    "Konflikt mit einer exklusiven KüA."
+                }
+                DataPolicy::EntrySubmissionNoExclusiveProperty => {
+                    "Exklusive KüAs können hier nicht angelegt werden."
+                }
+                DataPolicy::EntrySubmissionNoOfficialCategory => {
+                    "Die KüA darf nicht zu einer \"offiziellen\" Kategorie gehören."
+                }
+            };
             request.add_flash_message(FlashMessage {
                 flash_type: FlashType::Error,
                 message: format!("Die eingebenen Daten verletzen eine Regel: {}", policy_text),

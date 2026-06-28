@@ -1,8 +1,8 @@
+use crate::web::AppState;
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext};
 use crate::web::ui::error::AppError;
-use crate::web::AppState;
 use actix_web::web::Html;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 use askama::Template;
 
 #[get("/about")]

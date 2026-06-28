@@ -1,10 +1,10 @@
-use crate::data_store::auth_token::Privilege;
 use crate::data_store::EventId;
+use crate::data_store::auth_token::Privilege;
 use crate::web::ui::error::AppError;
 use crate::web::ui::util;
-use crate::web::{time_calculation, AppState};
+use crate::web::{AppState, time_calculation};
 use actix_web::web::Redirect;
-use actix_web::{get, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, web};
 
 #[get("/{event_id}")]
 async fn event_index(

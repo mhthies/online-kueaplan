@@ -1,6 +1,7 @@
+use crate::data_store::AnnouncementId;
 use crate::data_store::auth_token::Privilege;
 use crate::data_store::models::{AnnouncementPatch, Event, FullAnnouncement};
-use crate::data_store::AnnouncementId;
+use crate::web::AppState;
 use crate::web::ui::base_template::{
     AnyEventData, BaseConfigTemplateContext, BaseTemplateContext, ConfigNavButton, MainNavButton,
 };
@@ -8,9 +9,8 @@ use crate::web::ui::error::AppError;
 use crate::web::ui::flash::{FlashMessage, FlashType, FlashesInterface};
 use crate::web::ui::sub_templates::announcement::AnnouncementTemplate;
 use crate::web::ui::util;
-use crate::web::AppState;
 use actix_web::web::{Html, Redirect};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 
 #[get("/{event_id}/config/announcements/{announcement_id}/delete")]

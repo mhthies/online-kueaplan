@@ -3,6 +3,7 @@ use crate::data_store::models::{
     Category, EventClockInfo, ExtendedEvent, FullEntry, FullPreviousDate, PreviousDate, Room,
 };
 use crate::data_store::{EntryId, EventId, StoreError};
+use crate::web::AppState;
 use crate::web::time_calculation::{get_effective_date, timestamp_from_effective_date_and_time};
 use crate::web::ui::base_template::{AnyEventData, BaseTemplateContext, MainNavButton};
 use crate::web::ui::error::AppError;
@@ -14,13 +15,12 @@ use crate::web::ui::sub_templates::form_inputs::{
     FormFieldTemplate, HiddenInputTemplate, InputType, SelectEntry, SelectTemplate,
 };
 use crate::web::ui::sub_templates::main_list_row::{
-    styles_for_category, MainListRow, MainListRowTemplate, RoomByIdWithOrder,
+    MainListRow, MainListRowTemplate, RoomByIdWithOrder, styles_for_category,
 };
 use crate::web::ui::util::{event_days, weekday_short};
 use crate::web::ui::{util, validation};
-use crate::web::AppState;
 use actix_web::web::{Form, Html};
-use actix_web::{get, post, web, HttpRequest, Responder};
+use actix_web::{HttpRequest, Responder, get, post, web};
 use askama::Template;
 use serde::Deserialize;
 use std::borrow::Cow;

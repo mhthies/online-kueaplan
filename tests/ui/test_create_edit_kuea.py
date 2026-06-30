@@ -39,7 +39,7 @@ def test_create_entry(page: Page, reset_database: None) -> None:
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(
         """Wir bauen Drachen und lassen sie steigen.
 
-        Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
+Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
         """
     )
     page.get_by_role("button", name="Erstellen").click()

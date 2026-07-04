@@ -103,7 +103,7 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> N
     calendar_date_indicator = begin_input.locator("..").locator("#calendarDateInfo")
     expect(calendar_date_indicator).to_be_visible()
     expect(calendar_date_indicator).to_have_text("Kalendertag: 04.01.")
-    expect(calendar_date_indicator).to_have_css("color", "rgb(13, 202, 240)")
+    assert helpers.is_text_colored(calendar_date_indicator)
 
     date_input.select_option("04.01. (Sa)")
     expect(calendar_date_indicator).to_be_visible()

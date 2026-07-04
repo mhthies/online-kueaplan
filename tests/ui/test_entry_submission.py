@@ -40,6 +40,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     )
     user_page.get_by_role("button", name="Weiter").click()
 
+    user_page.get_by_role("textbox", name="Hinweise für die Orgas").fill("Wir brauchen wirklich die Pelikanhalle!")
     expect(user_page.get_by_role("document")).to_contain_text(
         "Nach dem Einreichen wird der Eintrag zunächst den Orgas zur Überprüfung angezeigt. Erst mit deren Bestätigung "
         "wird der Eintrag im KüA-Plan veröffentlicht."
@@ -60,7 +61,11 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     review_area_button.click()
     expect(orga_page).to_have_title(re.compile("Zu prüfende Einträge"))
     row = helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht")
+    expect(row).to_contain_text("Wir brauchen wirklich die Pelikanhalle!")
     row.get_by_role("link", name="Eintrag bearbeiten").click()
+    expect(orga_page.get_by_role("textbox", name="Orga-interner Kommentar")).to_contain_text(
+        "Wir brauchen wirklich die Pelikanhalle!"
+    )
     orga_page.get_by_role("radio", name="Veröffentlichen").check(force=True)
     orga_page.get_by_role("button", name="Speichern").click()
     actions.check_success_toast(orga_page)
@@ -77,6 +82,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     expect(row.get_by_role("cell").nth(0)).to_contain_text("wir lassen Drachen steigen")
     expect(row.get_by_role("cell").nth(1)).to_contain_text("13:00 – 14:30")
     expect(row.get_by_role("cell").nth(3)).to_contain_text("Max Mustermann")
+    expect(user_page.get_by_role("document")).not_to_contain_text("Wir brauchen wirklich die Pelikanhalle!")
 
 
 def test_submit_entry_form_with_all_fields_and_preview(browser: Browser, page: Page, reset_database: None) -> None:
@@ -245,6 +251,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     user_page.get_by_role("button", name="Weiter").click()
 
     # Direct publishing should be the default option
+    user_page.get_by_role("textbox", name="Hinweise für die Orgas").fill("Wir brauchen wirklich die Pelikanhalle!")
     expect(user_page.get_by_role("checkbox", name="Direkt veröffentlichen")).to_be_checked()
     user_page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
     user_page.get_by_role("button", name="Veröffentlichen").click()
@@ -261,6 +268,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     expect(row.get_by_role("cell").nth(0)).to_contain_text("wir lassen Drachen steigen")
     expect(row.get_by_role("cell").nth(1)).to_contain_text("13:00 – 14:30")
     expect(row.get_by_role("cell").nth(3)).to_contain_text("Max Mustermann")
+    expect(user_page.get_by_role("document")).not_to_contain_text("Wir brauchen wirklich die Pelikanhalle!")
 
     orga_page.reload()
     review_area_button = orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen")
@@ -268,7 +276,11 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     review_area_button.click()
     expect(orga_page).to_have_title(re.compile("Zu prüfende Einträge"))
     row = helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht")
+    expect(row).to_contain_text("Wir brauchen wirklich die Pelikanhalle!")
     row.get_by_role("link", name="Eintrag bearbeiten").click()
+    expect(orga_page.get_by_role("textbox", name="Orga-interner Kommentar")).to_contain_text(
+        "Wir brauchen wirklich die Pelikanhalle!"
+    )
     orga_page.get_by_role("radio", name="Bestätigen").check(force=True)
     orga_page.get_by_role("button", name="Speichern").click()
     actions.check_success_toast(orga_page)

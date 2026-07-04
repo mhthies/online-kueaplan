@@ -160,7 +160,54 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     assert helpers.is_text_bold(page.get_by_text("5€"))
 
 
-# TODO test tab navigation + next/prev buttons + browser back/forwar in entry submission form
+def test_submit_entry_form_tab_navigation(browser: Browser, page: Page, reset_database: None) -> None:
+    orga_context = browser.new_context()
+    orga_page = orga_context.new_page()
+    actions.login(orga_page, 1, "admin")
+    actions.enable_entry_submission(orga_page, True)
+
+    actions.login(page, 1, "user")
+    page.get_by_role("link", name="Eintrag einreichen").click()
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+
+    title_input = page.get_by_role("textbox", name="Titel der KüA")
+    day_input = page.get_by_role("combobox", name="Tag")
+    description_input = page.get_by_role("textbox", name="Ausführliche Beschreibung")
+    orga_comment_input = page.get_by_role("textbox", name="Hinweise für die Orgas")
+
+    expect(title_input).to_be_visible()
+    expect(day_input).not_to_be_visible()
+
+    page.get_by_role("tab", name="Zeit & Ort").click()
+    expect(day_input).to_be_visible()
+
+    page.go_back()
+    expect(title_input).to_be_visible()
+
+    page.get_by_role("button", name="Weiter").click()
+    page.get_by_role("button", name="Weiter").click()
+    expect(description_input).to_be_visible()
+
+    page.go_back()
+    expect(day_input).to_be_visible()
+
+    page.go_forward()
+    expect(description_input).to_be_visible()
+
+    page.reload()
+    expect(description_input).to_be_visible()
+
+    page.get_by_role("button", name="Zurück").click()
+    expect(day_input).to_be_visible()
+
+    page.get_by_role("tab", name="Vorschau").click()
+    expect(orga_comment_input).to_be_visible()
+
+    page.go_back()
+    expect(day_input).to_be_visible()
+
+    page.go_forward()
+    expect(orga_comment_input).to_be_visible()
 
 
 def test_submit_entry_workflow_with_review_after_publishing(browser: Browser, reset_database: None) -> None:

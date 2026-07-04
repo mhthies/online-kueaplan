@@ -268,6 +268,9 @@ def test_submit_entry_parallel_entries(page: Page, browser: Browser, reset_datab
     )
     actions.add_entry(orga_page, data.ENTRY_BEGRUESSUNGSPLENUM)  # from 20:00
     actions.add_entry(orga_page, data.ENTRY_PLENUMSVORBEREITUNG)  # 19:30 – 20:00
+    actions.add_entry(
+        orga_page, dataclasses.replace(data.ENTRY_LOREM_IPSUM, day=datetime.date(2025, 1, 1)), as_draft=True
+    )  # from 14:00
 
     actions.login(page, 1, "user")
     page.get_by_role("link", name="Eintrag einreichen").click()
@@ -283,6 +286,10 @@ def test_submit_entry_parallel_entries(page: Page, browser: Browser, reset_datab
 
     begin_input.fill("08:00")
     duration_input.fill("1:00")
+    expect(parallel_entries_overlays).not_to_be_visible()
+    expect(parallel_entries_box).to_contain_text("Keine parallelen Einträge")
+    # Parallel to Lorem Ipsum entry, which is not public yet
+    begin_input.fill("14:00")
     expect(parallel_entries_overlays).not_to_be_visible()
     expect(parallel_entries_box).to_contain_text("Keine parallelen Einträge")
 

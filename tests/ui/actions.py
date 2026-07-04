@@ -35,7 +35,7 @@ class Entry:
     description: str = ""
 
 
-def add_entry(page: Page, entry: Entry) -> None:
+def add_entry(page: Page, entry: Entry, as_draft: bool = False) -> None:
     page.get_by_role("link", name="Neuer Eintrag").click()
     page.get_by_role("textbox", name="Titel").fill(entry.title)
     page.get_by_role("textbox", name="Kommentar / Kurze Beschreibung").fill(entry.comment)
@@ -57,6 +57,8 @@ def add_entry(page: Page, entry: Entry) -> None:
         page.get_by_role("option", name=room, exact=True).click()
     page.get_by_role("textbox", name="Kommentar zum Ort").fill(entry.room_comment)
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(entry.description)
+    if as_draft:
+        page.locator('label:has-text("Als Entwurf speichern")').click()
     page.get_by_role("button", name="Erstellen").click()
     check_success_toast(page)
 

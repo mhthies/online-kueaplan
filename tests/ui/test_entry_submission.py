@@ -68,7 +68,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     expect(orga_page.get_by_role("textbox", name="Orga-interner Kommentar")).to_contain_text(
         "Wir brauchen wirklich die Pelikanhalle!"
     )
-    orga_page.get_by_role("radio", name="Veröffentlichen").check(force=True)
+    orga_page.locator('label:has-text("Veröffentlichen")').click()
     orga_page.get_by_role("button", name="Speichern").click()
     actions.check_success_toast(orga_page)
     expect(review_area_button).not_to_contain_text("1")
@@ -388,7 +388,7 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     expect(orga_page.get_by_role("textbox", name="Orga-interner Kommentar")).to_contain_text(
         "Wir brauchen wirklich die Pelikanhalle!"
     )
-    orga_page.get_by_role("radio", name="Bestätigen").check(force=True)
+    orga_page.locator('label:has-text("Bestätigen")').click()
     orga_page.get_by_role("button", name="Speichern").click()
     actions.check_success_toast(orga_page)
     expect(review_area_button).not_to_contain_text("1")

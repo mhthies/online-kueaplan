@@ -397,6 +397,93 @@ Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werd
     expect(orga_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
 
 
-# TODO test that "official" categories are not selectable
+def test_submit_entry_not_for_official_category(page: Page, browser: Browser, reset_database: None) -> None:
+    orga_context = browser.new_context()
+    orga_page = orga_context.new_page()
+    actions.login(orga_page, 1, "admin")
+    actions.enable_entry_submission(orga_page, False)
+    actions.add_category(
+        orga_page,
+        actions.Category(
+            title="Plenum",
+            icon="📣",
+            color="#12143b",
+            sort_key=100,
+            is_official=True,
+        ),
+    )
+    plenum_row = helpers.get_table_row_by_column_value(orga_page, "Name", "Plenum")
+    plenum_edit_link = plenum_row.get_by_role("link", name="Bearbeiten")
+    plenum_category_id = re.search(r"/categories/([a-f0-9\-]+)/edit", plenum_edit_link.get_attribute("href")).group(1)
+
+    actions.login(page, 1, "user")
+    page.get_by_role("link", name="Eintrag einreichen").click()
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+
+    # Plenum category should not be selectable
+    page.get_by_role("combobox", name="Kategorie").select_option()
+    expect(
+        page.get_by_role("combobox", name="Kategorie").get_by_role("option").filter(has_text="Plenum")
+    ).not_to_be_attached()
+
+    # When forced to the invalid category, the submission should be rejected
+    page.get_by_role("combobox", name="Kategorie").evaluate(
+        f'(x) => x.add(new Option("Plenum", "{plenum_category_id}", false, true))'
+    )
+
+    page.get_by_role("tab", name="Vorschau").click()
+    page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
+    page.get_by_role("button", name="Einreichen").click()
+
+    error_alert = page.get_by_role("alert").filter(has_text="Fehler")
+    expect(error_alert).to_be_visible()
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+    category_input = page.get_by_role("combobox", name="Kategorie")
+    expect(category_input).to_be_visible()
+    helpers.expected_has_validation_error(category_input, re.compile(r".*"), False)
+
+    orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    expect(orga_page).to_have_title(re.compile("Zu prüfende Einträge"))
+    expect(orga_page.get_by_role("document")).not_to_contain_text("Test-Eintrag")
+
+
+def test_submit_entry_rejected_with_parallel_exclusive_entry(
+    page: Page, browser: Browser, reset_database: None
+) -> None:
+    orga_context = browser.new_context()
+    orga_page = orga_context.new_page()
+    actions.login(orga_page, 1, "admin")
+    actions.enable_entry_submission(orga_page, False)
+    actions.add_room(orga_page, data.ROOM_PELIKANHALLE)
+    actions.add_entry(orga_page, data.ENTRY_BEGRUESSUNGSPLENUM)
+
+    actions.login(page, 1, "user")
+    page.get_by_role("link", name="Eintrag einreichen").click()
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+    page.get_by_role("textbox", name="Titel der KüA").fill("Test-Eintrag")
+
+    page.get_by_role("tab", name="Zeit & Ort").click()
+    page.get_by_role("combobox", name="Tag").select_option("01.01. (Mi)")
+    page.get_by_role("textbox", name="Beginn").fill("19:30")
+    page.get_by_role("textbox", name="Dauer").fill("1:00")
+
+    page.get_by_role("tab", name="Vorschau").click()
+    page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
+    page.get_by_role("button", name="Einreichen").click()
+
+    error_alert = page.get_by_role("alert").filter(has_text="Fehler")
+    expect(error_alert).to_be_visible()
+    expect(error_alert).to_contain_text("Konflikt mit einer exklusiven KüA")
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+    begin_input = page.get_by_role("textbox", name="Beginn")
+    expect(begin_input).to_be_visible()
+    helpers.expected_has_validation_error(
+        begin_input, re.compile(r"Darf nicht parallel zu einer exklusiven KüA liegen"), False
+    )
+
+    orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    expect(orga_page).to_have_title(re.compile("Zu prüfende Einträge"))
+    expect(orga_page.get_by_role("document")).not_to_contain_text("Test-Eintrag")
+
 
 # TODO test going to "Eintrag einreichen" page or manually POSTing entry submission does not work when disabled

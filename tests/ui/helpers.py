@@ -1,7 +1,7 @@
 import re
 from re import Pattern
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Locator, Page, expect
 
 
 def get_table_row_by_column_value(
@@ -70,3 +70,18 @@ def is_text_colored(locator: Locator) -> bool:
     assert match
     r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
     return abs(min(r, g, b) - max(r, g, b)) > 20
+
+
+def expected_has_validation_error(
+    input_field_locator: Locator, expected_message: str | Pattern, is_input_group: bool
+) -> None:
+    if is_input_group:
+        # parent of input field has 'is-invalid' class for red marker
+        expect(input_field_locator.locator("..")).to_have_class(re.compile(r"(^|\s)is-invalid(\s|$)"))
+        # error text within form row (parent of input group)
+        expect(input_field_locator.locator("../..")).to_have_text(expected_message)
+    else:
+        # parent of input field has 'is-invalid' class for red marker
+        expect(input_field_locator).to_have_class(re.compile(r"(^|\s)is-invalid(\s|$)"))
+        # error text within form row (parent of input group)
+        expect(input_field_locator.locator("..")).to_have_text(expected_message)

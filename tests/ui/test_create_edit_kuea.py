@@ -83,10 +83,7 @@ def test_create_entry_validation_error_duration(page: Page, reset_database: None
     expect(error_alert).to_be_visible()
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     duration_input = page.get_by_role("textbox", name="Dauer")
-    # parent of input field has 'is-invalid' class for red marker
-    expect(duration_input.locator("..")).to_have_class(re.compile(r"(^|\s)is-invalid(\s|$)"))
-    # error text within form row (parent of input group)
-    expect(duration_input.locator("../..")).to_have_text(re.compile(r"Keine gültige Dauer"))
+    helpers.expected_has_validation_error(duration_input, re.compile(r"Keine gültige Dauer"), True)
 
 
 def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> None:

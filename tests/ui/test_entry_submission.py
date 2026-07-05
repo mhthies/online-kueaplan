@@ -413,8 +413,11 @@ def test_submit_entry_not_for_official_category(page: Page, browser: Browser, re
         ),
     )
     plenum_row = helpers.get_table_row_by_column_value(orga_page, "Name", "Plenum")
-    plenum_edit_link = plenum_row.get_by_role("link", name="Bearbeiten")
-    plenum_category_id = re.search(r"/categories/([a-f0-9\-]+)/edit", plenum_edit_link.get_attribute("href")).group(1)
+    plenum_edit_url = plenum_row.get_by_role("link", name="Bearbeiten").get_attribute("href")
+    assert plenum_edit_url is not None
+    plenum_edit_url_match = re.search(r"/categories/([a-f0-9\-]+)/edit", plenum_edit_url)
+    assert plenum_edit_url_match is not None
+    plenum_category_id = plenum_edit_url_match.group(1)
 
     actions.login(page, 1, "user")
     page.get_by_role("link", name="Eintrag einreichen").click()

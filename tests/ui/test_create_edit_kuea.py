@@ -39,7 +39,7 @@ def test_create_entry(page: Page, reset_database: None) -> None:
     page.get_by_role("textbox", name="Ausführliche Beschreibung").fill(
         """Wir bauen Drachen und lassen sie steigen.
 
-        Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
+Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
         """
     )
     page.get_by_role("button", name="Erstellen").click()
@@ -83,10 +83,7 @@ def test_create_entry_validation_error_duration(page: Page, reset_database: None
     expect(error_alert).to_be_visible()
     expect(page).to_have_title(re.compile(r"Neuer Eintrag"))
     duration_input = page.get_by_role("textbox", name="Dauer")
-    # parent of input field has 'is-invalid' class for red marker
-    expect(duration_input.locator("..")).to_have_class(re.compile(r"(^|\s)is-invalid(\s|$)"))
-    # error text within form row (parent of input group)
-    expect(duration_input.locator("../..")).to_have_text(re.compile(r"Keine gültige Dauer"))
+    helpers.expected_has_validation_error(duration_input, re.compile(r"Keine gültige Dauer"), True)
 
 
 def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> None:
@@ -103,7 +100,7 @@ def test_create_entry_date_info_indicator(page: Page, reset_database: None) -> N
     calendar_date_indicator = begin_input.locator("..").locator("#calendarDateInfo")
     expect(calendar_date_indicator).to_be_visible()
     expect(calendar_date_indicator).to_have_text("Kalendertag: 04.01.")
-    expect(calendar_date_indicator).to_have_css("color", "rgb(13, 202, 240)")
+    assert helpers.is_text_colored(calendar_date_indicator)
 
     date_input.select_option("04.01. (Sa)")
     expect(calendar_date_indicator).to_be_visible()

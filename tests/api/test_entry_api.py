@@ -26,7 +26,7 @@ def test_create_and_update_entry_simple(generated_api_client: ApiClientWrapper, 
         comment="wir lassen Drachen steigen",
         description="""Wir bauen Drachen und lassen sie steigen.
 
-        Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
+Für das Material müssen von jedem Teilnehmer an der KüA **5€** bezahlt werden.
         """,
         room=[],
         begin=datetime.datetime(2025, 1, 6, 12, 0, tzinfo=datetime.UTC).isoformat(),

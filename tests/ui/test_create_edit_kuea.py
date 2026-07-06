@@ -192,6 +192,8 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
     expect(parallel_entries_overlays).not_to_be_visible()
     expect(list_item).to_have_count(1)
 
+    # TODO check that draft is shown as well
+
     begin_input.fill("19:30")
     expect(list_item).to_have_count(3)
     # Items should be ordered from most problematic to least problematic (and then by time)

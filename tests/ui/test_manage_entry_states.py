@@ -207,4 +207,60 @@ def test_reject_and_republish_submitted_entry(page: Page, browser: Browser, rese
     expect(row.get_by_role("cell").nth(3)).to_contain_text("Anna")
 
 
-# TODO edit submitted entry without deciding, then publish it later.
+def test_edit_submitted_entry_and_publish_later(page: Page, browser: Browser, reset_database: None) -> None:
+    orga_page = page
+    actions.login(orga_page, 1, "admin")
+    actions.enable_entry_submission(orga_page, False)
+
+    user_context = browser.new_context()
+    user_page = user_context.new_page()
+    actions.login(user_page, 1, "user")
+
+    # Submit entry
+    user_page.get_by_role("link", name="Eintrag einreichen").click()
+    user_page.get_by_role("textbox", name="Titel der KüA").fill("Drachenfliegen leicht gemacht")
+    user_page.get_by_role("button", name="Weiter").click()
+    user_page.get_by_role("textbox", name="Beginn").fill("13:00")
+    user_page.get_by_role("textbox", name="Dauer").fill("1,5")
+    user_page.get_by_role("tab", name="Vorschau").click()
+    user_page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
+    user_page.get_by_role("button", name="Einreichen").click()
+    actions.check_success_toast(user_page)
+
+    # Entry should not be visible in the plan yet
+    expect(user_page).to_have_title(re.compile(r"06\.01\."))
+    expect(user_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+
+    # Edit entry without publishing
+    orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht").get_by_role(
+        "link", name="Eintrag bearbeiten"
+    ).click()
+    orga_page.get_by_role("textbox", name="von wem? / Ansprechpersonen").fill("Anna")
+    expect(orga_page.get_by_role("radio", name="Ungeprüft")).to_be_checked()
+    orga_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(orga_page)
+
+    # Entry should still not be visible in the plan yet
+    user_page.reload()
+    expect(user_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+
+    # Review area button in the navigation bar should still show one entry to review
+    review_area_button = orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen")
+    expect(review_area_button).to_contain_text("1")
+
+    # Publish entry
+    helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht").get_by_role(
+        "link", name="Eintrag bearbeiten"
+    ).click()
+    orga_page.locator('label:has-text("Veröffentlichen")').click()
+    orga_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(orga_page)
+
+    expect(review_area_button).not_to_contain_text("1")
+
+    # User should see entry now, with new responsible person
+    user_page.reload()
+    row = helpers.get_table_row_by_column_value(user_page, "Was?", "Drachenfliegen leicht gemacht")
+    expect(row).to_be_visible()
+    expect(row.get_by_role("cell").nth(3)).to_contain_text("Anna")

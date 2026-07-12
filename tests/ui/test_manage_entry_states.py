@@ -40,7 +40,51 @@ def test_create_edit_and_publish_draft(page: Page, browser: Browser, reset_datab
     expect(user_page.get_by_role("document")).to_contain_text("Tanzabend")
 
 
-# TODO test delete entry
+def test_delete_entry(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_TANZABEND)
+
+    helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
+    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("button", name="Löschen").click()
+    actions.check_success_toast(page)
+
+    # Deleted entry should not be shown in normal plan, nor in "retracted" page
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Fr 03.01.").click()
+    expect(page.get_by_role("document")).not_to_contain_text("Tanzabend")
+    page.get_by_role("link", name="Versteckte").click()
+    expect(page.get_by_role("document")).not_to_contain_text("Tanzabend")
+
+
+def test_retract_and_delete_entry(page: Page, reset_database: None) -> None:
+    actions.login(page, 1, "orga")
+    actions.add_entry(page, data.ENTRY_TANZABEND)
+
+    # Retract entry
+    helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
+    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("button", name="Verstecken").click()
+    actions.check_success_toast(page)
+
+    # Retracted entry should not be shown for users or orgas in normal plan
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Fr 03.01.").click()
+    expect(page.get_by_role("document")).not_to_contain_text("Tanzabend")
+
+    # Delete entry
+    page.get_by_role("link", name="Versteckte").click()
+    helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
+    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("button", name="Löschen").click()
+    actions.check_success_toast(page)
+
+    # Deleted entry should not be shown in normal plan, nor in "retracted" page
+    page.get_by_role("button", name="Datum").click()
+    page.get_by_role("link", name="Fr 03.01.").click()
+    expect(page.get_by_role("document")).not_to_contain_text("Tanzabend")
+    page.get_by_role("link", name="Versteckte").click()
+    expect(page.get_by_role("document")).not_to_contain_text("Tanzabend")
 
 
 def test_retract_and_republish_entry(page: Page, browser: Browser, reset_database: None) -> None:

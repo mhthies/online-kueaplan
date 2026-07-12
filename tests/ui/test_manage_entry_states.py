@@ -1,3 +1,5 @@
+import re
+
 from playwright.sync_api import Browser, Page, expect
 
 from . import actions, data, helpers
@@ -129,6 +131,80 @@ def test_retract_and_republish_entry(page: Page, browser: Browser, reset_databas
     expect(user_page.get_by_role("document")).to_contain_text("Tanzabend")
 
 
-# TODO edit submitted entry without deciding, then publish it later.
+def test_reject_and_republish_submitted_entry(page: Page, browser: Browser, reset_database: None) -> None:
+    orga_page = page
+    actions.login(orga_page, 1, "admin")
+    actions.enable_entry_submission(orga_page, True)
 
-# TODO test reject submitted entry, edit it and then publish it
+    user_context = browser.new_context()
+    user_page = user_context.new_page()
+    actions.login(user_page, 1, "user")
+
+    # Submit entry
+    user_page.get_by_role("link", name="Eintrag einreichen").click()
+    user_page.get_by_role("textbox", name="Titel der KüA").fill("Drachenfliegen leicht gemacht")
+    user_page.get_by_role("button", name="Weiter").click()
+    user_page.get_by_role("textbox", name="Beginn").fill("13:00")
+    user_page.get_by_role("tab", name="Vorschau").click()
+    expect(user_page.get_by_role("checkbox", name="Direkt veröffentlichen")).to_be_checked()
+    user_page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
+    user_page.get_by_role("button", name="Veröffentlichen").click()
+    actions.check_success_toast(user_page)
+
+    # User should already see the entry in the public list
+    expect(user_page).to_have_title(re.compile(r"06\.01\."))
+    expect(user_page.get_by_role("document")).to_contain_text("Drachenfliegen leicht gemacht")
+
+    # Reject entry
+    orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht").get_by_role(
+        "link", name="bearbeiten"
+    ).click()
+    orga_page.locator('label:has-text("Ablehnen")').click()
+    orga_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(orga_page)
+
+    # User should not see entry anymore
+    user_page.reload()
+    expect(user_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+
+    # Entry should not be listed as "to review" anymore, but it should be listed as "rejected"
+    orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    expect(orga_page).to_have_title(re.compile("Zu prüfende Einträge"))
+    expect(orga_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+    rejected_list_link = orga_page.get_by_role("link", name="Abgelehnt")
+    expect(rejected_list_link).to_contain_text("1")
+    rejected_list_link.click()
+    expect(helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht")).to_be_visible()
+
+    # Edit entry (new responsible person) without changing state
+    helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht").get_by_role(
+        "link", name="bearbeiten"
+    ).click()
+    orga_page.get_by_role("textbox", name="von wem? / Ansprechpersonen").fill("Anna")
+    expect(orga_page.get_by_role("radio", name="Versteckt lassen")).to_be_checked()
+    orga_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(orga_page)
+    expect(orga_page).to_have_title(re.compile("Abgelehnte Einreichungen"))
+
+    # User should still not see entry anymore
+    user_page.reload()
+    expect(user_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+
+    # Republish entry
+    helpers.get_table_row_by_column_value(orga_page, "Was?", "Drachenfliegen leicht gemacht").get_by_role(
+        "link", name="bearbeiten"
+    ).click()
+    expect(page.get_by_role("document")).to_contain_text("Bei Prüfung abgelehnt")
+    page.locator('label:has-text("Veröffentlichen")').click()
+    orga_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(orga_page)
+
+    # User should see entry again, with new responsible person
+    user_page.reload()
+    row = helpers.get_table_row_by_column_value(user_page, "Was?", "Drachenfliegen leicht gemacht")
+    expect(row).to_be_visible()
+    expect(row.get_by_role("cell").nth(3)).to_contain_text("Anna")
+
+
+# TODO edit submitted entry without deciding, then publish it later.

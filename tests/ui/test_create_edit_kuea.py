@@ -159,6 +159,9 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
             time_comment="Schnell noch vor dem Plenum :)",
         ),
     )
+    actions.add_entry(
+        page, dataclasses.replace(data.ENTRY_LOREM_IPSUM, day=datetime.date(2025, 1, 1)), as_draft=True
+    )  # from 14:00
     actions.add_entry(page, ENTRY_BEGRUESSUNGSPLENUM)  # from 20:00
     actions.add_entry(page, ENTRY_PLENUMSVORBEREITUNG)  # 19:30 – 20:00
 
@@ -189,10 +192,18 @@ def test_create_entry_parallel_entries(page: Page, reset_database: None) -> None
     expect(list_item).to_contain_text("18:30 – 19:50")
 
     begin_input.fill("18:30")
+    # only the Beach-Volleyball (which is exactly parallel) should be shown now, not the "Plenumsvorbereitung", which
+    # starts exactly when the new entry ends
     expect(parallel_entries_overlays).not_to_be_visible()
     expect(list_item).to_have_count(1)
 
-    # TODO check that draft is shown as well
+    begin_input.fill("14:00")
+    # Parallel draft entry should be shown as well
+    expect(parallel_entries_overlays).not_to_be_visible()
+    expect(list_item).to_have_count(1)
+    expect(list_item).to_contain_text("Lorem Ipsum")
+    # Icon that indicates that this is a draft should be present:
+    expect(list_item.get_by_title("Entwurf")).to_be_visible()
 
     begin_input.fill("19:30")
     expect(list_item).to_have_count(3)

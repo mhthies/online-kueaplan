@@ -489,4 +489,46 @@ def test_submit_entry_rejected_with_parallel_exclusive_entry(
     expect(orga_page.get_by_role("document")).not_to_contain_text("Test-Eintrag")
 
 
-# TODO test going to "Eintrag einreichen" page or manually POSTing entry submission does not work when disabled
+def test_submit_entry_denied(page: Page, browser: Browser, reset_database: None) -> None:
+    # Enable entry submission
+    # (this is simlar to actions.enable_entry_submission(), but we do it manually here for faster switching below
+    admin_context = browser.new_context()
+    admin_page = admin_context.new_page()
+    actions.login(admin_page, 1, "admin")
+    admin_page.get_by_role("link", name="Konfiguration").click()
+    admin_page.get_by_role("link", name="Veranstaltungs-Metadaten").click()
+    admin_page.get_by_role("combobox", name="KüA-Einreichungen durch Teilnehmende").select_option(
+        label="Erlaubt, mit Review vor Veröffentlichung"
+    )
+    admin_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(admin_page)
+
+    # Go to submit entry form
+    actions.login(page, 1, "user")
+    page.get_by_role("link", name="Eintrag einreichen").click()
+    expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
+    page.get_by_role("textbox", name="Titel der KüA").fill("Test-Eintrag")
+    page.get_by_role("tab", name="Vorschau").click()
+    page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
+
+    # Disable entry submission
+    admin_page.get_by_role("combobox", name="KüA-Einreichungen durch Teilnehmende").select_option(label="Nicht erlaubt")
+    admin_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(admin_page)
+
+    # Submit entry should fail
+    page.get_by_role("button", name="Einreichen").click()
+    error_alert = page.get_by_role("alert").filter(has_text="Fehler")
+    expect(error_alert).to_be_visible()
+    expect(error_alert).to_contain_text("Die Einreichung von Beiträgen ist in dieser Veranstaltung nicht erlaubt.")
+
+    # Enable entry submission again to check that the entry has not been submitted for review
+    admin_page.get_by_role("combobox", name="KüA-Einreichungen durch Teilnehmende").select_option(
+        label="Erlaubt, mit Review vor Veröffentlichung"
+    )
+    admin_page.get_by_role("button", name="Speichern").click()
+    actions.check_success_toast(admin_page)
+
+    admin_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
+    expect(admin_page).to_have_title(re.compile("Zu prüfende Einträge"))
+    expect(admin_page.get_by_role("document")).not_to_contain_text("Test-Eintrag")

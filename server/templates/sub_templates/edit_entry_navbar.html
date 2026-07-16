@@ -27,7 +27,7 @@
         <a class="nav-link {% if active_link == EditEntryNavbarActiveLink::DeleteEntry %}active{% endif %}"
            {% if active_link == EditEntryNavbarActiveLink::DeleteEntry %}aria-current="page"{% endif %}
            href="{{ request.url_for("delete_entry_form", [event_id.to_string(), entry_id.to_string()])? }}">
-        <i class="bi bi-trash" aria-hidden="true"></i> Löschen
+        <i class="bi bi-dash-circle" aria-hidden="true"></i> Entfernen
         </a>
     </li>
     <li class="nav-item">

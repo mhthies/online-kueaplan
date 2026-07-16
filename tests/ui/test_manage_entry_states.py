@@ -59,7 +59,7 @@ def test_delete_entry(page: Page, reset_database: None) -> None:
     actions.add_entry(page, data.ENTRY_TANZABEND)
 
     helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
-    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("link", name="Entfernen").click()
     page.get_by_role("button", name="Löschen").click()
     actions.check_success_toast(page)
 
@@ -77,7 +77,7 @@ def test_retract_and_delete_entry(page: Page, reset_database: None) -> None:
 
     # Retract entry
     helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
-    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("link", name="Entfernen").click()
     page.get_by_role("button", name="Verstecken").click()
     actions.check_success_toast(page)
 
@@ -89,7 +89,7 @@ def test_retract_and_delete_entry(page: Page, reset_database: None) -> None:
     # Delete entry
     page.get_by_role("link", name="Versteckte").click()
     helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
-    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("link", name="Entfernen").click()
     page.get_by_role("button", name="Löschen").click()
     actions.check_success_toast(page)
 
@@ -110,7 +110,7 @@ def test_retract_and_republish_entry(page: Page, browser: Browser, reset_databas
     actions.add_entry(page, data.ENTRY_TANZABEND)
 
     helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend").get_by_role("link", name="bearbeiten").click()
-    page.get_by_role("link", name="Löschen").click()
+    page.get_by_role("link", name="Entfernen").click()
     page.get_by_role("button", name="Verstecken").click()
     actions.check_success_toast(page)
 

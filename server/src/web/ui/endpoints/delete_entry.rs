@@ -45,7 +45,7 @@ async fn delete_entry_form(
     let tmpl = DeleteEntryTemplate {
         base: BaseTemplateContext {
             request: &req,
-            page_title: "Eintrag löschen",
+            page_title: "Eintrag entfernen",
             event: AnyEventData::ExtendedEvent(&event),
             current_date: Some(get_effective_date(&entry.entry.begin, &event.clock_info)),
             auth_token: Some(&auth),

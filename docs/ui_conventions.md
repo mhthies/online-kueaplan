@@ -14,23 +14,24 @@
 ## Icons
 
 ### Actions
-| Usage                       | Icon                       |
-|-----------------------------|----------------------------|
-| submit form to save changes | `bi-save`                  |
-| log in                      | `bi-box-arrow-in-right`    |
-| abort current action        | `bi-x-square`              |
-| go to some relevant page    | `bi-arrow-up-right-circle` |
-| add entity                  | `bi-plus-lg`               |
-| add secondary entity        | `bi-plus-circle`           |
-| delete entity               | `bi-trash`                 |
-| edit entity                 | `bi-pencil`                |
-| hide                        | `bi-eye-slash`             |
-| mark as cancelled/disabled  | `bi-x-cirle`               |
-| accept/publish entry        | `bi-check2-circle`         |
-| (no state change)           | `bi-circle`                |
-| reject                      | `bi-slash-circle`          |
-| reload                      | `bi-arrow-clockwise`       |
-| navigate back               | `bi-arrow-left`            |
+| Usage                            | Icon                       |
+|----------------------------------|----------------------------|
+| submit form to save changes      | `bi-save`                  |
+| log in                           | `bi-box-arrow-in-right`    |
+| abort current action             | `bi-x-square`              |
+| go to some relevant page         | `bi-arrow-up-right-circle` |
+| add entity                       | `bi-plus-lg`               |
+| add secondary entity             | `bi-plus-circle`           |
+| delete entity                    | `bi-trash`                 |
+| edit entity                      | `bi-pencil`                |
+| hide                             | `bi-eye-slash`             |
+| mark as cancelled/disabled       | `bi-x-circle`              |
+| remove (may cover delete & hide) | `bi-dash-circle`           |
+| accept/publish entry             | `bi-check2-circle`         |
+| (no state change)                | `bi-circle`                |
+| reject                           | `bi-slash-circle`          |
+| reload                           | `bi-arrow-clockwise`       |
+| navigate back                    | `bi-arrow-left`            |
 
 ### Entities
 | Usage                                        | Icon                      |

@@ -34,7 +34,7 @@
     </table>
     <div class="card border-danger mt-md-5 mt-3">
         <h2 class="card-header border-danger fs-4">
-            Löschen
+            Eintrag entfernen
         </h2>
         <div class="card-body d-flex flex-column gap-3">
             <form class="row align-items-center" method="post" action="{{ base.request.url_for("delete_entry", [event.basic_data.id.to_string(), entry.entry.id.to_string()])? }}">

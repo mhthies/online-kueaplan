@@ -16,7 +16,7 @@
                     <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                     <span class="float-end badge rounded-pill {% if entries_without_room_count == 0 %}text-bg-secondary{% else %}text-bg-light{% endif %} ms-2" title="Anzahl Einträge">
                         {{ entries_without_room_count }}
-                        <span class="visually-hidden">Einträge</span>
+                        <span class="visually-hidden">{{ entries_without_room_count|pluralize("Eintrag", "Einträge") }}</span>
                     </span>
                     KüAs ohne Ort
                 </a>
@@ -35,7 +35,7 @@
                             <span class="float-end d-inline-block ms-2" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                             <span class="float-end badge rounded-pill {% if entry_count == 0 %}text-bg-secondary{% else %}text-bg-light{% endif %} ms-2" title="Anzahl Einträge">
                                 {{entry_count}}
-                                <span class="visually-hidden">Einträge</span>
+                                <span class="visually-hidden">{{ entry_count|pluralize("Eintrag", "Einträge") }}</span>
                             </span>
                             {{room.title}}
                         </a>

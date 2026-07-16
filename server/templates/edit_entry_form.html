@@ -42,7 +42,9 @@
                .info("wird unter dem Titel angezeigt") }}
     </div>
     <div class="mb-3">
-        {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus") }}
+        {{ CheckboxTemplate::new(form_data.is_cancelled, "is_cancelled", "fällt aus")
+           .info(&("Durchgestrichener Text, um Teilnehmende über das Ausfallen eines schon angekündigten Eintrags zu informieren.".to_string()
+                   + *is_new_entry|then_else("", " Zum vollständigen Entfernen aus dem Plan nutze die Seite „Entfernen“ oben."))) }}
     </div>
     <div class="row g-3 mb-3">
         <div class="col-md-6">

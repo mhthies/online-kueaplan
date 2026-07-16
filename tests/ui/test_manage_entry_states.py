@@ -21,6 +21,13 @@ def test_create_edit_and_publish_draft(page: Page, browser: Browser, reset_datab
     user_page.get_by_role("link", name="Fr 03.01.").click()
     expect(user_page.get_by_role("document")).not_to_contain_text("Tanzabend")
 
+    # Draft should not be counted into entry count of public category/room lists
+    user_page2 = user_context.new_page()
+    user_page2.goto(user_page.url)
+    user_page2.get_by_role("link", name="Kategorien").click()
+    expect(user_page2.get_by_role("link", name="Default")).to_contain_text("0 Einträge")
+
+    # Edit draft without publishing
     page.get_by_role("link", name="Versteckte").click()
     page.get_by_role("link", name="Entwürfe").click()
     row = helpers.get_table_row_by_column_value(page, "Was?", "Tanzabend")
@@ -34,12 +41,17 @@ def test_create_edit_and_publish_draft(page: Page, browser: Browser, reset_datab
     user_page.reload()
     expect(user_page.get_by_role("document")).not_to_contain_text("Tanzabend")
 
+    # Publish entry
     row.get_by_role("link", name="Eintrag bearbeiten").click()
     page.locator('label:has-text("Veröffentlichen")').click()
     page.get_by_role("button", name="Speichern").click()
 
+    # entry should be visible to user
     user_page.reload()
     expect(user_page.get_by_role("document")).to_contain_text("Tanzabend")
+    # ... and counted into category's entry count
+    user_page2.reload()
+    expect(user_page2.get_by_role("link", name="Default")).to_contain_text("1 Eintrag")
 
 
 def test_delete_entry(page: Page, reset_database: None) -> None:
@@ -167,6 +179,11 @@ def test_reject_and_republish_submitted_entry(page: Page, browser: Browser, rese
     # User should not see entry anymore
     user_page.reload()
     expect(user_page.get_by_role("document")).not_to_contain_text("Drachenfliegen leicht gemacht")
+    # and it should not be counted into entry count of public category/room lists anymore
+    user_page2 = user_context.new_page()
+    user_page2.goto(user_page.url)
+    user_page2.get_by_role("link", name="Kategorien").click()
+    expect(user_page2.get_by_role("link", name="Default")).to_contain_text("0 Einträge")
 
     # Entry should not be listed as "to review" anymore, but it should be listed as "rejected"
     orga_page.get_by_role("navigation", name="Haupt-Navigation").get_by_role("link", name="Prüfen").click()
@@ -205,6 +222,9 @@ def test_reject_and_republish_submitted_entry(page: Page, browser: Browser, rese
     row = helpers.get_table_row_by_column_value(user_page, "Was?", "Drachenfliegen leicht gemacht")
     expect(row).to_be_visible()
     expect(row.get_by_role("cell").nth(3)).to_contain_text("Anna")
+    # and it should be counted into the category's entry count again
+    user_page2.reload()
+    expect(user_page2.get_by_role("link", name="Default")).to_contain_text("1 Eintrag")
 
 
 def test_edit_submitted_entry_and_publish_later(page: Page, browser: Browser, reset_database: None) -> None:

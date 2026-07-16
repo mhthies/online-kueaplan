@@ -598,6 +598,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .filter(event_id.eq(the_event_id))
             .filter(not(deleted))
             .filter(not(is_cancelled))
+            .filter(state.eq_any(models::EntryState::all().filter(|s| s.is_published())))
             .group_by(category)
             .select((category, count_star()))
             .load::<(CategoryId, i64)>(&mut self.connection)?)
@@ -619,6 +620,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .filter(not(is_cancelled))
             .group_by(schema::entry_rooms::room_id)
             .select((schema::entry_rooms::room_id, count_star()))
+            .filter(state.eq_any(models::EntryState::all().filter(|s| s.is_published())))
             .load::<(RoomId, i64)>(&mut self.connection)?)
     }
 
@@ -638,6 +640,7 @@ impl KueaPlanStoreFacade for PgDataStoreFacade {
             .filter(not(exists(
                 schema::entry_rooms::table.filter(schema::entry_rooms::entry_id.eq(id)),
             )))
+            .filter(state.eq_any(models::EntryState::all().filter(|s| s.is_published())))
             .select(count_star())
             .first::<i64>(&mut self.connection)?)
     }

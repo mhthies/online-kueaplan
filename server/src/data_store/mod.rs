@@ -174,7 +174,7 @@ pub trait KueaPlanStoreFacade {
         entry_id: EntryId,
         previous_date_id: PreviousDateId,
     ) -> Result<(), StoreError>;
-    /// Cound the number of (not cancelled) entries of the event per category
+    /// Cound the number of public non-canceled entries of the event per category
     ///
     /// The returned map only includes categories with at least one entry.
     fn get_entry_count_by_category(
@@ -182,7 +182,7 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
     ) -> Result<Vec<(CategoryId, i64)>, StoreError>;
-    /// Cound the number of (not cancelled) entries of the event per room.
+    /// Cound the number of public non-canceled entries of the event per room.
     ///
     /// Entries with multiple rooms are counted multiple times.
     /// Previous dates are not considered.
@@ -192,7 +192,7 @@ pub trait KueaPlanStoreFacade {
         auth_token: &AuthToken,
         event_id: EventId,
     ) -> Result<Vec<(RoomId, i64)>, StoreError>;
-    /// Cound the number of (not cancelled) entries without a room.
+    /// Cound the number of public non-canceled entries without a room.
     ///
     /// Previous dates are not considered.
     fn get_entry_count_without_room(

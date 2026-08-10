@@ -29,7 +29,7 @@
     </div>
 
     {% if let Some((preceding_event, preceding_event_date)) = preceding_event_link_data() %}
-        <div class="d-grid col-12 col-sm-8 col-md-6 col-xl-4 mx-auto mt-4">
+        <div class="d-grid col-12 col-sm-8 col-md-6 col-xl-4 mx-auto mt-4 d-print-none">
             <a href="{{ base.request.url_for("main_list", [preceding_event.id.to_string(), preceding_event_date.to_string()])? }}"
                class="btn btn-outline-primary d-block" title="Zur vorangegangenen Veranstaltung" aria-label="Zur vorangegangenen Veranstaltung {{ preceding_event.title }}">
                 <div class="row">
@@ -75,7 +75,7 @@
     {% endfor %}
 
     {% if let Some((subsequent_event, subsequent_event_date)) = subsequent_event_link_data() %}
-        <div class="d-grid col-12 col-sm-8 col-md-6 col-xl-4 mx-auto mt-4">
+        <div class="d-grid col-12 col-sm-8 col-md-6 col-xl-4 mx-auto mt-4 d-print-none">
             <a href="{{ base.request.url_for("main_list", [subsequent_event.id.to_string(), subsequent_event_date.to_string()])? }}"
                class="btn btn-outline-primary d-block" title="Zur nachfolgenden Veranstaltung" aria-label="Zur nachfolgenden Veranstaltung {{ subsequent_event.title }}">
                 <div class="row">

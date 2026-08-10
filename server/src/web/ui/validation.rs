@@ -191,7 +191,7 @@ impl FormValueRepresentation for NiceDurationHours {
         if days > 0 {
             result.push_str(&format!("{}d ", days));
         }
-        result.push_str(&format!("{:02}:{:02}", hours, minutes));
+        result.push_str(&format!("{}:{:02}", hours, minutes));
         if seconds > 0 || milliseconds > 0 {
             result.push_str(&format!(":{:02}", seconds));
             if milliseconds > 0 {

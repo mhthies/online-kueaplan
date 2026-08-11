@@ -464,6 +464,7 @@ def test_submit_entry_rejected_with_parallel_exclusive_entry(
     page.get_by_role("link", name="Eintrag einreichen").click()
     expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
     page.get_by_role("textbox", name="Titel der KüA").fill("Test-Eintrag")
+    page.get_by_role("textbox", name="von wem?").fill("Max Mustermann")
 
     page.get_by_role("tab", name="Zeit & Ort").click()
     page.get_by_role("combobox", name="Tag").select_option("01.01. (Mi)")
@@ -508,6 +509,7 @@ def test_submit_entry_denied(page: Page, browser: Browser, reset_database: None)
     page.get_by_role("link", name="Eintrag einreichen").click()
     expect(page).to_have_title(re.compile(r"Eintrag einreichen"))
     page.get_by_role("textbox", name="Titel der KüA").fill("Test-Eintrag")
+    page.get_by_role("textbox", name="von wem?").fill("Max Mustermann")
     page.get_by_role("tab", name="Vorschau").click()
     page.get_by_role("checkbox", name="Ich habe die Vorschau geprüft").check()
 

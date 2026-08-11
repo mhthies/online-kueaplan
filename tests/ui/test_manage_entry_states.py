@@ -155,6 +155,7 @@ def test_reject_and_republish_submitted_entry(page: Page, browser: Browser, rese
     # Submit entry
     user_page.get_by_role("link", name="Eintrag einreichen").click()
     user_page.get_by_role("textbox", name="Titel der KüA").fill("Drachenfliegen leicht gemacht")
+    user_page.get_by_role("textbox", name="von wem?").fill("Max Mustermann")
     user_page.get_by_role("button", name="Weiter").click()
     user_page.get_by_role("textbox", name="Beginn").fill("13:00")
     user_page.get_by_role("tab", name="Vorschau").click()
@@ -239,6 +240,7 @@ def test_edit_submitted_entry_and_publish_later(page: Page, browser: Browser, re
     # Submit entry
     user_page.get_by_role("link", name="Eintrag einreichen").click()
     user_page.get_by_role("textbox", name="Titel der KüA").fill("Drachenfliegen leicht gemacht")
+    user_page.get_by_role("textbox", name="von wem?").fill("Max Mustermann")
     user_page.get_by_role("button", name="Weiter").click()
     user_page.get_by_role("textbox", name="Beginn").fill("13:00")
     user_page.get_by_role("textbox", name="Dauer").fill("1,5")

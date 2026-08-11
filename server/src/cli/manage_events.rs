@@ -18,7 +18,7 @@ pub fn print_event_list() -> Result<(), CliError> {
 
     let mut table = comfy_table::Table::new();
     table
-        .load_preset(comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED)
+        .load_style(comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED)
         .set_header(vec!["id", "slug", "title", "begin", "end"])
         .add_rows(events.into_iter().map(|event| {
             [

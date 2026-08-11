@@ -22,7 +22,7 @@ pub fn print_passphrase_list(event_id_or_slug: EventIdOrSlug) -> Result<(), CliE
 
     let mut table = comfy_table::Table::new();
     table
-        .load_preset(comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED)
+        .load_style(comfy_table::presets::ASCII_BORDERS_ONLY_CONDENSED)
         .set_header(vec![
             "id",
             "role",

@@ -61,10 +61,17 @@
 {% endif %}
 <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary" aria-label="Haupt-Navigation">
     <div class="container">
-        <div class="navbar-brand" href="#">
-            <img height="24" width="24" class="d-inline-block align-text-top me-2" alt="Logo" src="{{ base.url_for_static("touch-icon.png")? }}">
-            {% if let Some(event) = base.get_basic_event() %}{{ event.title }}{% else %}KüA-Plan{% endif %}
-        </div>
+        {% if let Some(event) = base.get_basic_event() && base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
+            <a href="{{ base.url_for_event_endpoint("event_index")? }}" class="navbar-brand">
+                <img height="24" width="24" class="d-inline-block align-text-top me-2" alt="Logo" src="{{ base.url_for_static("touch-icon.png")? }}">
+                {{ event.title }}
+            </a>
+        {% else %}
+            <div class="navbar-brand">
+                <img height="24" width="24" class="d-inline-block align-text-top me-2" alt="Logo" src="{{ base.url_for_static("touch-icon.png")? }}">
+                {% if let Some(event) = base.get_basic_event() %}{{ event.title }}{% else %}KüA-Plan{% endif %}
+            </div>
+        {% endif %}
         {% if let Some(event) = base.get_basic_event() %}
             {% if base.has_privilege(crate::data_store::auth_token::Privilege::ShowKueaPlan) %}
                 <ul class="navbar-nav">

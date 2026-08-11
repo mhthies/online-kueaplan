@@ -21,7 +21,7 @@ log = "^0.4"
 env_logger = "^0.11"
 r2d2 = "^0.8"
 ring = "^0.17.8"
-base64 = "^0.22.1"
+base64 = "^0.23.0"
 kueaplan_api_types = {path = "../api_types"}
 clap = { version = "4.5.30", features = ["derive"] }
 mime_guess = "^2.0.5"

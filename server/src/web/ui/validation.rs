@@ -23,7 +23,7 @@ impl FormValueRepresentation for NonEmptyString {
 }
 impl ValidateFromFormInput for NonEmptyString {
     fn from_form_value(value: &str) -> Result<Self, String> {
-        if value.is_empty() {
+        if value.trim().is_empty() {
             Err("Darf nicht leer sein".to_owned())
         } else {
             Ok(NonEmptyString(value.to_owned()))

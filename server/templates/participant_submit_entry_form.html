@@ -169,7 +169,7 @@
                                     <tbody>
                                         <tr id="entryPreviewRow">
                                             <td class="kuea-title aside-container">
-                                                {# TODO category icon preview (inkl. name) #}
+                                                <div class="d-inline-block float-end ms-2 category-icon"></div>
                                                 <span class="content" data-copy-from="titleInput">Wise Crowds Consulting - Orgateamfindung</span>
                                                 <div class="comment mt-1" data-copy-from="commentInput">Du kannst helfen!</div>
                                             </td>
@@ -274,6 +274,7 @@
 <script src="{{ base.url_for_static("submit_entry_form.js")? }}"></script>
 <script>
     const rooms = {{ room_entries()|json|safe }};
+    const categories = {{ category_data()|json|safe }};
     new TomSelect("#roomsInput", {
         options: rooms,
         clearAfterSelect: true,
@@ -289,7 +290,8 @@
         {{ effective_begin_of_day_milliseconds() }},
         rooms,
         {{ base.url_for_event_endpoint("concurrent_entries")?.to_string()|json|safe }},
-        {{ base.url_for_event_endpoint("markdown_preview")?.to_string()|json|safe }}
+        {{ base.url_for_event_endpoint("markdown_preview")?.to_string()|json|safe }},
+        categories,
     );
     initializeTabbedForm(document.getElementById("form-tabs"));
 </script>

@@ -25,6 +25,7 @@ use askama::Template;
 use chrono::Timelike;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[get("/{event_id}/submit_entry")]
@@ -280,6 +281,20 @@ impl<'a> ParticipantSubmitEntryFormTemplate<'a> {
             })
             .collect()
     }
+    fn category_data(&self) -> HashMap<&uuid::Uuid, CategoryData<'_>> {
+        self.categories
+            .iter()
+            .map(|c| {
+                (
+                    &c.id,
+                    CategoryData {
+                        title: &c.title,
+                        icon: &c.icon,
+                    },
+                )
+            })
+            .collect()
+    }
 
     fn effective_begin_of_day_milliseconds(&self) -> u64 {
         self.event
@@ -289,6 +304,12 @@ impl<'a> ParticipantSubmitEntryFormTemplate<'a> {
             * 1000
             + self.event.clock_info.effective_begin_of_day.nanosecond() as u64 / 1_000_000
     }
+}
+
+#[derive(Serialize)]
+struct CategoryData<'a> {
+    title: &'a str,
+    icon: &'a str,
 }
 
 #[derive(Default, Deserialize, Debug)]

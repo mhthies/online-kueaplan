@@ -2,7 +2,8 @@ function initializeSubmitEntryForm(
     effectiveBeginOfDayMilliseconds,
     rooms,
     concurrentEntriesApiEndpoint,
-    markdownPreviewApiEndpoint
+    markdownPreviewApiEndpoint,
+    categoryData
 ) {
     const daySelect = document.getElementById("daySelect");
     const beginInput = document.getElementById("beginInput");
@@ -70,7 +71,7 @@ function initializeSubmitEntryForm(
         updateRoomPreview(roomPreview, roomPreview2, roomsMap, roomsInput.value);
     });
     categorySelect.addEventListener("change", () => {
-        updateCategoryPreview(entryPreviewRow, categorySelect.value);
+        updateCategoryPreview(entryPreviewRow, categorySelect.value, categoryData);
     });
     descriptionInput.addEventListener("input", () => {
         markdownPreviewFetcher.scheduleFetching();
@@ -87,7 +88,7 @@ function initializeSubmitEntryForm(
     concurrentEntriesFetcher.doFetch();
     markdownPreviewFetcher.doFetch();
     updateRoomPreview(roomPreview, roomPreview2, roomsMap, roomsInput.value);
-    updateCategoryPreview(entryPreviewRow, categorySelect.value);
+    updateCategoryPreview(entryPreviewRow, categorySelect.value, categoryData);
     updateSubmitTooltip(submitButtonTooltipWrapper, !confirmPreviewCheckbox.checked);
 
     if (publishBeforeReviewCheckbox) {
@@ -168,9 +169,19 @@ function updateRoomPreview(roomPreview, roomPreview2, roomsMap, selectedRoomIds)
     roomPreview2.innerText = " • " + roomsString;
 }
 
-function updateCategoryPreview(entryPreview, selectedCategoryId) {
+function updateCategoryPreview(entryPreview, selectedCategoryId, categoryData) {
     entryPreview.className = "kuea-with-category";
     entryPreview.classList.add("category-" + selectedCategoryId);
+    const category = categoryData[selectedCategoryId];
+    const iconElement = entryPreview.getElementsByClassName("category-icon")[0];
+    if (category !== undefined) {
+        iconElement.innerText = category.icon;
+        iconElement.title = "Kategorie " + category.title;
+    } else {
+        iconElement.innerText = "";
+        iconElement.title = "";
+    }
+    iconElement.ariaLabel = iconElement.title;
 }
 
 function updatePublishBeforeReviewDependentTexts(publishBeforeReviewEnabled) {

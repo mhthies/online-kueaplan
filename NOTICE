@@ -18,13 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Different License conditions apply to bundled web assets in server/static/:
 
-Bootstrap v5.3.8 (https://getbootstrap.com/)
-Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+Bootstrap v5.3.9 (https://getbootstrap.com/)
+Copyright 2011-2026 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
 Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-
-Bootstrap Table of Contents v1.0.1 (http://afeld.github.io/bootstrap-toc/)
-Copyright 2015 Aidan Feldman
-Licensed under MIT (https://github.com/afeld/bootstrap-toc/blob/gh-pages/LICENSE.md)
 
 Tom Select v2.4.3
 Licensed under the Apache License, Version 2.0 (the "License");

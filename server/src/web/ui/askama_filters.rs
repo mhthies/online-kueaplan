@@ -10,17 +10,17 @@ pub fn markdown(
     _: &dyn askama::Values,
 ) -> askama::Result<askama::filters::Safe<String>> {
     let arena = comrak::Arena::new();
-    let options = comrak::options::Options {
-        extension: comrak::options::Extension::builder()
-            .strikethrough(true)
-            .tagfilter(true)
-            .table(true)
-            .footnotes(true)
-            .underline(true)
-            .build(),
-        parse: Default::default(),
-        render: comrak::options::Render::builder().escape(true).build(),
-    };
+    let options = comrak::options::Options::builder()
+        .extension(
+            comrak::options::Extension::builder()
+                .strikethrough(true)
+                .table(true)
+                .footnotes(true)
+                .underline(true)
+                .build(),
+        )
+        .render(comrak::options::Render::builder().escape(true).build())
+        .build();
     let ast_root = comrak::parse_document(&arena, input, &options);
 
     markdown_increase_heading_level(ast_root, 3);

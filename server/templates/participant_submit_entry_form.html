@@ -69,7 +69,7 @@
                             {% endif %}
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-6 col-sm-4">
+                            <div class="col-12 col-sm-4">
                                 {{ FormFieldTemplate::new(form_data.begin, "begin", "Beginn")
                                        .input_type(InputType::Time) }}
                             </div>
@@ -78,7 +78,7 @@
                                        .info("Angabe in Stunden mit Komma (1,5) oder Stunden:Minuten (1:30)")
                                        .suffix_text("h") }}
                             </div>
-                            <div class="col-12 col-sm-4">
+                            <div class="col-6 col-sm-4">
                                 <label for="endInput" class="form-label">Ende</label>
                                 <input class="form-control" type="text" value="0:00" id="endInput" disabled="disabled" aria-live="polite">
                             </div>
